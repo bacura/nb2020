@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
-# coding: UTF-8
+# coding: utf-8
 #Nutrition browser 2020 index page 0.00b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '/var/www/nb-soul.rb'
+require '../nb2020-soul'
 
 
 #==============================================================================
@@ -111,8 +111,8 @@ def html_top( user, lp )
               <option value='1'>#{lp[58]}</option>
               <option value='2'>#{lp[59]}</option>
             </select>
-            <input class="form-control" type="text" maxlength="100" id="words" onchange="searchBWL1()">
-            <btton class='btn btn-sm' onclick="searchBWL1()">#{lp[52]}</button>
+            <input class="form-control" type="text" maxlength="100" id="words" onchange="search()">
+            <btton class='btn btn-sm' onclick="search()">#{lp[52]}</button>
           </span>
         </div>
       </header>
@@ -153,19 +153,19 @@ def html_nav( user, lp )
 
   # 履歴ボタンとまな板ボタンの設定
   if user.status >= 1
-    cb = "#{lp[1]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"cb_num\">#{cb_num}</span>"
-    mb = "#{lp[2]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"mb_num\">#{meal_num}</span>"
-    special_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" id=\"category0\" onclick=\"summonBWL1( 0 )\">#{lp[3]}</button>"
-    his_button = "<button type=\"button\" class=\"btn btn-primary btn-sm nav_button\" onclick=\"historyBWL1( 'recent', '100', '1', 'all' )\">#{lp[4]}</button>"
-    sum_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initCB_BWL1( '' )\">#{cb}</button>"
+    cb = "#{lp[1]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"CBN\">#{cb_num}</span>"
+    mb = "#{lp[2]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"MBN\">#{meal_num}</span>"
+    special_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" id=\"category0\" onclick=\"summonL1( 0 )\">#{@category[0]}</button>"
+    his_button = "<button type=\"button\" class=\"btn btn-primary btn-sm nav_button\" onclick=\"historyInit()\">#{lp[4]}</button>"
+    sum_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initCB( '' )\">#{cb}</button>"
     recipe_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{lp[5]}</button>"
-    menu_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initMeal_BWL1( '' )\">#{mb}</button>"
+    menu_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initMeal( '' )\">#{mb}</button>"
     set_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"menuList()\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
   else
-    cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"cb_num\">#{cb_num}</span>"
-    mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"mb_num\">#{meal_num}</span>"
-    special_button = "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm nav_button\" onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[3]}</button>"
+    cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"CBN\">#{cb_num}</span>"
+    mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"MBN\">#{meal_num}</span>"
+    special_button = "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm nav_button\" onclick=\"displayVideo( '#{lp[8]}' )\">#{@category[0]}</button>"
     his_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[4]}</button>"
     sum_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{cb}</button>"
     recipe_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[5]}</button>"
@@ -180,30 +180,34 @@ def html_nav( user, lp )
     g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVideo( '#{lp[9]}' )\">G</button>"
   end
 
-  gm_account = ''
-  gm_account = "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount_BWL1( 'init' )\">#{lp[34]}</button>" if user.status == 9
+  gm_account =
+  if user.status == 9
+    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount( 'init' )\">#{lp[34]}</button>"
+    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initExport( 'init' )\">#{lp[3]}</button>"
+    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initImport( 'init' )\">#{lp[38]}</button>"
+  end
 
   html = <<-"HTML"
       <nav class='container-fluid'>
           #{g_button}
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summon( 1 )">#{lp[10]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="summon( 2 )">#{lp[11]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="summon( 3 )">#{lp[12]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category4" onclick="summon( 4 )">#{lp[13]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button" id="category5" onclick="summon( 5 )">#{lp[14]}</button>
-          <button type="button" class="btn btn-success btn-sm nav_button" id="category6" onclick="summon( 6 )">#{lp[15]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category7" onclick="summon( 7 )">#{lp[16]}</button>
-          <button type="button" class="btn btn-success btn-sm nav_button" id="category8" onclick="summon( 8 )">#{lp[17]}</button>
-          <button type="button" class="btn btn-success btn-sm nav_button" id="category9" onclick="summon( 9 )">#{lp[18]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category10" onclick="summon( 10 )">#{lp[19]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category11" onclick="summon( 11 )">#{lp[20]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category12" onclick="summon( 12 )">#{lp[21]}</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category13" onclick="summon( 13 )">#{lp[22]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button" id="category14" onclick="summon( 14 )">#{lp[23]}</button>
-          <button type="button" class="btn btn-secondary btn-sm nav_button" id="category15" onclick="summon( 15 )">#{lp[24]}</button>
-          <button type="button" class="btn btn-primary btn-sm nav_button" id="category16" onclick="summon( 16 )">#{lp[25]}</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category17" onclick="summon( 17 )">#{lp[26]}</button>
-          <button type="button" class="btn btn-secondary btn-sm nav_button" id="category18" onclick="summon( 18 )">#{lp[27]}</button>
+          <button type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonL1( 1 )">#{@category[1]}</button>
+          <button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="summonL1( 2 )">#{@category[2]}</button>
+          <button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="summonL1( 3 )">#{@category[3]}</button>
+          <button type="button" class="btn btn-danger btn-sm nav_button" id="category4" onclick="summonL1( 4 )">#{@category[4]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button" id="category5" onclick="summonL1( 5 )">#{@category[5]}</button>
+          <button type="button" class="btn btn-success btn-sm nav_button" id="category6" onclick="summonL1( 6 )">#{@category[6]}</button>
+          <button type="button" class="btn btn-info btn-sm nav_button" id="category7" onclick="summonL1( 7 )">#{@category[7]}</button>
+          <button type="button" class="btn btn-success btn-sm nav_button" id="category8" onclick="summonL1( 8 )">#{@category[8]}</button>
+          <button type="button" class="btn btn-success btn-sm nav_button" id="category9" onclick="summonL1( 9 )">#{@category[9]}</button>
+          <button type="button" class="btn btn-danger btn-sm nav_button" id="category10" onclick="summonL1( 10 )">#{@category[10]}</button>
+          <button type="button" class="btn btn-danger btn-sm nav_button" id="category11" onclick="summonL1( 11 )">#{@category[11]}</button>
+          <button type="button" class="btn btn-danger btn-sm nav_button" id="category12" onclick="summonL1( 12 )">#{@category[12]}</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category13" onclick="summonL1( 13 )">#{@category[13]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button" id="category14" onclick="summonL1( 14 )">#{@category[14]}</button>
+          <button type="button" class="btn btn-secondary btn-sm nav_button" id="category15" onclick="summonL1( 15 )">#{@category[15]}</button>
+          <button type="button" class="btn btn-primary btn-sm nav_button" id="category16" onclick="summonL1( 16 )">#{@category[16]}</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category17" onclick="summonL1( 17 )">#{@category[17]}</button>
+          <button type="button" class="btn btn-secondary btn-sm nav_button" id="category18" onclick="summonL1( 18 )">#{@category[18]}</button>
           #{special_button}
           #{his_button}
           #{sum_button}
@@ -237,9 +241,8 @@ def html_nav( user, lp )
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initShun( 'init' )">#{lp[36]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initDic( 'init' )">#{lp[32]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initSlogf( 'init' )">#{lp[33]}</button>
-          #{gm_account}
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initMemory( 'init' )">#{lp[39]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initImport( 'init' )">#{lp[38]}</button>
+          #{gm_account}
       </nav>
 HTML
   puts html
@@ -250,14 +253,14 @@ end
 def html_working( dummy )
   html = <<-"HTML"
       <div class="bw_frame" id='bw_frame' aligh="center">
-        <div class="" id='line' style="display: none;"></div>
+        <div class="line" id='LINE' style="display: block;"></div>
         <div class="browse_window" id='L1' style="display: none;"></div>
         <div class="browse_window" id='L2' style="display: none;"></div>
         <div class="browse_window" id='L3' style="display: none;"></div>
         <div class="browse_window" id='L4' style="display: none;"></div>
         <div class="browse_window" id='L5' style="display: none;"></div>
         <div class="browse_window" id='LF' style="display: none;"></div>
-        <div class="video" id='video' style="display: none;"></div>
+        <div class="video" id='VIDEO' style="display: none;"></div>
       </div>
 HTML
 
@@ -270,7 +273,7 @@ end
 #==============================================================================
 
 html_init( nil )
-user = User.new( cgi )
+user = User.new( @cgi )
 user.status = 0 unless user.name
 
 lp = user.language( script )
