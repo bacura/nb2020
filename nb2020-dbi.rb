@@ -12,8 +12,8 @@
 #CREATE DATABASE nb2020;
 
 #【特定のデータベースにアクセスするユーザーの追加】
-#CREATE USER ''@'localhost' IDENTIFIED BY '';
-#GRANT ALL PRIVILEGES ON nb2020.* TO ''@'localhost';
+#CREATE USER '****'@'localhost' IDENTIFIED BY '****';
+#GRANT ALL PRIVILEGES ON nb2020.* TO '****'@'localhost';
 #FLUSH PRIVILEGES;
 
 #### Ruby-R用データベース初期化（オプション）
@@ -22,9 +22,9 @@
 #CREATE DATABASE rr;
 
 #【特定のデータベースにアクセスするユーザーの追加】
-#CREATE USER ''@'localhost';
-#GRANT ALL PRIVILEGES ON rr.* TO ''@'localhost';
-#GRANT ALL PRIVILEGES ON rr.* TO ''@'localhost';
+#CREATE USER '****'@'localhost';
+#GRANT ALL PRIVILEGES ON rr.* TO '****'@'localhost';
+#GRANT ALL PRIVILEGES ON rr.* TO '****'@'localhost';
 #FLUSH PRIVILEGES;
 
 

@@ -11,7 +11,7 @@ require 'securerandom'
 #==============================================================================
 #STATIC
 #==============================================================================
-$GM = ''
+$GM = '****'
 
 $SERVER_PATH = '/var/www'
 $HTDOCS_PATH = "#{$SERVER_PATH}/htdocs_nbt"
@@ -21,9 +21,9 @@ $COOKIE_UID = 'UID2020'
 $COOKIE_MID = 'MID2020'
 
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = ''
-$MYSQL_USERR = ''
-$MYSQL_PW = ''
+$MYSQL_USER = '****'
+$MYSQL_USERR = '****'
+$MYSQL_PW = '####'
 $MYSQL_DB = 'nb2020'
 $MYSQL_DBR = 'rr'
 $MYSQL_TB_FCT = 'fct'
@@ -84,7 +84,7 @@ uid = @cgi.cookies[$COOKIE_UID].first unless @cgi.cookies[$COOKIE_UID] == nil
 
 
 if uname != nil && uid != nil
-
+#p 'vv'
   db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
   res = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{uname}' and cookie='#{uid}' and status>0;" )
   db.close
@@ -121,6 +121,21 @@ end
 #### Tracking code
 def tracking()
     html = <<-"HTML"
+<!-- Matomo -->
+<script type="text/javascript">
+  var _paq = window._paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="https://bacura.jp/matomo/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '3']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
 HTML
 
   puts html
