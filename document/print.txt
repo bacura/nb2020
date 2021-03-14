@@ -1,4 +1,4 @@
-#Nutrition browser printv 0.00b
+#Nutrition browser 2020 print page selector 0.00
 
 #==============================================================================
 # OVERVIEW
@@ -24,10 +24,10 @@ code.to_s		#レシピコード
 # TRANSITION
 #==============================================================================
 recipe.js/openPrint( user.name, code, # ) -> 'printv.cgi?&c=code&t=template&d=dish&p=palette&fa=frct_accu&ew=ew_mode&fm=frct_mode&hr=hr_image;
-recipe.js/print_templateReturen_BWL2() ->
+recipe.js/print_templateReturen() ->
 
 
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
-20201221	0.00b	βスタート
+20210311	0.00b	βスタート

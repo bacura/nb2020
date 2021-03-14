@@ -1,4 +1,4 @@
-#Nutrition browser calc 0.00b
+#Nutrition browser 2020 calc 0.00b
 
 #==============================================================================
 # OVERVIEW
@@ -27,10 +27,14 @@ palette.to_i	#成分パレット
 #==============================================================================
 # TRANSITION
 #==============================================================================
-recipe.js/recalcView( code ) -> calc.cgi{ command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }
+// まな板の成分計算表ボタンを押してL2にリストを表示
+recipe.js/calcView( code ) ->	calc.cgi{ command:'view', code:code }
+
+// 成分計算表の再計算ボタンを押してL2にリストを表示
+recipe.js/recalcView( code ) ->	calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }
 
 
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
-20200802	0.00b	βスタート
+20200131	0.00b	βスタート

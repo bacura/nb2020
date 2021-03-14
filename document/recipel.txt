@@ -1,4 +1,4 @@
-#Nutrition browser recipel 0.20b
+#Nutrition browser 2020 recipe list 0.00b
 
 #==============================================================================
 # OVERVIEW
@@ -11,6 +11,7 @@
 #==============================================================================
 nb-soul.rb
 fileutils
+
 
 #==============================================================================
 # ITEM FROM GET / POST
@@ -27,12 +28,17 @@ tech.to_i		#調理区分
 time.to_i		#時間区分
 cost.to_i		#原価区分
 
+
 #==============================================================================
 # TRANSITION
 #==============================================================================
+// Dosplaying recipe list with reset
 recipe.js/recipeList( com ) -> recipel.cgi{ command:com }
+
 recipe.js/recipeList2( page ) -> recipel.cgi{ command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page}
+
 recipe.js/recipeDelete( com, code, page ) -> recipel.cgi{ command:'delete', code:code } -> FxRLR
+
 recipe.js/recipeImport( com, code, page ) -> recipel.cgi"{ command:'import', code:code } -> FxRLR
 
 recipe.js/initCB_BWL1( 'load', code ) -> cboard.cgi{ command:com, code:code }
@@ -47,6 +53,4 @@ guild.js/addKoyomi_BWF( code ) -> koyomi-add.cgi{ command:"init", code:code }
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
-20200718	0.00b	βスタート
-20200723	0.10b	追加：レシピ輸入と統合する形で亜種作成。亜種レシピでは亜ボタンで表示しない。
-20200802	0.20b	追加：１ページのレシピ表示数の設定、レシピ画像のキャッシュの設定に対応。
+20200131	0.00b	βスタート
