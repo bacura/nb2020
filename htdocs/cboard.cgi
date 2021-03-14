@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #STATIC
 #==============================================================================
 script = 'cboard'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -148,6 +148,8 @@ food_check = @cgi['food_check']
 unitv = @cgi['unitv']
 unit= @cgi['unit']
 code = @cgi['code']
+chomi_selected = @cgi['chomi_selected']
+chomi_code = @cgi['chomi_code']
 if @debug
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"
@@ -159,6 +161,8 @@ if @debug
 	puts "food_check:#{food_check}<br>"
 	puts "unit:#{unit}<br>"
 	puts "unitv:#{unitv}<br>"
+	puts "chomi_selected:#{chomi_selected}<br>"
+	puts "chomi_code:#{chomi_code}<br>"
 	puts "<hr>"
 end
 
@@ -503,37 +507,23 @@ end
 db.close
 
 
-puts 'chomi % set<br>' if @debug
+puts 'chomi % categoty set<br>' if @debug
 chomi_html = ''
-chomih = Hash.new
-chomim_set = []
-chomis_set = []
-r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and role='100';", false, @debug )
-r.each do |e|
-	a = e['name'].split( ':' )
-	if chomih[a[0]]
-		chomih[a[0]] << "#{a[1]}:#{e['code']}\t"
-	else
-		chomih[a[0]] = "#{a[1]}:#{e['code']}\t"
-	end
-	chomim_set << a[0]
-end
-chomim_set.uniq!
-chomim_set.sort!
-chomim_set.unshift nil
 
-if chomim && chomim != ''
-	a = chomih[chomim].split( "\t" )
-	a.each do |e| chomis_set << e end
-	chomis_set.sort!
+chomim_categoty = []
+r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and role='100' ORDER BY name;", false, @debug )
+r.each do |e|
+	a = e['name'].sub( '：', ':' ).split( ':' )
+	chomim_categoty << a[0]
 end
-chomis_set.unshift ':'
+chomim_categoty.uniq!
 
 chomi_html << "<div class='input-group input-group-sm'>"
 chomi_html << "<label class='input-group-text' for='chomi'>#{lp[6]}</label>"
-chomi_html << "<select class='form-select' id='chomim' onchange=\"chomiSelect( '#{code}' )\">"
-chomim_set.each do |e|
-	if chomim == e
+chomi_html << "<select class='form-select' id='chomi_selected' onchange=\"chomiSelect( '#{code}' )\">"
+chomi_html << "<option value=''>-</option>"
+chomim_categoty.each do |e|
+	if chomi_selected == e
 		chomi_html << "<option value='#{e}' SELECTED>#{e}</option>"
 	else
 		chomi_html << "<option value='#{e}'>#{e}</option>"
@@ -541,15 +531,22 @@ chomim_set.each do |e|
 end
 chomi_html << "</select>"
 
-chomi_html << "<select class='form-select' id='chomis'>"
-chomis_set.each do |e|
-	a = e.split( ':' )
-	if a[0] != nil
-		chomi_html << "<option value='#{a[1]}'>#{a[0]}</option>"
+puts 'chomi % code set<br>' if @debug
+chomi_html << "<select class='form-select' id='chomi_code'>"
+r.each do |e|
+	a = e['name'].sub( '：', ':' ).split( ':' )
+	if chomi_selected == a[1]
+		if chomi_code == e['code']
+			chomi_html << "<option value='#{e['code']}' SELECTED>#{a[1]}</option>"
+		else
+			chomi_html << "<option value='#{e['code']}'>#{a[1]}</option>"
+		end
 	end
 end
 chomi_html << "</select>"
-if chomim != '' && chomim != nil
+
+puts 'chomi % button<br>' if @debug
+if chomi_selected != '' && chomi_selected != nil
 	chomi_html << "<button type='button' class='btn btn-outline-primary btn-sm' onclick=\"chomiAdd( '#{code}' )\">#{lp[7]}</button>"
 else
 	chomi_html << "<button type='button' class='btn btn-outline-secondary btn-sm'>#{lp[7]}</button>"

@@ -196,6 +196,23 @@ var cb_summon = function( key, weight, base_fn ){
 
 
 
+
+//
+var chomiSelect =  function( code ){
+	var chomi_selected = document.getElementById( "chomi_selected" ).value;
+	$.post( "cboard.cgi", { command:'chomi', code:code, chomi_selected:chomi_selected }, function( data ){ $( "#L1" ).html( data );});
+};
+
+var chomiAdd =  function( code ){chomi_code
+	var chomi_code = document.getElementById( "chomi_code" ).value;
+	$.post( "cboard.cgi", { command:'chomis', code:code, chomi_code:chomi_code }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Recipe ////////////////////////////////////////////////////////////////////////
 

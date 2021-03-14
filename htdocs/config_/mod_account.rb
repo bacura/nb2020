@@ -18,7 +18,8 @@ def config_module( cgi, user, lp )
 		old_password = cgi['old_password']
 		new_password1 = cgi['new_password1']
 		new_password2 = cgi['new_password2']
-
+		language = cgi['language']
+p language
 		if pass == old_password || pass == ''
 			mail = new_mail if new_mail != '' && new_mail != nil
 			aliasu = new_aliasu if new_aliasu != '' && new_aliasu != nil
@@ -27,7 +28,7 @@ def config_module( cgi, user, lp )
 			end
 
 			# Updating acount information
-			mdb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}', laguage='#{language}' WHERE user='#{user.name}' AND cookie='#{uid}';", false, false )
+			mdb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}', language='#{language}' WHERE user='#{user.name}' AND cookie='#{user.uid}';", false, false )
 		else
 			puts "<span class='msg_small_red'>#{lp[12]}</span><br>"
 		end
@@ -104,7 +105,6 @@ var account_cfg = function( step ){
 		var new_password2 = document.getElementById( "new_password2" ).value;
 		var language = document.getElementById( "language" ).value;
 	}
-	closeBroseWindows( 1 );
 
 	$.post( "config.cgi", { mod:'account', step:step, new_mail:new_mail, new_aliasu:new_aliasu, old_password:old_password, new_password1:new_password1, new_password2:new_password2, language:language }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';

@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 script = 'index'
 
 
@@ -41,6 +41,7 @@ def html_top( user, lp )
   else
     login_color = "secondary"
   end
+  login_color = "light"
 
   mom = ''
   mom_a = ''
