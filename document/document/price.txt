@@ -1,0 +1,53 @@
+#Nutrition browser 2020 price editor 0.00
+
+#==============================================================================
+# OVERVIEW
+#==============================================================================
+栄養ブラウザの原価計算。
+
+
+#==============================================================================
+# DEPENDENCE
+#==============================================================================
+nb-soul.rb
+
+
+#==============================================================================
+# ITEM FROM GET / POST
+#==============================================================================
+#POST
+command.to_s		#
+code.to_s	.to_s	#
+food_volume_p.to_i	#
+food_price_p.to_i	#
+food_no_p.to_s		#
+
+
+#==============================================================================
+# TRANSITION
+#==============================================================================
+// まな板の原価計算表ボタンを押してL2にリストを表示
+recipe.js/priceView( code ) ->	price.cgi{ command:'view', code:code }
+
+// 原価計算表の購入量変更でL2に原価表を更新
+recipe.js/changeFV( code, fvid, food_no ) ->	price.cgi{ command:'changeFV', code:code, food_volume:food_volume, food_no:food_no }
+
+// 原価計算表の支払金額変更でL2に原価表を更新
+recipe.js/changeFP( code, fpid, food_no ) ->	price.cgi{ command:'changeFP', code:code, food_price:food_price, food_no:food_no }
+
+// 原価計算表のマスター価格を適用してL2に原価表を更新
+recipe.js/pricemAdpt( code ) ->	price.cgi{ command:'adpt_master', code:code }
+
+// 原価計算表のマスター価格登録（でL2に原価表を更新）
+recipe.js/pricemReg( code ) ->	price.cgi{ command:'reg_master', code:code }
+
+// 原価計算表の価格を元にレシピの価格区分を変更
+recipe.js/recipeRef( code ) ->	price.cgi{ command:'ref_recipe', code:code }
+
+// 原価計算表の初期化ボタンでL2に原価表を更新
+recipe.js/clearCT( code ) ->	price.cgi{ command:'clearCT', code:code }
+
+#==============================================================================
+#CHANGE LOG
+#==============================================================================
+20210209	0.00b	βスタート
