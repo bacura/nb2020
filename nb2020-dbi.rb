@@ -7,33 +7,23 @@
 #yossy@bacura.jp
 
 #==============================================================================
-#DB
-#==============================================================================
-#CREATE DATABASE nb2020;
-
-#【特定のデータベースにアクセスするユーザーの追加】
-#CREATE USER '****'@'localhost' IDENTIFIED BY '****';
-#GRANT ALL PRIVILEGES ON nb2020.* TO '****'@'localhost';
-#FLUSH PRIVILEGES;
-
-#### Ruby-R用データベース初期化（オプション）
-#管理者権限で
-#【データベースの作成】
-#CREATE DATABASE rr;
-
-#【特定のデータベースにアクセスするユーザーの追加】
-#CREATE USER '****'@'localhost';
-#GRANT ALL PRIVILEGES ON rr.* TO '****'@'localhost';
-#GRANT ALL PRIVILEGES ON rr.* TO '****'@'localhost';
-#FLUSH PRIVILEGES;
-
-
-#==============================================================================
 #LIBRARY
 #==============================================================================
 require './nb2020-soul'
 
 
+#==============================================================================
+#DB
+#==============================================================================
+puts "CREATE DATABASE #{$MYSQL_DB};"
+puts "CREATE DATABASE #{$MYSQL_DBR};"
+puts "CREATE USER '#{$MYSQL_USER}'@'#{$MYSQL_HOST}' IDENTIFIED BY '#{$MYSQL_PW}';"
+puts "GRANT ALL PRIVILEGES ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+puts "GRANT ALL PRIVILEGES ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+puts "FLUSH PRIVILEGES;"
+
+puts "[Enter]"
+gets.chomp
 #==============================================================================
 #DEFINITION
 #==============================================================================
@@ -520,9 +510,9 @@ def meal_init()
 		$DB.query( query )
 
 		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{$GM}', meal='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{guest}', meal='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{guest2}', meal='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{guest3}', meal='';" )
+		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='guest', meal='';" )
+		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='guest2', meal='';" )
+		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='guest3', meal='';" )
 
 		puts 'meal table has been created.'
 	end
