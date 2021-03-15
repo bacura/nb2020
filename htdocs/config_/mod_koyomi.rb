@@ -206,6 +206,7 @@ def module_js()
 //
 var koyomiex_cfg = function( step, del_id, del_no ){
 	closeBroseWindows( 1 );
+	displayLINE( 'on' );
 
 	if( step == 'update' ){
 		var koyomiy = document.getElementById( "koyomiy" ).value;
@@ -248,21 +249,21 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 		var unit9 = document.getElementById( "unit9" ).value;
 
 		$.post( "config.cgi", {
-			mod:'koyomiex', step:step, koyomiy:koyomiy, breakfast_st:breakfast_st, lunch_st:lunch_st, dinner_st:dinner_st,
+			mod:'koyomi', step:step, koyomiy:koyomiy, breakfast_st:breakfast_st, lunch_st:lunch_st, dinner_st:dinner_st,
 			kex_select0:kex_select0, kex_select1:kex_select1, kex_select2:kex_select2, kex_select3:kex_select3, kex_select4:kex_select4, kex_select5:kex_select5, kex_select6:kex_select6, kex_select7:kex_select7, kex_select8:kex_select8, kex_select9:kex_select9,
 			item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9,
 			unit0:unit0, unit1:unit1, unit2:unit2, unit3:unit3, unit4:unit4, unit5:unit5, unit6:unit6, unit7:unit7, unit8:unit8, unit9:unit9,
 		}, function( data ){ $( "#L1" ).html( data );});
-		displayVideo( 'Saved' );
+		displayVIDEO( 'Saved' );
 	}else if( step == 'delete' ){
 		if( document.getElementById( del_id ).checked ){
-			$.post( "config.cgi", { mod:'koyomiex', step:step, del_no:del_no }, function( data ){ $( "#L1" ).html( data );});
-			displayVideo( 'Deleted' );
+			$.post( "config.cgi", { mod:'koyomi', step:step, del_no:del_no }, function( data ){ $( "#L1" ).html( data );});
+			displayVIDEO( 'Deleted' );
 		}else{
-			displayVideo( 'Check!(>_<)' );
+			displayVIDEO( 'Check!(>_<)' );
 		}
 	}else{
-		$.post( "config.cgi", { mod:'koyomiex', step:step,  }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "config.cgi", { mod:'koyomi', step:step,  }, function( data ){ $( "#L1" ).html( data );});
 	}
 	document.getElementById( "L1" ).style.display = 'block';
 };

@@ -57,7 +57,7 @@ var history_cfg = function( step ){
 	closeBroseWindows( 1 );
 	$.post( "config.cgi", { mod:'history', step:step, his_max:his_max }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
-	displayLine( 'on' );
+	displayLINE( 'on' );
 
 	if( step == 'clear' ){
 		displayVideo( 'Initialized' );

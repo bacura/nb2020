@@ -141,6 +141,7 @@ org_ymd = "#{calendar.yyyy}:#{calendar.mm}:#{calendar.dd}"
 
 #### Temp
 ( dummy, st_set ) = get_starty( user.name )
+p st_set if @debug
 #### Temp
 
 
@@ -170,7 +171,7 @@ if command == 'save' || command == 'move'
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
 		copy_name = r.first['name']
 		set_sql = ''
-		5.upto( 65 ) do |c| set_sql << ", #{@fct_item[c]}='#{r.first[@fct_item[c]]}'" end
+		@fct_start.upto( @fct_end ) do |c| set_sql << ", #{@fct_item[c]}='#{r.first[@fct_item[c]]}'" end
 		code = generate_code( user.name, 'f' )
 		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{code}', name='#{copy_name}', user='#{user.name}' #{set_sql};", false, @debug )
 	end

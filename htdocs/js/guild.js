@@ -46,7 +46,7 @@ var editKoyomi = function( com, dd ){
 
 // Koyomi delete
 var deleteKoyomi = function( yyyy, mm, dd, tdiv, code, order ){
-	$.post( "koyomi-edit.cgi", { command:'delete', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, code:code, order:order }, function( data ){ $( "L2" ).html( data );});
+	$.post( "koyomi-edit.cgi", { command:'delete', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, code:code, order:order }, function( data ){ $( "#L2" ).html( data );});
 };
 
 // Koyomi memo
