@@ -194,23 +194,20 @@ var cb_summon = function( key, weight, base_fn ){
 	bw_level = 5;
 };
 
-
-
-
-//
-var chomiSelect =  function( code ){
+// Chomi% category
+var chomiSelect =  function(){
+	var code = document.getElementById( "recipe_code" ).value;
 	var chomi_selected = document.getElementById( "chomi_selected" ).value;
-	$.post( "cboard.cgi", { command:'chomi', code:code, chomi_selected:chomi_selected }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "cboard.cgi", { command:'chomi', code:code, chomi_selected:chomi_selected }, function( data ){ $( "#chomi_cell" ).html( data );});
 };
 
-var chomiAdd =  function( code ){chomi_code
+// Chomi% add
+var chomiAdd =  function(){
+	var code = document.getElementById( "recipe_code" ).value;
+	var chomi_selected = document.getElementById( "chomi_selected" ).value;
 	var chomi_code = document.getElementById( "chomi_code" ).value;
-	$.post( "cboard.cgi", { command:'chomis', code:code, chomi_code:chomi_code }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "cboard.cgi", { command:'chomis', code:code, chomi_selected:chomi_selected, chomi_code:chomi_code }, function( data ){ $( "#L1" ).html( data );});
 };
-
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

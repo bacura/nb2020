@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #STATIC
 #==============================================================================
 script = 'cboard'
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -127,6 +127,59 @@ def proc_wf( weight )
 	return weight_
 end
 
+
+#### Chomi cell
+def chomi_cell( user, lp, code, chomi_selected, chomi_code )
+	puts 'chomi % categoty set<br>' if @debug
+	chomi_html = ''
+
+	chomim_categoty = []
+	r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and role='100' ORDER BY name;", false, @debug )
+	r.each do |e|
+		a = e['name'].sub( '：', ':' ).split( ':' )
+		chomim_categoty << a[0]
+	end
+	chomim_categoty.uniq!
+
+	chomi_html << '<div class="input-group input-group-sm">'
+	chomi_html << "<input type=\"hidden\" value=\"#{code}\" id=\"recipe_code\">"
+	chomi_html << "<label class=\"input-group-text\" for=\"chomi\">#{lp[6]}</label>"
+	chomi_html << "<select class=\"form-select\" id=\"chomi_selected\" onchange=\"chomiSelect()\">"
+	chomi_html << "<option value=\"\">-</option>"
+	chomim_categoty.each do |e|
+		if chomi_selected == e
+			chomi_html << "<option value=\"#{e}\" SELECTED>#{e}</option>"
+		else
+			chomi_html << "<option value=\"#{e}\">#{e}</option>"
+		end
+	end
+	chomi_html << "</select>"
+
+	puts 'chomi % code set<br>' if @debug
+	chomi_html << "<select class=\"form-select\" id=\"chomi_code\">"
+	r.each do |e|
+		a = e['name'].sub( '：', ':' ).split( ':' )
+		if chomi_selected == a[0]
+			if chomi_code == e['code']
+				chomi_html << "<option value=\"#{e['code']}\" SELECTED>#{a[1]}</option>"
+			else
+				chomi_html << "<option value=\"#{e['code']}\">#{a[1]}</option>"
+			end
+		end
+	end
+	chomi_html << "</select>"
+
+	puts 'chomi % button<br>' if @debug
+	if chomi_selected != '' && chomi_selected != nil
+		chomi_html << "<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" onclick=\"chomiAdd()\">#{lp[7]}</button>"
+	else
+		chomi_html << "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\">#{lp[7]}</button>"
+	end
+	chomi_html << "</div>"
+
+	return chomi_html
+end
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -198,6 +251,11 @@ end
 update = ''
 all_check = ''
 case command
+when 'chomi_cell'
+	chomi_html = chomi_cell( user, lp, code, chomi_selected, chomi_code )
+	puts chomi_html
+	exit
+
 when 'clear'
 	puts "Clear Sum<br>" if @debug
 	# まとめて削除
@@ -318,7 +376,7 @@ when 'add'
 	food_list_ = []
 	0.upto( insert_posi ) do |c| food_list_ << food_list[c] end
 
-	o = Sum.new( user.name )
+	o = Sum.new
 	if add_food_no == nil
 		o.fn = '-'
 	elsif /\d{5}/ =~ add_food_no
@@ -386,11 +444,6 @@ when 'gn_exchange'
 
 #### 調味％
 when 'chomis'
-	chomim = @cgi['chomim']
-	chomis = @cgi['chomis']
-	puts "chomim:#{chomim}<br>" if @debug
-	puts "chomis:#{chomis}<br>" if @debug
-
 	total_weight = BigDecimal( 0 )
 	target_weight = BigDecimal( 0 )
 
@@ -405,11 +458,11 @@ when 'chomis'
 	target_weight = total_weight if target_weight == 0
 	chomi_rate = target_weight / 100
 
-	r = mdb( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{chomis}';", false, @debug )
+	r = mdb( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{chomi_code}';", false, @debug )
 	if r.first
 		 r.first['sum'].split( "\t" ).each do |e|
-			t = Sum.new( user.name )
-			t.sum_load( e )
+			t = Sum.new
+			t.load_sum( e )
 			t.weight = BigDecimal( t.weight ) * chomi_rate
 			t.unitv = t.weight
 			t.ew = t.weight * BigDecimal( t.rr )
@@ -417,7 +470,6 @@ when 'chomis'
 		end
 	end
 	update = '*'
-
 
 #### Adjusting tootal food weight
 when 'wadj'
@@ -507,51 +559,8 @@ end
 db.close
 
 
-puts 'chomi % categoty set<br>' if @debug
-chomi_html = ''
-
-chomim_categoty = []
-r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and role='100' ORDER BY name;", false, @debug )
-r.each do |e|
-	a = e['name'].sub( '：', ':' ).split( ':' )
-	chomim_categoty << a[0]
-end
-chomim_categoty.uniq!
-
-chomi_html << "<div class='input-group input-group-sm'>"
-chomi_html << "<label class='input-group-text' for='chomi'>#{lp[6]}</label>"
-chomi_html << "<select class='form-select' id='chomi_selected' onchange=\"chomiSelect( '#{code}' )\">"
-chomi_html << "<option value=''>-</option>"
-chomim_categoty.each do |e|
-	if chomi_selected == e
-		chomi_html << "<option value='#{e}' SELECTED>#{e}</option>"
-	else
-		chomi_html << "<option value='#{e}'>#{e}</option>"
-	end
-end
-chomi_html << "</select>"
-
-puts 'chomi % code set<br>' if @debug
-chomi_html << "<select class='form-select' id='chomi_code'>"
-r.each do |e|
-	a = e['name'].sub( '：', ':' ).split( ':' )
-	if chomi_selected == a[1]
-		if chomi_code == e['code']
-			chomi_html << "<option value='#{e['code']}' SELECTED>#{a[1]}</option>"
-		else
-			chomi_html << "<option value='#{e['code']}'>#{a[1]}</option>"
-		end
-	end
-end
-chomi_html << "</select>"
-
-puts 'chomi % button<br>' if @debug
-if chomi_selected != '' && chomi_selected != nil
-	chomi_html << "<button type='button' class='btn btn-outline-primary btn-sm' onclick=\"chomiAdd( '#{code}' )\">#{lp[7]}</button>"
-else
-	chomi_html << "<button type='button' class='btn btn-outline-secondary btn-sm'>#{lp[7]}</button>"
-end
-chomi_html << "</div>"
+puts 'chomi % HTML<br>' if @debug
+chomi_html = chomi_cell( user, lp, code, chomi_selected, chomi_code )
 
 
 #### Sasshi button
@@ -578,7 +587,10 @@ html = <<-"HTML"
 	        	<button class='btn btn-outline-primary' type='button' onclick=\"recipeAdd( '#{code}' )\">#{lp[5]}</button>
 			</div>
 		</div>
-		<div class='col-6'>#{chomi_html}</div>
+		<div class='col-6' id='chomi_cell'></div>
+		<script language='javascript' type='text/javascript'>
+			document.getElementById( 'chomi_cell' ).innerHTML = '#{chomi_html}';
+		</script>
 	</div>
 	<br>
 	<div class='row'>
@@ -760,6 +772,8 @@ end
 html << "</div>"
 html << "<div class='code'>#{code}</div>"
 html << "</div>"
+
+
 
 puts html
 #### まな板データ更新
