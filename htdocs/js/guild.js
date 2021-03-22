@@ -388,13 +388,14 @@ var updateKoyomiex = function( dd, item_no, cell_id ){
 // Ginmi init
 var initGinmi = function(){
 	closeBroseWindows( 1 );
-	$.post( "ginmi.cgi", { mod:'' }, function( data ){ $( "#bw_level1" ).html( data );});
-	document.getElementById( "bw_level1" ).style.display = 'block';
+	displayLINE( 'on' );
+	$.post( "ginmi.cgi", { mod:'' }, function( data ){ $( "#LINE" ).html( data );});
+	document.getElementById( "LINE" ).style.display = 'block';
 };
 
 var ginmiForm = function( mod ){
-	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
-	document.getElementById( "bw_level2" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L1" ).style.display = 'block';
 };
 
 
@@ -404,11 +405,11 @@ var ginmiForm = function( mod ){
 // Tokei R init
 var initToker = function(){
 	closeBroseWindows( 1 );
-	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#bw_level1" ).html( data );});
-	document.getElementById( "bw_level1" ).style.display = 'block';
+	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L1" ).style.display = 'block';
 };
 
 var tokerForm = function( mod ){
-	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#bw_level2" ).html( data );});
-	document.getElementById( "bw_level2" ).style.display = 'block';
+	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };

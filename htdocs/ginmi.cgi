@@ -1,17 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser nutrition assessment tools 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20190910, 0.00, start
+#Nutrition browser 2020 nutrition assessment tools 0.00b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '/var/www/nb-soul.rb'
+require '../nb2020-soul'
 
 
 #==============================================================================
@@ -28,20 +23,20 @@ script = 'ginmi'
 #### 初期画面
 def init( lp )
 	html = <<-"HTML"
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'bmi' )">#{lp[1]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'kaupi' )">#{lp[2]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'laureli' )">#{lp[3]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="ginmiForm( 'obesity' )">#{lp[4]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ref' )">#{lp[5]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hn' )">#{lp[6]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-hb' )">#{lp[7]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-ath' )">#{lp[8]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'energy-mets' )">#{lp[9]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'es-height' )">#{lp[10]}</button>
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="ginmiForm( 'es-muscle' )">#{lp[11]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[12]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[13]}</button>
-	<button class='btn btn-sm btn-outline-light nav_button' onclick="">#{lp[14]}</button>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'bmi' )">#{lp[1]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'kaupi' )">#{lp[2]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'laureli' )">#{lp[3]}</span>
+	<span class='badge rounded-pill bg-light text-light' onclick="ginmiForm( 'obesity' )">#{lp[4]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-ref' )">#{lp[5]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-hn' )">#{lp[6]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-hb' )">#{lp[7]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-ath' )">#{lp[8]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-mets' )">#{lp[9]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'es-height' )">#{lp[10]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'es-muscle' )">#{lp[11]}</span>
+	<span class='badge rounded-pill bg-light text-light' onclick="">#{lp[12]}</span>
+	<span class='badge rounded-pill bg-light text-light' onclick="">#{lp[13]}</span>
+	<span class='badge rounded-pill bg-light text-light' onclick="">#{lp[14]}</span>
 HTML
 
 	return html
@@ -51,17 +46,15 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-cgi = CGI.new
-
 html_init( nil )
 
-user = User.new( cgi )
+user = User.new( @cgi )
 user.debug if @debug
-lp = user.language( script )
+lp = user.load_lp( script )
 
 
 #### Getting POST
-mod = cgi['mod']
+mod = @cgi['mod']
 if @debug
 	puts "mod:#{mod}<br>\n"
 	puts "<hr>\n"
@@ -74,7 +67,7 @@ if mod == ''
 	html = init( lp )
 else
 	require "#{$HTDOCS_PATH}/ginmi_/mod_#{mod}.rb"
-	html = ginmi_module( cgi, user )
+	html = ginmi_module( @cgi, user )
 end
 html << "</div>"
 
