@@ -76,7 +76,7 @@ def html_head( interrupt, status, sub_title )
   <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
 
 <!-- Jquery -->
-  <script type="text/javascript" src="./jquery-3.5.1.min.js"></script>
+  <script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
 <!-- bootstrap -->
   <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
   <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
