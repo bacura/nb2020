@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.00b
+#nb2020-dbi.rb 0.01b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -20,8 +20,10 @@ puts "CREATE DATABASE #{$MYSQL_DBR};"
 puts "CREATE USER '#{$MYSQL_USER}'@'#{$MYSQL_HOST}' IDENTIFIED BY '#{$MYSQL_PW}';"
 puts "GRANT ALL PRIVILEGES ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
 puts "GRANT ALL PRIVILEGES ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
-puts "FLUSH PRIVILEGES;"
+puts "FLUSH PRIVILEGES;\n\n"
 
+puts "Register the database and user as described above with administrator privileges."
+puts "If you have already registered, skip to the next step.\n\n"
 puts "[Enter]"
 gets.chomp
 #==============================================================================
@@ -245,7 +247,7 @@ def dic_init()
 			$DB.query( sql_query_dic )
 		end
 
-		alias_hash = Hash::new
+
 		query = 'SELECT * FROM fct;'
 		res = $DB.query( query )
 		res.each do |e|
@@ -680,7 +682,6 @@ def fcs_init()
 	if res.first
 		puts 'fcs already exists.'
 	else
-#		query = 'CREATE TABLE fcs ( code VARCHAR(32),name VARCHAR(64),user VARCHAR(32),ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLMF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8), period SAMLLINT UNSIGNED);'
 		query = 'CREATE TABLE fcs ( code VARCHAR(32),name VARCHAR(64),user VARCHAR(32),ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLMF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8));'
 		$DB.query( query )
 		puts 'fcs table has been created.'
@@ -695,10 +696,142 @@ def fcz_init()
 	if res.first
 		puts 'fcz already exists.'
 	else
-	# テーブル作成
 		query = 'CREATE TABLE fcz ( code VARCHAR(32), user VARCHAR(32),ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLMF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8), someb VARCHAR(3), somel VARCHAR(3), somed VARCHAR(3), somes VARCHAR(3));'
 		$DB.query( query )
 		puts 'fcz table has been created.'
+	end
+end
+
+
+#### Making METs standard table for koyomi.
+def metst_init()
+	query = "SHOW TABLES LIKE 'metst';"
+	res = $DB.query( query )
+	if res.first
+		puts 'metst already exists.'
+	else
+		query = 'CREATE TABLE metst (code VARCHAR(5), mets VARCHAR(4), heading VARCHAR(32), sub_heading VARCHAR(32), active VARCHAR(100));'
+		$DB.query( query )
+
+		f = open( "nb2020-mets.txt", 'r' )
+		f.each_line do |l|
+			t = l.chomp
+			a = t.split( "\t" )
+			query = "INSERT INTO metst set code='#{a[0]}', mets='#{a[1]}', heading='#{a[2]}', sub_heading='#{a[3]}', active='#{a[4]}';"
+			$DB.query( query )
+		end
+		f.close
+		puts 'metst table has been created.'
+	end
+end
+
+
+#### Making METs record table for koyomi.
+def mets_init()
+	query = "SHOW TABLES LIKE 'mets';"
+	res = $DB.query( query )
+	if res.first
+		puts 'mets already exists.'
+	else
+		query = 'CREATE TABLE mets (user VARCHAR(32), name VARCHAR(64), mets VARCHAR(1000), metsv VARCHAR(6));'
+		$DB.query( query )
+		puts 'mets table has been created.'
+	end
+end
+
+
+#### Making reference BMI table for koyomi.
+def ref_bmi_init()
+	query = "SHOW TABLES LIKE 'ref_bmi';"
+	res = $DB.query( query )
+	if res.first
+		puts 'ref_bmi already exists.'
+	else
+		query = 'CREATE TABLE ref_bmi ( period_class VARCHAR(1), periods VARCHAR(2), periode VARCHAR(2), BMI_targetl VARCHAR(4), BMI_targetu VARCHAR(4));'
+		$DB.query( query )
+
+		ref_solid = []
+		f = open( 'ref2020-bmi.txt', 'r')
+		f.each_line do |e| ref_solid << e.chomp end
+		ref_solid.shift
+		ref_solid.each do |e|
+			a = e.split( "\t" )
+			query = "INSERT INTO ref_bmi set period_class='#{a[0]}', periods='#{a[1]}', periode='#{a[2]}', BMI_targetl='#{a[3]}', BMI_targetu='#{a[4]}';"
+			$DB.query( query )
+		end
+		puts 'ref_bmi table has been created.'
+	end
+end
+
+
+#### Making reference Physics table for koyomi.
+def ref_phys_init()
+	query = "SHOW TABLES LIKE 'ref_phys';"
+	res = $DB.query( query )
+	if res.first
+		puts 'ref_phys already exists.'
+	else
+		query = 'CREATE TABLE ref_phys ( sex VARCHAR(1), period_class VARCHAR(1), periods VARCHAR(2), periode VARCHAR(2), height VARCHAR(5), weight VARCHAR(5), height_unit VARCHAR(2), weight_unit VARCHAR(2));'
+		$DB.query( query )
+
+		ref_solid = []
+		f = open( 'ref2020-phys.txt', 'r')
+		f.each_line do |e| ref_solid << e.chomp end
+		ref_solid.shift
+		ref_solid.each do |e|
+			a = e.split( "\t" )
+			query = "INSERT INTO ref_phys set sex='#{a[0]}', period_class='#{a[1]}', periods='#{a[2]}', periode='#{a[3]}', height='#{a[4]}', weight='#{a[5]}', height_unit='#{a[6]}', weight_unit='#{a[7]}';"
+			$DB.query( query )
+		end
+		puts 'ref_phys table has been created.'
+	end
+end
+
+
+#### Making reference EER table for koyomi.
+def ref_eer_init()
+	query = "SHOW TABLES LIKE 'ref_eer';"
+	res = $DB.query( query )
+	if res.first
+		puts 'ref_eer already exists.'
+	else
+		query = 'CREATE TABLE ref_eer ( sex VARCHAR(1), period_class VARCHAR(1), periods VARCHAR(2), periode VARCHAR(2), pal1 VARCHAR(4), pal2 VARCHAR(4), pal3 VARCHAR(4), unit VARCHAR(8));'
+		$DB.query( query )
+
+		ref_solid = []
+		f = open( 'ref2020-eer.txt', 'r')
+		f.each_line do |e| ref_solid << e.chomp end
+		ref_solid.shift
+		ref_solid.each do |e|
+			a = e.split( "\t" )
+			query = "INSERT INTO ref_eer set sex='#{a[0]}', period_class='#{a[1]}', periods='#{a[2]}', periode='#{a[3]}', pal1='#{a[4]}', pal2='#{a[5]}', pal3='#{a[6]}', unit='#{a[7]}';"
+			$DB.query( query )
+		end
+		puts 'ref_eer table has been created.'
+	end
+end
+
+
+#### Making reference intake table for koyomi.
+def ref_intake_init()
+	query = "SHOW TABLES LIKE 'ref_intake';"
+	res = $DB.query( query )
+	if res.first
+		puts 'ref_intake already exists.'
+	else
+		query = 'CREATE TABLE ref_intake ( name VARCHAR(10), sex VARCHAR(1), period_class VARCHAR(1), periods VARCHAR(2), periode VARCHAR(2), EAR VARCHAR(4), RDA VARCHAR(4), AI VARCHAR(4), UL VARCHAR(4), unit VARCHAR(10), DG_min VARCHAR(4), DG_max VARCHAR(4), DG_unit VARCHAR(10));'
+		$DB.query( query )
+
+		ref_solid = []
+		f = open( 'ref2020-intake.txt', 'r')
+		f.each_line do |e| ref_solid << e.chomp end
+		ref_solid.shift
+		ref_solid.each do |e|
+			a = e.split( "\t" )
+			query = "INSERT INTO ref_intake set name='#{a[0]}', sex='#{a[1]}', period_class='#{a[2]}', periods='#{a[3]}', periode='#{a[4]}', EAR='#{a[5]}', RDA='#{a[6]}', AI='#{a[7]}', UL='#{a[8]}', unit='#{a[9]}', DG_min='#{a[10]}', DG_max='#{a[11]}', DG_unit='#{a[12]}';"
+			$DB.query( query )
+		end
+		puts 'ref_intake table has been created.'
 	end
 end
 
@@ -712,31 +845,6 @@ def bio_init()
 end
 
 
-#### METs標準テーブルの作成
-def metst_init()
-	puts 'METs基準テーブルの作成'
-	# テーブル作成
-	query = 'CREATE TABLE metst (code VARCHAR(5), mets VARCHAR(4), heading VARCHAR(32), sub_heading VARCHAR(32), active VARCHAR(100));'
-	$DB.query( query )
-
-	f = open( "mets_utf8.txt", 'r' )
-	f.each_line do |l|
-		t = l.chomp
-		a = t.split( "\t" )
-		query = "INSERT INTO metst set code='#{a[0]}', mets='#{a[1]}', heading='#{a[2]}', sub_heading='#{a[3]}', active='#{a[4]}';"
-		$DB.query( query )
-	end
-	f.close
-end
-
-#### METsテーブルの作成
-def mets_init()
-	puts 'METsテーブルの作成'
-	# テーブル作成
-	query = 'CREATE TABLE mets (user VARCHAR(32), name VARCHAR(64), mets VARCHAR(1000), metsv VARCHAR(6));'
-	$DB.query( query )
-end
-
 #### 料理教室予約テーブルの作成
 def schoolk_init()
 	puts 'school koyomiテーブルの作成'
@@ -745,37 +853,6 @@ def schoolk_init()
 	$DB.query( query )
 end
 
-
-#### 基準BMIテーブルの作成
-#def standard_init()
-#	puts '基準BMIテーブルの作成'
-
-#	standard_solid = []
-#	f = open( 'standard.txt', 'r')
-#	f.each_line do |e| standard_solid << e.chomp end
-
-	# カラム追加
-#	column_names = standard_solid.shift.split( "\t" )
-#	column_type = standard_solid.shift.split( "\t" )
-#	column_names.size.times do |c|
-#		query = "ALTER TABLE standard add #{column_names[c]} #{column_type[c]};"
-#		$DB.query( query )
-#	end
-
-	# データのセット
-#	standard_solid.each do |e|
-#		query = 'INSERT INTO standard SET '
-#		a = e.split( "\t" )
-#		c = 0
-#		e.each do |ee|
-#			query << "#{column_names[c]}='#{ee}',"
-#			c += 1
-#		end
-#		query.chop
-#		query << ';'
-#		$DB.query( query )
-#	end
-#end
 
 #==============================================================================
 $DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -818,12 +895,15 @@ koyomiex_init
 fcs_init()
 fcz_init()
 
-#standard_init()
+metst_init()
+mets_init()
+
+ref_bmi_init()
+ref_phys_init()
+ref_eer_init()
+ref_intake_init()
+
 #bio_init()
-#metst_init()
-#mets_init()
-
 #schoolk_init()
-
 
 $DB.close
