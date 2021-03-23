@@ -704,7 +704,7 @@ end
 
 
 #### Making METs standard table for koyomi.
-def metst_init()
+def metst_init( mets_file )
 	query = "SHOW TABLES LIKE 'metst';"
 	res = $DB.query( query )
 	if res.first
@@ -713,10 +713,10 @@ def metst_init()
 		query = 'CREATE TABLE metst (code VARCHAR(5), mets VARCHAR(4), heading VARCHAR(32), sub_heading VARCHAR(32), active VARCHAR(100));'
 		$DB.query( query )
 
-		f = open( "nb2020-mets.txt", 'r' )
+		f = open( mets_file, 'r' )
 		f.each_line do |l|
 			t = l.chomp
-			a = t.split( "\t" )
+			a = t.force_encoding( 'utf-8' ).split( "\t" )
 			query = "INSERT INTO metst set code='#{a[0]}', mets='#{a[1]}', heading='#{a[2]}', sub_heading='#{a[3]}', active='#{a[4]}';"
 			$DB.query( query )
 		end
@@ -741,7 +741,7 @@ end
 
 
 #### Making reference BMI table for koyomi.
-def ref_bmi_init()
+def ref_bmi_init( ref_bmi )
 	query = "SHOW TABLES LIKE 'ref_bmi';"
 	res = $DB.query( query )
 	if res.first
@@ -751,11 +751,11 @@ def ref_bmi_init()
 		$DB.query( query )
 
 		ref_solid = []
-		f = open( 'ref2020-bmi.txt', 'r')
+		f = open( ref_bmi, 'r')
 		f.each_line do |e| ref_solid << e.chomp end
 		ref_solid.shift
 		ref_solid.each do |e|
-			a = e.split( "\t" )
+			a = e.force_encoding( 'utf-8' ).split( "\t" )
 			query = "INSERT INTO ref_bmi set period_class='#{a[0]}', periods='#{a[1]}', periode='#{a[2]}', BMI_targetl='#{a[3]}', BMI_targetu='#{a[4]}';"
 			$DB.query( query )
 		end
@@ -765,7 +765,7 @@ end
 
 
 #### Making reference Physics table for koyomi.
-def ref_phys_init()
+def ref_phys_init( ref_phys )
 	query = "SHOW TABLES LIKE 'ref_phys';"
 	res = $DB.query( query )
 	if res.first
@@ -775,11 +775,11 @@ def ref_phys_init()
 		$DB.query( query )
 
 		ref_solid = []
-		f = open( 'ref2020-phys.txt', 'r')
+		f = open( ref_phys, 'r')
 		f.each_line do |e| ref_solid << e.chomp end
 		ref_solid.shift
 		ref_solid.each do |e|
-			a = e.split( "\t" )
+			a = e.force_encoding( 'utf-8' ).split( "\t" )
 			query = "INSERT INTO ref_phys set sex='#{a[0]}', period_class='#{a[1]}', periods='#{a[2]}', periode='#{a[3]}', height='#{a[4]}', weight='#{a[5]}', height_unit='#{a[6]}', weight_unit='#{a[7]}';"
 			$DB.query( query )
 		end
@@ -789,7 +789,7 @@ end
 
 
 #### Making reference EER table for koyomi.
-def ref_eer_init()
+def ref_eer_init( ref_eer )
 	query = "SHOW TABLES LIKE 'ref_eer';"
 	res = $DB.query( query )
 	if res.first
@@ -799,11 +799,11 @@ def ref_eer_init()
 		$DB.query( query )
 
 		ref_solid = []
-		f = open( 'ref2020-eer.txt', 'r')
+		f = open( ref_eer, 'r')
 		f.each_line do |e| ref_solid << e.chomp end
 		ref_solid.shift
 		ref_solid.each do |e|
-			a = e.split( "\t" )
+			a = e.force_encoding( 'utf-8' ).split( "\t" )
 			query = "INSERT INTO ref_eer set sex='#{a[0]}', period_class='#{a[1]}', periods='#{a[2]}', periode='#{a[3]}', pal1='#{a[4]}', pal2='#{a[5]}', pal3='#{a[6]}', unit='#{a[7]}';"
 			$DB.query( query )
 		end
@@ -813,7 +813,7 @@ end
 
 
 #### Making reference intake table for koyomi.
-def ref_intake_init()
+def ref_intake_init( ref_intake )
 	query = "SHOW TABLES LIKE 'ref_intake';"
 	res = $DB.query( query )
 	if res.first
@@ -823,11 +823,11 @@ def ref_intake_init()
 		$DB.query( query )
 
 		ref_solid = []
-		f = open( 'ref2020-intake.txt', 'r')
+		f = open( ref_intake, 'r')
 		f.each_line do |e| ref_solid << e.chomp end
 		ref_solid.shift
 		ref_solid.each do |e|
-			a = e.split( "\t" )
+			a = e.force_encoding( 'utf-8' ).split( "\t" )
 			query = "INSERT INTO ref_intake set name='#{a[0]}', sex='#{a[1]}', period_class='#{a[2]}', periods='#{a[3]}', periode='#{a[4]}', EAR='#{a[5]}', RDA='#{a[6]}', AI='#{a[7]}', UL='#{a[8]}', unit='#{a[9]}', DG_min='#{a[10]}', DG_max='#{a[11]}', DG_unit='#{a[12]}';"
 			$DB.query( query )
 		end
@@ -861,6 +861,11 @@ source_file = '20201225-mxt_kagsei-mext_01110_012_clean.txt'
 gycv_file = 'nb2020-gycv.txt'
 shun_file = 'nb2020-shun.txt'
 unit_file = 'nb2020-unit.txt'
+mets_file = 'nb2020-mets.txt'
+ref_bmi = 'ref2020-bmi.txt'
+ref_phys = 'ref2020-phys.txt'
+ref_eer = 'ref2020-eer.txt'
+ref_intake = 'ref2020-intake.txt'
 
 #==============================================================================
 
@@ -895,13 +900,13 @@ koyomiex_init
 fcs_init()
 fcz_init()
 
-metst_init()
+metst_init( mets_file )
 mets_init()
 
-ref_bmi_init()
-ref_phys_init()
-ref_eer_init()
-ref_intake_init()
+ref_bmi_init( ref_bmi )
+ref_phys_init( ref_phys )
+ref_eer_init( ref_eer )
+ref_intake_init( ref_intake )
 
 #bio_init()
 #schoolk_init()
