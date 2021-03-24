@@ -217,13 +217,15 @@ html_cost << '</select>'
 
 # photo upload form
 form_photo = ''
-if recipe.code != ''
 	form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
 	form_photo << '<div class="input-group input-group-sm">'
 	form_photo << "<label class='input-group-text'>#{lp[13]}</label>"
-	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{code}' )\">"
+	if recipe.code == nil
+		form_photo << "<input type='file' class='form-control' DISABLED>"
+	else
+		form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{code}', '#photo_form' )\">"
+	end
 	form_photo << '</form></div>'
-end
 
 
 #### HTML FORM recipe
