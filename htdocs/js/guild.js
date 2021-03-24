@@ -22,7 +22,7 @@ var changeKoyomi = function(){
 var freezeKoyomi = function( dd ){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
 	var freeze_check = document.getElementById( "freeze_check" + dd ).checked ;
-	$.post( "koyomi.cgi", { command:'freeze', yyyy_mm:yyyy, dd, freeze_check:freeze_check }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "koyomi.cgi", { command:'freeze', yyyy_mm:yyyy_mm, dd, freeze_check:freeze_check }, function( data ){ $( "#L1" ).html( data );});
 };
 
 // Koyomi freeze all
