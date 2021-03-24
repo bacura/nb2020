@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.00b
+#Nutrition browser 2020 soul 0.01b
 
 #==============================================================================
 # LIBRARY
@@ -11,19 +11,18 @@ require 'securerandom'
 #==============================================================================
 #STATIC
 #==============================================================================
-$GM = '****'
+$GM = 'gm'
 
 $SERVER_PATH = '/var/www'
-$HTDOCS_PATH = "#{$SERVER_PATH}/htdocs_nbt"
+$HTDOCS_PATH = "#{$SERVER_PATH}/nb2020/htdocs"
 $TMP_PATH = '/tmp'
 
 $COOKIE_UID = 'UID2020'
 $COOKIE_MID = 'MID2020'
 
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = '****'
-$MYSQL_USERR = '****'
-$MYSQL_PW = '####'
+$MYSQL_USER = 'user'
+$MYSQL_PW = 'password'
 $MYSQL_DB = 'nb2020'
 $MYSQL_DBR = 'rr'
 $MYSQL_TB_FCT = 'fct'
@@ -93,7 +92,8 @@ if uname != nil && uid != nil
 
 end
 
-require "#{$SERVER_PATH}/nb2020-soul-#{soul_language}"
+require "#{$HTDOCS_PATH}/../nb2020-soul-#{soul_language}"
+
 
 
 #==============================================================================
@@ -226,6 +226,8 @@ def num_opt( num, weight, mode, limit )
       return '-'
     elsif num == 'Tr'
       return 'Tr'
+    elsif num == '*'
+      return '*'
     else
       weight = weight / 100
       #weight_f = 1 if weight_f < 0
@@ -454,6 +456,7 @@ def convert_zero( t )
       t.to_s.sub!( ')', '' )
       t = 0 if t == '-'
       t = 0 if t == 'Tr'
+      t = 0 if t == '*'
 
   return t
 end
