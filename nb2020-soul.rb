@@ -8,6 +8,7 @@ require 'mysql2'
 require 'bigdecimal'
 require 'securerandom'
 
+
 #==============================================================================
 #STATIC
 #==============================================================================
@@ -523,12 +524,31 @@ def selected( s, e, n )
   return a
 end
 
+
 #### for select 廃止予定
 def selected_( a, b )
   s = ''
   s = 'SELECTED' if a == b
 
   return s
+end
+
+
+#### Photos
+def photos( user, code, del_icon, tn_size )
+  r = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
+
+  html = "<div class='row'>"
+  r.each do |e|
+    html << "<div class='col'>"
+    html << "<span onclick=\"photoDel( '#{code}', '#{e}' )\">#{del_icon}</span><br>"
+    html << "<img src='#{$PHOTO}/#{e}-tn.jpg' width='#{tn_size}px' class='img-thumbnail'>"
+    html << "</div>"
+  end
+  html << "</div>"
+  html = 'No photo' if r.size == 0
+
+  return html
 end
 
 
@@ -804,6 +824,11 @@ class Recipe
     @time = cgi['time'].to_i
     @cost = cgi['cost'].to_i
     @protocol = cgi['protocol']
+
+    # excepting for tags
+    @protocol.gsub!( '<', '&lt;')
+    @protocol.gsub!( '>', '&gt;')
+    @protocol.gsub!( ';', '；')
   end
 
   def load_db( code, mode )
@@ -957,6 +982,11 @@ class Menu
     @label = cgi['label'].to_s
     @new_label = cgi['new_label'].to_s
     @memo = cgi['memo'].to_s
+
+    # excepting for tags
+    @memo.gsub!( '<', '&lt;')
+    @memo.gsub!( '>', '&gt;')
+    @memo.gsub!( ';', '；')
   end
 
   def load_db( code, mode )
@@ -1024,6 +1054,75 @@ class Menu
     puts "new_label:#{@new_label}<br>"
     puts "memo:#{@memo}<br>"
     puts "media:#{@media}<br>"
+    puts "<hr>"
+  end
+end
+
+class Media
+  attr_accessor :user, :code, :mcode, :series, :origin, :date
+
+  def initialize( user )
+    @code = nil
+    @user = user.name
+    @mcode = nil
+    @origin = nil
+    @date = nil
+    @series = []
+  end
+
+  def load_db( mcode )
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' AND mcode='#{mcode}';" )
+    db.close
+
+    if res.first
+      @mcode = res['mcode'].to_s
+      @code = res['code'].to_s
+      @origin = res['origin'].to_s
+      @date = res['date']
+    else
+      puts "<span class='error'>[Media load]ERROR!!<br>"
+      puts "mcode:#{@mcode}</span><br>"
+    end
+
+  end
+
+  def save_db()
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', date='#{@date}'" )
+    db.close
+  end
+
+  def delete_db()
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and mcode='#{@mcode}';" )
+    db.close
+  end
+
+  def load_series()
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' AND code='#{@code}';" )
+    db.close
+    res.each do |e| @series << e['mcode'] end
+
+    return @series
+  end
+
+  def delete_series()
+    if code != nil
+      db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+      db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" )
+      db.close
+    end
+  end
+
+  def debug()
+    puts "user:#{@user}<br>"
+    puts "code:#{@code}<br>"
+    puts "mcode:#{@mcode}<br>"
+    puts "origin:#{@origin}<br>"
+    puts "date:#{@date}<br>"
+    puts "series:#{@series}<br>"
     puts "<hr>"
   end
 end

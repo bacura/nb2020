@@ -500,10 +500,11 @@ var configForm = function( mod ){
 // Photo //////////////////////////////////////////////////////////////////////////
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-var photoSave = function( code, base ){
-	form_data = new FormData( $( '#photo_form' )[0] );
+var photoSave = function( code, form, base ){
+	form_data = new FormData( $( form )[0] );
 	form_data.append( 'command', 'upload' );
 	form_data.append( 'code', code );
+	form_data.append( 'base', base );
 
 	$.ajax( "photo.cgi",
 		{
@@ -519,6 +520,6 @@ var photoSave = function( code, base ){
 
 
 // delete photo from media db
-var photoDel = function( code, mcode ){
-	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode }, function( data ){ $( '#L3' ).html( data );});
+var photoDel = function( code, mcode, base ){
+	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:base }, function( data ){ $( '#L3' ).html( data );});
 };

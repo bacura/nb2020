@@ -1,4 +1,4 @@
-#Nutrition browser 2020 pseudo food 0.00b
+#Nutrition browser 2020 photo manager 0.10b
 
 #==============================================================================
 # OVERVIEW
@@ -9,40 +9,39 @@
 #==============================================================================
 # DEPENDENCE
 #==============================================================================
-nb-soul.rb
+nb2020-soul
+fileutils
 
 
 #==============================================================================
 # ITEM FROM GET / POST
 #==============================================================================
 #POST
-command.to_i	#コマンド
-food_key
-code
-food_name
-food_group
-food_weight
-class1
-class2
-class3
-tag1
-tag2
-tag3
-tag4
-tag5
-
+command.to_s	# コマンド
+base.to_s		# 送信元スクリプト
+code.to_s		# 紐付けコード
+mcode.to_s		# メディアコード
+photo.mp		# 写真データ
 
 #==============================================================================
 # TRANSITION
 #==============================================================================
+// レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
+photoSave( code, form, base ){
+	form_data = new FormData( $( form )[0] );
+	form_data.append( 'command', 'upload' );
+	form_data.append( 'code', code );
+	form_data.append( 'base', base );
 
-core.js/pseudoAdd( com, food_key, code ) -> pseudo.cgi{ command:com, food_key:food_key, code:code }
+->	photo.cgi { type: 'post', processData: false, contentType: false, data: form_data, dataype: 'html' }
 
-// 疑似食品を登録
-core.js/pseudoSave( code ) -> pseudo.cgi
+
+// delete photo from media db
+photoDel( code, mcode, base )	->	photo.cgi{ command:'delete', code:code, mcode:mcode, base:base }
 
 
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
 20210128	0.00b	βスタート
+20210325	0.10b	media classに対応させ、暦からも利用可能にした。

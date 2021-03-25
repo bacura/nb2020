@@ -145,7 +145,6 @@ recipe_list.each do |e|
 	c += 1
 end
 
-
 html << "	<br>"
 html << "	<div class='row'>"
 html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuEdit( 'view', '#{meal.code}' )\">#{lp[7]}</button></div>"

@@ -73,6 +73,35 @@ var editKoyomiR = function( yyyy, mm ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
+// koyomi photo //////////////////////////////////////////////////////////////////////////
+
+// レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
+var koyomiPhotoSave = function( code, form ){
+	document.getElementById( "L3" ).style.display = 'block';
+	form_data = new FormData( $( form )[0] );
+	form_data.append( 'command', 'upload' );
+	form_data.append( 'code', code );
+
+	$.ajax( "photo.cgi",
+		{
+			type: 'post',
+			processData: false,
+			contentType: false,
+			data: form_data,
+			dataype: 'html',
+			success: function( data ){ $( '#L3' ).html( data ); }
+		}
+	);
+};
+
+
+// delete photo from media db
+var koyomiPhotoDel = function( code, mcode ){
+	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode }, function( data ){});
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
 // Koyomi calc //////////////////////////////////////////////////////////////
 
 // Koyomi calc

@@ -1,12 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.00b
+#Nutrition browser 2020 recipe editor 0.01b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require '../nb2020-soul'
-require 'fileutils'
 
 
 #==============================================================================
@@ -217,15 +216,15 @@ html_cost << '</select>'
 
 # photo upload form
 form_photo = ''
-	form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
-	form_photo << '<div class="input-group input-group-sm">'
-	form_photo << "<label class='input-group-text'>#{lp[13]}</label>"
-	if recipe.code == nil
-		form_photo << "<input type='file' class='form-control' DISABLED>"
-	else
-		form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{code}', '#photo_form' )\">"
-	end
-	form_photo << '</form></div>'
+form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
+form_photo << '<div class="input-group input-group-sm">'
+form_photo << "<label class='input-group-text'>#{lp[13]}</label>"
+if recipe.code == nil
+	form_photo << "<input type='file' class='form-control' DISABLED>"
+else
+	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{recipe.code}', '#photo_form', 'recipe' )\">"
+end
+form_photo << '</form></div>'
 
 
 #### HTML FORM recipe

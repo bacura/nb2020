@@ -410,8 +410,17 @@ disabled = 'DISABLED' if freeze_flag == 1
 	form_photo[c] = "<form method='post' enctype='multipart/form-data' id='photo_form#{c}'>"
 	form_photo[c] << '<div class="input-group input-group-sm">'
 	form_photo[c] << "<label class='input-group-text'>#{lp[26]}</label>"
-	form_photo[c] << "<input type='file' class='form-control' name='photo#{c}' onchange=\"photoSave( '#{yyyy}-#{mm}-#{dd}-#{tdiv}' )\" #{disabled}></div>"
+	form_photo[c] << "<input type='file' class='form-control' name='photo#{c}' onchange=\"koyomiPhotoSave( '#{yyyy}-#{mm}-#{dd}-#{tdiv}', '#photo_form#{c}' )\" #{disabled}></div>"
 	form_photo[c] << '</form>'
+end
+
+
+# photo frame
+photo_frame = []
+disabled = ''
+disabled = 'DISABLED' if freeze_flag == 1
+0.upto( 3 ) do |c|
+	photo_frame[c] = photos( user, "#{yyyy}-#{mm}-#{dd}-#{c}", 'del', 200 )
 end
 
 
@@ -456,6 +465,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-5'>
 			#{form_photo[0]}
+			#{photo_frame[0]}
 		</div>
 	</div>
 	<hr>
@@ -470,6 +480,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-5'>
 			#{form_photo[1]}
+			#{photo_frame[1]}
 		</div>
 	</div>
 	<hr>
@@ -484,6 +495,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-5'>
 			#{form_photo[2]}
+			#{photo_frame[2]}
 		</div>
 	</div>
 	<hr>
@@ -498,10 +510,12 @@ html = <<-"HTML"
 		</div>
 		<div class='col-5'>
 			#{form_photo[3]}
+			#{photo_frame[3]}
 		</div>
 	</div>
 	<br><br>
 	<div class='row'>
+		<div class='col-1'><h5>#{lp[28]}</h5></div>
 		#{memo_html}
 	</div>
 </div>

@@ -42,51 +42,43 @@ end
 
 
 menu = Menu.new( user.name )
-meal = Meal.new( user.name )
-meal.debug if @debug
+menu.debug if @debug
 
 
 case command
 when 'view'
 	puts 'Displaing menu<br>' if @debug
-	if code == ''
-		# 献立データベースの仮登録チェック
-  		r = mdb( "SELECT code FROM #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND name='' AND code!='';", false, @debug )
-  		if r.first
-			meal.load_menu( r.first['code'] )
-  		else
-		  	# 献立データベースに仮登録
-			menu.code = generate_code( user.name, 'm' )
-			menu.insert_db
- 	 		meal.code = menu.code
-  			meal.update_db
-  		end
-  	end
-	menu.load_db( meal.code, true )
+	menu.load_db( code, true ) unless code == ''
 
 when 'save'
 	puts 'Saving menu<br>' if @debug
 	menu.load_cgi( @cgi )
-	menu.label = menu.new_label unless menu.new_label == ''
-	menu.protect = 1 if menu.public == 1
 
-	menu_old = Menu.new( user.name )
-	menu_old.load_db( code, true )
-
-	if menu.name != menu_old.name
-		# 名前が一致しなければ、新規コードとメニューを登録
-		# バグに近い仕様：名前を変えて新規コードになるけど、写真はコピーされない
+	r = mdb( "SELECT * from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
+	# Inserting new menu
+	if r.first['name'] == ''
 		menu.code = generate_code( user.name, 'm' )
-		menu.insert_db
-  		meal.code = menu.code
-  		meal.name = menu.name
+		menu.meal = r.first['meal']
+  		menu.insert_db
+
+	# Updating menu
+	else
+		pre_menu = Menu.new( user.name )
+		pre_menu.code = menu.code
+		pre_menu.load_db( code, true )
+		menu.meal = r.first['meal']
+
+		if menu.name != pre_menu.name
+			# 名前が一致しなければ、新規コードとメニューを登録
+			# バグに近い仕様：名前を変えて新規コードになるけど、写真はコピーされない
+			menu.code = generate_code( user.name, 'm' )
+			menu.insert_db
+			mdb( "UPDATE #{$MYSQL_TB_MEAL} SET name='#{menu.name}', code='#{menu.code}', protect='#{recipe.protect}' WHERE user='#{user.name}';", false, @debug )
+		end
 	end
-	# Updating menu & meal
-	menu.meal = meal.meal
+	# Updating menu
 	menu.debug if @debug
 	menu.update_db
-	meal.debug
-  	meal.update_db
 end
 
 
@@ -98,7 +90,6 @@ label_list.uniq!
 
 html_label = '<select class="form-select form-select-sm" id="label">'
 html_label << "<option value='#{lp[2]}'>#{lp[2]}</option>"
-puts 'vv' if @debug
 
 label_list.each do |e|
 	selected = ''
@@ -122,13 +113,15 @@ html_label << '</select>'
 
 puts 'Photo upload form<br>' if @debug
 form_photo = ''
-if code != ''
-	form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
-	form_photo << '<div class="input-group input-group-sm">'
-	form_photo << "<label class='input-group-text'>#{lp[12]}</label>"
-	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{code}' )\">"
-	form_photo << '</form></div>'
+form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
+form_photo << '<div class="input-group input-group-sm">'
+form_photo << "<label class='input-group-text'>#{lp[12]}</label>"
+if menu.code == nil
+	form_photo << "<input type='file' class='form-control' DISABLED>"
+else
+	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{menu.code}', '#photo_form', 'menu' )\">"
 end
+form_photo << '</form></div>'
 
 
 puts 'HTML<br>' if @debug
