@@ -13,7 +13,7 @@ require 'fileutils'
 #STATIC
 #==============================================================================
 script = 'photo'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -90,7 +90,6 @@ when 'upload'
 	media.code = code
 	media.date = @datetime
 
-
 	media.origin = @cgi['photo'].original_filename
 	photo_type = @cgi['photo'].content_type
 	photo_body = @cgi['photo'].read
@@ -103,6 +102,7 @@ when 'upload'
 	end
 
 	if photo_size < $SIZE_MAX && ( photo_type == 'image/jpeg' || photo_type == 'image/jpg' )
+		puts 'Image magick<br>' if @debug
 		require 'nkf'
 		require 'rmagick'
 
