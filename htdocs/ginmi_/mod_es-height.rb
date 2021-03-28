@@ -110,8 +110,8 @@ var Calculate = function(){
 	var sex = document.getElementById( "sex" ).value;
 	var age = document.getElementById( "age" ).value;
 	var knee_height = document.getElementById( "knee_height" ).value;
-	$.post( "ginmi.cgi", { mod:"es-height", command:'result', age:age, sex:sex, knee_height:knee_height }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:"es-height", command:'result', age:age, sex:sex, knee_height:knee_height }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 </script>

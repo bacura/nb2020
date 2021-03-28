@@ -214,12 +214,12 @@ var ginmiEnergyHNres = function(){
 	var height = document.getElementById( "height" ).value;
 	var weight = document.getElementById( "weight" ).value;
 	var pal = document.getElementById( "pal" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-hn", command:'result', age:age, sex:sex, height:height, weight:weight, pal:pal }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:"energy-hn", command:'result', age:age, sex:sex, height:height, weight:weight, pal:pal }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 var ginmiEnergyHNkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-hn", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"energy-hn", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
 };
 
 </script>

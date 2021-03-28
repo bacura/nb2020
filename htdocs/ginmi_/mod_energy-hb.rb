@@ -259,12 +259,12 @@ var ginmiEnergyHBres = function(){
 	var active = document.getElementById( "active" ).value;
 	var stress = document.getElementById( "stress" ).value;
 	var btm = document.getElementById( "btm" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-hb", command:'result', sex:sex, age:age, height:height, weight:weight, active:active, stress:stress, btm:btm }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:"energy-hb", command:'result', sex:sex, age:age, height:height, weight:weight, active:active, stress:stress, btm:btm }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 var ginmiEnergyHBkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-hb", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"energy-hb", command:'koyomiex' }, function( data ){ $( "#L2" ).html( data );});
 };
 
 </script>

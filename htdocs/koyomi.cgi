@@ -486,10 +486,10 @@ html = <<-"HTML"
 	<thead>
     	<tr>
      		<th align='center'></th>
-     		<th align='center'>#{lp[12]}</th>
-     		<th align='center'>#{lp[13]}</th>
-     		<th align='center'>#{lp[14]}</th>
-     		<th align='center'>#{lp[15]}</th>
+     		<th align='center' width='15%'>#{lp[12]}</th>
+     		<th align='center' width='15%'>#{lp[13]}</th>
+     		<th align='center' width='15%'>#{lp[14]}</th>
+     		<th align='center' width='15%'>#{lp[15]}</th>
      		<th align='center'>#{lp[16]}</th>
      		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll()" #{freeze_all_checked}>&nbsp;#{lp[17]}</th>
     	</tr>

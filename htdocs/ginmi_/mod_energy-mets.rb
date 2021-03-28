@@ -56,7 +56,9 @@ def ginmi_module( cgi, user )
 		total_mm = 0.0
 		total_hm = ''
 		total_energy = 0
+		total_energya = 0
 		total_mets = BigDecimal( 0 )
+		total_metsa = BigDecimal( 0 )
 		a = mets.split( "\t" )
 		a.size.times do |c|
 			aa = a[c].split( ':' )
@@ -79,13 +81,20 @@ def ginmi_module( cgi, user )
 		code_set.size.times do |c|
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_METST} WHERE code='#{code_set[c]}';", false, false )
 			if r.first
-				mets_table_html << '<tr>'
 				mets = BigDecimal( r.first['mets'] )
-				hh_ = sprintf( "%.3f", ( mm_set[c].to_f / 60 ).round(3).to_s )
+				metsa = BigDecimal( r.first['mets'] ) - 1
+
+				hh_ = sprintf( "%.3f", ( mm_set[c].to_f / 60 ).round( 3 ).to_s )
 				metsh = mets * mm_set[c].to_f / 60
-				metsh_ = sprintf( "%.3f", metsh.round(3).to_s )
+				metsha = metsa * mm_set[c].to_f / 60
+
+				metsh_ = sprintf( "%.3f", metsh.round( 3 ).to_s )
+				metsha_ = sprintf( "%.3f", metsha.round( 3 ).to_s )
+
 				total_mets += metsh
+				total_metsa += metsha
 				total_energy += ( metsh * weight.to_f * 1.05 )
+				total_energya += ( metsha * weight.to_f * 1.05 )
 				total_mm += mm_set[c]
 
 				h = mm_set[c].div( 60 )
@@ -106,6 +115,7 @@ def ginmi_module( cgi, user )
 				end
 				total_hm = "#{th}:#{tm}"
 
+				mets_table_html << '<tr>'
 				mets_table_html << "<td>#{r.first['code']}</td><td>#{r.first['active']}</td><td>#{mets.to_f}</td><td>#{hm} [#{total_hm}]</td><td>#{hh_}</td><td>#{metsh_}</td>"
 				mets_table_html << '</tr>'
 			end
@@ -125,6 +135,10 @@ def ginmi_module( cgi, user )
 			<div class='col-2'>#{total_energy.to_i} kcal</div>
 			<div class='col-1'>計算式</div>
 			<div class='col-5'>#{weight} * #{total_mets.to_f.round( 3 )} * 1.05</div>
+		</div>
+		<div class='row'>
+			<div class='col-2'>消費エネルギー (追加分)</div>
+			<div class='col-2'>#{total_energya.to_i} kcal</div>
 		</div>
 RESULT_HTML
 
@@ -302,7 +316,7 @@ def module_js()
 <script type='text/javascript'>
 
 var ginmiEnergyMETskex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"energy-mets", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
 };
 
 var ginmiEnergyMETs = function( select ){
@@ -310,14 +324,14 @@ var ginmiEnergyMETs = function( select ){
 	var heading = document.getElementById( "heading" ).value;
 	if( select == 'sub_heading'){
 		var sub_heading = document.getElementById( "sub_heading" ).value;
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading }, function( data ){ $( "#bw_level2" ).html( data );});
+		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading }, function( data ){ $( "#L1" ).html( data );});
 	} else if( select == 'active'){
 		var sub_heading = document.getElementById( "sub_heading" ).value;
 		var active = document.getElementById( "active" ).value;
-		displayVideo( active );
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading, active:active }, function( data ){ $( "#bw_level2" ).html( data );});
+		displayVIDEO( active );
+		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading, active:active }, function( data ){ $( "#L1" ).html( data );});
 	} else{
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading }, function( data ){ $( "#bw_level2" ).html( data );});
+		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading }, function( data ){ $( "#L1" ).html( data );});
 	}
 };
 
@@ -329,19 +343,19 @@ var ginmiEnergyMETsres = function(){
 	var history = document.getElementById( "history" ).value;
 
 	if( hh=='0' && mm=='0'){
-		displayVideo( 'Time! (>_<)' );
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'display', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#bw_level3" ).html( data );});
+		displayVIDEO( 'Time! (>_<)' );
+		$.post( "ginmi.cgi", { mod:"energy-mets", command:'display', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
 	}else{
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'result', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#bw_level3" ).html( data );});
+		$.post( "ginmi.cgi", { mod:"energy-mets", command:'result', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
 		setTimeout( ginmiEnergyMETs( 'active' ), 1000 );
 	}
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 var ginmiEnergyMETsreset = function(){
-	displayVideo( 'METs reset' );
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'reset' }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'none';
+	displayVIDEO( 'METs reset' );
+	$.post( "ginmi.cgi", { mod:"energy-mets", command:'reset' }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'none';
 };
 
 </script>

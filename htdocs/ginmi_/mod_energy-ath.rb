@@ -22,9 +22,7 @@ def ginmi_module( cgi, user )
 
 		#importing from config
 		r = mdb( "SELECT weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
-		if r.first
-			weight = r.first['weight'].to_f
-		end
+		weight = r.first['weight'].to_f if r.first
 
 		# inporting from koyomiex
 		if command == 'koyomiex' && r.first['koyomiex']
@@ -33,16 +31,12 @@ def ginmi_module( cgi, user )
 				aa = a[c].split( "\t" )
 				if aa[0] == '3'
 					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						weight = rr.first["item#{aa[0]}"].to_f
-					end
+					weight = rr.first["item#{aa[0]}"].to_f if rr.first
 				end
 
 				if aa[0] == '5'
 					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						body_fat = rr.first["item#{aa[0]}"].to_f
-					end
+					body_fat = rr.first["item#{aa[0]}"].to_f if rr.first
 				end
 			end
 		end
@@ -180,12 +174,12 @@ var ginmiEnergyAthres = function(){
 	var body_fat = document.getElementById( "body_fat" ).value;
 	var period = document.getElementById( "period" ).value;
 	var event = document.getElementById( "event" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-ath", command:'result', weight:weight, body_fat:body_fat, period:period, event:event }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:"energy-ath", command:'result', weight:weight, body_fat:body_fat, period:period, event:event }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 var ginmiEnergyAthkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-ath", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"energy-ath", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
 };
 
 </script>

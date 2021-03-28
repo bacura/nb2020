@@ -233,12 +233,12 @@ var ginmiEnergyRefres = function(){
 	var weight = document.getElementById( "weight" ).value;
 	var pal = document.getElementById( "pal" ).value;
 	var pregnancy = document.getElementById( "pregnancy" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-ref", command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:"energy-ref", command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 var ginmiEnergyRefkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-ref", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"energy-ref", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
 };
 
 </script>

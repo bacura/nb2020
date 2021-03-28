@@ -289,12 +289,12 @@ var ginmiBMIres = function(){
 	var age = document.getElementById( "age" ).value;
 	var height = document.getElementById( "height" ).value;
 	var weight = document.getElementById( "weight" ).value;
-	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 var ginmiBMIkex = function(){
-	$.post( "ginmi.cgi", { mod:"bmi", command:'koyomiex' }, function( data ){ $( "#bw_level2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"bmi", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
 };
 
 </script>

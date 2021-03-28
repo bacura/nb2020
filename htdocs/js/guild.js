@@ -415,9 +415,10 @@ var updateKoyomiex = function( dd, item_no, cell_id ){
 // Ginmi init
 var initGinmi = function(){
 	closeBroseWindows( 1 );
+	$.post( "ginmi.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
 	displayLINE( 'on' );
-	$.post( "ginmi.cgi", { mod:'' }, function( data ){ $( "#LINE" ).html( data );});
-	document.getElementById( "LINE" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L1" ).style.display = 'block';
 };
 
 var ginmiForm = function( mod ){

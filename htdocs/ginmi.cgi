@@ -20,8 +20,8 @@ script = 'ginmi'
 #DEFINITION
 #==============================================================================
 
-#### 初期画面
-def init( lp )
+#### line menu
+def line( lp )
 	html = <<-"HTML"
 	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'bmi' )">#{lp[1]}</span>
 	<span class='badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'kaupi' )">#{lp[2]}</span>
@@ -43,6 +43,11 @@ HTML
 end
 
 
+####
+def init( lp )
+	puts lp[15]
+end
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -63,7 +68,9 @@ end
 
 ####
 html = "<div class='container-fluid'>"
-if mod == ''
+if mod == 'line'
+	html = line( lp )
+elsif mod == ''
 	html = init( lp )
 else
 	require "#{$HTDOCS_PATH}/ginmi_/mod_#{mod}.rb"

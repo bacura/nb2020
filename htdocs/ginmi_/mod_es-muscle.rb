@@ -75,8 +75,8 @@ def module_js()
 var ginmiEsMuscleres = function(){
 	var ac = document.getElementById( "ac" ).value;
 	var tsf = document.getElementById( "tsf" ).value;
-	$.post( "ginmi.cgi", { mod:"es-muscle", command:'result', ac:ac, tsf:tsf }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:"es-muscle", command:'result', ac:ac, tsf:tsf }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 </script>

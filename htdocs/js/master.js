@@ -337,8 +337,8 @@ var deleteCategory = function( category, delete_check_no ){
 
 // List each pointer
 var listPointer = function( category ){
-	$.post( "gm-memory.cgi", { command:'list_pointer', category:category }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "gm-memory.cgi", { command:'list_pointer', category:category }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L1" ).style.display = 'block';
 };
 
 // New pointer form
@@ -358,7 +358,7 @@ var savePMemory = function( category, post_process ){
 		if( post_process == 'front'){
 			$.post( "gm-memory.cgi", { command:'save_pointer', memory:memory, category:category, pointer:pointer, rank:rank, post_process:post_process }, function( data ){ $( "#L2" ).html( data );});
 			$.post( "gm-memory.cgi", { command:'init' }, function( data ){ $( "#L1" ).html( data );});
-			document.getElementById( "L2" ).style.display = 'block';
+			document.getElementById( "L1" ).style.display = 'block';
 		}else{
 			$.post( "gm-memory.cgi", { command:'save_pointer', memory:memory, category:category, pointer:pointer, rank:rank, post_process:post_process }, function( data ){});
 		}
@@ -378,7 +378,7 @@ var movePMemory = function( category, pointer, post_process ){
 	if( post_process == 'front'){
 		$.post( "gm-memory.cgi", { command:'move_pointer', memory:memory, category:category, pointer:pointer, rank:rank, mvcategory:mvcategory }, function( data ){ $( "#L2" ).html( data );});
 		$.post( "gm-memory.cgi", { command:'init' }, function( data ){ $( "#L1" ).html( data );});
-		document.getElementById( "L2" ).style.display = 'block';
+		document.getElementById( "L1" ).style.display = 'block';
 	}else{
 		$.post( "gm-memory.cgi", { command:'move_pointer', memory:memory, category:category, pointer:pointer, rank:rank, mvcategory:mvcategory }, function( data ){});
 	}
@@ -393,7 +393,7 @@ var deletePMemory = function( category, pointer, post_process ){
 		if( post_process == 'front'){
 			$.post( "gm-memory.cgi", { command:'delete_pointer', category:category, pointer:pointer, post_process }, function( data ){ $( "#L2" ).html( data );});
 			$.post( "gm-memory.cgi", { command:'init' }, function( data ){ $( "#L1" ).html( data );});
-			document.getElementById( "L2" ).style.display = 'block';
+			document.getElementById( "L1" ).style.display = 'block';
 		}else{
 			$.post( "gm-memory.cgi", { command:'delete_pointer', category:category, pointer:pointer, post_process }, function( data ){});
 		}
