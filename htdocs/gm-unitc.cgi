@@ -184,6 +184,10 @@ html = <<-"HTML"
 		<div class='col-1' align='right'>#{lp[4]}</div>
 		<div class='col-11'><input type='text' class='form-control form-control-sm' id='notice' value='#{notice}'></div>
 	</div><br>
+
+	<div class='row'>
+		<div class='col' align='center'><button class='btn btn-outline-danger' type='button' onclick=\"updateUintc()\">#{lp[5]}</button></div>
+	</div>
 </div>
 <hr>
 #{lp[7]}<br>
