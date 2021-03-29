@@ -385,7 +385,8 @@ puts "Multi calc process<br>" if @debug
 			sub_query.chop!
 
 			rr = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
-			if rr.first && fzcode != ''
+			if sub_query == ''
+			elsif rr.first && fzcode != ''
 				puts "UPDATE(#{fzcode})<br>" if @debug
 				mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{sub_query} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
 				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
@@ -505,4 +506,4 @@ puts html
 
 
 #### Deleting Empty koyomi
-mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi='';", false, @debug )
+mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi IS NULL;", false, @debug )
