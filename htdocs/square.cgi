@@ -300,7 +300,7 @@ when 'fctb_l2'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<span onclick=\"pseudoAdd_LF( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
+	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>

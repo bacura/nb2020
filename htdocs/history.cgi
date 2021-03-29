@@ -147,16 +147,16 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col">
-			<h5>#{lp[27]}: #{sub_title}</h5>
+			<h5>#{lp[27]}: #{lp[1]}</h5>
 			<table class="table table-sm table-hover">
-			#{food_html_sg}
+				#{food_html_all}
 			</table>
 		</div>
 		<div class="col">
-			<h5>#{lp[27]}: #{lp[1]}</h5>
+			<h5>#{lp[27]}: #{sub_title}</h5>
 			<table class="table table-sm table-hover">
-			#{food_html_all}
-		</table>
+				#{food_html_sg}
+			</table>
 		</div>
 	</div>
 </div>
