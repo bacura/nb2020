@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.00b
+#Nutrition browser 2020 koyomi 0.01b
 
 
 #==============================================================================
@@ -102,7 +102,6 @@ class Nutrition_calc
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@uname}' AND code='#{fzcode}';", false, false )
 		if r.first
 			fct_start.upto( fct_end ) do |c| @results[@fct_item[c]] = BigDecimal( r.first[@fct_item[c]] ) end
-
 			return true
 		end
 
@@ -313,6 +312,7 @@ puts "Multi calc process<br>" if @debug
 		calc = Nutrition_calc.new( user.name, [], [], [], @fct_item, @fct_name, @fct_frct )
 		some_set = ''
 		fzcode = r.first['fzcode']
+
 		freeze_flag = false
 		r.each do |e|
 			break if freeze_flag
@@ -374,7 +374,7 @@ puts "Multi calc process<br>" if @debug
 		puts 'Start calculation<br>' if @debug
 		calc.calculate( @fct_start, @fct_end, @fct_frct, @fct_item )
 
-		puts 'freeze process<br>' if @debug
+		puts "freeze process:#{freeze_flag}<br>" if @debug
 		unless freeze_flag
 			sub_query = ''
 			calc.results.each do |k, v|
@@ -386,10 +386,12 @@ puts "Multi calc process<br>" if @debug
 
 			rr = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
 			if rr.first && fzcode != ''
+				puts "UPDATE(#{fzcode})<br>" if @debug
 				mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{sub_query} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
 				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-			elsif rr.first && fzcode == ''
+			else
 				new_fzcode = generate_code( user.name, 'z' )
+				puts "INSERT(#{new_fzcode})<br>" if @debug
 				mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET user='#{user.name}', code='#{new_fzcode}', #{sub_query};", false, @debug )
 				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{new_fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 			end
