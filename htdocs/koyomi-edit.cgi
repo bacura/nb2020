@@ -44,6 +44,7 @@ def meals( e, lp, uname, freeze_flag )
 		item_name = ''
 		onclick = ''
 		fix_copy_button = ''
+		recipe_button = ''
 		if aa[0] == '?-'
 			item_name = lp[21]
 		elsif aa[0] == '?--'
@@ -64,7 +65,7 @@ def meals( e, lp, uname, freeze_flag )
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
 				onclick = " onclick=\"modifysaveKoyomiFC( '#{aa[0]}', '#{origin}' )\"" if freeze_flag == 0
-				fix_copy_button = "<button class='btn btn-sm btn-primary' onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\">編</button>&nbsp;"
+				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\">#{lp[30]}</span>"
 			else
 				item_name = "Error: #{aa[0]}"
 				onclick = ''
@@ -73,6 +74,7 @@ def meals( e, lp, uname, freeze_flag )
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
 			item_name = rr.first['name']
 			onclick = " onclick=\"modifyKoyomi( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{aa[1]}', '#{aa[2]}', '#{c}' )\"" if freeze_flag == 0
+			recipe_button = "<span onclick=\"initCB( 'load', '#{aa[0]}' )\">#{lp[31]}</span>"
 		else
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U\d{5}/ =~ aa[0]
@@ -101,8 +103,18 @@ def meals( e, lp, uname, freeze_flag )
 
 		if freeze_flag == 0
 			mb_html << "<td>"
+			mb_html << "<div class='row'>"
+
+			mb_html << "	<div class='col-6'>"
 			mb_html << fix_copy_button unless fix_copy_button == ''
-			mb_html << "<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[0]}', '#{c}' )\">#{lp[27]}</span>"
+			mb_html << recipe_button unless recipe_button == ''
+			mb_html << "	</div>"
+
+			mb_html << "<div class='col-6'>"
+			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[0]}', '#{c}' )\">#{lp[27]}</span>"
+			mb_html << "</div>"
+
+			mb_html << "</div>"
 			mb_html << "</td>"
 		else
 			mb_html << "<td></td>"
