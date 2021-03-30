@@ -436,7 +436,7 @@ recipes.each do |e|
 	if recipe_count >= recipe_start && recipe_count <= recipe_end
 		recipe_html << '<tr style="font-size:medium;">'
 		if e.media[0] != nil
-			recipe_html << "<td><img src='#{$PHOTO}/#{e.media[0]}-tns.jpg'></a></td>"
+			recipe_html << "<td><a href='#{$PHOTO}/#{e.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{e.media[0]}-tns.jpg'></a></td>"
 		else
 			recipe_html << "<td>-</td>"
 		end

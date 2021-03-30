@@ -29,7 +29,7 @@ def view_series( user, code, del_icon, size )
 		media.series.each do |e|
 			puts "<div class='col'>"
 			puts "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{del_icon}</span><br>"
-			puts "<img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'>"
+			puts "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a>"
 			puts "</div>"
 		end
 		puts "</div>"
