@@ -12,7 +12,7 @@ require '../nb2020-soul'
 # STATIC
 #==============================================================================
 script = 'pseudo_r2f'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -194,6 +194,7 @@ if command == 'save'
 	fct_set.chop!
 
 	public_bit = 0
+	public_bit = 1 if user.status == 9
 
 	puts '新規食品番号の合成<br>' if @debug
 	new_FN = ''
@@ -241,7 +242,7 @@ if command == 'save'
 		puts 'タグテーブルに追加<br>' if @debug
 		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", false, @debug )
 
-	puts '拡張タグテーブルに追加<br>' if @debug
+		puts '拡張タグテーブルに追加<br>' if @debug
 		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{new_FN}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
 	end
 end

@@ -466,8 +466,8 @@ var savePseudo_R2F = function( code ){
 			command:'save', code:code,
 			food_name:food_name, food_group:food_group, class1:class1, class2:class2, class3:class3, tag1:tag1,
 			tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5
-//		}, function( data ){});
-		}, function( data ){$( "#L2" ).html( data );});
+		}, function( data ){});
+//		}, function( data ){$( "#L2" ).html( data );});
 		displayVIDEO( 'Foodized' );
 	}else{
 		displayVIDEO( '(>_<) Food name!' );

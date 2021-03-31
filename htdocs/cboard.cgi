@@ -707,7 +707,7 @@ food_list.each do |e|
 		html << "</div><div class='col-9'><hr></div>"
 		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{lp[33]}</span></div>"
  	elsif e.fn == '+'
-		html << "</div><div class='col-3 text-secondary cb_food_label'>#{e.init}</div>"
+		html << "</div><div class='col-3 text-secondary cb_food_label'>( #{e.init} )</div>"
 		html << "<div class='col-6'><hr></div>"
 		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{lp[33]}</span></div>"
   	else
