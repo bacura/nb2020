@@ -1,4 +1,4 @@
-doas ## test.R
+## test.R
 
 
 #### library
