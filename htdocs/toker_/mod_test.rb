@@ -1,8 +1,13 @@
 # TokeR module for test 0.00b
 #encoding: utf-8
 
-def toker_module( cgi, user )
+def table_check( table )
+	r = mdbr( "SHOW TABLES LIKE '#{table}';", false, false )
+	mdbr( "CREATE TABLE #{table} ( token VARCHAR(20), data TEXT, result TEXT );", false, false ) unless r.first
+end
 
+
+def toker_module( cgi, user, debug )
 	mod = cgi['mod']
 	command = cgi['command']
 	token = cgi['token']
@@ -111,13 +116,13 @@ def module_js( mod )
 
 var tokerTESTready = function( token ){
 	var test_group = document.getElementById( "test_group" ).value;
-	$.post( "toker.cgi", { mod:'#{mod}', command:'ready', token:token, test_group:test_group }, function( data ){ $( "#bw_level2" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'none';
+	$.post( "toker.cgi", { mod:'#{mod}', command:'ready', token:token, test_group:test_group }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'none';
 };
 
 var tokerTESTprocess = function( token ){
-	$.post( "toker.cgi", { mod:'#{mod}', command:'process', token:token }, function( data ){ $( "#bw_level3" ).html( data );});
-	document.getElementById( "bw_level3" ).style.display = 'block';
+	$.post( "toker.cgi", { mod:'#{mod}', command:'process', token:token }, function( data ){ $( "#L2" ).html( data );});
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 </script>

@@ -1,17 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser statistics tools 0.00
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20190910, 0.00, start
-
+#Nutrition browser statistics tools 0.00b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '/var/www/nb-soul.rb'
+require '../nb2020-soul'
 
 
 #==============================================================================
@@ -39,17 +33,15 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-cgi = CGI.new
-
 html_init( nil )
 
-user = User.new( cgi )
+user = User.new( @cgi )
 user.debug if @debug
-lp = user.language( script )
+lp = user.load_lp( script )
 
 
 #### Getting POST
-mod = cgi['mod']
+mod = @cgi['mod']
 if @debug
 	puts "mod:#{mod}<br>\n"
 	puts "<hr>\n"
@@ -58,11 +50,14 @@ end
 
 ####
 html = "<div class='container-fluid'>"
-if mod == ''
+if mod == 'line'
 	html = init( lp )
+elsif mod == ''
+	html = 'Statistical analysis with R'
 else
 	require "#{$HTDOCS_PATH}/toker_/mod_#{mod}.rb"
-	html = toker_module( cgi, user )
+	table_check( mod )
+	html = toker_module( @cgi, user, @debug )
 end
 html << "</div>"
 

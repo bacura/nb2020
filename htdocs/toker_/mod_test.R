@@ -1,4 +1,4 @@
-## test.R
+doas ## test.R
 
 
 #### library
@@ -10,7 +10,7 @@ token = commandArgs( trailingOnly = TRUE )[1]
 
 
 #### S4 method for signature 'MariaDBDriver'
-con <- dbConnect( RMariaDB::MariaDB(), dbname = "rr", username = "rru" )
+con <- dbConnect( RMariaDB::MariaDB(), dbname = "rr2020", username = "rru" )
 
 
 #### Get data from DB & modify
