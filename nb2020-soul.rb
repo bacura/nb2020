@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.01b
+#Nutrition browser 2020 soul 0.02b
 
 #==============================================================================
 # LIBRARY
@@ -22,10 +22,11 @@ $COOKIE_UID = 'UID2020'
 $COOKIE_MID = 'MID2020'
 
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = 'user'
-$MYSQL_PW = 'password'
 $MYSQL_DB = 'nb2020'
-$MYSQL_DBR = 'rr'
+$MYSQL_DBR = 'rr2020'
+$MYSQL_USER = 'user'
+$MYSQL_USERR = 'userr'
+$MYSQL_PW = 'password'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
 $MYSQL_TB_CFG = 'cfg'
