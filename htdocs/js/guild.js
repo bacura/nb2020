@@ -433,11 +433,14 @@ var ginmiForm = function( mod ){
 // Tokei R init
 var initToker = function(){
 	closeBroseWindows( 1 );
+	$.post( "toker.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
+	displayLINE( 'on');
+
 	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
 };
 
 var tokerForm = function( mod ){
-	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L1" ).style.display = 'block';
 };
