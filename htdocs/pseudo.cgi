@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.00b
+#Nutrition browser 2020 pseudo food editer 0.01b
 
 #==============================================================================
 # LIBRARY
@@ -191,9 +191,10 @@ if command == 'save'
 	public_bit = 1 if user.status == 9
 
 	# 新規食品番号の合成
-	over_max_flag = false
 	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
-	if r.first
+	if r.first && public_bit == 0
+		code = r.first['FN']
+	elsif r.first && /P/ =~ r.first['FN']
 		code = r.first['FN']
 	else
 		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}');", false, @debug )
