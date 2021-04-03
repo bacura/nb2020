@@ -501,21 +501,18 @@ when 'fctb_l5'
 			koyomi_button = ''
 		end
 
-		# GM専用単位変換ボタン
+		# GM/SGM専用単位変換ボタン
 		gm_unitc = ''
-		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnitc( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if user.status == 9
+		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnitc( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if user.status >= 8
 
-		# GM専用色ボタン
 		gm_color = ''
-		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{lp[5]}</button>" if user.status == 9
+#		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{lp[5]}</button>" if user.status >= 8
 
-		# GM専用アレルギーボタン
 		gm_allergen = ''
-		gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{lp[6]}</button>" if user.status == 9
+#		gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{lp[6]}</button>" if user.status >= 8
 
-		# GM専用旬ボタン
 		gm_shun = ''
-		gm_shun = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{lp[7]}</button>" if user.status == 9
+		gm_shun = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{lp[7]}</button>" if user.status >= 8
 
 
 		tags = "<span class='tag1'>#{tag1_list[c]}</span> <span class='tag2'>#{tag2_list[c]}</span> <span class='tag3'>#{tag3_list[c]}</span> <span class='tag4'>#{tag4_list[c]}</span> <span class='tag5'>#{tag5_list[c]}</span>"
