@@ -461,7 +461,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		date_html << "<tr id='nutrition#{c}' class='table-borderless'>"
 	end
 	date_html << "<td></td>"
-	date_html << "<td colspan='5'>#{calc_html_set[c]}</td>"
+	date_html << "<td colspan='6'>#{calc_html_set[c]}</td>"
 	date_html << "<td></td>"
 	date_html << "</tr>"
 	week_count += 1

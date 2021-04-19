@@ -126,6 +126,7 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 
 			query = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{fn}';"
 			res = db.query( query )
+
 			case template
 			when 1, 2
   				class_add = ''
@@ -136,15 +137,29 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
   				elsif /\+/ =~ res.first['class3']
     				class_add = "<span class='tagc'>#{res.first['class3'].sub( '+', '' )}</span> "
   				end
-				return_foods << "<tr><td>#{class_add}#{res.first['name']}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td></tr>\n" if res.first
+  				food_name = res.first['name']
+				if /^\=/ =~ fi
+					food_name = fi.sub( '=', '' )
+					fi = ''
+				end
+				return_foods << "<tr><td>#{class_add}#{food_name}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td></tr>\n" if res.first
 			when 3, 4
 				tags = bind_tags( res )
+				if /^\=/ =~ fi
+					tags = fi.sub( '=', '' )
+					fi = ''
+				end
 				return_foods << "<tr><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td></tr>\n" if res.first
 			when 5, 6
 				tags = bind_tags( res )
+				if /^\=/ =~ fi
+					tags = fi.sub( '=', '' )
+					fi = ''
+				end
 				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td><td align='right'>#{few_v}</td></tr>\n" if res.first
 			when 7, 8
 				tags = bind_tags( res )
+				fi.sub!( '=', '' )
 				refuse = 0
 				query = ''
 				if /U|P/ =~ fn
@@ -315,22 +330,22 @@ foods = extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 puts "foods: #{foods}<br>" if @debug
 
 
-#### プロトコール変換
+puts 'Protocol html<br>' if @debug
 protocol = modify_protocol( protocol )
 
 
-#### 写真変換
+puts 'Photo html<br>' if @debug
 main_photo, sub_photos = arrange_photo( code, mcode, hr_image )
 
 
-#### QR codeの生成
+puts 'Generating QR code<br>' if @debug
 makeQRcode( url, code )
-
 
 #### 食品番号から食品成分と名前を抽出
 fct = []
 fct_name = []
 fct_sum = []
+
 if template > 4
 	# セレクト＆チェック設定
 	frct_select = frct_select( frct_mode )
@@ -339,14 +354,12 @@ if template > 4
 
 	# Setting palette
 	palette_sets = []
-	palette_name = []
 	r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @degug )
 	if r.first
 		r.each do |e|
 			a = e['palette'].split( '' )
 			a.map! do |x| x.to_i end
 			palette_sets << a
-			palette_name << e['name']
 		end
 	end
 	palette_set = palette_sets[palette]
@@ -356,6 +369,7 @@ if template > 4
 	@fct_item.size.times do |c|
 		fct_item << @fct_item[c] if palette_set[c] == 1
 	end
+
 
 	food_no, food_weight, total_weight = extract_sum( sum, dish_recipe, ew_mode )
 	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
