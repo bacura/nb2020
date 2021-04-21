@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.00b
+#Nutrition browser 2020 index page 0.01b
 
 
 #==============================================================================
@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 script = 'index'
 
 
@@ -22,6 +22,7 @@ script = 'index'
 
 #### HTML top
 def html_top( user, lp )
+  puts 'HTML TOP<br>' if @debug
   user_name = user.name
   user_name = user.aliasu if user.aliasu != '' && user.aliasu != nil
   uid = user.uid
@@ -59,13 +60,14 @@ def html_top( user, lp )
     end
     mom = user.name
     mom_a = user.aliasu
+    mom_a = mom if mom_a == '' || mom_a == nil
   else
     r = mdb( "SELECT * FROM user WHERE user='#{user.mom}';", false, false )
     if r.first
       if r.first['cookie_m'] == mid
         mom = r.first['user']
         mom_a = r.first['aliasu']
-        mom_a = mom if mom_a == ''
+        mom_a = mom if mom_a == '' || mom_a == nil
 
         rr = mdb( "SELECT * FROM user WHERE mom='#{mom}' AND status='6';", false, false )
         rr.each do |e|
@@ -85,7 +87,7 @@ def html_top( user, lp )
     login << "<OPTION value='#{mom}'>#{mom_a}</OPTION>"
     daughters.size.times do |c|
       t = daughters[c]
-      t = daughters_a[c] unless daughters_a[c] == ''
+      t = daughters_a[c] if daughters_a[c] != nil && daughters_a[c] != ''
       if daughters[c] == user.name
         login << "<OPTION value='#{daughters[c]}' SELECTED>#{t}</OPTION>"
       else
@@ -272,10 +274,11 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-
 html_init( nil )
+
 user = User.new( @cgi )
 user.status = 0 unless user.name
+user.debug if @debug
 
 lp = user.load_lp( script )
 

@@ -19,14 +19,14 @@ script = 'account-mom'
 #==============================================================================
 #DEFINITION
 #==============================================================================
-def New_account( user, lp )
-	mdb( "INSERT #{$MYSQL_TB_USER} SET pass='#{user.pass}', mail='#{user.mail}', aliasu='#{user.aliasu}', status='6', language='#{user.language}', user='#{uid_d}', mom='#{user.mom}', switch='1', count=0;", false, @debug )
+def new_account( user, lp )
+	mdb( "INSERT #{$MYSQL_TB_USER} SET pass='#{user.pass}', mail='#{user.mail}', aliasu='#{user.aliasu}', status='6', language='#{user.language}', user='#{user.name}', mom='#{user.mom}', switch='1', reg_date='#{user.reg_date}';", false, @debug )
 
 	# Inserting standard palettes
 	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[18]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
 	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[19]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
 	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[20]}', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false, @debug )
-	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[21]}', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
+	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[21]}', count='54', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
 
 	# Inserting new history
 	mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{user.name}', his='';", false, @debug )
@@ -97,6 +97,7 @@ elsif command == 'save'
 		r = mdb( "SELECT user FROM #{$MYSQL_TB_USER} WHERE user='#{uid_d}';", false, @debug )
 		message = "<p class='msg_small_red'>#{lp[16]}</p>" if r.first
 	end
+
 	if message == ''
 		new_user = User.new( @cgi )
 		new_user.name = uid_d
@@ -105,28 +106,9 @@ elsif command == 'save'
 		new_user.aliasu = aliasu_d
 		new_user.language = language_d
 		new_user.mom = user.name
+		new_user.reg_date = @datetime
 
-
-		mdb( "INSERT #{$MYSQL_TB_USER} SET pass='#{pass_d}', mail='#{mail_d}', aliasu='#{aliasu_d}', status='6', language='#{language_d}', user='#{uid_d}', mom='#{user.name}', switch='1', count=0;", false, @debug )
-
-		# Inserting standard palettes
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uid_d}', name='#{lp[18]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uid_d}', name='#{lp[19]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uid_d}', name='#{lp[20]}', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{uid_d}', name='#{lp[21]}', count='63', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
-
-		# Inserting new history
-		mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{uid_d}', his='';", false, @debug )
-
-		# Inserting new SUM
-		mdb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{uid_d}', sum='';", false, @debug )
-
-		# Inserting new meal
-		mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{uid_d}', meal='';", false, @debug )
-
-		# Inserting new config
-		mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{uid_d}', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
-
+		new_account( new_user, lp )
 	else
 		puts message
 	end
@@ -235,6 +217,7 @@ html = <<-"HTML"
 		</div>
 	<div>
 	#{account_html}
+	#{lp[23]}
 </div>
 HTML
 

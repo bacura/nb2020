@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.02b
+#Nutrition browser 2020 soul 0.03b
 
 #==============================================================================
 # LIBRARY
@@ -83,7 +83,6 @@ soul_language = $DEFAULT_LP
 uname = @cgi.cookies['NAME'].first unless @cgi.cookies['NAME'] == nil
 uid = @cgi.cookies[$COOKIE_UID].first unless @cgi.cookies[$COOKIE_UID] == nil
 
-
 if uname != nil && uid != nil
 #p 'vv'
   db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -95,7 +94,6 @@ if uname != nil && uid != nil
 end
 
 require "#{$HTDOCS_PATH}/../nb2020-soul-#{soul_language}"
-
 
 
 #==============================================================================
@@ -558,12 +556,15 @@ end
 #==============================================================================
 
 class User
-  attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :language, :switch
+  attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :language, :switch, :pass, :mail, :reg_date
 
   def initialize( cgi )
     @name = cgi.cookies['NAME'].first
     @uid = cgi.cookies[$COOKIE_UID].first
     @mid = cgi.cookies[$COOKIE_MID].first
+    @pass = nil
+    @mail = nil
+    @reg_date  = nil
 
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     res = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{@name}' and cookie='#{@uid}' and status>0;" )
@@ -571,7 +572,9 @@ class User
     if res.first
       @status = res.first['status'].to_i
       @aliasu = res.first['aliasu']
+      @aliasu = nil if @aliasu == ''
       @mom = res.first['mom']
+      @mom = nil if @mom == ''
       @mom = @name if @mom == nil
       @language = res.first['language']
       @switch = res.first['switch'].to_i
@@ -601,7 +604,7 @@ class User
     puts "uid:#{@uid}<br>"
     puts "status:#{@status}<br>"
     puts "alias:#{@alias}<br>"
-    puts "lg:#{@lg}<br>"
+    puts "language:#{@language}<br>"
     puts "<hr>"
   end
 end

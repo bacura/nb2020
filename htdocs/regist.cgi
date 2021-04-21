@@ -201,6 +201,9 @@ when 'finish'
   mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{@cgi['id']}', name='#{lp[22]}', count='14', palette='0000001001001000001001110110000000000001000000110000000001';", false, @debug )
   mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{@cgi['id']}', name='#{lp[23]}', count='54', palette='0000111111111111111111111111111111111111111111111111111111';", false, @debug )
 
+  # Inserting new history
+  mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{@cgi['id']}', his='';", false, @debug )
+
   # Inserting new SUM
   mdb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{@cgi['id']}', sum='';", false, @debug )
 
