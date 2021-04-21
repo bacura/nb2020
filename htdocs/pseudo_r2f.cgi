@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.01b
+#Nutrition browser recipe to pseudo food 0.02b
 
 #==============================================================================
 # LIBRARY
@@ -193,28 +193,32 @@ if command == 'save'
 	( @fct_start - 1 ).upto( @fct_end + 1 ) do |i| fct_set << "#{@fct_item[i]}='#{fct_opt[@fct_item[i]]}'," end
 	fct_set.chop!
 
-	public_bit = 0
-	public_bit = 1 if user.status == 9
-
 	puts '新規食品番号の合成<br>' if @debug
 	new_FN = ''
-	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
-	if r.first && public_bit == 0
-		code = r.first['FN']
-	elsif r.first && /P/ =~ r.first['FN']
-		code = r.first['FN']
-	else
-		rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_FCTP} WHERE FG='#{food_group}' AND user='#{user.name}');", false, @debug )
-		if rr.first
-			last_FN = rr.first['FN'][-3,3].to_i
-			if public_bit == 1
+	public_bit = 0
+	if user.status >= 8
+		public_bit = 1
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='2';", false, @debug )
+		if r.first
+			code = r.first['FN']
+		else
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}'", false, @debug )
+			if rr.first
+				last_FN = rr.first['FN'][-3,3].to_i
 				new_FN = "P#{food_group}%#03d" % ( last_FN + 1 )
 			else
-				new_FN = "U#{food_group}%#03d" % ( last_FN + 1 )
-			end
-		else
-			if public_bit == 1
 				new_FN = "P#{food_group}001"
+			end
+		end
+	else
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
+		if r.first
+			code = r.first['FN']
+		else
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}');", false, @debug )
+			if rr.first
+				last_FN = rr.first['FN'][-3,3].to_i
+				new_FN = "U#{food_group}%#03d" % ( last_FN + 1 )
 			else
 				new_FN = "U#{food_group}001"
 			end
