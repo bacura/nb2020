@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.03b
+#Nutrition browser 2020 soul 0.04b
 
 #==============================================================================
 # LIBRARY
@@ -84,7 +84,6 @@ uname = @cgi.cookies['NAME'].first unless @cgi.cookies['NAME'] == nil
 uid = @cgi.cookies[$COOKIE_UID].first unless @cgi.cookies[$COOKIE_UID] == nil
 
 if uname != nil && uid != nil
-#p 'vv'
   db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
   res = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{uname}' and cookie='#{uid}' and status>0;" )
   db.close
@@ -118,27 +117,15 @@ def html_init_cache( cookie )
 end
 
 
+#### TEXT init
+def text_init
+  puts "Content-type: text/text\n"
+  puts "\n"
+end
+
+
 #### Tracking code
 def tracking()
-    html = <<-"HTML"
-<!-- Matomo -->
-<script type="text/javascript">
-  var _paq = window._paq = window._paq || [];
-  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
-  (function() {
-    var u="https://bacura.jp/matomo/";
-    _paq.push(['setTrackerUrl', u+'matomo.php']);
-    _paq.push(['setSiteId', '3']);
-    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.type='text/javascript'; g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-  })();
-</script>
-<!-- End Matomo Code -->
-HTML
-
-  puts html
 end
 
 
@@ -556,12 +543,12 @@ end
 #==============================================================================
 
 class User
-  attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :language, :switch, :pass, :mail, :reg_date
+  attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :switch, :language, :pass, :mail, :reg_date
 
   def initialize( cgi )
     @name = cgi.cookies['NAME'].first
     @uid = cgi.cookies[$COOKIE_UID].first
-    @mid = cgi.cookies[$COOKIE_MID].first
+    @mid = nil
     @pass = nil
     @mail = nil
     @reg_date  = nil
@@ -574,10 +561,9 @@ class User
       @aliasu = res.first['aliasu']
       @aliasu = nil if @aliasu == ''
       @mom = res.first['mom']
-      @mom = nil if @mom == ''
-      @mom = @name if @mom == nil
-      @language = res.first['language']
+      @mid = res.first['cookie_m']
       @switch = res.first['switch'].to_i
+      @language = res.first['language']
     else
       @name = nil
       @uid = nil
@@ -585,8 +571,8 @@ class User
       @mid = nil
       @status = 0
       @aliasu = nil
-      @language = $DEFAULT_LP
       @switch = 0
+      @language = $DEFAULT_LP
     end
   end
 
@@ -604,6 +590,8 @@ class User
     puts "uid:#{@uid}<br>"
     puts "status:#{@status}<br>"
     puts "alias:#{@alias}<br>"
+    puts "mom:#{@mom}<br>"
+    puts "mid:#{@mid}<br>"
     puts "language:#{@language}<br>"
     puts "<hr>"
   end

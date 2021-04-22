@@ -118,7 +118,7 @@ var changeMenu = function( user_status ){
 // Changing Account
 var chageAccountM = function( mid ){
 	var login_mv = document.getElementById( "login_mv" ).value;
-	location.href = "login.cgi?mode=daughter" + "&login_mv=" + login_mv + "&mid=" + mid;
+	location.href = "login.cgi?mode=family" + "&login_mv=" + login_mv;
 };
 
 

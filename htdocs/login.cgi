@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 login 0.01b
+#Nutrition browser 2020 login 0.02b
 
 
 #==============================================================================
@@ -88,12 +88,14 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+text_init() if @debug
 
 #### Getting GET data
 get_data = get_data()
 
 #### Getting POST date
 user = User.new( @cgi )
+user.debug if @debug
 lp = lp_init( script, $DEFAULT_LP )
 
 puts "#{get_data['mode']}" if @debug
@@ -108,21 +110,19 @@ when 'check'
       html_top_login( lp )
       msg = "<p class='msg_small_red'>#{lp[4]}</p>"
       html_login_form( msg, lp )
-
+      html_foot()
   else
     status = r.first['status'].to_i
 
     # Issuing cookies
     uid = SecureRandom.hex(16)
-    mid = ''
-    mid = uid if r.first['status'].to_i >= 5 && r.first['status'].to_i != 6
-
-    cookie = "Set-Cookie: NAME=#{@cgi['id']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\nSet-Cookie: #{$COOKIE_MID}=#{mid}\n"
+    cookie = "Set-Cookie: NAME=#{@cgi['id']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
 
     # Updating user information
-    mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{mid}' WHERE user='#{@cgi['id']}';", true, @debug )
+    mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m=NULL WHERE user='#{@cgi['id']}';", true, @debug )
     html_init( cookie )
     html_head( 'refresh', status, nil )
+    puts '</span></body></html>'
 
     # Checking & repairing history table
     r = mdb( "SELECT user FROM #{$MYSQL_TB_HIS} WHERE user='#{@cgi['id']}';", false, @debug )
@@ -143,36 +143,40 @@ when 'check'
 
 when 'logout'
   # Meaningless Cookie
-  cookie = "Set-Cookie: NAME=NULL\nSet-Cookie: #{$COOKIE_UID}=NULL\nSet-Cookie: #{$COOKIE_MID}=NULL\n"
+  cookie = "Set-Cookie: NAME=NULL\nSet-Cookie: #{$COOKIE_UID}=NULL\n"
   html_init( cookie )
   html_head( 'refresh', 0, nil )
+  puts '</span></body></html>'
+  mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true, @debug )
 
-when 'daughter'
+when 'family'
   cookie = ''
-  uid = ''
   login_mv = get_data['login_mv']
-  puts login_mv if @debug
+  puts "->#{login_mv}" if @debug
   r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{login_mv}';", true, @debug )
   if r.first
     puts r.first['mom'] if @debug
     if r.first['mom'] == '' ||  r.first['mom'] == nil
         cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{r.first['cookie']}\n"
-        uid = r.first['cookie']
-        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{login_mv}';", true, @debug )
+        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true, @debug )
     else
       rr = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user=\"#{r.first['mom']}\";", true, @debug )
       if rr.first
         # Issuing cookies
         uid = SecureRandom.hex( 16 )
-        cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\nSet-Cookie: #{$COOKIE_MID}=#{rr.first['cookie_m']}\n"
+        mid = rr.first['cookie']
+        cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
         puts cookie if @debug
-        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{rr.first['cookie_m']}' WHERE user='#{login_mv}';", true, @debug )
+
+        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{mid}' WHERE user='#{login_mv}';", true, @debug )
+        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true, @debug )
       end
     end
   end
   html_init( cookie )
 
   html_head( 'refresh', r.first['status'], nil )
+  puts '</span></body></html>'
 
 # Input form init
 else
@@ -180,6 +184,6 @@ else
   html_head( nil, 0, nil )
   html_top_login( lp )
   html_login_form( nil, lp )
+  html_foot()
 end
 
-html_foot()

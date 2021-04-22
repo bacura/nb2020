@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.01b
+#Nutrition browser 2020 index page 0.02b
 
 
 #==============================================================================
@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 script = 'index'
 
 
@@ -46,52 +46,49 @@ def html_top( user, lp )
 
   mom = ''
   mom_a = ''
-  daughters = []
-  daughters_a = []
-  mom_flag = false
+  family = []
+  family_a = []
 
-  if user.mom == user.name
-    r = mdb( "SELECT * FROM user WHERE mom='#{user.name}' AND status='6';", false, false )
+  r = mdb( "SELECT * FROM user WHERE mom='#{user.name}' AND status='6' AND switch=1;", false, false )
+  # Dose user have doughters?
+  if r.first
+    puts 'MOM with family<br>' if @debug
+    family << user.name
+    t = user.aliasu
+    t = user.name if t == '' || t == nil
+    family_a << t
     r.each do |e|
-      if e['switch'] == 1
-        daughters << e['user']
-        daughters_a << e['aliasu'].to_s
-      end
+      family << e['user']
+      family_a << e['aliasu'].to_s
     end
-    mom = user.name
-    mom_a = user.aliasu
-    mom_a = mom if mom_a == '' || mom_a == nil
   else
-    r = mdb( "SELECT * FROM user WHERE user='#{user.mom}';", false, false )
-    if r.first
-      if r.first['cookie_m'] == mid
-        mom = r.first['user']
-        mom_a = r.first['aliasu']
-        mom_a = mom if mom_a == '' || mom_a == nil
+    rr = mdb( "SELECT * FROM user WHERE cookie='#{user.mid}' AND ( status='5' OR status>='8' );", false, false )
+    if rr.first
+      puts 'One of family<br>' if @debug
+      family << rr.first['user']
+      t = rr.first['aliasu']
+      t = rr.first['user'] if t == '' || t == nil
+      family_a << t
 
-        rr = mdb( "SELECT * FROM user WHERE mom='#{mom}' AND status='6';", false, false )
-        rr.each do |e|
-          if e['switch'] == 1
-            daughters << e['user']
-            daughters_a << e['aliasu'].to_s
-          end
-        end
+      rrr = mdb( "SELECT * FROM user WHERE mom='#{rr.first['user']}' AND status='6' AND switch=1;", false, false )
+      rrr.each do |e|
+        family << e['user']
+        family_a << e['aliasu'].to_s
       end
     end
   end
 
   login = ''
-  if daughters.size > 0 || mom_flag
+  if family.size > 0
     login = "<div class='form-inline'>"
     login << "<SELECT style='background-color:#343a40' id='login_mv' class='custom-select text-#{login_color}' onchange=\"chageAccountM( '#{mid}' )\">"
-    login << "<OPTION value='#{mom}'>#{mom_a}</OPTION>"
-    daughters.size.times do |c|
-      t = daughters[c]
-      t = daughters_a[c] if daughters_a[c] != nil && daughters_a[c] != ''
-      if daughters[c] == user.name
-        login << "<OPTION value='#{daughters[c]}' SELECTED>#{t}</OPTION>"
+    family.size.times do |c|
+      t = family[c]
+      t = family_a[c] if family_a[c] != nil && family_a[c] != ''
+      if family[c] == user.name
+        login << "<OPTION value='#{family[c]}' SELECTED>#{t}</OPTION>"
       else
-        login << "<OPTION value='#{daughters[c]}'>#{t}</OPTION>"
+        login << "<OPTION value='#{family[c]}'>#{t}</OPTION>"
       end
     end
     login << "</SELECT>"
