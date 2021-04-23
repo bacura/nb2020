@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.00
+#Nutrition browser 2020 memory editor 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -397,7 +397,7 @@ when 'refer'
 	pointer.gsub!( '　', ' ' )
 	pointer.gsub!( /\s+/, ' ' )
 	a = pointer.split( ' ' )
-	code = 0
+	score = 0
 	a.each do |e|
 		r = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{e}';", false, @debug )
 		if r.first
@@ -411,9 +411,9 @@ when 'refer'
 			end
 			count = r.first['count'].to_i + 1
 			mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{e}';", false, @debug )
-			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', code='9', date='#{@datetime}';", false ,@debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='9', date='#{@datetime}';", false ,@debug )
 		else
-			a_pointer, code = alike_pointer( e )
+			a_pointer, score = alike_pointer( e )
 			unless a_pointer == ''
 				rr = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{a_pointer}';", false, @debug )
 				pointer = ''
@@ -427,10 +427,10 @@ when 'refer'
 				count = rr.first['count'].to_i + 1
 				mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{a_pointer}';", false, @debug )
 			end
-			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', code='#{code}', date='#{@datetime}';", false ,@debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='#{score}', date='#{@datetime}';", false ,@debug )
 		end
 	end
-	memory_html << lp[2] if memory_html == ''
+	memory_html << "#{lp[14]} (#{pointer})" if memory_html == ''
 end
 
 
