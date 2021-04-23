@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.03b
+#Nutrition browser 2020 pseudo food editer 0.04b
 
 #==============================================================================
 # LIBRARY
@@ -192,39 +192,50 @@ if command == 'save'
 	fct_set.chop!
 
 	puts '新規食品番号の合成<br>' if @debug
-	code = ''
 	if user.status >= 8
 		puts '公開<br>' if @debug
 		public_bit = 1
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
-
-		if r.first
-			code = r.first['FN']
-			puts "リサイクル:#{code}<br>" if @debug
-		else
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
+		unless r.first
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
 			if rr.first
-				puts "検出:#{rr.first['FN']}<br>" if @debug
-				last_code = rr.first['FN'][-3,3].to_i
-				code = "P#{food_group}%#03d" % ( last_code + 1 )
+				code = rr.first['FN']
+				puts "リサイクル:#{code}<br>" if @debug
 			else
-				code = "P#{food_group}001"
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
+				if rrr.first
+					puts "検出:#{rrr.first['FN']}<br>" if @debug
+					last_code = rrr.first['FN'][-3,3].to_i
+					code = "P#{food_group}%#03d" % ( last_code + 1 )
+				else
+					code = "P#{food_group}001"
+				end
+				puts "新規:#{code}<br>" if @debug
 			end
-			puts "新規:#{code}<br>" if @debug
+		else
+			puts "上書き:#{code}<br>" if @debug
 		end
 	else
 		puts 'プライベート<br>' if @debug
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
-		if r.first
-			code = r.first['FN']
-		else
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0;", false, @debug )
+		unless r.first
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
 			if rr.first
-				last_code = rr.first['FN'][-3,3].to_i
-				code = "U#{food_group}%#03d" % ( last_code + 1 )
+				code = rr.first['FN']
+				puts "リサイクル:#{code}<br>" if @debug
 			else
-				code = "U#{food_group}001"
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
+				if rrr.first
+					puts "検出:#{rrr.first['FN']}<br>" if @debug
+					last_code = rrr.first['FN'][-3,3].to_i
+					code = "U#{food_group}%#03d" % ( last_code + 1 )
+				else
+					code = "U#{food_group}001"
+				end
+				puts "新規:#{code}<br>" if @debug
 			end
+		else
+			puts "上書き:#{code}<br>" if @debug
 		end
 	end
 
