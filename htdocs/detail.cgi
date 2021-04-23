@@ -25,14 +25,14 @@ def sid_skip( sid, dir )
 	until r.first
 		if dir == 'fwd'
 			sid = sid.to_i + 1
-			sid = 1 if sid > 2198
+			sid = 1 if sid > 2481
 		else
 			sid = sid.to_i - 1
-			sid = 2198 if sid < 1
+			sid = 2481 if sid < 1
 		end
 		r = mdb( "SELECT FN, SID FROM #{$MYSQL_TB_TAG} WHERE SID='#{sid}';", false, @debug )
 		c += 1
-		break if c > 10
+		break if c > 100
 	end
 	food_no = r.first['FN']
 

@@ -4,28 +4,28 @@
 //
 var initSchool = function(){
 	closeBroseWindows( 1 );
-	$.post( "school.cgi", { command:"menu" }, function( data ){ $( "#L1" ).html( data );});
-	$.post( "school.cgi", { command:"init" }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "school.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
+	$.post( "school.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
-	document.getElementById( "L2" ).style.display = 'block';
+	displayLINE( 'on' );
 };
 
 // School koyomi change
 var changeSchoolk = function(){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	$.post( "school.cgi", { command:"init", yyyy_mm:yyyy_mm }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "school.cgi", { command:"init", yyyy_mm:yyyy_mm }, function( data ){ $( "#L1" ).html( data );});
 };
 
 // School status change
 var changeSchoolkSt = function( dd, ampm, status ){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	$.post( "school.cgi", { command:"changest", yyyy_mm:yyyy_mm, dd:dd, ampm:ampm, status:status }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "school.cgi", { command:"changest", yyyy_mm:yyyy_mm, dd:dd, ampm:ampm, status:status }, function( data ){ $( "#L1" ).html( data );});
 };
 
 // School open
 var openSchoolk = function( dd, ampm ){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	$.post( "school.cgi", { command:"open", yyyy_mm:yyyy_mm, dd:dd, ampm:ampm }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "school.cgi", { command:"open", yyyy_mm:yyyy_mm, dd:dd, ampm:ampm }, function( data ){ $( "#L1" ).html( data );});
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -34,8 +34,8 @@ var openSchoolk = function( dd, ampm ){
 // menu
 var initSchoolMenu = function(){
 	closeBroseWindows( 1 );
-	$.post( "school-menu.cgi", { command:"init" }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "school-menu.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L1" ).style.display = 'block';
 };
 
 
@@ -45,8 +45,8 @@ var initSchoolMenu = function(){
 // menu
 var initSchoolStock = function(){
 	closeBroseWindows( 1 );
-	$.post( "school-stock.cgi", { command:"init" }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "school-stock.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
+	document.getElementById( "L1" ).style.display = 'block';
 };
 
 

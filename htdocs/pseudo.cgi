@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.02b
+#Nutrition browser 2020 pseudo food editer 0.03b
 
 #==============================================================================
 # LIBRARY
@@ -94,6 +94,7 @@ end
 
 #### クラス・タグ読み込み
 tag_user = nil
+public_bit = 0
 if command == 'init' && code != ''
 	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{user.name}' OR user='#{$GM}' );", false, @debug )
 	if r.first
@@ -106,10 +107,14 @@ if command == 'init' && code != ''
 		tag3 = r.first['tag3']
 		tag4 = r.first['tag4']
 		tag5 = r.first['tag5']
+		public_bit = r.first['public']
 	end
 elsif command == 'save' && code != ''
 	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 	tag_user = r.first['user'] if r.first
+elsif command == 'delete' && code != ''
+	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+	public_bit = r.first['public']
 end
 
 
@@ -187,73 +192,65 @@ if command == 'save'
 	fct_set.chop!
 
 	puts '新規食品番号の合成<br>' if @debug
-	new_FN = ''
-	public_bit = 0
+	code = ''
 	if user.status >= 8
+		puts '公開<br>' if @debug
 		public_bit = 1
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='2';", false, @debug )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
+
 		if r.first
 			code = r.first['FN']
+			puts "リサイクル:#{code}<br>" if @debug
 		else
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}'", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
 			if rr.first
-				last_FN = rr.first['FN'][-3,3].to_i
-				new_FN = "P#{food_group}%#03d" % ( last_FN + 1 )
+				puts "検出:#{rr.first['FN']}<br>" if @debug
+				last_code = rr.first['FN'][-3,3].to_i
+				code = "P#{food_group}%#03d" % ( last_code + 1 )
 			else
-				new_FN = "P#{food_group}001"
+				code = "P#{food_group}001"
 			end
+			puts "新規:#{code}<br>" if @debug
 		end
 	else
+		puts 'プライベート<br>' if @debug
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
 		if r.first
 			code = r.first['FN']
 		else
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}');", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
 			if rr.first
-				last_FN = rr.first['FN'][-3,3].to_i
-				new_FN = "U#{food_group}%#03d" % ( last_FN + 1 )
+				last_code = rr.first['FN'][-3,3].to_i
+				code = "U#{food_group}%#03d" % ( last_code + 1 )
 			else
-				new_FN = "U#{food_group}001"
+				code = "U#{food_group}001"
 			end
 		end
 	end
 
 	puts '食品番号のチェック<br>' if @debug
-	unless code == ''
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
-	else
-		r = []
-	end
-
+	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	if r.first
 		# 擬似食品テーブルの更新
-		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
-
-		# タグテーブルの更新
-		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
-
-		# 拡張タグテーブルに追加
-		mdb( "UPDATE #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_EXT} SET user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 	else
-		# 擬似食品テーブルに追加
-		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{new_FN}',user='#{user.name}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
-
-		# タグテーブルに追加
-		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{new_FN}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", false, @debug )
-
-		# 拡張タグテーブルに追加
-		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{new_FN}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
-
-		code = new_FN
+		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',user='#{user.name}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
 	end
 
 	food_weight = 100
+	tag_user = user.name
 end
 
 
 #### 削除部分
 if command == 'delete'
-	mdb( "UPDATE #{$MYSQL_TB_TAG} SET public='2' WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
+	public_bit = 2 if public_bit == 0
+	public_bit = 3 if public_bit == 1
+	mdb( "UPDATE #{$MYSQL_TB_TAG} SET public='#{public_bit}' WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	code = ''
 end
 
@@ -405,7 +402,9 @@ html = <<-"HTML"
 			#{html_fct_block6}
 		</div>
 	</div>
+	<div class='code'>#{code}</div>
 </div>
+
 
 HTML
 

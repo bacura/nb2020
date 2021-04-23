@@ -17,7 +17,7 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '/var/www/nb-soul.rb'
+require '../nb2020-soul'
 require 'mail'
 
 
@@ -79,7 +79,7 @@ def html_header()
   <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
 <!-- Jquery -->
-  <script type="text/javascript" src="./jquery-3.5.1.min.js"></script>
+  <script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
 <!-- bootstrap -->
   <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
   <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
@@ -113,8 +113,7 @@ end
 # Main
 #==============================================================================
 #### Getting Cookie
-cgi = CGI.new
-user = User.new( cgi )
+user = User.new( @cgi )
 user.status = 8
 #lp = lp_init( 'yoyaku', language )
 

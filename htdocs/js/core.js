@@ -401,7 +401,7 @@ var pseudoSave = function( code ){
 			THIAHCL:THIAHCL, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
 			ALC:ALC, NACL_EQ:NACL_EQ,
 			Notice:Notice
-		}, function( data ){});
+		}, function( data ){ $( "#LF" ).html( data );});
 		displayVIDEO( food_name + ' saved' );
 	} else{
 		displayVIDEO( 'Food name! (>_<)' );
@@ -410,9 +410,9 @@ var pseudoSave = function( code ){
 
 // 削除ボタンを押したときに非同期通信でLFの内容を書き換える
 var pseudoDelete = function( code ){
-	$.post( "pseudo.cgi", { command:'delete', code:code }, function( data ){});
+	$.post( "pseudo.cgi", { command:'delete', code:code }, function( data ){ $( "#LF" ).html( data );});
 	displayVIDEO( code + ' deleted' );
-	closeBroseWindows( 5 );
+//	closeBroseWindows( 5 );
 };
 
 

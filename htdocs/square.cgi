@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.00b
+#Nutrition browser 2020 food square 0.01b
 
 
 #==============================================================================
@@ -199,7 +199,7 @@ when 'fctb'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{user.name}' AND public!='2' ) OR public='1' );", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false, @debug )
 		r.each do |e|
 			if e['class1'] != ''
 				class1_group_p << e['class1']
@@ -272,7 +272,7 @@ when 'fctb_l2'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false, @debug )
 		r.each do |e|
 			if e['class1'] != '' && e['class2'] != ''
 				class2_group_p << e['class2']
@@ -332,7 +332,7 @@ when 'fctb_l3'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1' );", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false, @debug )
 		r.each do |e|
 			if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 				class3_group_p << e['class3']
@@ -373,7 +373,7 @@ when 'fctb_l4'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false, @debug )
 		r.each do |e| direct_group_p << e['name'] end
 
 		# ダイレクトグループの作成
@@ -392,6 +392,7 @@ HTML
 
 #### L5 final page
 when 'fctb_l5'
+	puts 'L5 final page<br>' if @debug
 	query = ''
 	food_no_list = []
 	food_name_list = []
@@ -429,10 +430,12 @@ when 'fctb_l5'
 
 	# 擬似食品
 	if class_no.to_i == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
+		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
 	else
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{user.name}' AND public!='2' ) OR public='1');", false, @debug )
+		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
 	end
+	puts "#{query}<br>" if @debug
+	r = mdb( query, false, @debug )
 	if r.first
 		r.each do |e|
 			food_no_list << e['FN']

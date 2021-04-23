@@ -87,7 +87,7 @@ def html_head( interrupt, status, sub_title )
   #{js_shun}
   #{js_master}
 
-  <!--#{tracking()}-->
+  #{tracking()}
 
 </head>
 

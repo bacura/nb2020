@@ -840,6 +840,20 @@ def ref_intake_init( ref_intake )
 end
 
 
+#### Making cooking school koyomi table
+def schoolk_init()
+	query = "SHOW TABLES LIKE 'schoolk';"
+	res = $DB.query( query )
+	if res.first
+		puts 'schoolk already exists.'
+	else
+		query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), num TINYINT, pass VARCHAR(64), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE );'
+		$DB.query( query )
+	end
+	puts 'schoolk table has been created.'
+end
+
+
 #### 生体情報
 def bio_init()
 	puts '栄養成分安定テーブルの作成'
@@ -847,16 +861,6 @@ def bio_init()
 	query = 'CREATE TABLE bio (user VARCHAR(32), auto TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height TINYINT UNSIGNED, weight TINYINT UNSIGNED);'
 	$DB.query( query )
 end
-
-
-#### 料理教室予約テーブルの作成
-def schoolk_init()
-	puts 'school koyomiテーブルの作成'
-	# テーブル作成
-	query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), num TINYINT, pass VARCHAR(64), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE );'
-	$DB.query( query )
-end
-
 
 #==============================================================================
 $DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -913,6 +917,6 @@ ref_eer_init( ref_eer )
 ref_intake_init( ref_intake )
 
 #bio_init()
-#schoolk_init()
+schoolk_init()
 
 $DB.close

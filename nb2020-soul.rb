@@ -19,7 +19,6 @@ $HTDOCS_PATH = "#{$SERVER_PATH}/nb2020/htdocs"
 $TMP_PATH = '/tmp'
 
 $COOKIE_UID = 'UID2020'
-$COOKIE_MID = 'MID2020'
 
 $MYSQL_HOST = 'localhost'
 $MYSQL_DB = 'nb2020'
@@ -126,6 +125,25 @@ end
 
 #### Tracking code
 def tracking()
+  code = <<-"CODE"
+<!-- Matomo -->
+<script type="text/javascript">
+  var _paq = window._paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="https://bacura.jp/matomo/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '3']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
+CODE
+
+  puts code
 end
 
 
