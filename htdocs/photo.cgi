@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.01b
+#Nutrition browser 2020 recipe photo 0.02b
 
 #==============================================================================
 #LIBRARY
@@ -14,6 +14,7 @@ require 'fileutils'
 #==============================================================================
 script = 'photo'
 @debug = false
+tmp_delete = false
 
 
 #==============================================================================
@@ -155,6 +156,8 @@ when 'upload'
 
 		puts "insert DB<br>" if @debug
 		media.save_db
+
+		File.unlink "#{$TMP_PATH}/#{media.origin}" if File.exist?( "#{$TMP_PATH}/#{media.origin}" ) && tmp_delete
 	end
 	view_series( user, code, lp[1], 200 )
 

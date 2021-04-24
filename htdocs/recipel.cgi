@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.00b
+#Nutrition browser 2020 recipe list 0.01b
 
 
 #==============================================================================
@@ -386,10 +386,12 @@ recipes = []
 if recipe_code_list.size > 0
 	recipe_code_list.each do |e|
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, @debug )
-		o = Recipe.new( user.name )
-		o.load_db( r.first, false )
-		o.load_media
-		recipes << o
+		if r.first
+			o = Recipe.new( user.name )
+			o.load_db( r.first, false )
+			o.load_media
+			recipes << o
+		end
 	end
 else
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, @debug )
