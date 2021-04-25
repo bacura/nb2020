@@ -19,8 +19,8 @@ require 'natto'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = 'nbu'
-$MYSQL_PW = 'sqlmouse'
+$MYSQL_USER = 'user'
+$MYSQL_PW = 'password'
 $MYSQL_DB = 'nb2020'
 $MYSQL_TB_TAG = 'tag'
 $MYSQL_TB_DIC = 'dic'
