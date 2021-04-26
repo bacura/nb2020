@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 config 0.00b
+#Nutrition browser 2020 config 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -24,8 +24,6 @@ def init( lp, user )
 	bio = "<span class='badge rounded-pill bg-info' onclick=\"configForm( 'bio' )\">#{lp[11]}</span>" if user.status >= 2
 	koyomiex = ''
 	koyomiex = "<span class='badge rounded-pill bg-info' onclick=\"configForm( 'koyomi' )\">#{lp[9]}</span>" if user.status >= 2
-	schoolm = ''
-	schoolm = "<span class='badge rounded-pill bg-info' onclick=\"configForm( 'school' )\">#{lp[71]}</span>" if user.status >= 5 && user.status != 6
 
 	html = <<-"HTML"
 <span class="badge rounded-pill bg-info" onclick="configForm( 'account' )">#{lp[1]}</span>
@@ -35,7 +33,6 @@ def init( lp, user )
 <span class="badge rounded-pill bg-info" onclick="configForm( 'sum' )">#{lp[7]}</span>
 #{bio}
 #{koyomiex}
-#{schoolm}
 <span class="badge rounded-pill bg-danger" onclick="configForm( 'release' )">#{lp[8]}</span>
 HTML
 
