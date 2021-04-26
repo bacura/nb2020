@@ -76,8 +76,9 @@ def html_top( user, lp )
 
   login = ''
   if family.size > 0
+    puts 'family mode<br>' if @debug
     login = "<div class='form-inline'>"
-    login << "<SELECT style='background-color:#343a40' id='login_mv' class='custom-select text-#{login_color}' onchange=\"chageAccountM( '#{mid}' )\">"
+    login << "<SELECT style='background-color:#343a40' id='login_mv' class='custom-select text-#{login_color}' onchange=\"chageAccountM()\">"
     family.size.times do |c|
       t = family[c]
       t = family_a[c] if family_a[c] != nil && family_a[c] != ''
@@ -91,10 +92,12 @@ def html_top( user, lp )
     login << "&nbsp;#{lp[56]}&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{lp[55]}</a>"
     login << "</div>"
   else
+    puts 'solo mode<br>' if @debug
     login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{lp[55]}</a>"
   end
   login = "<a href='login.cgi' class=\"text-#{login_color}\">#{lp[60]}</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{lp[53]}</a>" if user_name == nil
 
+  puts 'HTML HEAD<br>' if @debug
   html = <<-"HTML"
       <header class="navbar navbar-expand-lg navbar-dark bg-dark" id="header">
         <div class="container-fluid">
