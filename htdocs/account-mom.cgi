@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser account mother 0.00b
+#Nutrition browser account mother 0.01b
 
 
 #==============================================================================
@@ -23,10 +23,9 @@ def new_account( user, lp )
 	mdb( "INSERT #{$MYSQL_TB_USER} SET pass='#{user.pass}', mail='#{user.mail}', aliasu='#{user.aliasu}', status='6', language='#{user.language}', user='#{user.name}', mom='#{user.mom}', switch='1', reg_date='#{user.reg_date}';", false, @debug )
 
 	# Inserting standard palettes
-	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[18]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
-	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[19]}', count='5', palette='00000100101000001000000000000000000000000000000000000000100000000000';", false, @debug )
-	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[20]}', count='14', palette='0000010010100000100010111011000000000000100000011000000110000000000';", false, @debug )
-	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[21]}', count='54', palette='0000011111111111111111111111111111111111111111111111111111111111110';", false, @debug )
+	0.upto( 3 ) do |c|
+    	mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{@palette_default_name[c]}', palette='#{@palette_default[c]}';", false, @debug )
+	end
 
 	# Inserting new history
 	mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{user.name}', his='';", false, @debug )
@@ -38,7 +37,7 @@ def new_account( user, lp )
 	mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}', meal='';", false, @debug )
 
 	# Inserting new config
-	mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
+	mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', his_max=200, recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
 end
 
 #==============================================================================

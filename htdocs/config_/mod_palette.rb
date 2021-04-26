@@ -1,18 +1,23 @@
-# Nutorition browser 2020 Config module for Palette 0.00
+# Nutorition browser 2020 Config module for Palette 0.01b
 #encoding: utf-8
+
+#### mod debug mode
+@degug = true
+
 
 #### displying palette
 def listing( uname, lp )
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
-
 	list_body = ''
 	r.each do |e|
-		list_body << "<tr><td>#{e['name']}</td><td>#{e['count']}</td>"
+		count = e['palette'].count( '1' )
+		list_body << "<tr><td>#{e['name']}</td><td>#{count}</td>"
 		list_body << "<td><button class='btn btn-outline-primary btn-sm' type='button' onclick='palette_cfg( \"edit_palette\", \"#{e['name']}\" )'>#{lp[41]}</button></td>"
 		list_body << "<td>"
 		list_body << "<input type='checkbox' id=\"#{e['name']}\">&nbsp;<button class='btn btn-outline-danger btn-sm' type='button' onclick='palette_cfg( \"delete_palette\", \"#{e['name']}\" )'>#{lp[42]}</button></td></tr>\n" unless e['name'] == '簡易表示用'
 		list_body << "</td></tr>"
 	end
+
 
 	html = <<-"HTML"
 <div class='container-fluid'>
@@ -103,19 +108,15 @@ HTML
 
 	when 'regist'
 		fct_bits = '0000'
-		fct_count = 0
 		palette_name = cgi['palette_name']
 
-		4.upto( 67 ) do |i|
-			fct_bits << cgi[@fct_item[i]].to_i.to_s
-			fct_count += 1 if cgi[@fct_item[i]] == '1'
-		end
+		4.upto( 57 ) do |i| fct_bits << cgi[@fct_item[i]].to_i.to_s end
 
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
 		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}', count='#{fct_count}' WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}', WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{user.name}', palette='#{fct_bits}', count='#{fct_count}';", false, @debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{user.name}', palette='#{fct_bits}';", false, @debug )
 		end
 
 		html = listing( user.name, lp )
@@ -127,11 +128,9 @@ HTML
 
 	when 'reset_palette'
 		mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
- 		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[51]}', count='5',  palette='0000001001001000001000000000000000000000000000000000000001';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[52]}', count='5',  palette='0000001001001000001000000000000000000000000000000000000001';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[53]}', count='14', palette='0000001001001000001001110110000000000001000000110000000001';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{lp[54]}', count='54', palette='0000111111111111111111111111111111111111111111111111111111';", false, @debug )
-
+		0.upto( 3 ) do |c|
+			mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{$PALETTE_DEFAULT_NAME['jp'][c]}', palette='#{$PALETTE_DEFAULT['jp'][c]}';", false, @debug )
+		end
 		html = listing( user.name, lp )
 	end
 
@@ -161,7 +160,7 @@ var palette_cfg = function( step, id ){
 	case 'reset_palette':
 		$.post( "config.cgi", { mod:'palette', step:step }, function( data ){ $( "#L1" ).html( data );});
 		document.getElementById( "L1" ).style.display = 'block';
-		displayVideo( 'Palette reset' );
+		displayVIDEO( 'Palette reset' );
 		break;
 	}
 
@@ -174,9 +173,9 @@ var palette_cfg = function( step, id ){
 			$.post( "config.cgi", { mod:'palette', step:step, palette_name:palette_name,
 			#{post_fc_set}
 			}, function( data ){ $( "#L1" ).html( data );});
-			displayVideo( palette_name + 'saved' );
+			displayVIDEO( palette_name + 'saved' );
 		} else{
-			displayVideo( 'Palette name!(>_<)' );
+			displayVIDEO( 'Palette name!(>_<)' );
 		}
 	}
 
@@ -191,9 +190,9 @@ var palette_cfg = function( step, id ){
 		if( document.getElementById( id ).checked ){
 			$.post( "config.cgi", { mod:'palette', step:step, palette_name:id }, function( data ){ $( "#L1" ).html( data );});
 			closeBroseWindows( 1 );
-			displayLine( 'on' );
+			displayLINE( 'on' );
 		} else{
-			displayVideo( 'Check!(>_<)' );
+			displayVIDEO( 'Check!(>_<)' );
 		}
 	}
 

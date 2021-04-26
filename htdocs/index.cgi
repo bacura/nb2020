@@ -25,8 +25,6 @@ def html_top( user, lp )
   puts 'HTML TOP<br>' if @debug
   user_name = user.name
   user_name = user.aliasu if user.aliasu != '' && user.aliasu != nil
-  uid = user.uid
-  mid = user.mid
 
   case user.status
   when 1
@@ -44,8 +42,6 @@ def html_top( user, lp )
   end
   login_color = "light"
 
-  mom = ''
-  mom_a = ''
   family = []
   family_a = []
 
@@ -276,7 +272,6 @@ html_init( nil )
 user = User.new( @cgi )
 user.status = 0 unless user.name
 user.debug if @debug
-
 lp = user.load_lp( script )
 
 r = mdb( "SELECT ifix FROM cfg WHERE user='#{user.name}';", false, @debug )

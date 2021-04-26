@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for history 0.00b
+# Nutorition browser 2020 Config module for history 0.01b
 #encoding: utf-8
 
 def config_module( cgi, user, lp )
@@ -60,10 +60,10 @@ var history_cfg = function( step ){
 	displayLINE( 'on' );
 
 	if( step == 'clear' ){
-		displayVideo( 'Initialized' );
+		displayVIDEO( 'Initialized' );
 	}
 	if( step == 'max' ){
-		displayVideo( 'History max -> '+ his_max );
+		displayVIDEO( 'History max -> '+ his_max );
 	}
 };
 

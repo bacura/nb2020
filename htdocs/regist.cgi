@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 regist 0.00b
+#Nutrition browser 2020 regist 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -71,11 +71,11 @@ def html_regist_form( id, mail, pass, msg, aliasu, lp )
         <form action="regist.cgi?mode=confirm" method="post" class="form-signin login_form">
           #{msg}
           <p class="msg_small">#{lp[4]}</p>
-          <input type="text" name="id" value="#{id}" maxlength="30" id="inputID" class="form-control login_input" placeholder="#{lp[5]}" required autofocus>
-          <input type="text" name="aliasu" value="#{aliasu}" maxlength="60" id="inputAlias" class="form-control login_input" placeholder="#{lp[6]}">
-          <input type="email" name="mail" value="#{mail}" maxlength="60" id="inputMail" class="form-control login_input" placeholder="#{lp[7]}">
-          <input type="text" name="pass" value="#{pass}" maxlength="30" id="inputPassword" class="form-control login_input" placeholder="#{lp[8]}" required>
-          <select id="language" class="form-select">
+          <input type="text" name="id" value="#{id}" maxlength="30" class="form-control login_input" placeholder="#{lp[5]}" required autofocus>
+          <input type="text" name="pass" value="#{pass}" maxlength="30" class="form-control login_input" placeholder="#{lp[8]}" required>
+          <input type="text" name="aliasu" value="#{aliasu}" maxlength="60" class="form-control login_input" placeholder="#{lp[6]}">
+          <input type="email" name="mail" value="#{mail}" maxlength="60" class="form-control login_input" placeholder="#{lp[7]}">
+          <select name="language" class="form-select">
             #{option_language}
           </select>
           <br>
@@ -104,16 +104,16 @@ def html_regist_confirm( id, mail, pass, aliasu, language, lp )
                 <td>#{id}</td>
               </tr>
               <tr>
+                <td>#{lp[14]}</td>
+                <td>#{pass}</td>
+              </tr>
+              <tr>
                 <td>#{lp[12]}</td>
                 <td>#{aliasu}</td>
               </tr>
               <tr>
                 <td>#{lp[13]}</td>
                 <td>#{mail}</td>
-              </tr>
-              <tr>
-                <td>#{lp[14]}</td>
-                <td>#{pass}</td>
               </tr>
               <tr>
                 <td>#{lp[31]}</td>
@@ -192,14 +192,14 @@ when 'finish'
   # Inserting user information
   aliasu = @cgi['alias']
   aliasu = @cgi['id'] if aliasu == ''
+  p @cgi if @debug
 
   mdb( "INSERT INTO #{$MYSQL_TB_USER} SET user='#{@cgi['id']}', pass='#{@cgi['pass']}', mail='#{@cgi['mail']}',aliasu='#{aliasu}', status=1, language='#{@cgi['language']}', reg_date='#{@datetime}'", false, @debug )
 
   # Inserting standard palettes
-  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{@cgi['id']}', name='#{lp[20]}', count='5', palette='0000001001001000001000000000000000000000000000000000000001';", false, @debug )
-  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{@cgi['id']}', name='#{lp[21]}', count='5', palette='0000001001001000001000000000000000000000000000000000000001';", false, @debug )
-  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{@cgi['id']}', name='#{lp[22]}', count='14', palette='0000001001001000001001110110000000000001000000110000000001';", false, @debug )
-  mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{@cgi['id']}', name='#{lp[23]}', count='54', palette='0000111111111111111111111111111111111111111111111111111111';", false, @debug )
+  0.upto( 3 ) do |c|
+    mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{@cgi['id']}', name='#{@palette_default_name[c]}', palette='#{@palette_default[c]}';", false, @debug )
+  end
 
   # Inserting new history
   mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{@cgi['id']}', his='';", false, @debug )
@@ -211,7 +211,7 @@ when 'finish'
   mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", false, @debug )
 
   # Inserting new config
-  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
+  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', his_max=200, recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
 
   html_regist_finish( lp )
 

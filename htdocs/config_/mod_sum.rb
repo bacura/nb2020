@@ -1,4 +1,4 @@
-# Config module for sum 0.00b
+# Config module for sum 0.01b
 #encoding: utf-8
 
 def config_module( cgi, user, lp )
@@ -7,9 +7,7 @@ def config_module( cgi, user, lp )
 	step = cgi['step']
 
 	if step == 'reset'
-		query = "UPDATE sum set sum='', name='', code='' WHERE user='#{user.name}';"
-		db_err = 'UPDATE sum'
-		db_process( query, db_err, false )
+		mdb( "UPDATE sum set sum='', name='', code='' WHERE user='#{user.name}';", false, false )
 	end
 	html = <<-"HTML"
      <div class="container">
@@ -30,11 +28,11 @@ def module_js()
 // Chopping board initialisation
 var sum_cfg = function( step ){
 	closeBroseWindows( 1 );
-	$.post( "config.cgi", { com:'sum', step:step }, function( data ){ $( "#L1" ).html( data );});
+	displayLINE( 'on' )
+	$.post( "config.cgi", { mod:'sum', step:step }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
-	displayLine( 'on' )
 
-	if( step == 'clear' ){ displayVideo( 'Initialized' ); }
+	if( step == 'reset' ){ displayVIDEO( 'SUM reset' ); }
 	var fx = function(){ refreshCB(); };
 	setTimeout( fx, 1000 );
 };

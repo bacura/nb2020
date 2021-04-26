@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for acount 0.00b
+# Nutorition browser 2020 Config module for acount 0.01b
 #encoding: utf-8
 
 def config_module( cgi, user, lp )
@@ -19,7 +19,7 @@ def config_module( cgi, user, lp )
 		new_password1 = cgi['new_password1']
 		new_password2 = cgi['new_password2']
 		language = cgi['language']
-p language
+
 		if pass == old_password || pass == ''
 			mail = new_mail if new_mail != '' && new_mail != nil
 			aliasu = new_aliasu if new_aliasu != '' && new_aliasu != nil
@@ -108,7 +108,7 @@ var account_cfg = function( step ){
 
 	$.post( "config.cgi", { mod:'account', step:step, new_mail:new_mail, new_aliasu:new_aliasu, old_password:old_password, new_password1:new_password1, new_password2:new_password2, language:language }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
-	displayLine( 'on' );
+	displayLINE( 'on' );
 };
 
 </script>

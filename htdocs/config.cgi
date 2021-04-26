@@ -51,22 +51,20 @@ lp = user.load_lp( script )
 
 #### Getting POST
 mod = @cgi['mod']
-if @debug
-	puts"mod: #{mod}"
-	puts"<hr>"
-end
 
 
-####
+#### Driver
 html = ''
 if mod == ''
+	puts 'INIT<br>' if @debug
 	html = init( lp, user )
 else
 	require "#{$HTDOCS_PATH}/config_/mod_#{mod}.rb"
 
+	puts "MOD (#{mod})<br>" if @debug
 	html = config_module( @cgi, user, lp )
 end
 
 
-#### 画面表示
+puts 'HTML<br>' if @debug
 puts html

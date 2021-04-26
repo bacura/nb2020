@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for NB display 0.00b
+# Nutorition browser 2020 Config module for NB display 0.01b
 #encoding: utf-8
 
 def config_module( cgi, user, lp )
@@ -126,8 +126,8 @@ var display_cfg = function(){
 
 	$.post( "config.cgi", { mod:'display', step:'update', icache:icache, ifix:ifix, ilist:ilist, icalc:icalc, icalcp:icalcp }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
-	displayLine( 'on' );
-	displayVideo( 'Updated' );
+	displayLINE( 'on' );
+	displayVIDEO( 'Updated' );
 };
 
 </script>
