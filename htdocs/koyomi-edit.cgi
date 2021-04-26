@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.01b
+#Nutrition browser 2020 koyomi editor 0.02b
 
 
 #==============================================================================
@@ -57,7 +57,11 @@ def meals( e, lp, uname, freeze_flag )
 			item_name = lp[25]
 		elsif /\-m\-/ =~ aa[0]
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false, @debug )
-			item_name = rr.first['name']
+			if rr.first
+				item_name = rr.first['name']
+			else
+				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
+			end
 			onclick = ""
 		elsif /\-f\-/ =~ aa[0]
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
@@ -67,20 +71,28 @@ def meals( e, lp, uname, freeze_flag )
 				onclick = " onclick=\"modifysaveKoyomiFC( '#{aa[0]}', '#{origin}' )\"" if freeze_flag == 0
 				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\">#{lp[30]}</span>"
 			else
-				item_name = "Error: #{aa[0]}"
+				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
 				onclick = ''
 			end
 		elsif /\-/ =~ aa[0]
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
-			item_name = rr.first['name']
-			onclick = " onclick=\"modifyKoyomi( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{aa[1]}', '#{aa[2]}', '#{c}' )\"" if freeze_flag == 0
-			recipe_button = "<span onclick=\"initCB( 'load', '#{aa[0]}' )\">#{lp[31]}</span>"
+			if rr.first
+				item_name = rr.first['name']
+				onclick = " onclick=\"modifyKoyomi( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{aa[1]}', '#{aa[2]}', '#{c}' )\"" if freeze_flag == 0
+				recipe_button = "<span onclick=\"initCB( 'load', '#{aa[0]}' )\">#{lp[31]}</span>"
+			else
+				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
+			end
 		else
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U\d{5}/ =~ aa[0]
 			rr = mdb( q, false, @debug )
-			item_name = rr.first['name']
-			onclick = " onclick=\"modifyKoyomi( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{aa[1]}', '#{aa[2]}', '#{c}' )\"" if freeze_flag == 0
+			if rr.first
+				item_name = rr.first['name']
+				onclick = " onclick=\"modifyKoyomi( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{aa[1]}', '#{aa[2]}', '#{c}' )\"" if freeze_flag == 0
+			else
+				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
+			end
 		end
 		mb_html << "<tr>"
 		mb_html << "<td#{onclick}>#{item_name}</td>"
@@ -170,8 +182,10 @@ def multi_calc_sub( uname, yyyy, mm, dd, tdiv, fc_items, fct_start, fct_end, fct
 					weight_set = []
 					if /\-m\-/ =~ code
 						rr = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
-						a = rr.first['meal'].split( "\t" )
-						a.each do |e| recipe_set << e end
+						if rr.first
+							a = rr.first['meal'].split( "\t" )
+							a.each do |e| recipe_set << e end
+						end
 					end
 					recipe_set << code if recipe_set.size == 0
 
@@ -181,15 +195,17 @@ def multi_calc_sub( uname, yyyy, mm, dd, tdiv, fc_items, fct_start, fct_end, fct
 						if /\-r\-/ =~ recipe_set[cc] || /\w+\-\h{4}\-\h{4}/ =~ recipe_set[cc]
 							puts 'Recipe<br>' if @debug
 							rr = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{recipe_set[cc]}';", false, @debug )
-							a = rr.first['sum'].split( "\t" )
-							a.each do |eee|
-								( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = eee.split( ':' )
+							if rr.first
+								a = rr.first['sum'].split( "\t" )
+								a.each do |eee|
+									( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = eee.split( ':' )
 
-								if sum_no != '+' && sum_no != '-'
-									fn_set << sum_no
-									sum_ew = sum_weight if sum_ew == nil
-									weight_set << ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
-									recipe_total_weight += ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
+									if sum_no != '+' && sum_no != '-'
+										fn_set << sum_no
+										sum_ew = sum_weight if sum_ew == nil
+										weight_set << ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
+										recipe_total_weight += ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
+									end
 								end
 							end
 

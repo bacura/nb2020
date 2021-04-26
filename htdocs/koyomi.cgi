@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.01b
+#Nutrition browser 2020 koyomi 0.02b
 
 
 #==============================================================================
@@ -45,7 +45,7 @@ def meals( meal, uname )
 	mb_html = '<ul>'
 	a = meal.split( "\t" )
 	a.each do |e|
-		aa = e.split( ':' )
+aa = e.split( ':' )
 		if aa[0] == '?--'
 			mb_html << "<li style='list-style-type: circle'>何か食べた（微盛）</li>"
 		elsif aa[0] == '?-'
@@ -57,23 +57,39 @@ def meals( meal, uname )
 		elsif aa[0] == '?++'
 			mb_html << "<li style='list-style-type: circle'>何か食べた（特盛）</li>"
 		elsif /\-m\-/ =~ aa[0]
+			puts 'menu' if @debug
 			r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false, @debug )
-			mb_html << "<li>#{r.first['name']}</li>"
+			if r.first
+				mb_html << "<li>#{r.first['name']}</li>"
+			else
+				mb_html << "<li class='error'>Error: #{aa[0]}</li>"
+			end
 		elsif /\-f\-/ =~ aa[0]
+			puts 'fix' if @debug
 			r = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
 			if r.first
 				mb_html << "<li style='list-style-type: circle'>#{r.first['name']}</li>"
 			else
-				mb_html << "<li>Error: #{aa[0]}</li>"
+				mb_html << "<li class='error'>Error: #{aa[0]}</li>"
 			end
 		elsif /\-/ =~ aa[0]
+			puts 'recipe' if @debug
 			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
-			mb_html << "<li>#{r.first['name']}</li>"
+			if r.first
+				mb_html << "<li>#{r.first['name']}</li>"
+			else
+				mb_html << "<li class='error'>Error: #{aa[0]}</li>"
+			end
 		else
+			puts 'food' if @debug
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U/ =~ aa[0]
 			r = mdb( q, false, @debug )
-			mb_html << "<li style='list-style-type: square'>#{r.first['name']}</li>"
+			if r.first
+				mb_html << "<li style='list-style-type: square'>#{r.first['name']}</li>"
+			else
+				mb_html << "<li class='error'>Error: #{aa[0]}</li>"
+			end
 		end
 	end
 	mb_html << '</ul>'
@@ -131,16 +147,18 @@ class Nutrition_calc
 		recipe_total_weight = BigDecimal( 0 )
 
 		r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@uname}' AND code='#{code}';", false, false )
-		a = r.first['sum'].split( "\t" )
-		a.each do |e|
-			( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = e.split( ':' )
+		if r.first
+			a = r.first['sum'].split( "\t" )
+			a.each do |e|
+				( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = e.split( ':' )
 
-			if sum_no != '+' && sum_no != '-'
-				@fn_set << sum_no
-				@unit_set << unit
-				sum_ew = sum_weight if sum_ew == nil
-				weight_set_ << ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
-				recipe_total_weight += ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
+				if sum_no != '+' && sum_no != '-'
+					@fn_set << sum_no
+					@unit_set << unit
+					sum_ew = sum_weight if sum_ew == nil
+					weight_set_ << ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
+					recipe_total_weight += ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
+				end
 			end
 		end
 

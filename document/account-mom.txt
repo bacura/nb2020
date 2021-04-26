@@ -1,4 +1,4 @@
-#Nutrition browser account-mom 0.00b
+#Nutrition browser account-mom 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -42,3 +42,4 @@ shun.js/switchAccountM( switch_id, uid_d )	-> account-mom.cgi{ command:"switch",
 #CHANGE LOG
 #==============================================================================
 20200805	0.00b	βスタート
+20210426	0.01b	更新：成分パレット標準化への対応。
