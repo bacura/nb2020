@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.02b
+#nb2020-dbi.rb 0.03b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -63,6 +63,31 @@ def fct_init( source_file )
 		f.close
 		puts 'fct table has been created.'
 	end
+end
+
+
+#### Updating fct table.
+def fct_update( source_file )
+	query = 'DELETE FROM fct;'
+	$DB.query( query )
+
+	f = open( source_file, 'r' )
+	label = true
+	f.each_line do |e|
+		items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+
+		query = "INSERT INTO #{$MYSQL_TB_FCT} SET"
+		@fct_item.size.times do |c|
+			query << " #{@fct_item[c]}='#{items[c]}',"
+		end
+		query.chop!
+		query << ";"
+
+		$DB.query( query ) unless label
+		label = false
+	end
+	f.close
+	puts 'fct table has been updated.'
 end
 
 
@@ -148,6 +173,85 @@ def tag_init( source_file )
 		f.close
 		puts 'tag table has been created.'
 	end
+end
+
+
+#### Updating food tag table.
+def tag_update( source_file )
+	query = 'DELETE FROM tag WHERE user IS NULL;'
+	res = $DB.query( query )
+
+	# タグテーブルから読み込んでタグテーブル更新
+	f = open( source_file, 'r' )
+	label = true
+	f.each_line do |e|
+		items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+		sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
+		t = items[3]
+
+		t.gsub!( '（', "｛" )
+		t.gsub!( '＞　｛', "＞　（" )
+		t.gsub!( '］　｛', "］　（" )
+		t.gsub!( /^｛/, "（" )
+		t.gsub!( '｛', '' )
+		t.gsub!( 'もの｝', '' )
+
+		t.gsub!( '　', "\t" )
+		t.gsub!( '＞', "\t" )
+		t.gsub!( '）', "\t" )
+		t.gsub!( '］', "\t" )
+		t.gsub!( "\s", "\t" )
+		t.gsub!( /\t{2,}/, "\t" )
+		t.gsub!( /\t+$/, '' )
+
+		tags = t.split( "\t" )
+		class1 = ''
+		class2 = ''
+		class3 = ''
+		name_ = ''
+		tag1 = ''
+		tag2 = ''
+		tag3 = ''
+		tag4 = ''
+		tag5 = ''
+		count = 0
+
+		tags.each do |ee|
+			if /＜/ =~ ee
+				class1 = ee.sub( '＜', '' )
+			elsif /［/ =~ ee
+				class2 = ee.sub( '［', '' )
+			elsif /（/ =~ ee
+				class3 = ee.sub( '（', '' )
+			else
+				case count
+				when 0
+					name_ = ee
+					count += 1
+				when 1
+					tag1 = ee
+					count += 1
+				when 2
+					tag2 = ee
+					count += 1
+				when 3
+					tag3 = ee
+					count += 1
+				when 4
+					tag4 = ee
+					count += 1
+				when 5
+					tag5 = ee
+					count += 1
+				end
+			end
+		end
+		sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
+		$DB.query( sql_query_tag ) unless label
+		label = false
+	end
+	f.close
+	puts 'tag table has been updated.'
 end
 
 
@@ -412,12 +516,10 @@ def user_init()
 
 		$DB.query( "INSERT INTO user SET user='#{$GM}', pass='', status='9', language='#{$DEFAULT_LP}';" )
 
-		query = "INSERT INTO user SET user='guest', pass='', status='3', language='#{$DEFAULT_LP}';"
-		$DB.query( query )
-		query = "INSERT INTO user SET user='guest1', pass='', status='3', language='#{$DEFAULT_LP}';"
-		$DB.query( query )
-		query = "INSERT INTO user SET user='guest3', pass='', status='3', language='#{$DEFAULT_LP}';"
-		$DB.query( query )
+		['guest', 'guest2', 'guest3'].each do |e|
+			$DB.query( "INSERT INTO user SET user='#{e}', pass='', status='3', language='#{$DEFAULT_LP}';" )
+		end
+
 		puts 'GM & guests have been registed.'
 	end
 end
@@ -430,13 +532,12 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED, schooll VARCHAR(512));'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
 		$DB.query( query )
 
-		$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{$GM}', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='guest', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='guest2', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='guest3', recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';" )
+		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
+			$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{e}', his_max=200, recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';" )
+		end
 
 		puts 'cfg table has been created.'
 	end
@@ -467,10 +568,9 @@ def sum_init()
 		query = 'CREATE TABLE sum (user VARCHAR(32) NOT NULL PRIMARY KEY, code VARCHAR(32), name VARCHAR(255), sum varchar(1024), protect TINYINT(1), dish TINYINT);'
 		$DB.query( query )
 
-		$DB.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{$GM}', sum='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='guest', sum='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='guest2', sum='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='guest3', sum='';" )
+		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
+			$DB.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{e}', sum='';" )
+		end
 
 		puts 'sum table has been created.'
 	end
@@ -515,10 +615,9 @@ def meal_init()
 		query = 'CREATE TABLE meal (user VARCHAR(32) NOT NULL PRIMARY KEY, code varchar(32), name VARCHAR(255), meal VARCHAR(255), protect TINYINT(1));'
 		$DB.query( query )
 
-		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{$GM}', meal='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='guest', meal='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='guest2', meal='';" )
-		$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='guest3', meal='';" )
+		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
+			$DB.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{e}', meal='';" )
+		end
 
 		puts 'meal table has been created.'
 	end
@@ -546,7 +645,7 @@ def palette_init()
 	if res.first
 		puts 'palette table already exists.'
 	else
-		query = 'CREATE TABLE palette (user VARCHAR(32) NOT NULL, name VARCHAR(64), palette VARCHAR(128), count TINYINT );'
+		query = 'CREATE TABLE palette (user VARCHAR(32) NOT NULL, name VARCHAR(64), palette VARCHAR(128));'
 		$DB.query( query )
 		puts 'palette table has been created.'
 	end
@@ -849,8 +948,8 @@ def schoolk_init()
 	else
 		query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), num TINYINT, pass VARCHAR(64), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE );'
 		$DB.query( query )
+		puts 'schoolk table has been created.'
 	end
-	puts 'schoolk table has been created.'
 end
 
 
@@ -878,7 +977,9 @@ ref_intake = 'ref2020-intake.txt'
 #==============================================================================
 
 fct_init( source_file )
+#fct_update( source_file )
 tag_init( source_file )
+#tag_update( source_file )
 ext_init( gycv_file, shun_file, unit_file )
 dic_init()
 fct_pseudo_init()
