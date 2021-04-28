@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.00
+#Nutrition browser 2020 detail viewer 0.01b
 
 #==============================================================================
 # LIBRARY
@@ -141,7 +141,7 @@ etc_html << '</table>'
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
-		<div class="col-2" align='center'>
+		<div class="col-3" align='center'>
 			<span class='h6'>#{lp[5]}：#{food_no}<br>
 			<span onclick="detailPage( 'rev', '#{sid}' )">#{lp[7]}</span>
 			#{lp[6]}：#{sid}</span>
@@ -166,16 +166,12 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class="col-1">
-		</div>
-		<div class="col-1">
 			#{add_button}
 		</div>
 		<div class="col-1">
 			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}&lg=#{user.language}' download='detail_#{fct_opt['FN']}.txt'><span>#{lp[14]}</span></a>
 		</div>
-		<div class="col-1" align='right'>
-			<span onclick='detailReturn()'>#{lp[15]}</span>
-		</div>
+		<div align='center' class='col-1 joystic_koyomi' onclick="detailReturn()">#{lp[15]}</div>
 	</div>
 </div>
 <br>

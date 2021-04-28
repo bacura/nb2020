@@ -498,11 +498,8 @@ end
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-3'><h5>#{yyyy} / #{mm} / #{dd}</h5></div>
-		<div class='col-8'></div>
-		<div class='col-1'>
-			<span onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</span>
-		</div>
+		<div class='col-2'><h5>#{yyyy} / #{mm} / #{dd}</h5></div>
+		<div align='center' class='col-10 joystic_koyomi' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</div>
 	</div>
 	<br>
 	<div class='row'>

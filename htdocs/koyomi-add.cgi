@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.00b
+#Nutrition browser 2020 koyomi adding panel 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -230,7 +230,7 @@ date_html = ''
 week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 1.upto( calendar.ddl ) do |c|
-	date_html << "<tr>"
+	date_html << "<tr id='day#{c}'>"
 	if week_count == 0
 		date_html << "<td style='color:red;'>#{c} (#{weeks[week_count]})</td>"
 	else
@@ -319,9 +319,9 @@ else
 end
 
 #### Return button
-return_button = "<span onclick=\"koyomiReturn()\">#{lp[11]}</span>"
+return_joystic = "<div align='center' class='col-9 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
 if command == 'modify' || command == 'move'
-	return_button = "<span onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</span>"
+	return_joystic = "<div align='center' class='col-9 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
 end
 
 
@@ -332,12 +332,14 @@ onchange = "onChange=\"changeKoyomiAdd( 'modify', '#{code}', '#{origin}' )\"" if
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-11'><h5>#{food_name}</h5></div>
-		<div class='col-1'>#{return_button}</div>
+		<div class='col-3'><h5>#{food_name}</h5></div>
+		#{return_joystic}
 	</div>
+	<br>
 	<div class='row'>
 		<div class='col-2 form-inline'>
 			<input type='date' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' #{onchange}>
+			<span class='joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</span>
 		</div>
 		<div class='col-2 form-inline'>
 			#{tdiv_html}

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser cooking school 0.00b
+#Nutrition browser school 0.00b
 
 
 #==============================================================================
@@ -20,7 +20,7 @@ require '../nb2020-soul'
 #STATIC
 #==============================================================================
 script = 'school'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -178,7 +178,6 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	else
 		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
-	date_html << "<td><span onclick=\"\">#{lp[29]}</span></td>"
 
 	reservation_am = nil
 	reservation_pm = nil
@@ -304,7 +303,6 @@ html = <<-"HTML"
 	<thead>
     	<tr>
      		<th align='center'></th>
-     		<th align='center'>#{lp[28]}</th>
      		<th align='center'>#{lp[12]}</th>
      		<th align='center'>#{lp[13]}</th>
     	</tr>

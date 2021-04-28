@@ -200,15 +200,11 @@ end
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'>
-			<h5>#{lp[8]}</h5>
-		</div>
+		<div class='col-2'><h5>#{lp[8]}</h5></div>
 		<div class='col-2 form-inline'>
 			<input type='month' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomiex()">
 		</div>
-		<div class='col-7'>
-			<a href='#day#{date.day}'>#{lp[13]}</a>
-		</div>
+		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{date.day}';">#{lp[13]}</div>
 	</div>
 	<div class='row'>
 		<div class='col'></div>

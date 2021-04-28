@@ -1,6 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
-depth = 0;
+dl1 = false;
+dl2 = false;
+dl3 = false;
+dl4 = false;
+dl5 = false;
+dlf = false;
+dlm = false;
+
 menu_status = 0;
 general_ = '';
 
@@ -16,6 +23,7 @@ window.onload = function(){
 		document.getElementById( "L4" ).innerHTML = "";
 		document.getElementById( "L5" ).innerHTML = "";
 		document.getElementById( "LF" ).innerHTML = "";
+		document.getElementById( "LINE" ).innerHTML = "";
 
 		bookOpen( 'books/about.html', 1 );
 		bookOpen( 'books/information.html', 2 );
@@ -28,24 +36,49 @@ var closeBroseWindows = function( num ){
 	switch( Number( num )){
 	case 0:
 		document.getElementById( "L1" ).style.display = 'none';
-		document.getElementById( "LINE" ).style.display = 'none';
-		depth = 0;
 	case 1:
 		document.getElementById( "L2" ).style.display = 'none';
 		document.getElementById( "LINE" ).style.display = 'none';
-		depth = 1;
 	case 2:
 		document.getElementById( "L3" ).style.display = 'none';
-		depth = 2;
 	case 3:
 		document.getElementById( "L4" ).style.display = 'none';
-		depth = 3;
 	case 4:
 		document.getElementById( "L5" ).style.display = 'none';
-		depth = 4;
 	case 5:
 		document.getElementById( "LF" ).style.display = 'none';
-		depth = 5;
+ 	}
+};
+
+
+// Reopening browse windows
+var reopenBroseWindows = function(){
+	if( dl1 ){ document.getElementById( "L1" ).style.display = 'block'; }
+	if( dl2 ){ document.getElementById( "L2" ).style.display = 'block'; }
+	if( dl3 ){ document.getElementById( "L3" ).style.display = 'block'; }
+	if( dl4 ){ document.getElementById( "L4" ).style.display = 'block'; }
+	if( dl5 ){ document.getElementById( "L5" ).style.display = 'block'; }
+	if( dlf ){ document.getElementById( "LF" ).style.display = 'block'; }
+	if( dlm ){ document.getElementById( "LINE" ).style.display = 'block'; }
+};
+
+
+// Resetting level status
+var resetL = function( num ){
+	switch( Number( num )){
+	case 0:
+		dl1 = false;
+		dlm = false;
+	case 1:
+		dl2 = false;
+	case 2:
+		dl3 = false;
+	case 3:
+		dl4 = false;
+	case 4:
+		dl5 = false;
+	case 5:
+		dlf = false;
  	}
 };
 
@@ -53,11 +86,13 @@ var closeBroseWindows = function( num ){
 var displayLINE = function( msg ){
 	if( msg == 'on' ){
 		document.getElementById( "LINE" ).style.display = 'block';
+		dlm = true;
 	}else if( msg == 'off' ){
 		document.getElementById( "LINE" ).style.display = 'none';
 	}else{
 		document.getElementById( "LINE" ).style.display = 'block';
 		document.getElementById( "LINE" ).innerHTML = msg;
+		dlm = true;
 	}
 }
 
@@ -130,6 +165,8 @@ var summonL1 = function( num ){
 	closeBroseWindows( 1 );
 	$.get( "square.cgi", { channel:"fctb", category:num }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
+	resetL( 0 );
+	dl1 = true;
 };
 
 
@@ -138,6 +175,8 @@ var summonL2 = function( key ){
 	closeBroseWindows( 2 );
 	$.get( "square.cgi", { channel:"fctb_l2", food_key:key }, function( data ){ $( "#L2" ).html( data );});
 	document.getElementById( "L2" ).style.display = 'block';
+	resetL( 2 );
+	dl2 = true;
 };
 
 
@@ -148,6 +187,8 @@ var summonL3 = function( key, direct ){
 	}
 	$.get( "square.cgi", { channel:"fctb_l3", food_key:key }, function( data ){ $( "#L3" ).html( data );});
 	document.getElementById( "L3" ).style.display = 'block';
+	resetL( 3 );
+	dl3 = true;
 };
 
 
@@ -158,6 +199,8 @@ var summonL4 = function( key, direct ){
 	}
 	$.get( "square.cgi", { channel:"fctb_l4", food_key:key }, function( data ){ $( "#L4" ).html( data );});
 	document.getElementById( "L4" ).style.display = 'block';
+	resetL( 4 );
+	dl4 = true;
 };
 
 
@@ -168,6 +211,8 @@ var summonL5 = function( key, direct ){
 	}
 	$.get( "square.cgi", { channel:"fctb_l5", food_key:key }, function( data ){ $( "#L5" ).html( data );});
 	document.getElementById( "L5" ).style.display = 'block';
+	resetL( 5 );
+	dl5 = true;
 };
 
 
@@ -196,6 +241,7 @@ var detailView_his = function( fn ){
 	$.get( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100 }, function( data ){ $( "#LF" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'none';
 	document.getElementById( "LF" ).style.display = 'block';
+	displayLINE( 'off' );
 };
 
 // 詳細ボタンを押したらL1-L4の窓を閉じて、LF閲覧ウインドウに詳細を表示する２。
@@ -222,13 +268,9 @@ var detailPage = function( dir, sid ){
 
 // 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
 var detailReturn = function(){
-	document.getElementById( "LF" ).style.display = 'none';
-	if( depth == 1 ){
-		document.getElementById( "L1" ).style.display = 'block';
-	}
-	if( depth == 5 ){
-		document.getElementById( "L5" ).style.display = 'block';
-	}
+	closeBroseWindows( 0 );
+	ldf = false;
+	reopenBroseWindows();
 };
 
 
@@ -291,13 +333,13 @@ var historyInit = function(){
 	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
 	displayLINE( 'on' );
+	resetL( 1 );
+	dl1 = true;
 };
 
 var historySub = function( sub_fg ){
-	closeBroseWindows( 1 );
 	$.post( "history.cgi", { command:'sub', sub_fg:sub_fg }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
 };
 
 

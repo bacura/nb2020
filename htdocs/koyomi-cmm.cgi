@@ -136,7 +136,7 @@ date_html = ''
 week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 1.upto( calendar.ddl ) do |c|
-	date_html << "<tr>"
+	date_html << "<tr id='day#{c}'>"
 	if week_count == 0
 		date_html << "<td style='color:red;'>#{c} (#{weeks[week_count]})</td>"
 	else
@@ -205,12 +205,14 @@ hour_html << "</select>"
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-11'><h5>#{yyyy} / #{mm} / #{dd} (#{tdiv_set[tdiv]})</h5></div>
-		<div class='col-1'><span onclick="koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</span></div>
+		<div class='col-3'><h5>#{yyyy} / #{mm} / #{dd} (#{tdiv_set[tdiv]})</h5></div>
+		<div align='center' class='col-9 joystic_koyomi' onclick="koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</div>
 	</div>
+	<br>
 	<div class='row'>
 		<div class='col-2 form-inline'>
 			<input type='date' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' onChange="cmmChangeKoyomi( '#{cm_mode}', '#{origin}' )">
+			<span class='joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[17]}</span>
 		</div>
 		<div class='col-2 form-inline'>
 			#{tdiv_html}

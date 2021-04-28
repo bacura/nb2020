@@ -34,8 +34,30 @@ var openSchoolk = function( dd, ampm ){
 // menu
 var initSchoolMenu = function(){
 	closeBroseWindows( 1 );
-	$.post( "school-menu.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
+	$.post( "school-menu.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
+	displayLINE( 'on' );
+};
+
+
+// Making new school menu tag group
+var mekeSchoolGroup = function(){
+	var group_new = document.getElementById( 'group_new' ).value;
+	$.post( "school-menu.cgi", { command:"group_new", group_new:group_new }, function( data ){ $( "#L1" ).html( data );});
+};
+
+// Changing school menu tag name
+var changeSchoolTagName = function( tag_group, group_no, tag_no ){
+	var tag_name_new = document.getElementById( 'tag_name' + group_no + '_' + tag_no ).value;
+	$.post( "school-menu.cgi", { command:"tag_name_change", tag_group:tag_group, tag_no:tag_no, tag_name_new:tag_name_new }, function( data ){ $( "#L1" ).html( data );});
+	displayVIDEO( tag_name_new );
+};
+
+// Changing school menu tag
+var changeSchoolTag = function( tag_group, group_no, tag_no ){
+	var tag_new = document.getElementById( 'tag' + group_no + '_' + tag_no ).value;
+	$.post( "school-menu.cgi", { command:"tag_change", tag_group:tag_group, tag_no:tag_no, tag_new:tag_new }, function( data ){ $( "#L1" ).html( data );});
+	displayVIDEO( tag_new );
 };
 
 

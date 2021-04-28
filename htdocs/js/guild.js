@@ -307,13 +307,9 @@ var modifysaveKoyomiFC = function( code, origin ){
 
 // Return from Koyomi
 var koyomiReturn = function(){
-	document.getElementById( "LF" ).style.display = 'none';
-	if( bw_level == 1 ){
-		document.getElementById( "L1" ).style.display = 'block';
-	}
-	if( bw_level == 5 ){
-		document.getElementById( "L4" ).style.display = 'block';
-	}
+	closeBroseWindows( 0 );
+	ldf = false;
+	reopenBroseWindows();
 };
 
 // Return from Koyomi to Koyomi edit

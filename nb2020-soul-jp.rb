@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.02b
+#Nutrition browser 2020 soul Japanese pack 0.03b
 
 #==============================================================================
 # STATIC
@@ -93,7 +93,7 @@ def html_head( interrupt, status, sub_title )
 
 </head>
 
-<body class="body">
+<body class="body" id='top'>
   <span class="world_frame" id="world_frame">
 HTML
 
@@ -105,7 +105,8 @@ end
 #==============================================================================
 def html_foot()
     html = <<-"HTML"
-    <br>
+      <div align='center' class='koyomi_today' onclick="window.location.href='#top';"><img src='bootstrap-dist/icons/joystick.svg' style='height:2em; width:2em;'></div>
+      <br>
       <footer class="footer">
         <div align="center">
           <a href="https://neg.bacura.jp">日本えいようギルド</a>

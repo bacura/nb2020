@@ -26,8 +26,8 @@ def sub_menu( lp )
 	html = <<-"MENU"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><span class='badge rounded-pill bg-info' onclick="initKoyomi()">#{lp[23]}</span></div>
-		<div class='col-2'><span class='badge rounded-pill bg-info' onclick="initKoyomiex()">#{lp[24]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initKoyomi()">#{lp[23]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initKoyomiex()">#{lp[24]}</span></div>
 		<div class='col-2'><span class='badge rounded-pill bg-secondry' onclick="">#{lp[25]}</span></div>
 		<div class='col-2'><span class='badge rounded-pill bg-secondry' onclick="">#{lp[26]}</span></div>
 		<div class='col-2'></div>
@@ -494,9 +494,7 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			<input type='month' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomi()">
 		</div>
-		<div class='col-7'>
-			<a href='#day#{calendar_td.dd}'>#{lp[18]}</a>
-		</div>
+		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{calendar_td.dd}';">#{lp[18]}</div>
 	</div>
 	<div class='row'>
 		<div class='col'></div>
@@ -517,7 +515,6 @@ html = <<-"HTML"
   	</thead>
 	#{date_html}
 	</table>
-
 HTML
 
 puts html

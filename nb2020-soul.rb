@@ -91,7 +91,6 @@ if uname != nil && uid != nil
 
 end
 
-soul_language = 'jp'
 require "#{$HTDOCS_PATH}/../nb2020-soul-#{soul_language}"
 
 

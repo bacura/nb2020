@@ -1,4 +1,4 @@
-#Nutrition browser 2020 koyomi adding panel 0.00b
+#Nutrition browser 2020 koyomi adding panel 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -47,3 +47,4 @@ guild.js/koyomiReturn2KE( yyyy, mm, dd ) -> koyomi-edit.cgi{ command:'init', yyy
 #CHANGE LOG
 #==============================================================================
 20210312	0.00b	βスタート
+20210429	0.01b	更新：Joystic対応

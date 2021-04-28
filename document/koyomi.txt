@@ -1,4 +1,4 @@
-#Nutrition browser 2020 koyomi 0.02b
+#Nutrition browser 2020 koyomi 0.03b
 
 #==============================================================================
 # OVERVIEW
@@ -45,4 +45,4 @@ guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy_mm:yyyy_
 					解決：凍結指定でFCZにINSERTする条件を修正。
 20210426	0.02b	問題：登録後に登録したコードのものを削除すると止まる。
 					解決：DBから削除されたものはエラーとして表示し続行するようにした。
-
+20210429	0.03b	更新：Joystic対応

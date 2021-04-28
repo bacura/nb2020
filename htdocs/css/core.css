@@ -128,10 +128,6 @@ nav {
   color: red;
 }
 
-
-
-
-
 /*=====================*/
 /* 閲覧階層 ＋ 詳細表示 */
 /*=====================*/
@@ -241,6 +237,34 @@ nav {
   color: tomato;
   font-size: medium;
 }
+
+/*===============*/
+/* ジョイスティック */
+/*===============*/
+
+.joystic_top{
+  border: none;
+  border-width: 1px;
+  border-color: paleturquoise;
+  background-color: white;
+  border-radius: 6px;
+}
+.joystic_rerutn{
+  border: none;
+  border-width: 1px;
+  border-color: paleturquoise;
+  border-radius: 6px;
+}
+
+.joystic_koyomi{
+  border: none;
+  border-width: 1px;
+  border-color: white;
+  background-color: white;
+  border-radius: 6px;
+}
+
+
 
 /*===============*/
 /* 記憶 */
@@ -378,24 +402,3 @@ nav {
 
 
 
-
-
-
-/*.link_cursor{
-  cursor: pointer;
-}
-
-
-.ctl_button{
-  padding-left: 0.8em;
-  padding-right: 0.8em;
-  margin-bottom: 0.5em;
-}
-
-.del_button{
-  padding-left: 0.2em;
-  padding-right: 0.2em;
-  margin-bottom: 0.5em;
-}
-
-*/
