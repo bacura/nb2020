@@ -1,4 +1,4 @@
-#Nutrition browser 2020 koyomi editor 0.01b
+#Nutrition browser 2020 koyomi editor 0.03b
 
 #==============================================================================
 # OVERVIEW
@@ -57,3 +57,5 @@ guild/editKoyomiR( yyyy, mm ) -> koyomi.cgi{ command:"init", yyyy:yyyy, mm:mm }
 20210312	0.00b	βスタート。
 20210330	0.01b	マイナーバージョンアップ。まな板への直リンボタンを設置。
 20210426	0.02b	更新：koyomiの削除エラーに対応。
+20210502	0.03b	問題：写真アップロードすると全部朝食になる。Delete出来ない。フルで見ようとすると404となる。
+					解決：koyomiPhotoSaveへのtdivの引数を修正。

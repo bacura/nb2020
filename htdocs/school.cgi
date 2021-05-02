@@ -294,9 +294,7 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			<input type='month' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeSchoolk()">
 		</div>
-		<div class='col'>
-			<a href='#day#{calendar_td.dd}'>#{lp[18]}</a>
-		</div>
+		<div align='center' class='col-7 joystic_koyomi' onclick="window.location.href='#day#{calendar_td.dd}';">#{lp[18]}</div>
 	</div>
 	<br>
 

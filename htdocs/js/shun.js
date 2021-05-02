@@ -39,25 +39,39 @@ var initSchoolMenu = function(){
 	displayLINE( 'on' );
 };
 
-
-// Making new school menu tag group
+// Making new school menu label group
 var mekeSchoolGroup = function(){
 	var group_new = document.getElementById( 'group_new' ).value;
-	$.post( "school-menu.cgi", { command:"group_new", group_new:group_new }, function( data ){ $( "#L1" ).html( data );});
+	if( group_new != '' ){
+		$.post( "school-menu.cgi", { command:"group_new", group_new:group_new }, function( data ){ $( "#L1" ).html( data );});
+	}else{
+		displayVIDEO( 'Group name! (>_<)' );
+	}
 };
 
-// Changing school menu tag name
-var changeSchoolTagName = function( tag_group, group_no, tag_no ){
-	var tag_name_new = document.getElementById( 'tag_name' + group_no + '_' + tag_no ).value;
-	$.post( "school-menu.cgi", { command:"tag_name_change", tag_group:tag_group, tag_no:tag_no, tag_name_new:tag_name_new }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( tag_name_new );
+// Deleting school menu label group
+var delSchoolGroup = function( label_group ){
+	if(document.getElementById( "del_check_" + label_group ).checked){
+		$.post( "school-menu.cgi", { command:"group_del", group_new:label_group }, function( data ){ $( "#L1" ).html( data );});
+	}else{
+		displayVIDEO( 'Check! (>_<)' );
+	}
+	displayVIDEO( label_group );
 };
 
-// Changing school menu tag
-var changeSchoolTag = function( tag_group, group_no, tag_no ){
-	var tag_new = document.getElementById( 'tag' + group_no + '_' + tag_no ).value;
-	$.post( "school-menu.cgi", { command:"tag_change", tag_group:tag_group, tag_no:tag_no, tag_new:tag_new }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( tag_new );
+// Changing school menu label
+var changeSchoolLabel = function( label_group, group_no, label_no ){
+	var label_new = document.getElementById( 'label' + group_no + '_' + label_no ).value;
+	$.post( "school-menu.cgi", { command:"label_change", label_group:label_group, label_no:label_no, label_new:label_new }, function( data ){ $( "#L1" ).html( data );});
+	displayVIDEO( label_new );
+};
+
+// Select school menu selector
+var selectSchoolMenu = function(){
+	var group_select = document.getElementById( 'group_select' ).value;
+	var label_select = document.getElementById( 'label_select' ).value;
+	var month_select = document.getElementById( 'month_select' ).value;
+	$.post( "school-menu.cgi", { command:'menu_select', group_select:group_select, label_select:label_select, month_select:month_select }, function( data ){ $( "#L1" ).html( data );});
 };
 
 
@@ -121,7 +135,7 @@ var deleteAccountM = function( uid_d ){
 	if(document.getElementById( "delete_checkM" ).checked){
 		$.post( "account-mom.cgi", { command:"delete", uid_d:uid_d }, function( data ){ $( "#L1" ).html( data );});
 	}else{
-		displayVideo( 'Check! (>_<)' );
+		displayVIDEO( 'Check! (>_<)' );
 	}
 };
 

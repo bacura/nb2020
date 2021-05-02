@@ -280,7 +280,7 @@ end
 
 
 #### View hotos series
-def view_series( user, code, del_icon, size )
+def view_series( user, code, del_icon, size, dd )
 	media = Media.new( user )
 	media.code = code
 	media.load_series()
@@ -290,7 +290,7 @@ def view_series( user, code, del_icon, size )
 		html << "<div class='row'>"
 		media.series.each do |e|
 			html << "<div class='col'>"
-			html << "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{del_icon}</span><br>"
+			html << "<span onclick=\"koyomiPhotoDel( '#{code}', '#{e}', '#{dd}' )\">#{del_icon}</span><br>"
 			html << "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a>"
 			html << "</div>"
 		end
@@ -463,7 +463,7 @@ disabled = 'DISABLED' if freeze_flag == 1
 	form_photo[c] = "<form method='post' enctype='multipart/form-data' id='photo_form#{c}'>"
 	form_photo[c] << '<div class="input-group input-group-sm">'
 	form_photo[c] << "<label class='input-group-text'>#{lp[26]}</label>"
-	form_photo[c] << "<input type='file' class='form-control' name='photo' onchange=\"koyomiPhotoSave( '#{yyyy}-#{mm}-#{dd}-#{tdiv}', '#photo_form#{c}' )\" #{disabled}></div>"
+	form_photo[c] << "<input type='file' class='form-control' name='photo' onchange=\"koyomiPhotoSave( '#{yyyy}-#{mm}-#{dd}-#{c}', '#photo_form#{c}', '#{dd}' )\" #{disabled}></div>"
 	form_photo[c] << '</form>'
 end
 
@@ -472,7 +472,7 @@ end
 photo_frame = []
 disabled = ''
 disabled = 'DISABLED' if freeze_flag == 1
-0.upto( 3 ) do |c| photo_frame[c] = view_series( user, "#{yyyy}-#{mm}-#{dd}-#{c}", lp[29], 200 ) end
+0.upto( 3 ) do |c| photo_frame[c] = view_series( user, "#{yyyy}-#{mm}-#{dd}-#{c}", lp[29], 200, dd ) end
 
 
 ####

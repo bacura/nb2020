@@ -1,4 +1,4 @@
-#Nutrition browser 2020 menu 0.00b
+#Nutrition browser 2020 menu 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -40,3 +40,4 @@ menu.js/menuSave( code ) 		->	menu.cgi{ command:'save', code:code, menu_name:men
 #CHANGE LOG
 #==============================================================================
 20200210	0.00b	βスタート
+20200210	0.01b	更新：料理教室機能との連繋

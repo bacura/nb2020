@@ -1,4 +1,4 @@
-//guild.js ver 0.00b
+//guild.js ver 0.01b
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -66,20 +66,19 @@ var koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
 // Koyomi edit return
 var editKoyomiR = function( yyyy, mm ){
 	$.post( "koyomi.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	document.getElementById( "L2" ).style.display = 'none';
-	document.getElementById( "L3" ).style.display = 'none';
+
+	resetL( 1 );
+	dl1 = true;
+	reopenBroseWindows();
 };
 
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-var koyomiPhotoSave = function( code, form ){
-	document.getElementById( "L3" ).style.display = 'block';
+var koyomiPhotoSave = function( code, form, dd ){
 	form_data = new FormData( $( form )[0] );
 	form_data.append( 'command', 'upload' );
 	form_data.append( 'code', code );
 	form_data.append( 'base', 'koyomi' );
-
 	$.ajax( "photo.cgi",
 		{
 			type: 'post',
@@ -87,15 +86,16 @@ var koyomiPhotoSave = function( code, form ){
 			contentType: false,
 			data: form_data,
 			dataype: 'html',
-			success: function( data ){ $( '#L3' ).html( data ); }
+			success: function( data ){ setTimeout( editKoyomi( 'init', dd ), 2000); }
 		}
 	);
 };
 
 
 // delete photo from media db
-var koyomiPhotoDel = function( code, mcode ){
-	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){ $( '#L3' ).html( data );});
+var koyomiPhotoDel = function( code, mcode, dd ){
+	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){});
+	setTimeout( editKoyomi( 'init', dd ), 2000);
 };
 
 
