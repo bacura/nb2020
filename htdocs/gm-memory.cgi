@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM memory editor 0.00
+#Nutrition browser 2020 GM memory editor 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -240,11 +240,14 @@ when 'list_pointer'
 	new_html, memory_html = list( category, lp )
 
 when 'new_pointer'
+	puts 'New pointer<br>' if @debug
 	if pointer != ''
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false, @debug )
-		pointer = r.first['pointer']
-		memory = r.first['memory']
-		rank = r.first['rank']
+		if r.first
+			pointer = r.first['pointer']
+			memory = r.first['memory']
+			rank = r.first['rank']
+		end
 	end
 
 	category_set = []

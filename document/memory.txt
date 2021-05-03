@@ -1,4 +1,4 @@
-#Nutrition browser 2020 memory 0.00b
+#Nutrition browser 2020 memory 0.02b
 
 #==============================================================================
 # OVERVIEW
@@ -37,6 +37,8 @@ memory_solid.to_s
 #==============================================================================
 # TRANSITION
 #==============================================================================
+// New pointer form from nomatch
+master.js/newPMemoryNM( pointer, post_process ){	->	gm-memory.cgi"command:'new_pointer', category:category, pointer:pointer, post_process:post_process }
 
 
 #==============================================================================
@@ -45,3 +47,4 @@ memory_solid.to_s
 #20210310	0.00b	start
 #20210424	0.01b	問題：slogmへのINSERTエラー
 					解決：カラム名が間違っていたので、code->scoreに修正。
+#20210503	0.10b	更新：マッチしなかったポインターの登録フォームを追加。

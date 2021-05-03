@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.01b
+#Nutrition browser 2020 memory editor 0.10b
 
 #==============================================================================
 #LIBRARY
@@ -430,7 +430,32 @@ when 'refer'
 			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='#{score}', date='#{@datetime}';", false ,@debug )
 		end
 	end
-	memory_html << "#{lp[14]} (#{pointer})" if memory_html == ''
+
+	if memory_html == ''
+		memory_html << "<div class='row'>"
+		memory_html << "<div class='col'>#{lp[14]} (#{pointer})</div>"
+		memory_html << "</div>"
+		memory_html << "<br>"
+		if user.status >= 8
+			memory_html << "<div class='row'>"
+			r = mdb( "SELECT DISTINCT category from #{$MYSQL_TB_MEMORY};", false, @debug )
+			if r.first
+				memory_html << "<div class='col-6'>"
+				memory_html << "<div class='input-group input-group-sm'>"
+				memory_html << "<label class='input-group-text'>#{lp[4]}</label>"
+				memory_html << "<select class='form-select' id='nonmatch_categoly'>"
+				r.each do |e|
+					category = e['category']
+					memory_html << "<option value='#{category}'>#{category}</option>"
+				end
+				memory_html << "</select>"
+				memory_html << "<button type='button' class='btn btn-outline-primary' onclick=\"newPMemoryNM( '#{pointer}', '' )\"`>#{lp[8]}</button>"
+				memory_html << "</div>"
+				memory_html << "</div>"
+			end
+			memory_html << "</div>"
+		end
+	end
 end
 
 

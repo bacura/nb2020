@@ -1,3 +1,4 @@
+// master.js 0.00b 20210503
 /////////////////////////////////////////////////////////////////////////////////
 // Unit exchange ////////////////////////////////////////////////////////////////////////
 
@@ -338,14 +339,25 @@ var deleteCategory = function( category, delete_check_no ){
 // List each pointer
 var listPointer = function( category ){
 	$.post( "gm-memory.cgi", { command:'list_pointer', category:category }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	dl1 = true;
+	reopenBroseWindows();
 };
 
 // New pointer form
 var newPMemory = function( category, pointer, post_process ){
 	$.post( "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){ $( "#LF" ).html( data );});
-	if( post_process == 'front'){ document.getElementById( "L2" ).style.display = 'none'; }
-	document.getElementById( "LF" ).style.display = 'block';
+	if( post_process == 'front'){ dl2 = false; }
+	dlf = true;
+	reopenBroseWindows();
+};
+
+// New pointer form from nomatch
+var newPMemoryNM = function( pointer, post_process ){
+	var category = document.getElementById( 'nonmatch_categoly' ).value;
+	$.post( "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){ $( "#LF" ).html( data );});
+	if( post_process == 'front'){ dl1 = false; }
+	dlf = true;
+	reopenBroseWindows();
 };
 
 // Save pointer

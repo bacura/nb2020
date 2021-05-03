@@ -1,3 +1,4 @@
+// Nutorition Browser 2020 core.js 0.00b 20210503
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -6,7 +7,6 @@ dl3 = false;
 dl4 = false;
 dl5 = false;
 dlf = false;
-dlm = false;
 
 menu_status = 0;
 general_ = '';
@@ -38,7 +38,6 @@ var closeBroseWindows = function( num ){
 		document.getElementById( "L1" ).style.display = 'none';
 	case 1:
 		document.getElementById( "L2" ).style.display = 'none';
-		document.getElementById( "LINE" ).style.display = 'none';
 	case 2:
 		document.getElementById( "L3" ).style.display = 'none';
 	case 3:
@@ -59,7 +58,6 @@ var reopenBroseWindows = function(){
 	if( dl4 ){ document.getElementById( "L4" ).style.display = 'block'; }
 	if( dl5 ){ document.getElementById( "L5" ).style.display = 'block'; }
 	if( dlf ){ document.getElementById( "LF" ).style.display = 'block'; }
-	if( dlm ){ document.getElementById( "LINE" ).style.display = 'block'; }
 };
 
 
@@ -68,7 +66,6 @@ var resetL = function( num ){
 	switch( Number( num )){
 	case 0:
 		dl1 = false;
-		dlm = false;
 	case 1:
 		dl2 = false;
 	case 2:
@@ -86,13 +83,11 @@ var resetL = function( num ){
 var displayLINE = function( msg ){
 	if( msg == 'on' ){
 		document.getElementById( "LINE" ).style.display = 'block';
-		dlm = true;
 	}else if( msg == 'off' ){
 		document.getElementById( "LINE" ).style.display = 'none';
 	}else{
 		document.getElementById( "LINE" ).style.display = 'block';
 		document.getElementById( "LINE" ).innerHTML = msg;
-		dlm = true;
 	}
 }
 
@@ -164,9 +159,9 @@ var chageAccountM = function(){
 var summonL1 = function( num ){
 	closeBroseWindows( 1 );
 	$.get( "square.cgi", { channel:"fctb", category:num }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
 	resetL( 0 );
 	dl1 = true;
+	reopenBroseWindows();
 };
 
 
@@ -174,45 +169,39 @@ var summonL1 = function( num ){
 var summonL2 = function( key ){
 	closeBroseWindows( 2 );
 	$.get( "square.cgi", { channel:"fctb_l2", food_key:key }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
 	resetL( 2 );
 	dl2 = true;
+	reopenBroseWindows();
 };
 
 
 // Display foods on BWL3
 var summonL3 = function( key, direct ){
-	if( direct > 0 ){
-		closeBroseWindows( direct );
-	}
+	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l3", food_key:key }, function( data ){ $( "#L3" ).html( data );});
-	document.getElementById( "L3" ).style.display = 'block';
 	resetL( 3 );
 	dl3 = true;
+	reopenBroseWindows();
 };
 
 
 // Display foods on BWL4
 var summonL4 = function( key, direct ){
-	if( direct > 0 ){
-		closeBroseWindows( direct );
-	}
+	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l4", food_key:key }, function( data ){ $( "#L4" ).html( data );});
-	document.getElementById( "L4" ).style.display = 'block';
 	resetL( 4 );
 	dl4 = true;
+	reopenBroseWindows();
 };
 
 
 // Display foods on BWL5
 var summonL5 = function( key, direct ){
-	if( direct > 0 ){
-		closeBroseWindows( direct );
-	}
+	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l5", food_key:key }, function( data ){ $( "#L5" ).html( data );});
-	document.getElementById( "L5" ).style.display = 'block';
 	resetL( 5 );
 	dl5 = true;
+	reopenBroseWindows();
 };
 
 
@@ -232,15 +221,17 @@ var detailView = function( fn ){
 	var fraction_mode = document.getElementById( "fraction" ).value;
 	var weight = document.getElementById( "weight" ).value;
 	$.get( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "L5" ).style.display = 'none';
-	document.getElementById( "LF" ).style.display = 'block';
+	dl5 = false;
+	dlf = true;
+	reopenBroseWindows();
 };
 
 // Display ditail information on LF (history)
 var detailView_his = function( fn ){
 	$.get( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100 }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'none';
-	document.getElementById( "LF" ).style.display = 'block';
+	dl1 = false;
+	dlf = true;
+	reopenBroseWindows();
 	displayLINE( 'off' );
 };
 
@@ -294,7 +285,9 @@ var search = function(){
 			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){ $( "#L1" ).html( data );});
 			break;
  		}
-		document.getElementById( "L1" ).style.display = 'block';
+ 		resetL( 1 );
+ 		ld1 = true
+ 		reopenBroseWindows();
 	}
 };
 
@@ -331,15 +324,14 @@ var historyInit = function(){
 	closeBroseWindows( 1 );
 	$.post( "history.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
 	displayLINE( 'on' );
 	resetL( 1 );
 	dl1 = true;
+	reopenBroseWindows();
 };
 
 var historySub = function( sub_fg ){
 	$.post( "history.cgi", { command:'sub', sub_fg:sub_fg }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
 };
 
 
@@ -351,7 +343,7 @@ var pseudoAdd = function( com, food_key, code ){
 	closeBroseWindows( 5 );
 	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){ $( "#LF" ).html( data );});
 	document.getElementById( "LF" ).style.display = 'block';
-
+	resetL()
 	LF_status = 'block';
 };
 
