@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.03b
+#nb2020-dbi.rb 0.05b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -35,37 +35,6 @@ gets.chomp
 #==============================================================================
 
 
-#### Making fct table.
-def fct_init( source_file )
-	query = "SHOW TABLES LIKE 'fct';"
-	res = $DB.query( query )
-	if res.first
-		puts 'fct table already exists.'
-	else
-		query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5) NOT NULL PRIMARY KEY,SID SMALLINT UNSIGNED,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLMF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
-		$DB.query( query )
-
-		f = open( source_file, 'r' )
-		label = true
-		f.each_line do |e|
-			items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-
-			query = "INSERT INTO #{$MYSQL_TB_FCT} SET"
-			@fct_item.size.times do |c|
-				query << " #{@fct_item[c]}='#{items[c]}',"
-			end
-			query.chop!
-			query << ";"
-
-			$DB.query( query ) unless label
-			label = false
-		end
-		f.close
-		puts 'fct table has been created.'
-	end
-end
-
-
 #### Updating fct table.
 def fct_update( source_file )
 	query = 'DELETE FROM fct;'
@@ -91,87 +60,34 @@ def fct_update( source_file )
 end
 
 
-#### Making food tag table.
-def tag_init( source_file )
-	query = "SHOW TABLES LIKE 'tag';"
+#### Making fct table.
+def fct_init( source_file )
+	query = "SHOW TABLES LIKE 'fct';"
 	res = $DB.query( query )
 	if res.first
-		puts 'tag table already exists.'
+		puts 'fct table already exists.'
+		fct_update( source_file )
 	else
-		query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID VARCHAR(5), user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
+		query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5) NOT NULL PRIMARY KEY,SID SMALLINT UNSIGNED,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLMF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
 		$DB.query( query )
 
-		# タグテーブルから読み込んでタグテーブル更新
 		f = open( source_file, 'r' )
 		label = true
 		f.each_line do |e|
 			items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-			sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
-			t = items[3]
 
-			t.gsub!( '（', "｛" )
-			t.gsub!( '＞　｛', "＞　（" )
-			t.gsub!( '］　｛', "］　（" )
-			t.gsub!( /^｛/, "（" )
-			t.gsub!( '｛', '' )
-			t.gsub!( 'もの｝', '' )
-
-			t.gsub!( '　', "\t" )
-			t.gsub!( '＞', "\t" )
-			t.gsub!( '）', "\t" )
-			t.gsub!( '］', "\t" )
-			t.gsub!( "\s", "\t" )
-			t.gsub!( /\t{2,}/, "\t" )
-			t.gsub!( /\t+$/, '' )
-
-			tags = t.split( "\t" )
-			class1 = ''
-			class2 = ''
-			class3 = ''
-			name_ = ''
-			tag1 = ''
-			tag2 = ''
-			tag3 = ''
-			tag4 = ''
-			tag5 = ''
-			count = 0
-
-			tags.each do |ee|
-				if /＜/ =~ ee
-					class1 = ee.sub( '＜', '' )
-				elsif /［/ =~ ee
-					class2 = ee.sub( '［', '' )
-				elsif /（/ =~ ee
-					class3 = ee.sub( '（', '' )
-				else
-					case count
-					when 0
-						name_ = ee
-						count += 1
-					when 1
-						tag1 = ee
-						count += 1
-					when 2
-						tag2 = ee
-						count += 1
-					when 3
-						tag3 = ee
-						count += 1
-					when 4
-						tag4 = ee
-						count += 1
-					when 5
-						tag5 = ee
-						count += 1
-					end
-				end
+			query = "INSERT INTO #{$MYSQL_TB_FCT} SET"
+			@fct_item.size.times do |c|
+				query << " #{@fct_item[c]}='#{items[c]}',"
 			end
-			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
-			$DB.query( sql_query_tag ) unless label
+			query.chop!
+			query << ";"
+
+			$DB.query( query ) unless label
 			label = false
 		end
 		f.close
-		puts 'tag table has been created.'
+		puts 'fct table has been created.'
 	end
 end
 
@@ -255,12 +171,152 @@ def tag_update( source_file )
 end
 
 
+#### Making food tag table.
+def tag_init( source_file )
+	query = "SHOW TABLES LIKE 'tag';"
+	res = $DB.query( query )
+	if res.first
+		puts 'tag table already exists.'
+		tag_update( source_file )
+	else
+		query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID VARCHAR(5), user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
+		$DB.query( query )
+
+		# タグテーブルから読み込んでタグテーブル更新
+		f = open( source_file, 'r' )
+		label = true
+		f.each_line do |e|
+			items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+			sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
+			t = items[3]
+
+			t.gsub!( '（', "｛" )
+			t.gsub!( '＞　｛', "＞　（" )
+			t.gsub!( '］　｛', "］　（" )
+			t.gsub!( /^｛/, "（" )
+			t.gsub!( '｛', '' )
+			t.gsub!( 'もの｝', '' )
+
+			t.gsub!( '　', "\t" )
+			t.gsub!( '＞', "\t" )
+			t.gsub!( '）', "\t" )
+			t.gsub!( '］', "\t" )
+			t.gsub!( "\s", "\t" )
+			t.gsub!( /\t{2,}/, "\t" )
+			t.gsub!( /\t+$/, '' )
+
+			tags = t.split( "\t" )
+			class1 = ''
+			class2 = ''
+			class3 = ''
+			name_ = ''
+			tag1 = ''
+			tag2 = ''
+			tag3 = ''
+			tag4 = ''
+			tag5 = ''
+			count = 0
+
+			tags.each do |ee|
+				if /＜/ =~ ee
+					class1 = ee.sub( '＜', '' )
+				elsif /［/ =~ ee
+					class2 = ee.sub( '［', '' )
+				elsif /（/ =~ ee
+					class3 = ee.sub( '（', '' )
+				else
+					case count
+					when 0
+						name_ = ee
+						count += 1
+					when 1
+						tag1 = ee
+						count += 1
+					when 2
+						tag2 = ee
+						count += 1
+					when 3
+						tag3 = ee
+						count += 1
+					when 4
+						tag4 = ee
+						count += 1
+					when 5
+						tag5 = ee
+						count += 1
+					end
+				end
+			end
+			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
+			$DB.query( sql_query_tag ) unless label
+			label = false
+		end
+		f.close
+		puts 'tag table has been created.'
+	end
+end
+
+
+#### Updating food extra tag table.
+def ext_update( gycv_file, shun_file, unit_file )
+	query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
+	res = $DB.query( query )
+	res.each do |e|
+		query = "UPDATE #{$MYSQL_TB_EXT} SET color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{e['FN']}';"
+		$DB.query( query )
+	end
+
+	# Green/Yellow color vegitable
+	f = open( gycv_file, 'r' )
+	f.each_line do |e|
+		food_no = e.chomp
+		query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN=#{food_no};"
+		$DB.query( query )
+	end
+	f.close
+	puts 'Green/Yellow color vegitable in ext has been updated.'
+
+	# Shun
+	f = open( shun_file, 'r' )
+	f.each_line do |e|
+		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+		food_no = a[0]
+		shun1s = a[2]
+		shun1e = a[3]
+		shun2s = a[4]
+		shun2e = a[5]
+		shun1s = 0 if shun1s == nil || shun1s == ''
+		shun1e = 0 if shun1e == nil || shun1e == ''
+		shun2s = 0 if shun2s == nil || shun2s == ''
+		shun2e = 0 if shun2e == nil || shun2e == ''
+		query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
+		$DB.query( query )
+	end
+	f.close
+	puts 'Shun in ext has been updated.'
+
+	# Unit
+	f = open( unit_file, 'r' )
+	f.each_line do |e|
+		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+		food_no = a[0]
+		unitc = a[2]
+		unitn = a[3]
+		query = "UPDATE #{$MYSQL_TB_EXT} SET unitc='#{unitc}', unitn='#{unitn}' WHERE FN='#{food_no}';"
+		$DB.query( query )
+	end
+	f.close
+	puts 'Unit in ext has been updated.'
+end
+
+
 #### Making food extra tag table.
 def ext_init( gycv_file, shun_file, unit_file )
 	query = "SHOW TABLES LIKE 'ext';"
 	res = $DB.query( query )
 	if res.first
 		puts 'ext table already exists.'
+		ext_update( gycv_file, shun_file, unit_file )
 	else
 		query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen TINYINT(1), unitc VARCHAR(255), unitn VARCHAR(255), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
 		$DB.query( query )
@@ -496,7 +552,7 @@ def fct_pseudo_init()
 	if res.first
 		puts 'fctp table already exists.'
 	else
-		query = 'CREATE TABLE fctp (FG VARCHAR(2),FN VARCHAR(6),user VARCHAR(32) NOT NULL,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLMF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
+		query = 'CREATE TABLE fctp (FG VARCHAR(2),FN VARCHAR(6),user VARCHAR(32) NOT NULL,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(16),PROTCAA VARCHAR(16),PROT VARCHAR(16),FATNLEA VARCHAR(16),CHOLE VARCHAR(16),FAT VARCHAR(16),CHOAVLM VARCHAR(16),CHOAVL VARCHAR(16),CHOAVLMF VARCHAR(16),FIB VARCHAR(16),POLYL VARCHAR(16),CHOCDF VARCHAR(16),OA VARCHAR(16),ASH VARCHAR(16),NA VARCHAR(16),K VARCHAR(16),CA VARCHAR(16),MG VARCHAR(16),P VARCHAR(16),FE VARCHAR(16),ZN VARCHAR(16),CU VARCHAR(16),MN VARCHAR(16),ID VARCHAR(16),SE VARCHAR(16),CR VARCHAR(16),MO VARCHAR(16),RETOL VARCHAR(16),CARTA VARCHAR(16),CARTB VARCHAR(16),CRYPXB VARCHAR(16),CARTBEQ VARCHAR(16),VITA_RAE VARCHAR(16),VITD VARCHAR(16),TOCPHA VARCHAR(16),TOCPHB VARCHAR(16),TOCPHG VARCHAR(16),TOCPHD VARCHAR(16),VITK VARCHAR(16),THIAHCL VARCHAR(16),RIBF VARCHAR(16),NIA VARCHAR(16),NE VARCHAR(16),VITB6A VARCHAR(16),VITB12 VARCHAR(16),FOL VARCHAR(16),PANTAC VARCHAR(16),BIOT VARCHAR(16),VITC VARCHAR(16),ALC VARCHAR(16),NACL_EQ VARCHAR(16),Notice VARCHAR(255));'
 		$DB.query( query )
 		puts 'fctp table has been created.'
 	end
@@ -785,7 +841,7 @@ def fcs_init()
 	if res.first
 		puts 'fcs already exists.'
 	else
-		query = 'CREATE TABLE fcs ( code VARCHAR(32) NOT NULL PRIMARY KEY, name VARCHAR(64), user VARCHAR(32), ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLMF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIAHCL VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8));'
+		query = 'CREATE TABLE fcs ( code VARCHAR(32) NOT NULL PRIMARY KEY, name VARCHAR(64), user VARCHAR(32), ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(16),PROTCAA VARCHAR(16),PROT VARCHAR(16),FATNLEA VARCHAR(16),CHOLE VARCHAR(16),FAT VARCHAR(16),CHOAVLM VARCHAR(16),CHOAVL VARCHAR(16),CHOAVLMF VARCHAR(16),FIB VARCHAR(16),POLYL VARCHAR(16),CHOCDF VARCHAR(16),OA VARCHAR(16),ASH VARCHAR(16),NA VARCHAR(16),K VARCHAR(16),CA VARCHAR(16),MG VARCHAR(16),P VARCHAR(16),FE VARCHAR(16),ZN VARCHAR(16),CU VARCHAR(16),MN VARCHAR(16),ID VARCHAR(16),SE VARCHAR(16),CR VARCHAR(16),MO VARCHAR(16),RETOL VARCHAR(16),CARTA VARCHAR(16),CARTB VARCHAR(16),CRYPXB VARCHAR(16),CARTBEQ VARCHAR(16),VITA_RAE VARCHAR(16),VITD VARCHAR(16),TOCPHA VARCHAR(16),TOCPHB VARCHAR(16),TOCPHG VARCHAR(16),TOCPHD VARCHAR(16),VITK VARCHAR(16),THIAHCL VARCHAR(16),RIBF VARCHAR(16),NIA VARCHAR(16),NE VARCHAR(16),VITB6A VARCHAR(16),VITB12 VARCHAR(16),FOL VARCHAR(16),PANTAC VARCHAR(16),BIOT VARCHAR(16),VITC VARCHAR(16),ALC VARCHAR(16),NACL_EQ VARCHAR(16));'
 		$DB.query( query )
 		puts 'fcs table has been created.'
 	end
@@ -802,6 +858,20 @@ def fcz_init()
 		query = 'CREATE TABLE fcz ( code VARCHAR(32) NOT NULL PRIMARY KEY, user VARCHAR(32),ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(16),PROTCAA VARCHAR(16),PROT VARCHAR(16),FATNLEA VARCHAR(16),CHOLE VARCHAR(16),FAT VARCHAR(16),CHOAVLM VARCHAR(16),CHOAVL VARCHAR(16),CHOAVLMF VARCHAR(16),FIB VARCHAR(16),POLYL VARCHAR(16),CHOCDF VARCHAR(16),OA VARCHAR(16),ASH VARCHAR(16),NA VARCHAR(16),K VARCHAR(16),CA VARCHAR(16),MG VARCHAR(16),P VARCHAR(16),FE VARCHAR(16),ZN VARCHAR(16),CU VARCHAR(16),MN VARCHAR(16),ID VARCHAR(16),SE VARCHAR(16),CR VARCHAR(16),MO VARCHAR(16),RETOL VARCHAR(16),CARTA VARCHAR(16),CARTB VARCHAR(16),CRYPXB VARCHAR(16),CARTBEQ VARCHAR(16),VITA_RAE VARCHAR(16),VITD VARCHAR(16),TOCPHA VARCHAR(16),TOCPHB VARCHAR(16),TOCPHG VARCHAR(16),TOCPHD VARCHAR(16),VITK VARCHAR(16),THIAHCL VARCHAR(16),RIBF VARCHAR(16),NIA VARCHAR(16),NE VARCHAR(16),VITB6A VARCHAR(16),VITB12 VARCHAR(16),FOL VARCHAR(16),PANTAC VARCHAR(16),BIOT VARCHAR(16),VITC VARCHAR(16),ALC VARCHAR(16),NACL_EQ VARCHAR(16), someb VARCHAR(3), somel VARCHAR(3), somed VARCHAR(3), somes VARCHAR(3));'
 		$DB.query( query )
 		puts 'fcz table has been created.'
+	end
+end
+
+
+#### Making fct result table.
+def fcr_init()
+	query = "SHOW TABLES LIKE 'fcr';"
+	res = $DB.query( query )
+	if res.first
+		puts 'fcr already exists.'
+	else
+		query = 'CREATE TABLE fcr ( code VARCHAR(32) NOT NULL PRIMARY KEY, user VARCHAR(32), ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(16),PROTCAA VARCHAR(16),PROT VARCHAR(16),FATNLEA VARCHAR(16),CHOLE VARCHAR(16),FAT VARCHAR(16),CHOAVLM VARCHAR(16),CHOAVL VARCHAR(16),CHOAVLMF VARCHAR(16),FIB VARCHAR(16),POLYL VARCHAR(16),CHOCDF VARCHAR(16),OA VARCHAR(16),ASH VARCHAR(16),NA VARCHAR(16),K VARCHAR(16),CA VARCHAR(16),MG VARCHAR(16),P VARCHAR(16),FE VARCHAR(16),ZN VARCHAR(16),CU VARCHAR(16),MN VARCHAR(16),ID VARCHAR(16),SE VARCHAR(16),CR VARCHAR(16),MO VARCHAR(16),RETOL VARCHAR(16),CARTA VARCHAR(16),CARTB VARCHAR(16),CRYPXB VARCHAR(16),CARTBEQ VARCHAR(16),VITA_RAE VARCHAR(16),VITD VARCHAR(16),TOCPHA VARCHAR(16),TOCPHB VARCHAR(16),TOCPHG VARCHAR(16),TOCPHD VARCHAR(16),VITK VARCHAR(16),THIAHCL VARCHAR(16),RIBF VARCHAR(16),NIA VARCHAR(16),NE VARCHAR(16),VITB6A VARCHAR(16),VITB12 VARCHAR(16),FOL VARCHAR(16),PANTAC VARCHAR(16),BIOT VARCHAR(16),VITC VARCHAR(16),ALC VARCHAR(16),NACL_EQ VARCHAR(16));'
+		$DB.query( query )
+		puts 'fcr table has been created.'
 	end
 end
 
@@ -960,7 +1030,7 @@ def schoolm_init()
 	if res.first
 		puts 'schoolm already exists.'
 	else
-		query = 'CREATE TABLE schoolm ( user VARCHAR(32) NOT NULL, tag_group VARCHAR(64), tags_name VARCHAR(256), tags VARCHAR(256));'
+		query = 'CREATE TABLE schoolm ( user VARCHAR(32) NOT NULL, label_group VARCHAR(64), label VARCHAR(256));'
 		$DB.query( query )
 		puts 'schoolm table has been created.'
 	end
@@ -978,7 +1048,6 @@ end
 #==============================================================================
 $DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
-source_file = '20201225-mxt_kagsei-mext_01110_012_clean.txt'
 gycv_file = 'nb2020-gycv.txt'
 shun_file = 'nb2020-shun.txt'
 unit_file = 'nb2020-unit.txt'
@@ -991,9 +1060,7 @@ ref_intake = 'ref2020-intake.txt'
 #==============================================================================
 
 fct_init( source_file )
-#fct_update( source_file )
 tag_init( source_file )
-#tag_update( source_file )
 ext_init( gycv_file, shun_file, unit_file )
 dic_init()
 fct_pseudo_init()
@@ -1020,8 +1087,10 @@ memory_init()
 
 koyomi_init
 koyomiex_init
+
 fcs_init()
 fcz_init()
+fcr_init()
 
 metst_init( mets_file )
 mets_init()
