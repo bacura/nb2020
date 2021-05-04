@@ -237,6 +237,7 @@ when 'delete_category'
 	new_html, memory_html = init( lp )
 
 when 'list_pointer'
+	puts 'List_pointer<br>' if @debug
 	new_html, memory_html = list( category, lp )
 
 when 'new_pointer'

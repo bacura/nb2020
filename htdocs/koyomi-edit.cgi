@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.02b
+#Nutrition browser 2020 koyomi editor 0.04b
 
 
 #==============================================================================
@@ -45,16 +45,9 @@ def meals( e, lp, uname, freeze_flag )
 		onclick = ''
 		fix_copy_button = ''
 		recipe_button = ''
-		if aa[0] == '?-'
-			item_name = lp[21]
-		elsif aa[0] == '?--'
-			item_name = lp[22]
-		elsif aa[0] == '?='
-			item_name = lp[23]
-		elsif aa[0] == '?+'
-			item_name = lp[24]
-		elsif aa[0] == '?++'
-			item_name = lp[25]
+
+		if /^\?/ =~ aa[0]
+			item_name = @something[aa[0]]
 		elsif /\-m\-/ =~ aa[0]
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false, @debug )
 			if rr.first
@@ -97,7 +90,7 @@ def meals( e, lp, uname, freeze_flag )
 		mb_html << "<tr>"
 		mb_html << "<td#{onclick}>#{item_name}</td>"
 
-		if /\-f\-/ =~ aa[0] || aa[0] == '?-' || aa[0] == '?=' || aa[0] == '?+' || aa[0] == '?++'  || aa[0] == '?--'
+		if /\-f\-/ =~ aa[0] ||  /^\?/ =~ aa[0]
 			mb_html << "<td#{onclick}>-</td>"
 		elsif /\-m\-/ =~ aa[0] || /\-/ =~ aa[0]
 			mb_html << "<td#{onclick}>#{aa[1]}&nbsp;#{unit}</td>"
@@ -167,7 +160,7 @@ def multi_calc_sub( uname, yyyy, mm, dd, tdiv, fc_items, fct_start, fct_end, fct
 				rate = BigDecimal( rate_set[c] )
 				unit = unit_set[c].to_i
 
-				if /\?/ =~ code
+				if /^\?/ =~ code
 				elsif /\-f\-/ =~ code
 					puts 'FIX<br>' if @debug
 					rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
@@ -426,11 +419,12 @@ if freeze_flag == 0
 		some_html[c] = <<-"SOME"
 		<select class='form-select form-select-sm' id='some#{c}' onchange="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', #{c}, 'some#{c}' )">
 			<option value='' selected>#{lp[20]}</option>
-			<option value='?--'>#{lp[15]}</option>
-			<option value='?-'>#{lp[12]}</option>
-			<option value='?='>#{lp[13]}</option>
-			<option value='?+'>#{lp[14]}</option>
-			<option value='?++'>#{lp[16]}</option>
+			<option value='?--'>#{@something['?--']}</option>
+			<option value='?-'>#{@something['?-']}</option>
+			<option value='?='>#{@something['?=']}</option>
+			<option value='?+'>#{@something['?+']}</option>
+			<option value='?++'>#{@something['?++']}</option>
+			<option value='?0'>#{@something['?0']}</option>
 		</select>
 SOME
 	end

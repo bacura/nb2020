@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.02b
+#Nutrition browser 2020 koyomi 0.04b
 
 
 #==============================================================================
@@ -45,17 +45,9 @@ def meals( meal, uname )
 	mb_html = '<ul>'
 	a = meal.split( "\t" )
 	a.each do |e|
-aa = e.split( ':' )
-		if aa[0] == '?--'
-			mb_html << "<li style='list-style-type: circle'>何か食べた（微盛）</li>"
-		elsif aa[0] == '?-'
-			mb_html << "<li style='list-style-type: circle'>何か食べた（小盛）</li>"
-		elsif aa[0] == '?='
-			mb_html << "<li style='list-style-type: circle'>何か食べた（並盛）</li>"
-		elsif aa[0] == '?+'
-			mb_html << "<li style='list-style-type: circle'>何か食べた（大盛）</li>"
-		elsif aa[0] == '?++'
-			mb_html << "<li style='list-style-type: circle'>何か食べた（特盛）</li>"
+		aa = e.split( ':' )
+		if /^\?/ =~ aa[0]
+			mb_html << "<li style='list-style-type: circle'>#{@something[aa[0]]}</li>"
 		elsif /\-m\-/ =~ aa[0]
 			puts 'menu' if @debug
 			r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false, @debug )
@@ -211,7 +203,7 @@ class Nutrition_calc
 		pfc_f = ( @results['FAT'] * 4 / @results['ENERC_KCAL'] * 100 ).round( 1 )
 		pfc_c = 100 - pfc_p - pfc_f
 		pfc_c = 0 if pfc_c == 100
-		html << "<span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = <span style='color:crimson'>#{pfc_p.to_f}</span> : <span style='color:green'>#{pfc_f.to_f}</span> : <span style='color:blue'>#{pfc_c.to_f}</span>"
+		html << "<br><span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = <span style='color:crimson'>#{pfc_p.to_f}</span> : <span style='color:green'>#{pfc_f.to_f}</span> : <span style='color:blue'>#{pfc_c.to_f}</span>"
 
 		return html
 	end
@@ -360,7 +352,6 @@ puts "Multi calc process<br>" if @debug
 						unit = unit_set[cc].to_i
 
 						if /\?/ =~ code
-							some_set << "+#{@something[code]}&nbsp;"
 						elsif /\-f\-/ =~ code
 							puts 'FIX<br>' if @debug
 							rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
@@ -417,7 +408,6 @@ puts "Multi calc process<br>" if @debug
 		end
 		calc_html = ''
 		calc_html << calc.total_html( fc_items )
-		calc_html << "#{some_set}&nbsp;&nbsp;&nbsp;&nbsp;" unless some_set == ''
 		calc_html << calc.pfc_html()
 		calc_html_set << calc_html
 	else

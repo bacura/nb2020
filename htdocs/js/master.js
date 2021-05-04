@@ -301,9 +301,9 @@ var saveAccount = function( target_uid ){
 
 // Memory init
 var initMemory = function(){
-	closeBroseWindows( 0 );
-	$.post( "gm-memory.cgi", { command:'init' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	$.post( "gm-memory.cgi", { command:'init', post_process:'front' }, function( data ){ $( "#L1" ).html( data );});
+	flashBW( 1 );
+	displayBW();
 };
 
 // Save New category
@@ -330,7 +330,8 @@ var changeCategory = function( category ){
 var deleteCategory = function( category, delete_check_no ){
 	if( document.getElementById( delete_check_no ).checked ){
 		$.post( "gm-memory.cgi", { command:'delete_category', category:category }, function( data ){ $( "#L1" ).html( data );});
-		closeBroseWindows( 1 );
+		flashBW( 1 );
+		displayBW();
 	}else{
 		displayVIDEO( 'Check!' );
 	}
@@ -338,17 +339,19 @@ var deleteCategory = function( category, delete_check_no ){
 
 // List each pointer
 var listPointer = function( category ){
-	$.post( "gm-memory.cgi", { command:'list_pointer', category:category }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "gm-memory.cgi", { command:'list_pointer', category:category, post_process:'front' }, function( data ){ $( "#L1" ).html( data );});
+	flashBW( 1 );
 	dl1 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 // New pointer form
 var newPMemory = function( category, pointer, post_process ){
 	$.post( "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){ $( "#LF" ).html( data );});
+	dl1 = false;
 	if( post_process == 'front'){ dl2 = false; }
 	dlf = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 // New pointer form from nomatch
@@ -357,7 +360,7 @@ var newPMemoryNM = function( pointer, post_process ){
 	$.post( "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){ $( "#LF" ).html( data );});
 	if( post_process == 'front'){ dl1 = false; }
 	dlf = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 // Save pointer
@@ -369,12 +372,14 @@ var savePMemory = function( category, post_process ){
 	if( pointer != '' ){
 		if( post_process == 'front'){
 			$.post( "gm-memory.cgi", { command:'save_pointer', memory:memory, category:category, pointer:pointer, rank:rank, post_process:post_process }, function( data ){ $( "#L2" ).html( data );});
-			$.post( "gm-memory.cgi", { command:'init' }, function( data ){ $( "#L1" ).html( data );});
-			document.getElementById( "L1" ).style.display = 'block';
+			$.post( "gm-memory.cgi", { command:'list_pointer', category:category, post_process:post_process }, function( data ){ $( "#L1" ).html( data );});
+			dl1 = true;
+			dl2 = false;
 		}else{
 			$.post( "gm-memory.cgi", { command:'save_pointer', memory:memory, category:category, pointer:pointer, rank:rank, post_process:post_process }, function( data ){});
 		}
-		document.getElementById( "LF" ).style.display = 'none';
+		dlf = false
+		displayBW();
 	}else{
 		displayVIDEO( '(>_<)key!!' );
 	}

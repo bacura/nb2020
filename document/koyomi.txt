@@ -46,3 +46,4 @@ guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy_mm:yyyy_
 20210426	0.02b	問題：登録後に登録したコードのものを削除すると止まる。
 					解決：DBから削除されたものはエラーとして表示し続行するようにした。
 20210429	0.03b	更新：Joystic対応
+20210504	0.04b	更新：何も食べていないコード'?0'に対応。

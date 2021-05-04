@@ -5,10 +5,11 @@
 
 // Koyomi
 var initKoyomi = function(){
-	closeBroseWindows( 1 );
 	$.post( "koyomi.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "koyomi.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	resetBW( 1 );
+	dl1 = true;
+	displayBW();
 	displayLINE( 'on');
 };
 
@@ -66,10 +67,9 @@ var koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
 // Koyomi edit return
 var editKoyomiR = function( yyyy, mm ){
 	$.post( "koyomi.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){ $( "#L1" ).html( data );});
-
-	resetL( 1 );
+	resetBWL( 1 );
 	dl1 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 
@@ -242,9 +242,10 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 
 // Koyomi modify or copy panel fix
 var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
-	closeBroseWindows( 2 );
 	$.post( "koyomi-fix.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, order:order }, function( data ){ $( "#L3" ).html( data );});
-	document.getElementById( "L3" ).style.display = 'block';
+	resetBW( 2 );
+	dl3 = true;
+	displayBW();
 };
 
 
@@ -309,7 +310,7 @@ var modifysaveKoyomiFC = function( code, origin ){
 var koyomiReturn = function(){
 	closeBroseWindows( 0 );
 	ldf = false;
-	reopenBroseWindows();
+	displayBW();
 };
 
 // Return from Koyomi to Koyomi edit

@@ -8,6 +8,15 @@ dl4 = false;
 dl5 = false;
 dlf = false;
 
+bwl1 = null;
+bwl2 = null;
+bwl3 = null;
+bwl4 = null;
+bwl5 = null;
+bwlf = null;
+line = null;
+video = null;
+
 menu_status = 0;
 general_ = '';
 
@@ -17,13 +26,14 @@ general_ = '';
 // initialization
 window.onload = function(){
 	if( !!document.getElementById( "L1" )){
-		document.getElementById( "L1" ).innerHTML = "";
-		document.getElementById( "L2" ).innerHTML = "";
-		document.getElementById( "L3" ).innerHTML = "";
-		document.getElementById( "L4" ).innerHTML = "";
-		document.getElementById( "L5" ).innerHTML = "";
-		document.getElementById( "LF" ).innerHTML = "";
-		document.getElementById( "LINE" ).innerHTML = "";
+		bwl1 = document.getElementById( "L1" );
+		bwl2 = document.getElementById( "L2" );
+		bwl3 = document.getElementById( "L3" );
+		bwl4 = document.getElementById( "L4" );
+		bwl5 = document.getElementById( "L5" );
+		bwlf = document.getElementById( "LF" );
+		line = document.getElementById( "LINE" );
+		video = document.getElementById( "VIDEO" );
 
 		bookOpen( 'books/about.html', 1 );
 		bookOpen( 'books/information.html', 2 );
@@ -32,7 +42,8 @@ window.onload = function(){
 
 
 // Closing browse windows
-var closeBroseWindows = function( num ){
+// This feature will be discontinued in the future.
+closeBroseWindows = function( num ){
 	switch( Number( num )){
 	case 0:
 		document.getElementById( "L1" ).style.display = 'none';
@@ -51,18 +62,18 @@ var closeBroseWindows = function( num ){
 
 
 // Reopening browse windows
-var reopenBroseWindows = function(){
-	if( dl1 ){ document.getElementById( "L1" ).style.display = 'block'; }
-	if( dl2 ){ document.getElementById( "L2" ).style.display = 'block'; }
-	if( dl3 ){ document.getElementById( "L3" ).style.display = 'block'; }
-	if( dl4 ){ document.getElementById( "L4" ).style.display = 'block'; }
-	if( dl5 ){ document.getElementById( "L5" ).style.display = 'block'; }
-	if( dlf ){ document.getElementById( "LF" ).style.display = 'block'; }
+displayBW = function(){
+	if( dl1 ){ bwl1.style.display = 'block'; }else{ bwl1.style.display = 'none'; }
+	if( dl2 ){ bwl2.style.display = 'block'; }else{ bwl2.style.display = 'none'; }
+	if( dl3 ){ bwl3.style.display = 'block'; }else{ bwl3.style.display = 'none'; }
+	if( dl4 ){ bwl4.style.display = 'block'; }else{ bwl4.style.display = 'none'; }
+	if( dl5 ){ bwl5.style.display = 'block'; }else{ bwl5.style.display = 'none'; }
+	if( dlf ){ bwlf.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
 };
 
 
 // Resetting level status
-var resetL = function( num ){
+resetBWL = function( num ){
 	switch( Number( num )){
 	case 0:
 		dl1 = false;
@@ -80,32 +91,32 @@ var resetL = function( num ){
 };
 
 // Opning menu LINE
-var displayLINE = function( msg ){
+displayLINE = function( msg ){
 	if( msg == 'on' ){
-		document.getElementById( "LINE" ).style.display = 'block';
+		line.style.display = 'block';
 	}else if( msg == 'off' ){
-		document.getElementById( "LINE" ).style.display = 'none';
+		line.style.display = 'none';
 	}else{
-		document.getElementById( "LINE" ).style.display = 'block';
-		document.getElementById( "LINE" ).innerHTML = msg;
+		line.style.display = 'block';
+		line.innerHTML = msg;
 	}
 }
 
 
 // Displaying message on VIDEO
-var displayVIDEO = function( msg ){
-	document.getElementById( "VIDEO" ).innerHTML = msg;
-	document.getElementById( "VIDEO" ).style.display = 'block';
+displayVIDEO = function( msg ){
+	video.innerHTML = msg;
+	video.style.display = 'block';
 	var fx = function(){
-		document.getElementById( "VIDEO" ).innerHTML = "";
-		document.getElementById( "VIDEO" ).style.display = 'none';
+		video.innerHTML = "";
+		video.style.display = 'none';
 	};
 	setTimeout( fx, 2000 );
 };
 
 
 // Exchanging menu sets
-var changeMenu = function( user_status ){
+changeMenu = function( user_status ){
 	switch( menu_status ){
 		case 0:
 			document.getElementById( "guild_menu" ).style.display = 'inline';
@@ -146,7 +157,7 @@ var changeMenu = function( user_status ){
 /////////////////////////////////////////////////////////////////////////////////
 // Account /////////////////////////////////////////////////////////////////////////
 // Changing Account
-var chageAccountM = function(){
+chageAccountM = function(){
 	var login_mv = document.getElementById( "login_mv" ).value;
 	location.href = "login.cgi?mode=family" + "&login_mv=" + login_mv;
 };
@@ -157,21 +168,19 @@ var chageAccountM = function(){
 
 // Display foods on BWL1
 var summonL1 = function( num ){
-	closeBroseWindows( 1 );
 	$.get( "square.cgi", { channel:"fctb", category:num }, function( data ){ $( "#L1" ).html( data );});
-	resetL( 0 );
+	resetBWL( 1 );
 	dl1 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 
 // Display foods on BWL2
 var summonL2 = function( key ){
-	closeBroseWindows( 2 );
 	$.get( "square.cgi", { channel:"fctb_l2", food_key:key }, function( data ){ $( "#L2" ).html( data );});
-	resetL( 2 );
+	resetBWL( 2 );
 	dl2 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 
@@ -179,9 +188,9 @@ var summonL2 = function( key ){
 var summonL3 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l3", food_key:key }, function( data ){ $( "#L3" ).html( data );});
-	resetL( 3 );
+	resetBWL( 3 );
 	dl3 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 
@@ -189,9 +198,9 @@ var summonL3 = function( key, direct ){
 var summonL4 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l4", food_key:key }, function( data ){ $( "#L4" ).html( data );});
-	resetL( 4 );
+	resetBWL( 4 );
 	dl4 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 
@@ -199,9 +208,9 @@ var summonL4 = function( key, direct ){
 var summonL5 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l5", food_key:key }, function( data ){ $( "#L5" ).html( data );});
-	resetL( 5 );
+	resetBWL( 5 );
 	dl5 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 
@@ -223,7 +232,7 @@ var detailView = function( fn ){
 	$.get( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#LF" ).html( data );});
 	dl5 = false;
 	dlf = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 // Display ditail information on LF (history)
@@ -231,7 +240,7 @@ var detailView_his = function( fn ){
 	$.get( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100 }, function( data ){ $( "#LF" ).html( data );});
 	dl1 = false;
 	dlf = true;
-	reopenBroseWindows();
+	displayBW();
 	displayLINE( 'off' );
 };
 
@@ -261,7 +270,7 @@ var detailPage = function( dir, sid ){
 var detailReturn = function(){
 	closeBroseWindows( 0 );
 	ldf = false;
-	reopenBroseWindows();
+	displayBW();
 };
 
 
@@ -285,9 +294,9 @@ var search = function(){
 			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){ $( "#L1" ).html( data );});
 			break;
  		}
- 		resetL( 1 );
+ 		resetBWL( 1 );
  		ld1 = true
- 		reopenBroseWindows();
+ 		displayBW();
 	}
 };
 
@@ -321,13 +330,13 @@ var aliasRequest = function( food_no ){
 
 // Display history
 var historyInit = function(){
-	closeBroseWindows( 1 );
+//	closeBroseWindows( 1 );
 	$.post( "history.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){ $( "#L1" ).html( data );});
 	displayLINE( 'on' );
-	resetL( 1 );
+	resetBWL( 0 );
 	dl1 = true;
-	reopenBroseWindows();
+	displayBW();
 };
 
 var historySub = function( sub_fg ){
@@ -343,7 +352,7 @@ var pseudoAdd = function( com, food_key, code ){
 	closeBroseWindows( 5 );
 	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){ $( "#LF" ).html( data );});
 	document.getElementById( "LF" ).style.display = 'block';
-	resetL()
+	resetBWL()
 	LF_status = 'block';
 };
 
@@ -455,7 +464,6 @@ var pseudoDelete = function( code ){
 
 // Display Bookshelf
 var bookOpen = function( url, depth ){
-
 	closeBroseWindows( depth );
 	$.ajax({ url:url, type:'GET', dataType:'html', success:function( data ){ $( "#L" + depth ).html( data ); }});
 	document.getElementById( "L" + depth ).style.display = 'block';
