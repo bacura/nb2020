@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory linker & ranker 0.00b
+#Nutrition browser 2020 memory linker & remarker 0.00b
 
 #==============================================================================
 #CHANGE LOG
