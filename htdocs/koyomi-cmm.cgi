@@ -189,9 +189,10 @@ tdiv_html << "</select>"
 
 
 #### hour HTML
-hour_html = ''
+hour_html = "<div class='input-group input-group-sm'>"
+hour_html << "<label class='input-group-text' onclick=\"cmmNowKoyomi()\">#{lp[18]}</label>"
 hour_html << "<select id='hh_cmm' class='form-select form-select-sm'>"
-hour_html << "<option value='99'>時刻</option>"
+hour_html << "<option value='99'>#{lp[19]}</option>"
 0.upto( 23 ) do |c|
 	if c == hh
 		hour_html << "<option value='#{c}' SELECTED>#{c}</option>"
@@ -200,19 +201,20 @@ hour_html << "<option value='99'>時刻</option>"
 	end
 end
 hour_html << "</select>"
+hour_html << "</div>"
 
 
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-3'><h5>#{yyyy} / #{mm} / #{dd} (#{tdiv_set[tdiv]})</h5></div>
-		<div align='center' class='col-9 joystic_koyomi' onclick="koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</div>
+		<div class='col-4'><h5>#{yyyy} / #{mm} / #{dd} (#{tdiv_set[tdiv]})</h5></div>
+		<div align='center' class='col-4 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[11]}</div>
+		<div align='center' class='col-4 joystic_koyomi' onclick="koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[17]}</div>
 	</div>
 	<br>
 	<div class='row'>
 		<div class='col-2 form-inline'>
-			<input type='date' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' onChange="cmmChangeKoyomi( '#{cm_mode}', '#{origin}' )">
-			<span class='joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[17]}</span>
+			<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' onChange="cmmChangeKoyomi( '#{cm_mode}', '#{origin}' )">
 		</div>
 		<div class='col-2 form-inline'>
 			#{tdiv_html}

@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.00b 20210503
+// Nutorition Browser 2020 core.js 0.01b 20210503
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -7,6 +7,13 @@ dl3 = false;
 dl4 = false;
 dl5 = false;
 dlf = false;
+
+hl1 = false;
+hl2 = false;
+hl3 = false;
+hl4 = false;
+hl5 = false;
+hlf = false;
 
 bwl1 = null;
 bwl2 = null;
@@ -73,22 +80,37 @@ displayBW = function(){
 
 
 // Resetting level status
-flashBW = function( num ){
-	switch( Number( num )){
-	case 0:
-		dl1 = false;
-	case 1:
-		dl2 = false;
-	case 2:
-		dl3 = false;
-	case 3:
-		dl4 = false;
-	case 4:
-		dl5 = false;
-	case 5:
-		dlf = false;
- 	}
+flashBW = function(){
+	dl1 = false;
+	dl2 = false;
+	dl3 = false;
+	dl4 = false;
+	dl5 = false;
+	dlf = false;
+}
+
+
+// Pushing level status to hide
+pushBW = function(){
+	hl1 = dl1;
+	hl2 = dl2;
+	hl3 = dl3;
+	hl4 = dl4;
+	hl5 = dl5;
+	hlf = dlf;
 };
+
+
+// Pulling level status from hide
+pullHW = function(){
+	dl1 = hl1;
+	dl2 = hl2;
+	dl3 = hl3;
+	dl4 = hl4;
+	dl5 = hl5;
+	dlf = hlf;
+};
+
 
 // Opning menu LINE
 displayLINE = function( msg ){
@@ -169,7 +191,7 @@ chageAccountM = function(){
 // Display foods on BWL1
 var summonL1 = function( num ){
 	$.get( "square.cgi", { channel:"fctb", category:num }, function( data ){ $( "#L1" ).html( data );});
-	flashBW( 1 );
+	flashBW();
 	dl1 = true;
 	displayBW();
 };
@@ -178,8 +200,11 @@ var summonL1 = function( num ){
 // Display foods on BWL2
 var summonL2 = function( key ){
 	$.get( "square.cgi", { channel:"fctb_l2", food_key:key }, function( data ){ $( "#L2" ).html( data );});
-	flashBW( 2 );
 	dl2 = true;
+	dl3 = false;
+	dl4 = false;
+	dl5 = false;
+	dlf = false;
 	displayBW();
 };
 
@@ -188,8 +213,10 @@ var summonL2 = function( key ){
 var summonL3 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l3", food_key:key }, function( data ){ $( "#L3" ).html( data );});
-	flashBW( 3 );
 	dl3 = true;
+	dl4 = false;
+	dl5 = false;
+	dlf = false;
 	displayBW();
 };
 
@@ -198,8 +225,9 @@ var summonL3 = function( key, direct ){
 var summonL4 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l4", food_key:key }, function( data ){ $( "#L4" ).html( data );});
-	flashBW( 4 );
 	dl4 = true;
+	dl5 = false;
+	dlf = false;
 	displayBW();
 };
 
@@ -208,8 +236,8 @@ var summonL4 = function( key, direct ){
 var summonL5 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l5", food_key:key }, function( data ){ $( "#L5" ).html( data );});
-	flashBW( 5 );
 	dl5 = true;
+	dlf = false;
 	displayBW();
 };
 
@@ -230,6 +258,7 @@ var detailView = function( fn ){
 	var fraction_mode = document.getElementById( "fraction" ).value;
 	var weight = document.getElementById( "weight" ).value;
 	$.get( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#LF" ).html( data );});
+	pushBW();
 	dl5 = false;
 	dlf = true;
 	displayBW();
@@ -243,12 +272,6 @@ var detailView_his = function( fn ){
 	displayBW();
 	displayLINE( 'off' );
 };
-
-// 詳細ボタンを押したらL1-L4の窓を閉じて、LF閲覧ウインドウに詳細を表示する２。
-//var detailView2 = function( fn, weight ){
-//	$.get( "detail.cgi", { food_no:fn, food_weight:weight }, function( data ){ $( "#LF" ).html( data );});
-//	document.getElementById( "LF" ).style.display = 'block';
-//};
 
 // Changing weight of food (ditail)
 var detailWeight = function( fn ){
@@ -268,8 +291,7 @@ var detailPage = function( dir, sid ){
 
 // 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
 var detailReturn = function(){
-	closeBroseWindows( 0 );
-	ldf = false;
+	pullHW();
 	displayBW();
 };
 
@@ -294,7 +316,7 @@ var search = function(){
 			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){ $( "#L1" ).html( data );});
 			break;
  		}
- 		flashBW( 1 );
+ 		flashBW();
  		ld1 = true
  		displayBW();
 	}
@@ -330,12 +352,12 @@ var aliasRequest = function( food_no ){
 
 // Display history
 var historyInit = function(){
-//	closeBroseWindows( 1 );
 	$.post( "history.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){ $( "#L1" ).html( data );});
 	displayLINE( 'on' );
-	flashBW( 0 );
+	flashBW();
 	dl1 = true;
+	pushBW();
 	displayBW();
 };
 
@@ -349,11 +371,11 @@ var historySub = function( sub_fg ){
 
 // カテゴリーボタンを押したときに非同期通信でL1閲覧ウインドウの内容を書き換える
 var pseudoAdd = function( com, food_key, code ){
-	closeBroseWindows( 5 );
 	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){ $( "#LF" ).html( data );});
 	document.getElementById( "LF" ).style.display = 'block';
 	flashBW()
-	LF_status = 'block';
+	dlf = true;
+	displayBW();
 };
 
 

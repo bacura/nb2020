@@ -157,6 +157,11 @@ html = <<-"HTML"
 				#{html_label}
 			</div>
 		</div>
+
+		<div align='center' class="col-1">
+			<span onclick="copyLabel()">#{lp[13]}</span>
+		</div>
+
 		<div class="col-4">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="menu_name">#{lp[10]}</label>
@@ -168,7 +173,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class="col">
 			<div class="form-group">
-    			<label for='memo'>メモ</label>
+    			<label for='memo'>#{lp[11]}</label>
 				<textarea class="form-control" id='memo' rows="3">#{menu.memo}</textarea>
    			</div>
 		</div>

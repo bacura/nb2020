@@ -593,6 +593,12 @@ var menuEdit = function( com, code ){
 };
 
 
+// Copying lebel to new label
+var copyLabel = function(){
+	document.getElementById( "new_label" ).value = document.getElementById( "label" ).value;
+};
+
+
 // メニュー編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
 var menuSave = function( code ){
 	var menu_name = document.getElementById( "menu_name" ).value;

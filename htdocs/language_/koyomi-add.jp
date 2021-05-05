@@ -8,7 +8,7 @@
 こよみ
 年
 月
-<img src='bootstrap-dist/icons/joystick.svg' style='height:2em; width:2em;'>
+<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>
 登録
 朝食
 昼食
@@ -22,4 +22,5 @@
 摂食量
 変更
 複製
-<img src='bootstrap-dist/icons/joystick.svg' style='height:1.6em; width:1.6em;'>
+<img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'>
+<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>

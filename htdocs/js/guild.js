@@ -7,7 +7,7 @@
 var initKoyomi = function(){
 	$.post( "koyomi.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "koyomi.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	flashBW( 1 );
+	flashBW();
 	dl1 = true;
 	displayBW();
 	displayLINE( 'on');
@@ -41,8 +41,9 @@ var freezeKoyomiAll = function(){
 var editKoyomi = function( com, dd ){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
 	$.post( "koyomi-edit.cgi", { command:com, yyyy_mm:yyyy_mm, dd:dd }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'none';
-	document.getElementById( "L2" ).style.display = 'block';
+	flashBW();
+	dl2 = true;
+	displayBW();
 };
 
 // Koyomi delete
@@ -67,8 +68,8 @@ var koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
 // Koyomi edit return
 var editKoyomiR = function( yyyy, mm ){
 	$.post( "koyomi.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){ $( "#L1" ).html( data );});
-	flashBW( 1 );
 	dl1 = true;
+	dl2 = false;
 	displayBW();
 };
 
@@ -110,13 +111,16 @@ var calcKoyomi = function( yyyy, mm, dd, palette ){
 
 	document.getElementById( "L1" ).style.display = 'none';
 	$.post( "koyomi-calc.cgi", { command:"init", yyyy:yyyy, mm:mm, dd:dd, palette:palette }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	dl1 = false;
+	dl2 = true;
+	displayBW();
 };
 
 // Koyomi calc return
 var calcKoyomiR = function( yyyy, mm ){
-	document.getElementById( "L1" ).style.display = 'block';
-	document.getElementById( "L2" ).style.display = 'none';
+	dl1 = true;
+	dl2 = false;
+	displayBW();
 };
 
 
@@ -126,7 +130,8 @@ var calcKoyomiR = function( yyyy, mm ){
 // Koyomi fix
 var fixKoyomi = function( com, yyyy, mm, dd, tdiv ){
 	$.post( "koyomi-fix.cgi", { command:com, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){ $( "#L3" ).html( data );});
-	document.getElementById( "L3" ).style.display = 'block';
+	dl3 = true;
+	displayBW();
 };
 
 // Koyomi fix
@@ -243,7 +248,6 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 // Koyomi modify or copy panel fix
 var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
 	$.post( "koyomi-fix.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, order:order }, function( data ){ $( "#L3" ).html( data );});
-	flashBW( 2 );
 	dl3 = true;
 	displayBW();
 };
@@ -254,9 +258,12 @@ var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
 
 // Koyomi insert panel
 var addKoyomi = function( code ){
-	closeBroseWindows( 0 );
 	$.post( "koyomi-add.cgi", { command:"init", code:code }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
+	pushBW();
+	flashBW();
+	dlf = true;
+	displayBW();
+	displayLINE( 'off' );
 };
 
 // Koyomi insert panel change
@@ -302,30 +309,28 @@ var modifysaveKoyomi_direct = function( code, yyyy, mm, dd, tdiv, origin ){
 // Modifying or copying fix code in Koyomi
 var modifysaveKoyomiFC = function( code, origin ){
 	$.post( "koyomi-add.cgi", { command:"move_fix", code:code, origin:origin, copy:1 }, function( data ){ $( "#LF" ).html( data );});
-	closeBroseWindows( 0 );
-	document.getElementById( "LF" ).style.display = 'block';
+	ldf = true;
+	displayBW();
 };
 
 // Return from Koyomi
 var koyomiReturn = function(){
-	closeBroseWindows( 0 );
-	ldf = false;
+	pullHW();
 	displayBW();
 };
 
 // Return from Koyomi to Koyomi edit
 var koyomiReturn2KE = function( yyyy, mm, dd ){
-	document.getElementById( "LF" ).style.display = 'none';
-	document.getElementById( "L2" ).style.display = 'block';
 	$.post( "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){ $( "#L2" ).html( data );});
-
+	pullHW();
+	displayBW();
 };
 
 // Koyomi modify or copy panel
 var modifyKoyomi = function( code, yyyy, mm, dd, tdiv, hh, ev, eu, order ){
-	closeBroseWindows( 1 );
 	$.post( "koyomi-add.cgi", {command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, order:order }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
+	ldf = true;
+	displayBW();
 };
 
 // Koyomi insert panel change  for fix code
@@ -333,19 +338,14 @@ var modifychangeKoyomiFC = function( code, origin ){
 	var hh = document.getElementById( "hh" ).value;
 	displayVIDEO( mm );
 	$.post( "koyomi-add.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }, function( data ){ $( "#LF" ).html( data );});
+	ldf = true;
+	displayBW();
 };
 
-// Set Date timet
+// Set time to now
 var nowKoyomi = function(){
 	var today = new Date();
-	var yyyy = today.getFullYear();
-	var mm = today.getMonth() + 1;
-	var dd = today.getDate();
 	var hh = today.getHours();
-
-	document.getElementById( 'yyyy_add' ).value = yyyy;
-	document.getElementById( 'mm_add' ).value = mm;
-	document.getElementById( 'dd' ).value = dd;
 	document.getElementById( 'hh' ).value = hh;
 };
 
@@ -353,9 +353,11 @@ var nowKoyomi = function(){
 // Koyomi menu copy / move //////////////////////////////////////////////////////////////
 
 var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
-	closeBroseWindows( 0 );
 	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99 }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
+	pushBW();
+	flashBW();
+	dlf = true;
+	displayBW();
 };
 
 var cmmChangeKoyomi = function( cm_mode, origin ){
@@ -372,13 +374,18 @@ var cmmSaveKoyomi = function( cm_mode, origin ){
 	var hh = document.getElementById( "hh_cmm" ).value;
 
 	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
 };
 
 var cmmSaveKoyomi_direct = function( cm_mode, yyyy, mm, dd, tdiv, origin ){
 	var hh = document.getElementById( "hh_cmm" ).value;
 	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
+};
+
+// Set time to now
+var cmmNowKoyomi = function(){
+	var today = new Date();
+	var hh = today.getHours();
+	document.getElementById( 'hh_cmm' ).value = hh;
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -387,14 +394,12 @@ var cmmSaveKoyomi_direct = function( cm_mode, yyyy, mm, dd, tdiv, origin ){
 // Koyomi EX init
 var initKoyomiex = function(){
 	$.post( "koyomiex.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
 };
 
 // Koyomi EX change
 var changeKoyomiex = function(){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
 	$.post( "koyomiex.cgi", { command:"init", yyyy_mm:yyyy_mm }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
 };
 
 // Updating Koyomiex cell

@@ -302,7 +302,8 @@ var saveAccount = function( target_uid ){
 // Memory init
 var initMemory = function(){
 	$.post( "gm-memory.cgi", { command:'init', post_process:'front' }, function( data ){ $( "#L1" ).html( data );});
-	flashBW( 1 );
+	flashBW();
+	dl1 = true;
 	displayBW();
 };
 
@@ -330,7 +331,8 @@ var changeCategory = function( category ){
 var deleteCategory = function( category, delete_check_no ){
 	if( document.getElementById( delete_check_no ).checked ){
 		$.post( "gm-memory.cgi", { command:'delete_category', category:category }, function( data ){ $( "#L1" ).html( data );});
-		flashBW( 1 );
+		flashBW();
+		dl1	true;
 		displayBW();
 	}else{
 		displayVIDEO( 'Check!' );
@@ -340,7 +342,7 @@ var deleteCategory = function( category, delete_check_no ){
 // List each pointer
 var listPointer = function( category ){
 	$.post( "gm-memory.cgi", { command:'list_pointer', category:category, post_process:'front' }, function( data ){ $( "#L1" ).html( data );});
-	flashBW( 1 );
+	flashBW();
 	dl1 = true;
 	displayBW();
 };

@@ -482,7 +482,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-2'><h5>#{lp[8]}</h5></div>
 		<div class='col-2 form-inline'>
-			<input type='month' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomi()">
+			<input type='month' class='form-control form-control-sm' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomi()">
 		</div>
 		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{calendar_td.dd}';">#{lp[18]}</div>
 	</div>

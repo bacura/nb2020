@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #STATIC
 #==============================================================================
 script = 'koyomi-add'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -281,7 +281,8 @@ end
 tdiv_html << "</select>"
 
 #### Rate HTML
-hour_html = ''
+hour_html = "<div class='input-group input-group-sm'>"
+hour_html << "<label class='input-group-text' onclick=\"nowKoyomi()\">#{lp[26]}</label>"
 hour_html << "<select id='hh' class='form-select form-select-sm'>"
 hour_html << "<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
@@ -292,7 +293,7 @@ hour_html << "<option value='99'>時刻</option>"
 	end
 end
 hour_html << "</select>"
-#select_html << "<button class='btn btn-sm btn-outline-success' type='button' onclick=\"nowKoyomi()\">#{lp[11]}</button>"
+hour_html << "</div>"
 
 
 #### Rate HTML
@@ -319,9 +320,9 @@ else
 end
 
 #### Return button
-return_joystic = "<div align='center' class='col-9 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
+return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
 if command == 'modify' || command == 'move'
-	return_joystic = "<div align='center' class='col-9 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
+	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
 end
 
 
@@ -332,14 +333,14 @@ onchange = "onChange=\"changeKoyomiAdd( 'modify', '#{code}', '#{origin}' )\"" if
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-3'><h5>#{food_name}</h5></div>
+		<div class='col-4'><h5>#{food_name}</h5></div>
+		<div align='center' class='col-4 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</div>
 		#{return_joystic}
 	</div>
 	<br>
 	<div class='row'>
 		<div class='col-2 form-inline'>
-			<input type='date' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' #{onchange}>
-			<span class='joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</span>
+			<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' #{onchange}>
 		</div>
 		<div class='col-2 form-inline'>
 			#{tdiv_html}
