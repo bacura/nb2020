@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.05b
+#nb2020-dbi.rb 0.06b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -19,11 +19,12 @@ puts "CREATE DATABASE #{$MYSQL_DB};"
 puts "CREATE DATABASE #{$MYSQL_DBR};"
 puts ''
 puts "CREATE USER '#{$MYSQL_USER}'@'#{$MYSQL_HOST}' IDENTIFIED BY '#{$MYSQL_PW}';"
-puts "GRANT ALL PRIVILEGES ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
-puts "GRANT ALL PRIVILEGES ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+puts "GRANT ALL ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+puts "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
 puts ''
 puts "CREATE USER '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-puts "GRANT ALL PRIVILEGES ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+puts "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+puts "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPE} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
 puts ''
 puts "FLUSH PRIVILEGES;\n\n"
 puts "Register the database and user as described above with administrator privileges."

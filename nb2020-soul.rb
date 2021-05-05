@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.04b
+#Nutrition browser 2020 soul 0.05b
 
 #==============================================================================
 # LIBRARY
@@ -24,7 +24,7 @@ $MYSQL_HOST = 'localhost'
 $MYSQL_DB = 'nb2020'
 $MYSQL_DBR = 'rr2020'
 $MYSQL_USER = 'user'
-$MYSQL_USERR = 'rru'
+$MYSQL_USERR = 'userr'
 $MYSQL_PW = 'password'
 $MYSQL_TB_FCT = 'fct'
 $MYSQL_TB_FCTP = 'fctp'
@@ -88,7 +88,6 @@ if uname != nil && uid != nil
   db.close
 
   soul_language = res.first['language'] if res.first
-
 end
 
 require "#{$HTDOCS_PATH}/../nb2020-soul-#{soul_language}"

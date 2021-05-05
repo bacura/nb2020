@@ -24,8 +24,8 @@ $PALETTE_DEFAULT = { 'jp' => @palette_default }
 @recipe_type = ['未設定','和食','洋食','中華','イタリアン','フレンチ','エスニック']
 @recipe_role = ['未設定','主食','主菜','副菜','汁物','デザート・おやつ','飲み物','調味料']
 @recipe_tech = ['未設定','茹でる・煮る・炊く','直火・炙る','炒める・ソテー','蒸す','揚げる','和える','生・非加熱','冷蔵・冷凍','オーブン・グリル','電子レンジ']
-@recipe_time = ['未設定','～5','～10','～15','～20','～30','～45','～60','～120','121～']
-@recipe_cost = ['未設定','50円未満','100円未満','150円未満','200円未満','300円未満','400円未満','500円未満','600円未満','800円未満','1000円未満', '1000円以上']
+@recipe_time = ['未設定','～5分','～10分','～15分','～20分','～30分','～45分','～60分','～120分','121分～']
+@recipe_cost = ['未設定','～50円','～100円','～150円','～200円','～300円','～400円','～500円','～600円','～800円','～1000円', '1000円～']
 
 #         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15       16    17
 @unit = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身S','切身M','切身L','個S','個M','個L','SV', '単位', '廃棄前', 'cm', '標準']
@@ -105,7 +105,7 @@ end
 #==============================================================================
 def html_foot()
     html = <<-"HTML"
-      <div align='center' class='koyomi_today' onclick="window.location.href='#top';"><img src='bootstrap-dist/icons/joystick.svg' style='height:2em; width:2em;'></div>
+      <div align='center' class='koyomi_today' onclick="window.location.href='#top';"><img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'></div>
       <br>
       <footer class="footer">
         <div align="center">
