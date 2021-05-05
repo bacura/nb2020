@@ -7,7 +7,7 @@
 var initKoyomi = function(){
 	$.post( "koyomi.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "koyomi.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	resetBW( 1 );
+	flashBW( 1 );
 	dl1 = true;
 	displayBW();
 	displayLINE( 'on');
@@ -243,7 +243,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 // Koyomi modify or copy panel fix
 var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
 	$.post( "koyomi-fix.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, order:order }, function( data ){ $( "#L3" ).html( data );});
-	resetBW( 2 );
+	flashBW( 2 );
 	dl3 = true;
 	displayBW();
 };
