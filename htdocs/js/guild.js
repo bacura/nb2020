@@ -67,7 +67,7 @@ var koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
 // Koyomi edit return
 var editKoyomiR = function( yyyy, mm ){
 	$.post( "koyomi.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){ $( "#L1" ).html( data );});
-	resetBWL( 1 );
+	flashBW( 1 );
 	dl1 = true;
 	displayBW();
 };

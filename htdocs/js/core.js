@@ -73,7 +73,7 @@ displayBW = function(){
 
 
 // Resetting level status
-resetBWL = function( num ){
+flashBW = function( num ){
 	switch( Number( num )){
 	case 0:
 		dl1 = false;
@@ -169,7 +169,7 @@ chageAccountM = function(){
 // Display foods on BWL1
 var summonL1 = function( num ){
 	$.get( "square.cgi", { channel:"fctb", category:num }, function( data ){ $( "#L1" ).html( data );});
-	resetBWL( 1 );
+	flashBW( 1 );
 	dl1 = true;
 	displayBW();
 };
@@ -178,7 +178,7 @@ var summonL1 = function( num ){
 // Display foods on BWL2
 var summonL2 = function( key ){
 	$.get( "square.cgi", { channel:"fctb_l2", food_key:key }, function( data ){ $( "#L2" ).html( data );});
-	resetBWL( 2 );
+	flashBW( 2 );
 	dl2 = true;
 	displayBW();
 };
@@ -188,7 +188,7 @@ var summonL2 = function( key ){
 var summonL3 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l3", food_key:key }, function( data ){ $( "#L3" ).html( data );});
-	resetBWL( 3 );
+	flashBW( 3 );
 	dl3 = true;
 	displayBW();
 };
@@ -198,7 +198,7 @@ var summonL3 = function( key, direct ){
 var summonL4 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l4", food_key:key }, function( data ){ $( "#L4" ).html( data );});
-	resetBWL( 4 );
+	flashBW( 4 );
 	dl4 = true;
 	displayBW();
 };
@@ -208,7 +208,7 @@ var summonL4 = function( key, direct ){
 var summonL5 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.get( "square.cgi", { channel:"fctb_l5", food_key:key }, function( data ){ $( "#L5" ).html( data );});
-	resetBWL( 5 );
+	flashBW( 5 );
 	dl5 = true;
 	displayBW();
 };
@@ -294,7 +294,7 @@ var search = function(){
 			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){ $( "#L1" ).html( data );});
 			break;
  		}
- 		resetBWL( 1 );
+ 		flashBW( 1 );
  		ld1 = true
  		displayBW();
 	}
@@ -334,7 +334,7 @@ var historyInit = function(){
 	$.post( "history.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){ $( "#L1" ).html( data );});
 	displayLINE( 'on' );
-	resetBWL( 0 );
+	flashBW( 0 );
 	dl1 = true;
 	displayBW();
 };
@@ -352,7 +352,7 @@ var pseudoAdd = function( com, food_key, code ){
 	closeBroseWindows( 5 );
 	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){ $( "#LF" ).html( data );});
 	document.getElementById( "LF" ).style.display = 'block';
-	resetBWL()
+	flashBW()
 	LF_status = 'block';
 };
 
