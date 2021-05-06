@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe search index builder 0.00b
+#Nutrition browser 2020 recipe search index builder 0.01b
 
 #==============================================================================
 #CHANGE LOG
@@ -19,8 +19,7 @@ require 'natto'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = 'user'
-$MYSQL_PW = 'password'
+$MYSQL_USER = 'userr'
 $MYSQL_DB = 'nb2020'
 $MYSQL_TB_TAG = 'tag'
 $MYSQL_TB_DIC = 'dic'
@@ -43,7 +42,7 @@ $MYSQL_TB_RECIPEI = 'recipei'
 mecab = Natto::MeCab.new()
 words = Hash.new
 
-db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 db.query( "update #{$MYSQL_TB_RECIPEI} SET f=0;" )
 
 
@@ -51,9 +50,7 @@ db.query( "update #{$MYSQL_TB_RECIPEI} SET f=0;" )
 puts "Makeing alias dictionary."
 dic = Hash.new
 res = db.query( "SELECT org_name, alias FROM #{$MYSQL_TB_DIC};" )
-res.each do |e|
-	dic[e['alias']] = e['org_name']
-end
+res.each do |e| dic[e['alias']] = e['org_name'] end
 
 
 #### Lording all recipe list
@@ -70,10 +67,8 @@ res.each do |e|
 
 	#comment 1st line
 	a = e['protocol'].split( "\n" )
-	unless a[0] == nil
-		if /^\#.+/ =~ a[0]
-			target << a[0]
-		end
+	if a[0] != nil
+		target << a[0] if /^\#.+/ =~ a[0]
 	end
 
 	target.each do |ee|
@@ -124,6 +119,4 @@ end
 puts "\nDeleting non-existent recipe."
 db.query( "DELETE FROM #{$MYSQL_TB_RECIPEI} WHERE f=0;" )
 
-
 puts "Done."
-

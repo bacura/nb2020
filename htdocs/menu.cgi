@@ -91,20 +91,24 @@ label_list.uniq!
 html_label = '<select class="form-select form-select-sm" id="label">'
 html_label << "<option value='#{lp[2]}'>#{lp[2]}</option>"
 
+normal_label_c = 0
 label_list.each do |e|
 	selected = ''
 	selected = 'SELECTED' if e == menu.label
-	html_label << "<option value='#{e}' #{selected}>#{e}</option>" unless e == lp[2]
+	html_label << "<option value='#{e}' id='normal_label#{normal_label_c}' #{selected} style='display:inline'>#{e}</option>" unless e == lp[2]
+	normal_label_c += 1
 end
 
 if user.status >= 5 && user.status != 6
-	r = mdb( "SELECT schooll FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-	if r.first
-		a =  r.first['schooll'].split( ':' )
-		a.each do |e|
+	school_label_c = 0
+	r = mdb( "SELECT label FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}';", false, @debug )
+	r.each do |e|
+		a = e['label'].split( "\t" )
+		a.each do |ee|
 			selected = ''
-			selected = 'SELECTED' if e == menu.label
-			html_label << "<option value='#{e}' #{selected}>[#{e}]</option>" if e != '' &&  e != nil
+			selected = 'SELECTED' if ee == menu.label
+			html_label << "<option value='#{ee}' id='school_label#{school_label_c}' #{selected} style='display:none'>#{ee}</option>"
+			school_label_c += 1
 		end
 	end
 end
@@ -153,7 +157,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="menu_name">#{lp[9]}</label>
+				<label class="input-group-text" onclick="changeLabelset( '#{normal_label_c}', '#{school_label_c}' )">#{lp[9]}</label>
 				#{html_label}
 			</div>
 		</div>

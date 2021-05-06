@@ -7,13 +7,14 @@ dl3 = false;
 dl4 = false;
 dl5 = false;
 dlf = false;
+dline = false;
 
 hl1 = false;
 hl2 = false;
 hl3 = false;
 hl4 = false;
 hl5 = false;
-hlf = false;
+hline = false;
 
 bwl1 = null;
 bwl2 = null;
@@ -76,6 +77,7 @@ displayBW = function(){
 	if( dl4 ){ bwl4.style.display = 'block'; }else{ bwl4.style.display = 'none'; }
 	if( dl5 ){ bwl5.style.display = 'block'; }else{ bwl5.style.display = 'none'; }
 	if( dlf ){ bwlf.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
+	if( dline ){ line.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
 };
 
 
@@ -87,6 +89,7 @@ flashBW = function(){
 	dl4 = false;
 	dl5 = false;
 	dlf = false;
+	dline = false;
 }
 
 
@@ -98,6 +101,7 @@ pushBW = function(){
 	hl4 = dl4;
 	hl5 = dl5;
 	hlf = dlf;
+	hline = dline;
 };
 
 
@@ -109,10 +113,12 @@ pullHW = function(){
 	dl4 = hl4;
 	dl5 = hl5;
 	dlf = hlf;
+	dline = hline;
 };
 
 
 // Opning menu LINE
+// This feature will be discontinued in the future.
 displayLINE = function( msg ){
 	if( msg == 'on' ){
 		line.style.display = 'block';
@@ -267,10 +273,11 @@ var detailView = function( fn ){
 // Display ditail information on LF (history)
 var detailView_his = function( fn ){
 	$.get( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100 }, function( data ){ $( "#LF" ).html( data );});
+	pushBW();
+	dline = false;
 	dl1 = false;
 	dlf = true;
 	displayBW();
-	displayLINE( 'off' );
 };
 
 // Changing weight of food (ditail)
@@ -304,7 +311,6 @@ var search = function(){
 	var words = document.getElementById( "words" ).value;
 	var qcate = document.getElementById( "qcate" ).value;
 	if( words != '' ){
-		closeBroseWindows( 1 );
 		switch( qcate ){
 		case '0':
 			$.post( "search-food.cgi", { words:words }, function( data ){ $( "#L1" ).html( data );});
@@ -316,20 +322,22 @@ var search = function(){
 			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){ $( "#L1" ).html( data );});
 			break;
  		}
+
  		flashBW();
- 		ld1 = true
+ 		dl1 = true;
  		displayBW();
 	}
 };
 
 // Direct recipe search
 var searchDR = function( words ){
-	closeBroseWindows( 1 );
 	$.post( "recipel.cgi", { command:'refer', words:words }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-
 	words = document.getElementById( "words" ).value = words;
 	qcate = document.getElementById( "qcate" ).value = 1;
+
+ 	flashBW();
+ 	dl1 = true;
+ 	displayBW();
 };
 
 // Sending alias request
@@ -354,8 +362,9 @@ var aliasRequest = function( food_no ){
 var historyInit = function(){
 	$.post( "history.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){ $( "#L1" ).html( data );});
-	displayLINE( 'on' );
+
 	flashBW();
+	dline = true;
 	dl1 = true;
 	pushBW();
 	displayBW();
@@ -372,8 +381,8 @@ var historySub = function( sub_fg ){
 // カテゴリーボタンを押したときに非同期通信でL1閲覧ウインドウの内容を書き換える
 var pseudoAdd = function( com, food_key, code ){
 	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
-	flashBW()
+
+	flashBW();
 	dlf = true;
 	displayBW();
 };
@@ -533,9 +542,11 @@ var newPMemory = function( category, pointer, post_process ){
 
 // Display meta data
 var metaDisplay = function( com ){
-	closeBroseWindows( 2 );
 	$.post( "meta.cgi", { command:com }, function( data ){ $( "#L3" ).html( data );});
-	document.getElementById( "L3" ).style.display = 'block';
+
+	flashBW();
+	dl3 = true;
+	displayBW();
 };
 
 
@@ -544,19 +555,18 @@ var metaDisplay = function( com ){
 
 // Display config menu
 var configInit = function(){
-	closeBroseWindows( 1 );
 	$.post( "config.cgi", { mod:'' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "config.cgi", { mod:'account' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
+	flashBW();
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
 // Display config form
 var configForm = function( mod ){
-	closeBroseWindows( 1 );
 	$.post( "config.cgi", { mod:mod }, function( data ){ $( "#L1" ).html( data );});
 	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
 };
 
 

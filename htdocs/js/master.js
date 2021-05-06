@@ -332,7 +332,7 @@ var deleteCategory = function( category, delete_check_no ){
 	if( document.getElementById( delete_check_no ).checked ){
 		$.post( "gm-memory.cgi", { command:'delete_category', category:category }, function( data ){ $( "#L1" ).html( data );});
 		flashBW();
-		dl1	true;
+		dl1	= true;
 		displayBW();
 	}else{
 		displayVIDEO( 'Check!' );

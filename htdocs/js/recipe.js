@@ -1,3 +1,4 @@
+// Recipe java script for nb2020 0.00b
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -32,17 +33,19 @@ var changingCB = function( fn, base_fn ){
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){ $( "#CBN" ).html( data );});
 	if( fn != '' ){ displayVIDEO( fn + 'has modified' ); }
 	$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){ $( "#L1" ).html( data );});
-	closeBroseWindows( 1 );
+	flashBW();
+	dl1 = true;
+	displayBW();
 };
 
 
 // Display CB sum in L1
 var initCB = function( com, code ){
-	closeBroseWindows( 1 );
 	$.post( "cboard.cgi", { command:com, code:code }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	flashBW();
+	dl1 = true;
+	displayBW();
 	setTimeout( refreshCB(), 1000 );
-	bw_level = 1;
 };
 
 
@@ -51,10 +54,10 @@ var clearCB = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'all_check' ).checked ){
 			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
-
-			document.getElementById( "L2" ).style.display = 'none';
-			document.getElementById( "L3" ).style.display = 'none';
-			displayVIDEO( 'CB has cleared' );
+			flashBW();
+			dl1 = true;
+			displayBW();
+			displayVIDEO( 'Cleared' );
 		} else{
 			displayVIDEO( '(>_<)cheack!' );
 		}
@@ -188,10 +191,11 @@ var gnExchange = function( code ){
 
 // まな板からでL5閲覧ウインドウを表示する。
 var cb_summon = function( key, weight, base_fn ){
-	closeBroseWindows( 1 );
 	$.get( "square.cgi", { channel:"fctb_l5", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){ $( "#L5" ).html( data );});
-	document.getElementById( "L5" ).style.display = 'block';
-	bw_level = 5;
+	flashBW()
+	dl1 = true;
+	dl5 = true;
+	displayBW();
 };
 
 // Chomi% category
@@ -215,11 +219,11 @@ var chomiAdd =  function(){
 
 // レシピ編集のレシピボタンを押してL2にレシピを表示
 var recipeEdit = function( com, code ){
-	closeBroseWindows( 2 );
 	$.post( "recipe.cgi", { command:com, code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
 	$.post( "photo.cgi", { command:'view_series', code:code, base:'recipe' }, function( data ){ $( "#L3" ).html( data );});
-	document.getElementById( "L3" ).style.display = 'block';
+	dl2 = true;
+	dl3 = true;
+	displayBW();
 };
 
 
@@ -251,7 +255,7 @@ var recipeBit_draft = function(){
 var recipeSave = function( code ){
 	var recipe_name = document.getElementById( "recipe_name" ).value;
 	if( recipe_name == '' ){
-		displayVIDEO( 'レシピ名が必要' );
+		displayVIDEO( 'Recipe name! (>_<)');
 	}
 	else{
 		var type = document.getElementById( "type" ).value;
@@ -266,7 +270,7 @@ var recipeSave = function( code ){
 		if( document.getElementById( "draft" ).checked ){ var draft = 1 }
 
 		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, public:public, protect:protect, draft:draft }, function( data ){ $( "#L2" ).html( data );});
-		displayVIDEO( 'レシピを保存' );
+		displayVIDEO( recipeSave );
 
 		var fx = function(){ $.post( "cboard.cgi", { command:'init', code:code }, function( data ){ $( '#L1' ).html( data );});};
 		setTimeout( fx , 1000 );
@@ -279,10 +283,10 @@ var recipeSave = function( code ){
 
 // Dosplaying recipe list with reset
 var recipeList = function( com ){
-	closeBroseWindows( 1 );
 	$.post( "recipel.cgi", { command:com }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	L1 = 1;
+	flashBW();
+	dl1 = true;
+	displayBW();
 };
 
 
@@ -317,7 +321,7 @@ var recipeDelete = function( code, page ){
 		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#L1" ).html( data );});
 		displayVIDEO( 'Removed' );
 	} else{
-		displayVIDEO( '(>_<) Check!' );
+		displayVIDEO( 'Check! (>_<)' );
 	}
 };
 
@@ -341,11 +345,9 @@ var recipeImport = function( com, code, page ){
 
 // まな板の成分計算表ボタンを押してL2にリストを表示
 var calcView = function( code ){
-	closeBroseWindows( 2 );
 	$.post( "calc.cgi", { command:'view', code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
-
-	L1 = 2;
+	dl2 = true;
+	displayBW();
 };
 
 // 成分計算表の再計算ボタンを押してL2にリストを表示
@@ -364,11 +366,9 @@ var recalcView = function( code ){
 
 // まな板の原価計算表ボタンを押してL2にリストを表示
 var priceView = function( code ){
-	closeBroseWindows( 2 );
 	$.post( "price.cgi", { command:'view', code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
-
-	L1 = 2;
+	dl2 = true;
+	displayBW();
 };
 
 // 原価計算表の購入量変更でL2に原価表を更新
@@ -417,11 +417,9 @@ var clearCT = function( code ){
 
 // Lucky☆入力ボタンを押してL2に入力画面を表示、そしてL1を非表示にする
 var luckyInput = function(){
-	closeBroseWindows( 2 );
 	$.post( "lucky.cgi", { command:'form' }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
-
-	L1 = 2;
+	dl2 = true;
+	displayBW();
 };
 
 // Lucky☆転送ボタンを押してL2に確認画面を表示
@@ -442,9 +440,9 @@ var luckyAnalyze = function(){
 
 // 成分計算表の食品化ボタンを押してL3に擬似食品フォームを表示
 var Pseudo_R2F = function( code ){
-	closeBroseWindows( 2 );
 	$.post( "pseudo_r2f.cgi", { command:'form', code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	dl2 = true;
+	displayBW();
 };
 
 // 食品化フォームの保存ボタンを押して保存してL3を消す。
@@ -470,7 +468,7 @@ var savePseudo_R2F = function( code ){
 //		}, function( data ){$( "#L2" ).html( data );});
 		displayVIDEO( 'Foodized' );
 	}else{
-		displayVIDEO( '(>_<) Food name!' );
+		displayVIDEO( 'Food name! (>_<)' );
 	}
 };
 
@@ -533,20 +531,10 @@ var addingMeal = function( recipe_code, recipe_name ){
 
 // 献立ボタンを押してL1にリストを表示
 var initMeal = function( com, code ){
-	closeBroseWindows( 1 );
 	$.post( "meal.cgi", { command:com, code:code }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-
-	var fx = function(){
-		addingMeal( '', '' );
-	};
-	setTimeout( fx, 1000 );
-
-	L1_status = 'block';
-	L2_status = 'none';
-	L3_status = 'none';
-	L4_status = 'none';
-	L5_status = 'none';
+	flashBW();
+	dl1 = true;
+	displayBW();
 };
 
 // 献立クリアボタンを押してL1にリストを更新、そしてまな献立カウンターの更新
@@ -554,18 +542,17 @@ var clear_meal = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'meal_all_check' ).checked ){
 			$.post( "meal.cgi", { command:'clear', order:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
-			displayVIDEO( '献立を初期化' );
-			closeBroseWindows( 1 );
+			displayVIDEO( 'Menu cleared' );
+			flashBW();
+			dl1 = true;
+			displayBW();
 		} else{
 			displayVIDEO( 'Check! (>_<)' );
 		}
 	} else{
 		$.post( "meal.cgi", { command:'clear', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
 	}
-	var fx = function(){
-		addingMeal( '' );
-	};
-	setTimeout( fx, 1000 );
+	setTimeout( addingMeal( '' ), 1000 );
 };
 
 
@@ -585,11 +572,11 @@ var lower_meal = function( order, code ){
 
 // 献立編集のレシピボタンを押してL2にレシピを表示
 var menuEdit = function( com, code ){
-	closeBroseWindows( 2 );
 	$.post( "menu.cgi", { command:com, code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
 	$.post( "photo.cgi", { command:'view_series', code:code, base:'menu' }, function( data ){ $( "#L3" ).html( data );});
-	document.getElementById( "L3" ).style.display = 'block';
+	dl2 = true;
+	dl3 = true;
+	displayBW();
 };
 
 
@@ -603,7 +590,7 @@ var copyLabel = function(){
 var menuSave = function( code ){
 	var menu_name = document.getElementById( "menu_name" ).value;
 	if( menu_name == '' ){
-		displayVIDEO( '献立名が必要' );
+		displayVIDEO( 'Menu name! (>_<)' );
 	}
 	else{
 		if( document.getElementById( "public" ).checked ){ var public = 1 }
@@ -613,7 +600,7 @@ var menuSave = function( code ){
 		var memo = document.getElementById( "memo" ).value;
 
 		$.post( "menu.cgi", { command:'save', code:code, menu_name:menu_name, public:public, protect:protect, label:label, new_label:new_label, memo:memo }, function( data ){ $( "#L2" ).html( data );});
-		displayVIDEO( menu_name + 'を保存' );
+		displayVIDEO( menu_name );
 
 		var fx = function(){ $.post( "meal.cgi", { command:'init', code:code }, function( data ){ $( '#L1' ).html( data );});};
 		setTimeout( fx , 1000 );
@@ -621,17 +608,21 @@ var menuSave = function( code ){
 };
 
 
+// Changing label set
+var changeLabelset = function( normal_label_c, school_label_c){
+
+	displayVIDEO( 'ok' );
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Set menu list ////////////////////////////////////////////////////////////////////////
 
 // まな板のレシピ読み込みボタンを押してL1に献立リストを表示
 var menuList = function( page ){
-	closeBroseWindows( 1 );
 	$.post( "menul.cgi", { command:'view', page:page }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-
-	L1_status = 'block';
-	L2_status = 'none';
+	flashBW();
+	dl1 = true;
+	displayBW();
 };
 
 
@@ -648,7 +639,7 @@ var menuList2 = function( page ){
 var menuDelete = function( code, menu_name ){
 	if( document.getElementById( code ).checked ){
 		$.post( "menul.cgi", { command:'delete', code:code }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( menu_name + 'deleted' );
+		displayVIDEO( menu_name );
 	} else{
 		displayVIDEO( 'Check! (>_<)' );
 	}
@@ -658,7 +649,7 @@ var menuDelete = function( code, menu_name ){
 // まな板のインポートボタンを押してレシピをインポートし、L1にリストを再表示
 var menuImport = function( code ){
 	$.post( "menul.cgi", { command:'import', code:code }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( code + 'imported' );
+	displayVIDEO( code );
 };
 
 
@@ -667,11 +658,9 @@ var menuImport = function( code ){
 
 // 献立の成分計算表ボタンを押してL2にリストを表示
 var menuCalcView = function( code ){
-	closeBroseWindows( 2 );
 	$.post( "menu-calc.cgi", { command:'view', code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
-
-	L2_status = 'block';
+	dl2 = true;
+	displayBW();
 };
 
 // 献立の成分計算表の再計算ボタンを押してL2にリストを表示
@@ -681,30 +670,18 @@ var menuRecalcView = function( code ){
 	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
 	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
 	$.post( "menu-calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#L2" ).html( data );});
-	displayVIDEO( '再計算' );
+	displayVIDEO( 'Recalc' );
 };
 
-
-// 献立の成分計算表の拡張ページボタンを押してメッセージを表示
-var menuCalcExpand_NW = function( uname, code ){
-	var palette = document.getElementById( "palette" ).value;
-	var fraction = document.getElementById( "fraction" ).value;
-	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 0; }else{ var frct_accu = 1; }
-	url = 'menu-calcex.cgi?uname=' + uname + '&code=' + code + '&frct_mode=' + fraction + '&frct_accu=' + frct_accu + '&palette=' + palette;
-	window.open( url, 'calc-ex' );
-	displayVIDEO( '拡張ページ' );
-};
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Analysis of menu ////////////////////////////////////////////////////////////////////////
 
 // Analysis of menu
 var menuAnalysis = function( code ){
-	closeBroseWindows( 2 );
 	$.post( "menu-analysis.cgi", { command:'', code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
-
-	L2_status = 'block';
+	dl2 = true;
+	displayBW();
 };
 
 // Reanalysis of menu
