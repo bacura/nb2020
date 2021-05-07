@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.01b 20210503
+// Nutorition Browser 2020 core.js 0.02b 20210507
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -14,6 +14,7 @@ hl2 = false;
 hl3 = false;
 hl4 = false;
 hl5 = false;
+hlf = false;
 hline = false;
 
 bwl1 = null;
@@ -77,7 +78,7 @@ displayBW = function(){
 	if( dl4 ){ bwl4.style.display = 'block'; }else{ bwl4.style.display = 'none'; }
 	if( dl5 ){ bwl5.style.display = 'block'; }else{ bwl5.style.display = 'none'; }
 	if( dlf ){ bwlf.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
-	if( dline ){ line.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
+	if( dline ){ line.style.display = 'block'; }else{ line.style.display = 'none'; }
 };
 
 
