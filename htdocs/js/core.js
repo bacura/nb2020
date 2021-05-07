@@ -382,8 +382,6 @@ var historySub = function( sub_fg ){
 // カテゴリーボタンを押したときに非同期通信でL1閲覧ウインドウの内容を書き換える
 var pseudoAdd = function( com, food_key, code ){
 	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){ $( "#LF" ).html( data );});
-
-	flashBW();
 	dlf = true;
 	displayBW();
 };
@@ -486,8 +484,10 @@ var pseudoSave = function( code ){
 // 削除ボタンを押したときに非同期通信でLFの内容を書き換える
 var pseudoDelete = function( code ){
 	$.post( "pseudo.cgi", { command:'delete', code:code }, function( data ){ $( "#LF" ).html( data );});
+
+	dlf = false;
+	displayBW();
 	displayVIDEO( code + ' deleted' );
-//	closeBroseWindows( 5 );
 };
 
 
@@ -558,6 +558,7 @@ var metaDisplay = function( com ){
 var configInit = function(){
 	$.post( "config.cgi", { mod:'' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "config.cgi", { mod:'account' }, function( data ){ $( "#L1" ).html( data );});
+
 	flashBW();
 	dline = true;
 	dl1 = true;
