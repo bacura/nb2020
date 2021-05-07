@@ -270,7 +270,7 @@ var recipeSave = function( code ){
 		if( document.getElementById( "draft" ).checked ){ var draft = 1 }
 
 		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, public:public, protect:protect, draft:draft }, function( data ){ $( "#L2" ).html( data );});
-		displayVIDEO( recipeSave );
+		displayVIDEO( recipe_name );
 
 		var fx = function(){ $.post( "cboard.cgi", { command:'init', code:code }, function( data ){ $( '#L1' ).html( data );});};
 		setTimeout( fx , 1000 );
