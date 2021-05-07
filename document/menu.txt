@@ -29,10 +29,10 @@ fig.to_i		#写真フラグ
 #==============================================================================
 # TRANSITION
 #==============================================================================
-menu.js/menu_photoDel( code )	->	menu-photo.cgi{ command:'delete', code:code, slot:'photo' }
+recipe.js/menu_photoDel( code )	->	menu-photo.cgi{ command:'delete', code:code, slot:'photo' }
 									menu-photo.cgi{ command:'view', code:code }
 
-menu.js/menuSave( code ) 		->	menu.cgi{ command:'save', code:code, menu_name:menu_name, public:public, protect:protect, label:label, new_label:new_label }
+recipe.js/menuSave( code ) 		->	menu.cgi{ command:'save', code:code, menu_name:menu_name, public:public, protect:protect, label:label, new_label:new_label }
 									meal.cgi{ command:'init', code:code }
 
 
@@ -40,4 +40,4 @@ menu.js/menuSave( code ) 		->	menu.cgi{ command:'save', code:code, menu_name:men
 #CHANGE LOG
 #==============================================================================
 20200210	0.00b	βスタート
-20200210	0.01b	更新：料理教室機能との連繋
+20200507	0.01b	更新：料理教室機能との連携

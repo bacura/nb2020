@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu list 0.00b
+#Nutrition browser 2020 menu list 0.01b
 
 
 #==============================================================================
@@ -36,22 +36,42 @@ end
 
 
 #### HTML of label
-def label_html( uname, label, lp )
-	r = mdb( "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND name!='';", false, @debug )
+def label_html( user, label, lp )
+	r = mdb( "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND name!='';", false, @debug )
 	label_list = []
 	r.each do |e| label_list << e['label'] end
 	label_list.uniq!
 
-	html = '<select class="form-select form-select-sm" id="label">'
-	html << "<option value=''>#{lp[12]}</option>"
+	html = '<select class="form-select form-select-sm" id="label_list">'
+	html << "<option value='#{lp[12]}' id='normal_label_list0' style='display:inline'>#{lp[12]}</option>"
+	normal_label_c = 0
 	label_list.each do |e|
 		selected = ''
 		selected = 'SELECTED' if e == label
-		html << "<option value='#{e}' #{selected}>#{e}</option>"
+		unless e == lp[12]
+			normal_label_c += 1
+			html << "<option value='#{e}' id='normal_label_list#{normal_label_c}' style='display:inline' #{selected}>#{e}</option>"
+		end
+	end
+
+	school_flavor = ''
+	if user.status >= 5 && user.status != 6
+		school_label_c = 0
+		r = mdb( "SELECT label FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}';", false, @debug )
+		r.each do |e|
+			school_flavor = 'btn-outline-info'
+			a = e['label'].split( "\t" )
+			a.each do |ee|
+				selected = ''
+				selected = 'SELECTED' if ee == label
+				school_label_c += 1
+				html << "<option value='#{ee}' id='school_label_list#{school_label_c}' style='display:none' #{selected}>#{ee}</option>"
+			end
+		end
 	end
 	html << '</select>'
 
-	return html
+	return html, normal_label_c, school_label_c, school_flavor
 end
 
 
@@ -191,7 +211,7 @@ html_range = range_html( range, lp )
 
 
 puts "HTML label<br>" if @debug
-html_label = label_html( user.name, label, lp )
+html_label, normal_label_c, school_label_c, school_flavor = label_html( user, label, lp )
 
 
 puts "Menu list<br>" if @debug
@@ -298,7 +318,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-4'>
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="menu_name">#{lp[5]}</label>
+				<label class="input-group-text #{school_flavor}" id='label_groupl' onclick="switchLabelsetl( '#{normal_label_c}', '#{school_label_c}' )">#{lp[5]}</label>
 				#{html_label}
 			</div>
 		</div>

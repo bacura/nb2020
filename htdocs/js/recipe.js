@@ -1,4 +1,4 @@
-// Recipe java script for nb2020 0.00b
+// Recipe java script for nb2020 0.01b
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -580,12 +580,6 @@ var menuEdit = function( com, code ){
 };
 
 
-// Copying lebel to new label
-var copyLabel = function(){
-	document.getElementById( "new_label" ).value = document.getElementById( "label" ).value;
-};
-
-
 // メニュー編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
 var menuSave = function( code ){
 	var menu_name = document.getElementById( "menu_name" ).value;
@@ -608,10 +602,34 @@ var menuSave = function( code ){
 };
 
 
-// Changing label set
-var changeLabelset = function( normal_label_c, school_label_c){
+// Copying lebel to new label
+var copyLabel = function(){
+	document.getElementById( "new_label" ).value = document.getElementById( "label" ).value;
+};
 
-	displayVIDEO( 'ok' );
+
+// Changing label set
+var switchLabelset = function( normal_label_c, school_label_c ){
+	var label_status = document.getElementById( 'normal_label0' ).style.display;
+	if( school_label_c > 0){
+		if( label_status == 'inline' ){
+			for( let i = 0; i <= normal_label_c; i++ ){
+				document.getElementById( 'normal_label' + i ).style.display = 'none';
+			}
+			for( let i = 1; i <= school_label_c; i++ ){
+				document.getElementById( 'school_label' + i ).style.display = 'inline';
+			}
+			document.getElementById( 'label' ).selectedIndex = normal_label_c + 1;
+		}else{
+			for( let i = 0; i <= normal_label_c; i++ ){
+				document.getElementById( 'normal_label' + i ).style.display = 'inline';
+			}
+			for( let i = 1; i <= school_label_c; i++ ){
+				document.getElementById( 'school_label' + i ).style.display = 'none';
+			}
+			document.getElementById( 'label' ).selectedIndex = 0;
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -629,7 +647,7 @@ var menuList = function( page ){
 // まな板のレシピ読み込みボタンを押してL1に献立リストを表示
 var menuList2 = function( page ){
 	var range = document.getElementById( "range" ).value;
-	var label = document.getElementById( "label" ).value;
+	var label = document.getElementById( "label_list" ).value;
 
 	$.post( "menul.cgi", { command:'view2', page:page, range:range, label:label }, function( data ){ $( "#L1" ).html( data );});
 };
@@ -652,6 +670,30 @@ var menuImport = function( code ){
 	displayVIDEO( code );
 };
 
+
+// Changing label set
+var switchLabelsetl = function( normal_label_c, school_label_c ){
+	var label_status = document.getElementById( 'normal_label_list0' ).style.display;
+	if( school_label_c > 0){
+		if( label_status == 'inline' ){
+			for( let i = 0; i <= normal_label_c; i++ ){
+				document.getElementById( 'normal_label_list' + i ).style.display = 'none';
+			}
+			for( let i = 1; i <= school_label_c; i++ ){
+				document.getElementById( 'school_label_list' + i ).style.display = 'inline';
+			}
+			document.getElementById( 'label_list' ).selectedIndex = normal_label_c + 1;
+		}else{
+			for( let i = 0; i <= normal_label_c; i++ ){
+				document.getElementById( 'normal_label_list' + i ).style.display = 'inline';
+			}
+			for( let i = 1; i <= school_label_c; i++ ){
+				document.getElementById( 'school_label_list' + i ).style.display = 'none';
+			}
+			document.getElementById( 'label_list' ).selectedIndex = 0;
+		}
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // 献立の成分計算 ////////////////////////////////////////////////////////////////////////

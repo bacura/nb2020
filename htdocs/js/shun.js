@@ -3,11 +3,12 @@
 
 //
 var initSchool = function(){
-	closeBroseWindows( 1 );
 	$.post( "school.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "school.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
+	flashBW();
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
 // School koyomi change
@@ -33,10 +34,7 @@ var openSchoolk = function( dd, ampm ){
 
 // menu
 var initSchoolMenu = function(){
-	closeBroseWindows( 1 );
-	document.getElementById( "L1" ).style.display = 'block';
 	$.post( "school-menu.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	displayLINE( 'on' );
 };
 
 // Making new school menu label group
@@ -91,9 +89,10 @@ var initSchoolStock = function(){
 
 // Account list
 var initAccountM = function(){
-	closeBroseWindows( 1 );
 	$.post( "account-mom.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	flashBW();
+	dl1 = true;
+	displayBW();
 };
 
 

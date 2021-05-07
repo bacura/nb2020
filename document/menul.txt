@@ -1,4 +1,4 @@
-#Nutrition browser 2020 menu list 0.00b
+#Nutrition browser 2020 menu list 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -24,15 +24,16 @@ page.to_i		#ページ番号
 #==============================================================================
 # TRANSITION
 #==============================================================================
-menu.js/menuList()					->	menul.cgi{ command:'init' }
-menu.js/menuListP( page )			->	menul.cgi{ command:'view', page:page }
-menu.js/menuDelete( code, name )	->	menul.cgi{ command:'delete', code:code }
-menu.js/menuImport( code )			->	menul.cgi{ command:'import', code:code }
+recipe.js/menuList()					->	menul.cgi{ command:'init' }
+recipe.js/menuListP( page )			->	menul.cgi{ command:'view', page:page }
+recipe.js/menuDelete( code, name )	->	menul.cgi{ command:'delete', code:code }
+recipe.js/menuImport( code )			->	menul.cgi{ command:'import', code:code }
 
-guild.js/addKoyomi_BWF( code, 1 )	->	koyomi-add.cgi{ command:"init", code:code }
+guild.js/addKoyomi( code, 1 )	->	koyomi-add.cgi{ command:"init", code:code }
 
 
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
 20210215	0.00b	βスタート
+20210507	0.01b	更新：料理教室機能との連携

@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 script = 'menu'
 
 
@@ -89,26 +89,30 @@ r.each do |e| label_list << e['label'] end
 label_list.uniq!
 
 html_label = '<select class="form-select form-select-sm" id="label">'
-html_label << "<option value='#{lp[2]}'>#{lp[2]}</option>"
+html_label << "<option value='#{lp[2]}' id='normal_label0' style='display:inline'>#{lp[2]}</option>"
 
 normal_label_c = 0
 label_list.each do |e|
 	selected = ''
 	selected = 'SELECTED' if e == menu.label
-	html_label << "<option value='#{e}' id='normal_label#{normal_label_c}' #{selected} style='display:inline'>#{e}</option>" unless e == lp[2]
-	normal_label_c += 1
+	unless e == lp[2]
+		normal_label_c += 1
+		html_label << "<option value='#{e}' id='normal_label#{normal_label_c}' style='display:inline' #{selected}>#{e}</option>"
+	end
 end
 
+school_flavor = ''
 if user.status >= 5 && user.status != 6
 	school_label_c = 0
 	r = mdb( "SELECT label FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}';", false, @debug )
 	r.each do |e|
+		school_flavor = 'btn-outline-info'
 		a = e['label'].split( "\t" )
 		a.each do |ee|
 			selected = ''
 			selected = 'SELECTED' if ee == menu.label
-			html_label << "<option value='#{ee}' id='school_label#{school_label_c}' #{selected} style='display:none'>#{ee}</option>"
 			school_label_c += 1
+			html_label << "<option value='#{ee}' id='school_label#{school_label_c}' style='display:none' #{selected}>#{ee}</option>"
 		end
 	end
 end
@@ -145,19 +149,12 @@ html = <<-"HTML"
   				</label>
 			</div>
 		</div>
-		<div class="col-6">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="menu_name">#{lp[6]}</label>
-      			<input type="text" class="form-control" id="menu_name" value="#{menu.name}" required>
-      			<button class="btn btn-outline-primary" type="button" onclick="menuSave( '#{menu.code}' )">#{lp[7]}</button>
-    		</div>
-    	</div>
     </div>
     <br>
 	<div class='row'>
-		<div class="col-4">
+		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" onclick="changeLabelset( '#{normal_label_c}', '#{school_label_c}' )">#{lp[9]}</label>
+				<label class="input-group-text #{school_flavor}" id='label_group' onclick="switchLabelset( '#{normal_label_c}', '#{school_label_c}' )">#{lp[9]}</label>
 				#{html_label}
 			</div>
 		</div>
@@ -166,11 +163,19 @@ html = <<-"HTML"
 			<span onclick="copyLabel()">#{lp[13]}</span>
 		</div>
 
-		<div class="col-4">
+		<div class="col-3">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="menu_name">#{lp[10]}</label>
       			<input type="text" class="form-control" id="new_label" value="">
 	   		</div>
+    	</div>
+
+		<div class="col-5">
+			<div class="input-group input-group-sm">
+				<label class="input-group-text">#{lp[6]}</label>
+      			<input type="text" class="form-control" id="menu_name" value="#{menu.name}" required>
+      			<button class="btn btn-outline-primary" type="button" onclick="menuSave( '#{menu.code}' )">#{lp[7]}</button>
+    		</div>
     	</div>
 	</div>
     <br>

@@ -336,7 +336,6 @@ var modifyKoyomi = function( code, yyyy, mm, dd, tdiv, hh, ev, eu, order ){
 // Koyomi insert panel change  for fix code
 var modifychangeKoyomiFC = function( code, origin ){
 	var hh = document.getElementById( "hh" ).value;
-	displayVIDEO( mm );
 	$.post( "koyomi-add.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }, function( data ){ $( "#LF" ).html( data );});
 	ldf = true;
 	displayBW();
@@ -416,16 +415,52 @@ var updateKoyomiex = function( dd, item_no, cell_id ){
 
 // Ginmi init
 var initGinmi = function(){
-	closeBroseWindows( 1 );
 	$.post( "ginmi.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
-	displayLINE( 'on' );
 	$.post( "ginmi.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	flashBW();
+	dline = true;
+	dl1 - true;
+	displayBW();
 };
 
 var ginmiForm = function( mod ){
 	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Physique //////////////////////////////////////////////////////////////
+
+// Physique init
+var initPhysique = function(){
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Mother and child //////////////////////////////////////////////////////////////
+
+// Mother and child init
+var initMC = function(){
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Elderly //////////////////////////////////////////////////////////////
+
+// Elderly init
+var initElderly = function(){
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Pathology //////////////////////////////////////////////////////////////
+
+// Pathology init
+var initPathology = function(){
+
 };
 
 
@@ -434,15 +469,14 @@ var ginmiForm = function( mod ){
 
 // Tokei R init
 var initToker = function(){
-	closeBroseWindows( 1 );
 	$.post( "toker.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
-	displayLINE( 'on');
-
 	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	flashBW();
+	dline = true;
+	dl1 - true;
+	displayBW();
 };
 
 var tokerForm = function( mod ){
 	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
 };

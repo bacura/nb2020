@@ -21,16 +21,16 @@ script = 'config'
 #### 初期画面
 def init( lp, user )
 	bio = ''
-	bio = "<span class='badge rounded-pill bg-info' onclick=\"configForm( 'bio' )\">#{lp[11]}</span>" if user.status >= 2
+	bio = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'bio' )\">#{lp[11]}</span>" if user.status >= 2
 	koyomiex = ''
-	koyomiex = "<span class='badge rounded-pill bg-info' onclick=\"configForm( 'koyomi' )\">#{lp[9]}</span>" if user.status >= 2
+	koyomiex = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'koyomi' )\">#{lp[9]}</span>" if user.status >= 2
 
 	html = <<-"HTML"
-<span class="badge rounded-pill bg-info" onclick="configForm( 'account' )">#{lp[1]}</span>
-<span class="badge rounded-pill bg-info" onclick="configForm( 'display' )">#{lp[10]}</span>
-<span class="badge rounded-pill bg-info" onclick="configForm( 'palette' )">#{lp[2]}</span>
-<span class="badge rounded-pill bg-info" onclick="configForm( 'history' )">#{lp[6]}</span>
-<span class="badge rounded-pill bg-info" onclick="configForm( 'sum' )">#{lp[7]}</span>
+<span class="badge rounded-pill bg-info text-dark" onclick="configForm( 'account' )">#{lp[1]}</span>
+<span class="badge rounded-pill bg-info text-dark" onclick="configForm( 'display' )">#{lp[10]}</span>
+<span class="badge rounded-pill bg-info text-dark" onclick="configForm( 'palette' )">#{lp[2]}</span>
+<span class="badge rounded-pill bg-info text-dark" onclick="configForm( 'history' )">#{lp[6]}</span>
+<span class="badge rounded-pill bg-info text-dark" onclick="configForm( 'sum' )">#{lp[7]}</span>
 #{bio}
 #{koyomiex}
 <span class="badge rounded-pill bg-danger" onclick="configForm( 'release' )">#{lp[8]}</span>
