@@ -1,4 +1,4 @@
-# Ginmi module for METs 0.00
+# Ginmi module for METs 0.00b
 #encoding: utf-8
 
 
@@ -58,7 +58,7 @@ def ginmi_module( cgi, user )
 		total_energy = 0
 		total_energya = 0
 		total_mets = BigDecimal( 0 )
-		total_metsa = BigDecimal( 0 )
+		total_d_mets = BigDecimal( 0 )
 		a = mets.split( "\t" )
 		a.size.times do |c|
 			aa = a[c].split( ':' )
@@ -82,19 +82,19 @@ def ginmi_module( cgi, user )
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_METST} WHERE code='#{code_set[c]}';", false, false )
 			if r.first
 				mets = BigDecimal( r.first['mets'] )
-				metsa = BigDecimal( r.first['mets'] ) - 1
+				d_mets = BigDecimal( r.first['mets'] ) - BigDecimal( mm_set[c] ) / 60
 
 				hh_ = sprintf( "%.3f", ( mm_set[c].to_f / 60 ).round( 3 ).to_s )
 				metsh = mets * mm_set[c].to_f / 60
-				metsha = metsa * mm_set[c].to_f / 60
+				d_metsh = d_mets * mm_set[c].to_f / 60
 
 				metsh_ = sprintf( "%.3f", metsh.round( 3 ).to_s )
-				metsha_ = sprintf( "%.3f", metsha.round( 3 ).to_s )
+				d_metsh_ = sprintf( "%.3f", d_metsh.round( 3 ).to_s )
 
 				total_mets += metsh
-				total_metsa += metsha
+				total_d_mets += d_metsh
 				total_energy += ( metsh * weight.to_f * 1.05 )
-				total_energya += ( metsha * weight.to_f * 1.05 )
+				total_energya += ( d_metsh * weight.to_f * 1.05 )
 				total_mm += mm_set[c]
 
 				h = mm_set[c].div( 60 )
@@ -137,7 +137,7 @@ def ginmi_module( cgi, user )
 			<div class='col-5'>#{weight} * #{total_mets.to_f.round( 3 )} * 1.05</div>
 		</div>
 		<div class='row'>
-			<div class='col-2'>消費エネルギー (追加分)</div>
+			<div class='col-2'>差分消費エネルギー (Δエネルギー)</div>
 			<div class='col-2'>#{total_energya.to_i} kcal</div>
 		</div>
 RESULT_HTML
@@ -165,6 +165,7 @@ RESULT_HTML
 		exit()
 	when 'reset'
 			mdb( "delete from #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
+			puts "[METs]"
 			exit()
 	end
 
@@ -349,13 +350,15 @@ var ginmiEnergyMETsres = function(){
 		$.post( "ginmi.cgi", { mod:"energy-mets", command:'result', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
 		setTimeout( ginmiEnergyMETs( 'active' ), 1000 );
 	}
-	document.getElementById( "L2" ).style.display = 'block';
+	dl2 = true;
+	displayBW();
 };
 
 var ginmiEnergyMETsreset = function(){
 	displayVIDEO( 'METs reset' );
 	$.post( "ginmi.cgi", { mod:"energy-mets", command:'reset' }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'none';
+	dl2 = true;
+	displayBW();
 };
 
 </script>

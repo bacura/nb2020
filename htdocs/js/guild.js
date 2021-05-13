@@ -471,12 +471,6 @@ var writekoyomiex = function( file, size, msg ){
 };
 
 
-
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////
 // Ginmi //////////////////////////////////////////////////////////////
 
@@ -484,9 +478,10 @@ var writekoyomiex = function( file, size, msg ){
 var initGinmi = function(){
 	$.post( "ginmi.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "ginmi.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
+
 	flashBW();
 	dline = true;
-	dl1 - true;
+	dl1 = true;
 	displayBW();
 };
 
