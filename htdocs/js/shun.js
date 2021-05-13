@@ -69,7 +69,8 @@ var selectSchoolMenu = function(){
 	var group_select = document.getElementById( 'group_select' ).value;
 	var label_select = document.getElementById( 'label_select' ).value;
 	var month_select = document.getElementById( 'month_select' ).value;
-	$.post( "school-menu.cgi", { command:'menu_select', group_select:group_select, label_select:label_select, month_select:month_select }, function( data ){ $( "#L1" ).html( data );});
+	var week_select = document.getElementById( 'week_select' ).value;
+	$.post( "school-menu.cgi", { command:'menu_select', group_select:group_select, label_select:label_select, month_select:month_select, week_select:week_select }, function( data ){ $( "#L1" ).html( data );});
 };
 
 

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 meal 0.00b
+#Nutrition browser 2020 meal 0.01b
 
 
 #==============================================================================
@@ -44,15 +44,15 @@ end
 
 
 puts "Loading MEAL<br>" if @debug
-meal = Meal.new( user.name )
-meal.load_menu( code ) if command == 'load'
-meal.debug if @debug
+meal_o = Meal.new( user.name )
+meal_o.load_menu( code ) if command == 'load'
+meal_o.debug if @debug
 
 
 puts "Loading recipe<br>" if @debug
 recipe_list = []
-if meal.meal
-	meal.meal.split( "\t" ).each do |e|
+if meal_o.meal
+	meal_o.meal.split( "\t" ).each do |e|
 		recipe = Recipe.new( user.name )
 		recipe.load_db( e, true )
 		recipe.load_media
@@ -66,8 +66,8 @@ when 'clear'
 	# All
 	if order == 'all'
 		recipe_list = []
-		meal.name = ''
-		meal.code = ''
+		meal_o.name = ''
+		meal_o.code = ''
 	# One by one
 	else
 		recipe_list.delete_at( order.to_i )
@@ -101,10 +101,10 @@ puts "HTML part<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-10'><h5>#{lp[1]}: #{meal.name}</h5></div>
+		<div class='col-10'><h5>#{lp[1]}: #{meal_o.name}</h5></div>
 		<div class='col-2' align='right'>
 			<input type='checkbox' id='meal_all_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clear_meal( 'all', '#{meal.code}' )\">#{lp[2]}</button>
+			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clear_meal( 'all', '#{meal_o.code}' )\">#{lp[2]}</button>
 		</div>
 	</div>
 	<hr>
@@ -147,11 +147,11 @@ end
 
 html << "	<br>"
 html << "	<div class='row'>"
-html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuEdit( 'view', '#{meal.code}' )\">#{lp[7]}</button></div>"
-html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuCalcView( '#{meal.code}' )\">#{lp[8]}</button></div>"
-html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuAnalysis( '#{meal.code}' )\">#{lp[9]}</button></div>"
+html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuEdit( 'view', '#{meal_o.code}' )\">#{lp[7]}</button></div>"
+html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuCalcView( '#{meal_o.code}' )\">#{lp[8]}</button></div>"
+html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuAnalysis( '#{meal_o.code}' )\">#{lp[9]}</button></div>"
 html << "	</div>"
-html << "	<div class='code'>#{meal.code}</div>"
+html << "	<div class='code'>#{meal_o.code}</div>"
 html << "</div>"
 
 puts html
@@ -160,5 +160,5 @@ puts html
 puts "Updating MEAL<br>" if @debug
 meal_new = ''
 recipe_list.each do |e| meal_new << "#{e.code}\t" end
-meal.meal = meal_new.chop!
-meal.update_db
+meal_o.meal = meal_new.chop!
+meal_o.update_db

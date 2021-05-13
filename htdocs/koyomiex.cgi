@@ -20,45 +20,6 @@ script = 'koyomiex'
 #DEFINITION
 #==============================================================================
 
-####
-def meals( meal )
-	mb_html = '<ul>'
-	a = meal.split( "\t" )
-	a.each do |e|
-		aa = e.split( ':' )
-		if /\-m\-/ =~ aa[0]
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false, @debug )
-			mb_html << "<li>#{r.first['name']}</li>"
-		elsif /\-f\-/ =~ aa[0]
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
-			mb_html << "<li>#{r.first['name']}</li>"
-		elsif /\-/ =~ aa[0]
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
-			mb_html << "<li>#{r.first['name']}</li>"
-		elsif /\?/ =~ aa[0]
-			mb_html << "<li>?</li>"
-		else
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';", false, @debug )
-			mb_html << "<li>#{r.first['name']}</li>"
-		end
-	end
-	mb_html << '</ul>'
-
-	return mb_html
-end
-
-
-#### Getting start year
-def get_starty( uname )
-	start_year = @time_now.year
-	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		start_year = a[0].to_i if a[0].to_i != 0
-	end
-
-	return start_year
-end
 
 #==============================================================================
 # Main
@@ -204,7 +165,15 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			<input type='month' class='form-control form-control-sm' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomiex()">
 		</div>
-		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{date.day}';">#{lp[13]}</div>
+		<div class='col-4'>
+			<form method='post' enctype='multipart/form-data' id='table_form'>
+			<div class='input-group input-group-sm'>
+				<label class="input-group-text btn-info" onclick="importkoyomiex()">#{lp[14]}</label>
+				<input type='file' class='form-control' name='extable' onchange="importkoyomiex()">
+			</div>
+			</form>
+		</div>
+		<div align='center' class='col-4 joystic_koyomi' onclick="window.location.href='#day#{date.day}';">#{lp[13]}</div>
 	</div>
 	<div class='row'>
 		<div class='col'></div>

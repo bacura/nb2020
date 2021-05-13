@@ -51,6 +51,7 @@ group_new = @cgi['group_new']
 group_select = @cgi['group_select']
 label_select = @cgi['label_select']
 month_select = @cgi['month_select'].to_i
+week_select = @cgi['week_select'].to_i
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "label_group:#{label_group}<br>\n"
@@ -59,9 +60,14 @@ if @debug
 	puts "group_new:#{group_new}<br>\n"
 	puts "group_select:#{group_select}<br>\n"
 	puts "label_select:#{label_select}<br>\n"
-	puts "month_select:#{month_select}<br>\n"
+	puts "week_select:#{week_select}<br>\n"
 	puts "<hr>\n"
 end
+
+
+school_mode = 3;
+r = mdb( "SELECT school FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+school_mode = r.first['school'] if r.first
 
 
 calendar = Calendar.new( user.name, 0, 0, 0 )
@@ -185,6 +191,18 @@ month_html << "<option value='0'>#{lp[6]}</option>"
 end
 
 
+puts 'HTML month option<br>' if @debug
+week_html = ''
+week_html << "<option value='0'>#{lp[6]}</option>"
+1.upto( 5 ) do |c|
+	if week_select.to_i == c
+		week_html << "<option value='#{c}' SELECTED>#{c}</option>"
+	else
+		week_html << "<option value='#{c}'>#{c}</option>"
+	end
+end
+
+
 puts 'HTML menu<br>' if @debug
 menu_html = ''
 if month_select == 0
@@ -193,21 +211,28 @@ else
 	label_select.sub!( '#', month_select.to_s )
 end
 r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND label='#{label_select}';", false, @debug )
-if r.first
+r.each do |e|
 	menu_html << "<div class='row'>"
-	menu_html << "<div class='col'><h5>#{r.first['name']}</h5></div>"
+	menu_html << "<div class='col'><h5>#{e['name']}</h5></div>"
 	menu_html << "</div>"
+
+
+
+#ここに教室モードごとの登録メニューを作る
+
+
+
 	menu_html << "<div class='row'>"
-	menu_html << "<div class='col'>#{r.first['memo']}</div>"
+	menu_html << "<div class='col'>#{e['memo']}</div>"
 	menu_html << "</div>"
 
 	menu_html << "<div class='row'>"
-	recipe_code = r.first['meal'].split( "\t" )
-	recipe_code.each do |e|
-		rr = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{e}';", false, @debug )
+	recipe_code = e['meal'].split( "\t" )
+	recipe_code.each do |ee|
+		rr = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{ee}';", false, @debug )
 		if rr.first
 			photo = 'no_image.png'
-			rrr = mdb( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{e}';", false, @debug )
+			rrr = mdb( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{ee}';", false, @debug )
 			photo = "#{rrr.first['mcode']}-tn.jpg" if rrr.first
 
 			menu_html << "<div class='col-2'>"
@@ -232,9 +257,12 @@ if r.first
 		end
 	end
 	menu_html << "</div>"
-else
-	menu_html << "#{lp[10]}"
+	menu_html << "<div class='code'>#{e['code']}</div>"
 end
+
+menu_html << "#{lp[10]}" if r.size == 0
+
+
 
 
 puts 'HTML<br>' if @debug
@@ -279,6 +307,14 @@ html = <<-"HTML"
 					#{month_html}
 				</select>
 				<label class='input-group-text'>#{lp[9]}</label>
+			</div>
+		</div>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<select class='form-select' id='week_select' onchange="selectSchoolMenu()">
+					#{week_html}
+				</select>
+				<label class='input-group-text'>#{lp[12]}</label>
 			</div>
 		</div>
 	</div>

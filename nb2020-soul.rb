@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.05b
+#Nutrition browser 2020 soul 0.07b
 
 #==============================================================================
 # LIBRARY
@@ -307,7 +307,7 @@ end
 #### コードの生成
 def generate_code( uname, c )
   require 'securerandom'
-
+  skip = false
   code = uname[0, 2]
   code = "x" + uname[0, 1] if code == nil
   10.times do
@@ -324,9 +324,15 @@ def generate_code( uname, c )
       query = "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}';"
     when 'p'
       query = "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE code='#{code}';"
+    else
+      skip = true
+      break;
     end
-    r = mdb( query, false, false )
-    break unless r.first
+
+    unless skip
+      r = mdb( query, false, false )
+      break unless r.first
+    end
   end
 
   return code
@@ -968,7 +974,7 @@ end
 
 
 class Menu
-  attr_accessor :user, :code, :name, :meal, :protect, :public, :label, :new_label, :memo, :media
+  attr_accessor :user, :code, :name, :meal, :protect, :public, :label, :memo, :media
 
   def initialize( user )
     @code = nil
@@ -978,7 +984,6 @@ class Menu
     @protect = 0
     @public = 0
     @label = nil
-    @new_label = nil
     @memo = nil
     @media = []
   end
@@ -989,7 +994,6 @@ class Menu
     @protect = cgi['protect'].to_i
     @public = cgi['public'].to_i
     @label = cgi['label'].to_s
-    @new_label = cgi['new_label'].to_s
     @memo = cgi['memo'].to_s
 
     # excepting for tags
@@ -1060,7 +1064,6 @@ class Menu
     puts "public:#{@public}<br>"
     puts "meal:#{@meal}<br>"
     puts "label:#{@label}<br>"
-    puts "new_label:#{@new_label}<br>"
     puts "memo:#{@memo}<br>"
     puts "media:#{@media}<br>"
     puts "<hr>"

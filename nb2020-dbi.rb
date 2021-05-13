@@ -593,7 +593,7 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), school TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|

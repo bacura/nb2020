@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.01b
+#Nutrition browser 2020 koyomi adding panel 0.02b
 
 #==============================================================================
 #LIBRARY
@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #STATIC
 #==============================================================================
 script = 'koyomi-add'
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -282,7 +282,7 @@ tdiv_html << "</select>"
 
 #### Rate HTML
 hour_html = "<div class='input-group input-group-sm'>"
-hour_html << "<label class='input-group-text' onclick=\"nowKoyomi()\">#{lp[26]}</label>"
+hour_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi()\">#{lp[26]}</label>"
 hour_html << "<select id='hh' class='form-select form-select-sm'>"
 hour_html << "<option value='99'>時刻</option>"
 0.upto( 23 ) do |c|
@@ -320,9 +320,9 @@ else
 end
 
 #### Return button
-return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
+return_joystic = "<div align='center' class='col-3 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
 if command == 'modify' || command == 'move'
-	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
+	return_joystic = "<div align='center' class='col-3 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
 end
 
 
@@ -333,8 +333,9 @@ onchange = "onChange=\"changeKoyomiAdd( 'modify', '#{code}', '#{origin}' )\"" if
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-4'><h5>#{food_name}</h5></div>
-		<div align='center' class='col-4 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</div>
+		<div class='col-3'><h5>#{food_name}</h5></div>
+		<div align='center' class='col-3 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</div>
+		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi()">#{lp[27]}</div>
 		#{return_joystic}
 	</div>
 	<br>

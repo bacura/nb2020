@@ -1,4 +1,4 @@
-//guild.js ver 0.01b
+//guild.js ver 0.02b
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -259,11 +259,12 @@ var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
 // Koyomi insert panel
 var addKoyomi = function( code ){
 	$.post( "koyomi-add.cgi", { command:"init", code:code }, function( data ){ $( "#LF" ).html( data );});
+
 	pushBW();
 	flashBW();
 	dlf = true;
+	dline = false;
 	displayBW();
-	displayLINE( 'off' );
 };
 
 // Koyomi insert panel change
@@ -309,6 +310,7 @@ var modifysaveKoyomi_direct = function( code, yyyy, mm, dd, tdiv, origin ){
 // Modifying or copying fix code in Koyomi
 var modifysaveKoyomiFC = function( code, origin ){
 	$.post( "koyomi-add.cgi", { command:"move_fix", code:code, origin:origin, copy:1 }, function( data ){ $( "#LF" ).html( data );});
+
 	dlf = true;
 	displayBW();
 };
@@ -322,6 +324,7 @@ var koyomiReturn = function(){
 // Return from Koyomi to Koyomi edit
 var koyomiReturn2KE = function( yyyy, mm, dd ){
 	$.post( "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){ $( "#L2" ).html( data );});
+
 	pullHW();
 	displayBW();
 };
@@ -329,6 +332,7 @@ var koyomiReturn2KE = function( yyyy, mm, dd ){
 // Koyomi modify or copy panel
 var modifyKoyomi = function( code, yyyy, mm, dd, tdiv, hh, ev, eu, order ){
 	$.post( "koyomi-add.cgi", {command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, order:order }, function( data ){ $( "#LF" ).html( data );});
+
 	dlf = true;
 	displayBW();
 };
@@ -337,6 +341,7 @@ var modifyKoyomi = function( code, yyyy, mm, dd, tdiv, hh, ev, eu, order ){
 var modifychangeKoyomiFC = function( code, origin ){
 	var hh = document.getElementById( "hh" ).value;
 	$.post( "koyomi-add.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }, function( data ){ $( "#LF" ).html( data );});
+
 	dlf = true;
 	displayBW();
 };
@@ -353,6 +358,7 @@ var nowKoyomi = function(){
 
 var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
 	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99 }, function( data ){ $( "#LF" ).html( data );});
+
 	pushBW();
 	flashBW();
 	dlf = true;
@@ -392,13 +398,20 @@ var cmmNowKoyomi = function(){
 // Koyomi EX init
 var initKoyomiex = function(){
 	$.post( "koyomiex.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
+
+	flashBW();
+	dl1 = true;
+	dline = true;
+	displayBW();
 };
+
 
 // Koyomi EX change
 var changeKoyomiex = function(){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
 	$.post( "koyomiex.cgi", { command:"init", yyyy_mm:yyyy_mm }, function( data ){ $( "#L1" ).html( data );});
 };
+
 
 // Updating Koyomiex cell
 var updateKoyomiex = function( dd, item_no, cell_id ){
@@ -407,6 +420,61 @@ var updateKoyomiex = function( dd, item_no, cell_id ){
 //	$.post( "koyomiex.cgi", { command:"update", yyyy:yyyy, mm:mm, dd:dd, item_no:item_no, cell:cell }, function( data ){ $( "#L1" ).html( data );});
 	$.post( "koyomiex.cgi", { command:"update", yyyy_mm:yyyy_mm, dd:dd, item_no:item_no, cell:cell }, function( data ){});
 };
+
+
+// Uploading table file
+var importkoyomiex = function(){
+	form_data = new FormData( $( '#table_form' )[0] );
+	form_data.append( 'command', 'upload' );
+	$.ajax( "koyomiex-in.cgi",
+		{
+			type: 'post',
+			processData: false,
+			contentType: false,
+			data: form_data,
+			dataype: 'html',
+			success: function( data ){ $( "#L2" ).html( data );}
+		}
+	);
+
+	dl1 = false;
+	dl2 = true;
+	dline = true;
+	displayBW();
+};
+
+
+// Updating koyomiex with table file
+var writekoyomiex = function( file, size, msg ){
+	var skip_line1 = 0;
+	if( document.getElementById( 'skip_line1' ).checked ){ skip_line1 = 1; }
+	var overwrite = 0;
+	if( document.getElementById( 'overwrite' ).checked ){ overwrite = 1; }
+	var date_flag= false;
+
+	var items = [];
+	for( i = 0; i < size; i++ ){
+		if( document.getElementById( 'item' + i ) != null ){ items[i] = document.getElementById( 'item' + i ).value; }
+		if( items[i] == '99' ){ date_flag = true; }
+	}
+	var item_solid = items.join( ':' );
+
+	if( date_flag ){
+		$.post( "koyomiex-in.cgi", { command:'update', file:file, skip_line1:skip_line1, overwrite:overwrite, item_solid:item_solid }, function( data ){ $( "#L2" ).html( data );});
+	}else{
+		displayVIDEO( msg );
+	}
+
+	setTimeout( initKoyomiex(), 1000 );
+	dl2 = true;
+	displayBW();
+};
+
+
+
+
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////////

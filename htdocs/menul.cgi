@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu list 0.01b
+#Nutrition browser 2020 menu list 0.02b
 
 
 #==============================================================================
@@ -59,7 +59,7 @@ def label_html( user, label, lp )
 		school_label_c = 0
 		r = mdb( "SELECT label FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}';", false, @debug )
 		r.each do |e|
-			school_flavor = 'btn-outline-info'
+			school_flavor = 'btn-info'
 			a = e['label'].split( "\t" )
 			a.each do |ee|
 				selected = ''
@@ -291,7 +291,7 @@ menus.each do |e|
 
 		menu_html << "<td>"
 		if e.user == user.name
-			menu_html << "<input type='checkbox' id='#{e.code}'>&nbsp;<span onclick=\"menuDelete( '#{e.code}', '#{e.name}' )\">#{lp[1]}</span>"
+			menu_html << "<input type='checkbox' id='#{e.code}'>&nbsp;<span onclick=\"menuDelete( '#{e.code}', '#{e.name}' )\">#{lp[1]}</span>" if e.protect != 1
 		else
 			menu_html << "<span onclick=\"menuImport( '#{e.code}' )\">#{lp[2]}</span>"
 		end

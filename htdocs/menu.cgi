@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 script = 'menu'
 
 
@@ -53,29 +53,21 @@ when 'view'
 when 'save'
 	puts 'Saving menu<br>' if @debug
 	menu.load_cgi( @cgi )
-
-	r = mdb( "SELECT * from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
+	menu.label = @cgi['new_label'] unless @cgi['new_label'] == ''
+	meal_o = Meal.new( user.name )
 	# Inserting new menu
-	if r.first['name'] == ''
+	if meal_o.name == '' || meal_o.name != menu.name || menu.protect == 1
+		puts 'New saving<br>' if @debug
 		menu.code = generate_code( user.name, 'm' )
-		menu.meal = r.first['meal']
+		menu.meal = meal_o.meal
   		menu.insert_db
 
-	# Updating menu
-	else
-		pre_menu = Menu.new( user.name )
-		pre_menu.code = menu.code
-		pre_menu.load_db( code, true )
-		menu.meal = r.first['meal']
-
-		if menu.name != pre_menu.name
-			# 名前が一致しなければ、新規コードとメニューを登録
-			# バグに近い仕様：名前を変えて新規コードになるけど、写真はコピーされない
-			menu.code = generate_code( user.name, 'm' )
-			menu.insert_db
-			mdb( "UPDATE #{$MYSQL_TB_MEAL} SET name='#{menu.name}', code='#{menu.code}', protect='#{recipe.protect}' WHERE user='#{user.name}';", false, @debug )
-		end
+  		meal_o.name = menu.name
+  		meal_o.code = menu.code
+  		meal_o.protect = menu.protect
+  		meal_o.update_db
 	end
+
 	# Updating menu
 	menu.debug if @debug
 	menu.update_db
@@ -106,7 +98,7 @@ if user.status >= 5 && user.status != 6
 	school_label_c = 0
 	r = mdb( "SELECT label FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}';", false, @debug )
 	r.each do |e|
-		school_flavor = 'btn-outline-info'
+		school_flavor = 'btn-info'
 		a = e['label'].split( "\t" )
 		a.each do |ee|
 			selected = ''

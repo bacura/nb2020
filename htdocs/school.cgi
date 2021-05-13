@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser cooking school 0.00b
+#Nutrition browser cooking school 0.01b
 
 
 #==============================================================================
@@ -32,9 +32,9 @@ def sub_menu( lp )
 	html = <<-"MENU"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><span class='badge rounded-pill bg-info' onclick="initSchool()">#{lp[23]}</span></div>
-		<div class='col-2'><span class='badge rounded-pill bg-info' onclick="initSchoolMenu()">#{lp[24]}</span></div>
-		<div class='col-2'><span class='badge rounded-pill bg-info' onclick="">#{lp[25]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initSchool()">#{lp[23]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initSchoolMenu()">#{lp[24]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-light text-light' onclick="">#{lp[25]}</span></div>
 		<div class='col-2'></div>
 	</div>
 </div>
@@ -136,6 +136,12 @@ if @debug
 end
 
 
+####
+school_mode = 3
+r = mdb( "SELECT school FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+school_mode = r.first['school'] if r.first
+
+
 #### Sub menu
 sub_menu ( lp ) if command == 'menu'
 
@@ -169,6 +175,7 @@ sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 date_html = ''
 week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
+menu_flag = true;
 1.upto( calendar.ddl ) do |c|
 	date_html << "<tr id='day#{c}'>"
 	if week_count == 0
@@ -178,7 +185,32 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	else
 		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
-	date_html << "<td><span onclick=\"\">#{lp[29]}</span></td>"
+
+
+
+
+	if school_mode == 3
+		if menu_flag
+			date_html << "<td><span onclick=\"\">#{lp[29]}</span></td>"
+			menu_flag = false
+		else
+			date_html << "<td>#{lp[30]}</td>"
+		end
+	elsif school_mode == 2
+		if week_count == 1 || menu_flag
+			date_html << "<td><span onclick=\"\">#{lp[29]}</span></td>"
+			menu_flag = false
+		else
+			date_html << "<td>#{lp[30]}</td>"
+		end
+	else
+		date_html << "<td><span onclick=\"\">#{lp[29]}</span></td>"
+	end
+
+
+
+
+
 
 	reservation_am = nil
 	reservation_pm = nil
