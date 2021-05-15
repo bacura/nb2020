@@ -87,7 +87,7 @@ def ginmi_module( cgi, user )
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_METST} WHERE code='#{code_set[c]}';", false, false )
 			if r.first
 				mets = BigDecimal( r.first['mets'] )
-				d_mets = BigDecimal( r.first['mets'] ) - BigDecimal( mm_set[c] ) / 60
+				d_mets = BigDecimal( r.first['mets'] ) - 1
 
 				hh_ = sprintf( "%.3f", ( mm_set[c].to_f / 60 ).round( 3 ).to_s )
 				metsh = mets * mm_set[c].to_f / 60
@@ -144,6 +144,8 @@ def ginmi_module( cgi, user )
 		<div class='row'>
 			<div class='col-2'>Δ消費エネルギー</div>
 			<div class='col-2'>#{total_d_energy.to_i} kcal</div>
+			<div class='col-1'>計算式</div>
+			<div class='col-5'>#{weight} * ( #{total_mets.to_f.round( 3 )} - #{(total_mm.to_f / 60 ).round( 3 )} ) * 1.05</div>
 		</div>
 RESULT_HTML
 
@@ -156,15 +158,11 @@ RESULT_HTML
 		config = Config.new( user.name )
 		a = config.koyomiex.split( ":" )
 		a.size.times do |c|
-p c
 			aa = a[c].split( "\t" )
-p aa[0]
-
 			exmets_no = c if aa[0].to_i == 8
 			exdelta_no = c if aa[0].to_i == 9
 		end
-p exmets_no
-p exdelta_no
+
 		if exmets_no >= 0 || exdelta_flag >= 0
 			calendar = Calendar.new( user.name, 0, 0, 0 )
 			puts "<div class='row'>"
@@ -193,14 +191,11 @@ p exdelta_no
 				mdb( "INSERT INTO #{$MYSQL_TB_METS} SET user='#{user.name}', name='history', mets='#{active}';", false, false )
 			end
 		end
-		exit()
+		exit( 0 )
 	when 'reset'
 			mdb( "delete from #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
-			exit()
+			exit( 0 )
 	when 'exmets'
-		p yyyy_mm_dd
-		p exmets_no
-		p exmets
 		r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
 		if r.first
 			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{exmets_no}='#{exmets}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
@@ -209,9 +204,6 @@ p exdelta_no
 		end
 		exit( 0 )
 	when 'exdelta'
-		p yyyy_mm_dd
-		p exdelta_no
-		p exdelta
 		r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
 		if r.first
 			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{exdelta_no}='#{exdelta}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
@@ -425,18 +417,14 @@ var ginmiEnergyMETsreset = function(){
 
 var ginmiEnergyMETexMets = function( exmets, exmets_no ){
 	var yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exmets', exmets:exmets, yyyy_mm_dd:yyyy_mm_dd, exmets_no:exmets_no }, function( data ){ $( "#L3" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exmets', exmets:exmets, yyyy_mm_dd:yyyy_mm_dd, exmets_no:exmets_no }, function( data ){});
 	displayVIDEO( 'METs recorded' );
-	dl3 = true;
-	displayBW();
 };
 
 var ginmiEnergyMETexDelta = function( exdelta, exdelta_no ){
 	var yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exdelta', exdelta:exdelta, yyyy_mm_dd:yyyy_mm_dd, exdelta_no:exdelta_no }, function( data ){ $( "#L3" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exdelta', exdelta:exdelta, yyyy_mm_dd:yyyy_mm_dd, exdelta_no:exdelta_no }, function( data ){});
 	displayVIDEO( 'Δenergy recorded' );
-	dl3 = true;
-	displayBW();
 };
 
 </script>
