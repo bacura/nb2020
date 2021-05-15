@@ -417,7 +417,7 @@ var changeKoyomiex = function(){
 var updateKoyomiex = function( dd, item_no, cell_id ){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
 	var cell = document.getElementById( cell_id ).value;
-//	$.post( "koyomiex.cgi", { command:"update", yyyy:yyyy, mm:mm, dd:dd, item_no:item_no, cell:cell }, function( data ){ $( "#L1" ).html( data );});
+//	$.post( "koyomiex.cgi", { command:"update", yyyy_mm:yyyy_mm, dd:dd, item_no:item_no, cell:cell }, function( data ){ $( "#L1" ).html( data );});
 	$.post( "koyomiex.cgi", { command:"update", yyyy_mm:yyyy_mm, dd:dd, item_no:item_no, cell:cell }, function( data ){});
 };
 
@@ -466,8 +466,6 @@ var writekoyomiex = function( file, size, msg ){
 	}
 
 	setTimeout( initKoyomiex(), 1000 );
-	dl2 = true;
-	displayBW();
 };
 
 

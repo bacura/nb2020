@@ -145,6 +145,16 @@ p st_set if @debug
 #### Temp
 
 
+if command == 'exmets'
+	puts 'exmets'
+end
+
+if command == 'exdelta'
+	puts 'exdelta'
+end
+
+
+
 #### Move food (deleting origin )
 new_solid = ''
 if command == 'move' && copy != 1

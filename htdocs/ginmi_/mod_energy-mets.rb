@@ -12,6 +12,11 @@ def ginmi_module( cgi, user )
 	history = cgi['history']
 	hh = cgi['hh'].to_i
 	mm = cgi['mm'].to_i
+	exmets = cgi['exmets'].to_s
+	exmets_no = cgi['exmets_no'].to_i
+	exdelta = cgi['exdelta'].to_s
+	exdelta_no = cgi['exdelta_no'].to_i
+	yyyy_mm_dd = cgi['yyyy_mm_dd']
 	active = history if history != '0' &&  history != ''
 
 	html = ''
@@ -56,7 +61,7 @@ def ginmi_module( cgi, user )
 		total_mm = 0.0
 		total_hm = ''
 		total_energy = 0
-		total_energya = 0
+		total_d_energy = 0
 		total_mets = BigDecimal( 0 )
 		total_d_mets = BigDecimal( 0 )
 		a = mets.split( "\t" )
@@ -72,9 +77,9 @@ def ginmi_module( cgi, user )
 		mets_table_html << '<td>Code</td>'
 		mets_table_html << '<td>個別活動</td>'
 		mets_table_html << '<td>METs</td>'
-		mets_table_html << '<td>時間 [累積]</td>'
 		mets_table_html << '<td>時間(h)</td>'
 		mets_table_html << '<td>METs*h</td>'
+		mets_table_html << '<td>時間 [累積]</td>'
 		mets_table_html << '</tr>'
 		mets_table_html << '</thead>'
 
@@ -94,7 +99,7 @@ def ginmi_module( cgi, user )
 				total_mets += metsh
 				total_d_mets += d_metsh
 				total_energy += ( metsh * weight.to_f * 1.05 )
-				total_energya += ( d_metsh * weight.to_f * 1.05 )
+				total_d_energy += ( d_metsh * weight.to_f * 1.05 )
 				total_mm += mm_set[c]
 
 				h = mm_set[c].div( 60 )
@@ -116,7 +121,7 @@ def ginmi_module( cgi, user )
 				total_hm = "#{th}:#{tm}"
 
 				mets_table_html << '<tr>'
-				mets_table_html << "<td>#{r.first['code']}</td><td>#{r.first['active']}</td><td>#{mets.to_f}</td><td>#{hm} [#{total_hm}]</td><td>#{hh_}</td><td>#{metsh_}</td>"
+				mets_table_html << "<td>#{r.first['code']}</td><td>#{r.first['active']}</td><td>#{mets.to_f}</td><td>#{hh_}</td><td>#{metsh_}</td><td>#{hm} [#{total_hm}]</td>"
 				mets_table_html << '</tr>'
 			end
 		end
@@ -137,13 +142,39 @@ def ginmi_module( cgi, user )
 			<div class='col-5'>#{weight} * #{total_mets.to_f.round( 3 )} * 1.05</div>
 		</div>
 		<div class='row'>
-			<div class='col-2'>差分消費エネルギー (Δエネルギー)</div>
-			<div class='col-2'>#{total_energya.to_i} kcal</div>
+			<div class='col-2'>Δ消費エネルギー</div>
+			<div class='col-2'>#{total_d_energy.to_i} kcal</div>
 		</div>
 RESULT_HTML
 
 		puts result_html
 		puts mets_table_html
+
+		####
+		exmets_no = -1
+		exdelta_no = -1
+		config = Config.new( user.name )
+		a = config.koyomiex.split( ":" )
+		a.size.times do |c|
+p c
+			aa = a[c].split( "\t" )
+p aa[0]
+
+			exmets_no = c if aa[0].to_i == 8
+			exdelta_no = c if aa[0].to_i == 9
+		end
+p exmets_no
+p exdelta_no
+		if exmets_no >= 0 || exdelta_flag >= 0
+			calendar = Calendar.new( user.name, 0, 0, 0 )
+			puts "<div class='row'>"
+			puts "<div class='col-3'>"
+			puts "<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dd}'>"
+			puts "</div>"
+			puts "<div class='col-3'><button class='btn btn-sm btn-outline-primary' onclick=\"ginmiEnergyMETexMets( '#{total_mets.to_f.round( 3 )}', '#{exmets_no}' )\">METs 拡張こよみ登録</button></div>" if exmets_no >= 0
+			puts "<div class='col-3'><button class='btn btn-sm btn-outline-primary' onclick=\"ginmiEnergyMETexDelta( '#{total_d_energy.to_i}', '#{exdelta_no}' )\">Δ消費エネルギー  拡張こよみ登録</button></div></div>" if exdelta_no >= 0
+			puts "</div>"
+		end
 
 		if command == 'result'
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{user.name}' AND name='history';", false, false)
@@ -165,8 +196,29 @@ RESULT_HTML
 		exit()
 	when 'reset'
 			mdb( "delete from #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
-			puts "[METs]"
 			exit()
+	when 'exmets'
+		p yyyy_mm_dd
+		p exmets_no
+		p exmets
+		r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
+		if r.first
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{exmets_no}='#{exmets}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
+		else
+			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', item#{exmets_no}='#{exmets}', date='#{yyyy_mm_dd}';", false, false )
+		end
+		exit( 0 )
+	when 'exdelta'
+		p yyyy_mm_dd
+		p exdelta_no
+		p exdelta
+		r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
+		if r.first
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{exdelta_no}='#{exdelta}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
+		else
+			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', item#{exdelta_no}='#{exdelta}', date='#{yyyy_mm_dd}';", false, false )
+		end
+		exit( 0 )
 	end
 
 
@@ -318,6 +370,11 @@ def module_js()
 
 var ginmiEnergyMETskex = function(){
 	$.post( "ginmi.cgi", { mod:"energy-mets", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
+
+	flashBW();
+	dl1 = true;
+	dline = true;
+	displayBW();
 };
 
 var ginmiEnergyMETs = function( select ){
@@ -343,13 +400,18 @@ var ginmiEnergyMETsres = function(){
 	var mm = document.getElementById( "mm" ).value;
 	var history = document.getElementById( "history" ).value;
 
-	if( hh=='0' && mm=='0'){
-		displayVIDEO( 'Time! (>_<)' );
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'display', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
+	if( weight != '' && weight != '0'){
+		if( hh == '0' && mm == '0'){
+			displayVIDEO( 'Time! (>_<)' );
+			$.post( "ginmi.cgi", { mod:"energy-mets", command:'display', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
+		}else{
+			$.post( "ginmi.cgi", { mod:"energy-mets", command:'result', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
+			setTimeout( ginmiEnergyMETs( 'active' ), 1000 );
+		}
 	}else{
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'result', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
-		setTimeout( ginmiEnergyMETs( 'active' ), 1000 );
+		displayVIDEO( 'Weight! (>_<)' );
 	}
+
 	dl2 = true;
 	displayBW();
 };
@@ -357,7 +419,23 @@ var ginmiEnergyMETsres = function(){
 var ginmiEnergyMETsreset = function(){
 	displayVIDEO( 'METs reset' );
 	$.post( "ginmi.cgi", { mod:"energy-mets", command:'reset' }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
+	dl2 = false;
+	displayBW();
+};
+
+var ginmiEnergyMETexMets = function( exmets, exmets_no ){
+	var yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
+	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exmets', exmets:exmets, yyyy_mm_dd:yyyy_mm_dd, exmets_no:exmets_no }, function( data ){ $( "#L3" ).html( data );});
+	displayVIDEO( 'METs recorded' );
+	dl3 = true;
+	displayBW();
+};
+
+var ginmiEnergyMETexDelta = function( exdelta, exdelta_no ){
+	var yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
+	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exdelta', exdelta:exdelta, yyyy_mm_dd:yyyy_mm_dd, exdelta_no:exdelta_no }, function( data ){ $( "#L3" ).html( data );});
+	displayVIDEO( 'Δenergy recorded' );
+	dl3 = true;
 	displayBW();
 };
 

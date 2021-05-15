@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi extra 0.01b
+#Nutrition browser 2020 koyomi extra 0.10b
 
 
 #==============================================================================
@@ -14,6 +14,7 @@ require '../nb2020-soul'
 #==============================================================================
 script = 'koyomiex'
 @debug = false
+item_max = 9	#start from 0
 
 
 #==============================================================================
@@ -75,7 +76,7 @@ if @debug
 end
 
 
-#### Date & calendar config
+puts "Date & calendar config<br>" if @debug
 calendar = Calendar.new( user.name, yyyy, mm, dd )
 calendar_td = Calendar.new( user.name, 0, 0, 0 )
 calendar.debug if @debug
@@ -83,30 +84,33 @@ sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
 sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 
 
-#### Loading config
-kex_select_set = []
-item_set = []
-unit_set = []
+puts "Loading config<br>" if @debug
+item_nos = []
+item_names = []
+item_units = []
 r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	a = r.first['koyomiex'].split( ':' )
-	0.upto( 9 ) do |c|
+	0.upto( item_max ) do |c|
 		aa = a[c].split( "\t" )
 		if aa[0] == "0"
+			item_nos << 0
+			item_names << ''
+			item_units << ''
 		elsif aa[0] == "1"
-			kex_select_set << aa[0].to_i
-			item_set << aa[1]
-			unit_set << aa[2]
+			item_nos << 1
+			item_names << aa[1]
+			item_units << aa[2]
 		else
-			kex_select_set << aa[0].to_i
-			item_set << @kex_item[aa[0].to_i]
-			unit_set << @kex_unit[aa[0].to_i]
+			item_nos << aa[0].to_i
+			item_names << @kex_item[aa[0].to_i]
+			item_units << @kex_unit[aa[0].to_i]
 		end
 	end
 end
 
 
-#### Updating cell
+puts "Updating cell<br>" if @debug
 if command == 'update'
 	r = mdb( "SELECT user FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
 	if r.first
@@ -120,8 +124,8 @@ end
 ####
 th_html = '<thead><tr>'
 th_html << "<th align='center'></th>"
-kex_select_set.size.times do |c|
-	th_html << "<th align='center'>#{item_set[c]} (#{unit_set[c]})</th>"
+0.upto( item_max ) do |c|
+	th_html << "<th align='center'>#{item_names[c]} (#{item_units[c]})</th>" if item_nos[c] != 0
 end
 th_html << '</tr></thead>'
 
@@ -141,15 +145,14 @@ r.each do |e| koyomir[e['date'].day] = e end
 	else
 		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
-
 	if koyomir[c] == nil
-		kex_select_set.each do |e|
-			date_html << "<td><input type='text' id='id#{c}_#{e}' value='' onChange=\"updateKoyomiex( '#{c}', '#{e}', 'id#{c}_#{e}' )\"></td>"
+		0.upto( item_max ) do |cc|
+			date_html << "<td><input type='text' id='id#{c}_#{item_nos[cc]}' value='' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{item_nos[cc]}' )\"></td>" if item_nos[cc] != 0
 		end
 	else
-		kex_select_set.each do |e|
-			t = koyomir[c]["item#{e}"]
-			date_html << "<td><input type='text' id='id#{c}_#{e}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{e}', 'id#{c}_#{e}' )\"></td>"
+		0.upto( item_max ) do |cc|
+			t = koyomir[c]["item#{cc}"]
+			date_html << "<td><input type='text' id='id#{c}_#{item_nos[cc]}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{item_nos[cc]}' )\"></td>" if item_nos[cc] != 0
 		end
 	end
 	date_html << "</tr>"

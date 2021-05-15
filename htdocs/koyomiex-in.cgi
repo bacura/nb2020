@@ -1,13 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi extra 0.01b
+#Nutrition browser 2020 koyomi extra 0.00b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require '../nb2020-soul'
-require 'fileutils'
 
 
 #==============================================================================
@@ -31,24 +30,6 @@ def get_starty( uname )
 	end
 
 	return start_year
-end
-
-
-#### Order check
-def array_no( solid, delimiter )
-	list = solid.split( delimiter )
-	date_column = 0
-	posi = []
-	list.size.times do |c|
-		if list[c] == '99'
-			posi << 0
-			date_column = c
-		else
-			posi << list[c].to_i
-		end
-	end
-
-	return date_column, posi
 end
 
 
@@ -83,26 +64,26 @@ if @debug
 end
 
 
-#### Loading config
 puts "Loading config<br>" if @debug
-kex_select_set = []
-item_set = []
-unit_set = []
-r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-if r.first
-	a = r.first['koyomiex'].split( ':' )
-	0.upto( 9 ) do |c|
-		aa = a[c].split( "\t" )
-		if aa[0] == "0"
-		elsif aa[0] == "1"
-			kex_select_set << aa[0].to_i
-			item_set << aa[1]
-			unit_set << aa[2]
-		else
-			kex_select_set << aa[0].to_i
-			item_set << @kex_item[aa[0].to_i]
-			unit_set << @kex_unit[aa[0].to_i]
-		end
+config = Config.new( user.name )
+item_nos = []
+item_names = []
+item_units = []
+a = config.koyomiex.split( ':' )
+0.upto( @kex_column ) do |c|
+	aa = a[c].split( "\t" )
+	if aa[0] == "0"
+		item_nos << 0
+		item_names << ''
+		item_units << ''
+	elsif aa[0] == "1"
+		item_nos << 1
+		item_names << aa[1]
+		item_units << aa[2]
+	else
+		item_nos << aa[0].to_i
+		item_names << @kex_item[aa[0].to_i]
+		item_units << @kex_unit[aa[0].to_i]
 	end
 end
 
@@ -136,24 +117,6 @@ when 'upload'
 		f.puts file_body
 		f.close
 
-		puts "Loading config<br>" if @debug
-		item_set = []
-		name_set = []
-		r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-		if r.first
-			a = r.first['koyomiex'].split( ':' )
-			a.each do |e|
-				aa = e.split( "\t" )
-				if aa[0] == "1"
-					item_set << aa[0].to_i
-					name_set << aa[1]
-				elsif aa[0] != "0"
-					item_set << aa[0].to_i
-					name_set << @kex_item[aa[0].to_i]
-				end
-			end
-		end
-
 		puts "<table class='table table-bordered'>"
 		puts "<tr>"
 		puts "<td></td>"
@@ -175,8 +138,8 @@ when 'upload'
 			puts "<SELECT class='form-select form-select-sm' id='item#{c}'>"
 			puts "<OPTION value='0'>#{lp[8]}</OPTION>"
 			puts "<OPTION value='99'>#{lp[12]}</OPTION>"
-			item_set.size.times do |cc|
-				puts "<OPTION value='#{item_set[cc]}'>#{name_set[cc]}</OPTION>"
+			item_nos.size.times do |cc|
+				puts "<OPTION value='#{item_nos[cc]}'>#{item_names[cc]}</OPTION>" if item_nos[cc] != 0
 			end
 			puts "/<SELECT>"
 			puts "</td>"
@@ -218,10 +181,32 @@ when 'update'
 	f.close
 	matrix.shift if skip_line1 == '1'
 
-	date_column, posi = array_no( item_solid, ':' )
-	puts "date_column:#{date_column}<br>" if @debug
-	puts "posi:#{posi}<br>" if @debug
+	puts 'Detevting item column<br>' if @debug
+	file_item_nos = item_solid.split( ':' )
+	date_column = 0
+	file_date_column = 0
+	file_item_nos.size.times do |c|
+		if file_item_nos[c] == '99'
+			date_column = c
+		end
+	end
 
+	item_column_posi = []
+	0.upto( @kex_column ) do |c|
+		if item_nos[c] != 0
+			file_item_nos.size.times do |cc|
+				if item_nos[c] == file_item_nos[cc].to_i
+					item_column_posi[c] = cc
+				end
+			end
+			item_column_posi[c] = 0 if item_column_posi[c] == nil
+		else
+			item_column_posi[c] = 0
+		end
+	end
+
+	puts "date_column:#{date_column}<br>" if @debug
+	puts "item_column_posi:#{item_column_posi}<br>" if @debug
 	count = 0
 	matrix.each do |ea|
 		t = ea[date_column]
@@ -235,39 +220,41 @@ when 'update'
 
 		if yyyymmdd != nil
 			sql_set = 'SET '
-			ea.size.times do |c|
-				if posi[c] != 0
-					sql_set << "item#{posi[c]}='#{ea[c]}',"
-				end
-			end
-			sql_set.chop!
-
-			if sql_set != 'SET'
-				r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
-				if r.first
-					if overwrite == '1'
-						mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} #{sql_set} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
-						count += 1
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
+			if r.first
+				item_column_posi.size.times do |c|
+					if item_column_posi[c] != 0 && ( r.first["item#{c}"] == '' || r.first["item#{c}"] == nil ) || overwrite == '1'
+						sql_set << "item#{c}='#{ea[item_column_posi[c]]}',"
 					end
-				else
-					mdb( "INSERT #{$MYSQL_TB_KOYOMIEX} #{sql_set}, user='#{user.name}', date='#{yyyymmdd}';", false, @debug )
+				end
+				sql_set.chop!
+				if sql_set != 'SET'
+					mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} #{sql_set} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
 					count += 1
 				end
 			else
-				puts lp[14]
-				exit
+				item_column_posi.size.times do |c|
+					if item_column_posi[c] != 0
+						sql_set << "item#{c}='#{ea[item_column_posi[c]]}',"
+					end
+				end
+				sql_set.chop!
+ 				if sql_set != 'SET'
+					mdb( "INSERT #{$MYSQL_TB_KOYOMIEX} #{sql_set}, user='#{user.name}', date='#{yyyymmdd}';", false, @debug )
+					count += 1
+				end
 			end
 		else
 			puts lp[15]
 			exit
 		end
 	end
+
 	puts "#{lp[17]}<br>" if skip_line1 == "1"
 	if overwrite == "1"
 		puts "#{lp[18]} (#{count}/#{matrix.size})<br>"
 	else
 		puts "#{lp[19]} (#{count}/#{matrix.size})<br>"
 	end
-
 	puts lp[16]
 end
