@@ -533,7 +533,7 @@ var initToker = function(){
 	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
 	dline = true;
-	dl1 - true;
+	dl1 = true;
 	displayBW();
 };
 

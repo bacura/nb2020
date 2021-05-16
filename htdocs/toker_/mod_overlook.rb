@@ -1,4 +1,4 @@
-# TokeR module for test 0.01b
+# TokeR module for test 0.00b
 #encoding: utf-8
 
 def table_check( table )
@@ -81,8 +81,7 @@ HTML
 		require "open3"
 
 		html = "<div class='row'><h5>#{mod}: 処理結果</h5></div>"
-		p "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}"
-		stdo, stde = Open3.capture3( "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" )
+		stdo, stde = Open3.capture3( "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token}" )
 
 		r = mdbr( "SELECT result FROM #{mod} WHERE token='#{token}';", false, false )
 		if r.first
@@ -118,18 +117,12 @@ def module_js( mod )
 var tokerTESTready = function( token ){
 	var test_group = document.getElementById( "test_group" ).value;
 	$.post( "toker.cgi", { mod:'#{mod}', command:'ready', token:token, test_group:test_group }, function( data ){ $( "#L1" ).html( data );});
-
-	flashBW();
-	dline = true;
-	dl1 = true;
-	displayBW();
+	document.getElementById( "L2" ).style.display = 'none';
 };
 
 var tokerTESTprocess = function( token ){
 	$.post( "toker.cgi", { mod:'#{mod}', command:'process', token:token }, function( data ){ $( "#L2" ).html( data );});
-
-	dl2 = true;
-	displayBW();
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 </script>

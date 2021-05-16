@@ -23,7 +23,7 @@ script = 'toker'
 #### Initial screen menu
 def init( lp )
 	html = <<-"HTML"
-	<button class='btn btn-sm btn-outline-info nav_button' onclick="tokerForm( 'test' )">#{lp[1]}</button>
+	<span class='badge rounded-pill bg-info text-dark' onclick="tokerForm( 'test' )">#{lp[1]}</span>
 HTML
 
 	return html
@@ -53,7 +53,7 @@ html = "<div class='container-fluid'>"
 if mod == 'line'
 	html = init( lp )
 elsif mod == ''
-	html = 'Statistical analysis with R'
+	html = "<div align='center'>Statistical analysis with R</div>"
 else
 	require "#{$HTDOCS_PATH}/toker_/mod_#{mod}.rb"
 	table_check( mod )

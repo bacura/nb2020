@@ -1,4 +1,4 @@
-## R script for test module of TokeR 0.01b
+## test.R
 
 
 #### MariaDBライブラリの呼び出し
@@ -6,13 +6,11 @@ library( RMariaDB )
 
 
 #### MariaDBからデータを受け取り
-# コマンドラインの第一引数をトークンとDBユーザー名を受け取る
+# コマンドラインの第一引数をトークンとする
 token = commandArgs( trailingOnly = TRUE )[1]
-user = commandArgs( trailingOnly = TRUE )[2]
-
 
 # S4 method を使ってMariaDBサーバーに接続する。
-con <- dbConnect( RMariaDB::MariaDB(), dbname = "rr2020", username = user )
+con <- dbConnect( RMariaDB::MariaDB(), dbname = "rr2020", username = "userr" )
 
 # クエリを設定する
 query <- paste( "SELECT data FROM test WHERE token='", token ,"';", sep = "" )
