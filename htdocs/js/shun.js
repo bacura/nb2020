@@ -145,3 +145,21 @@ var switchAccountM = function( switch_id, uid_d ){
 	if(document.getElementById( switch_id ).checked){ var switch_d = 1; }else{ var switch_d = 0; }
 	$.post( "account-mom.cgi", { command:"switch", uid_d:uid_d, switch_d:switch_d }, function( data ){});
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Tokei R //////////////////////////////////////////////////////////////
+
+// Tokei R init
+var initToker = function(){
+	$.post( "toker.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
+	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
+	flashBW();
+	dline = true;
+	dl1 = true;
+	displayBW();
+};
+
+var tokerForm = function( mod ){
+	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L1" ).html( data );});
+};
