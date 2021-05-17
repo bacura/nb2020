@@ -1,9 +1,10 @@
-# TokeR module for test 0.01b
+#テスト
+# TokeR module for test 0.00b
 #encoding: utf-8
 
 def table_check( table )
-	r = mdbr( "SHOW TABLES LIKE '#{table}';", false, false )
-	mdbr( "CREATE TABLE #{table} ( token VARCHAR(20), data TEXT, result TEXT );", false, false ) unless r.first
+	r = mdbr( "SHOW TABLES LIKE '#{table}';", false, true )
+	mdbr( "CREATE TABLE #{table} ( token VARCHAR(20) NOT NULL PRIMARY KEY, data TEXT, result TEXT );", false, true ) unless r.first
 end
 
 
@@ -21,24 +22,22 @@ def toker_module( cgi, user, debug )
 		token = "#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}"
 
 html = <<-"HTML"
-		<div class='row'><h5>統計(R) #{mod} フォーム</h5></div>
+		<div class='row'><h5>#{mod}</h5>Rの基礎的な統計テンプレ</div>
 		<br>
-
-		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="tokerTESTready( '#{token}' )">データ送信</button>
-			</div>
-		</div>
-		<br>
-
 		<div class='row'>
 			<div class='col'>
 				<div class="form-group">
 					<label for="test_group">データ形式：半角数字（区切りは改行、カンマ、空白）</label>
-					<textarea class="form-control" id="test_group" rows="10"></textarea>
+					<textarea class="form-control" id="test_group" rows="3"></textarea>
 				</div>
 			</div>
 		</div>
+		<div class='row'>
+			<div class='col-2'>
+				<button class='btn btn-sm btn-primary' onclick="tokerTESTready( '#{token}' )">サンプルデータ送信</button>
+			</div>
+		</div>
+		<br>
 
 HTML
 	when 'ready'
@@ -67,12 +66,12 @@ HTML
 				html << "<div class='col-2'>サンプル</div><div class='col-10'>#{clean_data[0..100]}</div>"
 				html << "</div>"
 				html << "<br>"
-				html << "<button class='btn btn-sm btn-primary' onclick=\"tokerTESTprocess( '#{token}' )\">データ処理</button>"
+				html << "<button class='btn btn-sm btn-primary' onclick=\"tokerTESTprocess( '#{token}' )\">サンプルデータ解析</button>"
 
 				html << "<div align='right'class='code'>#{token}</div>"
 			rescue
 				html << "<div class='row'>"
-				html << "送信データの格納に失敗しました。"
+				html << "送信データのDBへの格納に失敗しました。"
 				html << "</div>"
 			end
 		end
@@ -81,15 +80,16 @@ HTML
 		require "open3"
 
 		html = "<div class='row'><h5>#{mod}: 処理結果</h5></div>"
-		p "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}"
+
+		puts "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" if @debug
 		stdo, stde = Open3.capture3( "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" )
 
 		r = mdbr( "SELECT result FROM #{mod} WHERE token='#{token}';", false, false )
 		if r.first
 			if r.first['result'] != 'NA'
-				html << "<div class='row'>"
-				html << "<div class='col-2'>平均</div><div class='col-10'>#{r.first['result']}</div>"
-				html << "</div>"
+				html << "<table class='table table-striped'>"
+				html << "<tr><td>平均値</td><td>#{r.first['mean']}</td><td>最も単純な算術平均値。データの重心。</td></tr>"
+				html << "</table>"
 			else
 				html << "<div class='row'>"
 				html << "Rでの処理中にエラーが発生しました。"
@@ -118,18 +118,12 @@ def module_js( mod )
 var tokerTESTready = function( token ){
 	var test_group = document.getElementById( "test_group" ).value;
 	$.post( "toker.cgi", { mod:'#{mod}', command:'ready', token:token, test_group:test_group }, function( data ){ $( "#L1" ).html( data );});
-
-	flashBW();
-	dline = true;
-	dl1 = true;
-	displayBW();
+	document.getElementById( "L2" ).style.display = 'none';
 };
 
 var tokerTESTprocess = function( token ){
 	$.post( "toker.cgi", { mod:'#{mod}', command:'process', token:token }, function( data ){ $( "#L2" ).html( data );});
-
-	dl2 = true;
-	displayBW();
+	document.getElementById( "L2" ).style.display = 'block';
 };
 
 </script>

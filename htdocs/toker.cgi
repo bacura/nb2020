@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #STATIC
 #==============================================================================
 script = 'toker'
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -22,9 +22,26 @@ script = 'toker'
 
 #### Initial screen menu
 def init( lp )
-	html = <<-"HTML"
-	<span class='badge rounded-pill bg-info text-dark' onclick="tokerForm( 'test' )">#{lp[1]}</span>
-HTML
+	mod_list = []
+	mod_name_list = []
+	Dir.glob('toker_/*.rb') do |mod|
+		detect_mod = ''
+		detect_mod = mod.sub( 'toker_/mod_', '' ).sub( '.rb', '' )
+		detect_mod_name = ''
+		open( "#{$HTDOCS_PATH}/#{mod}" ) do |file|
+			detect_mod_name = file.readlines[0].sub( '#', '' )
+		end
+
+		if detect_mod != '' && detect_mod_name != ''
+ 			mod_list << detect_mod
+ 			mod_name_list <<detect_mod_name
+ 		end
+	end
+
+	html = ''
+	mod_list.size.times do |c|
+		html << "<span class='badge rounded-pill bg-info text-dark' onclick=\"tokerForm( '#{mod_list[c]}' )\">#{mod_name_list[c]}</span>&nbsp;"
+	end
 
 	return html
 end
@@ -34,7 +51,7 @@ end
 # Main
 #==============================================================================
 html_init( nil )
-p 'vv'
+
 user = User.new( @cgi )
 user.debug if @debug
 lp = user.load_lp( script )

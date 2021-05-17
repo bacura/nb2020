@@ -1,56 +1,68 @@
-## R script for test module of TokeR 0.01b
+## R script for test module of TokeR 0.00b
 
+#### mod設定
+mod <- 'test'
+
+#### おまじない
+Sys.timezone( location = TRUE )
 
 #### MariaDBライブラリの呼び出し
 library( RMariaDB )
 
-
-#### MariaDBからデータを受け取り
-# コマンドラインの第一引数をトークンとDBユーザー名を受け取る
+#### コマンドラインの第一引数からトークンを受け取る
 token = commandArgs( trailingOnly = TRUE )[1]
+
+#### コマンドラインの第二引数をからDBユーザー名を受け取る
 user = commandArgs( trailingOnly = TRUE )[2]
 
-
-# S4 method を使ってMariaDBサーバーに接続する。
+#### S4 method を使ってDBに接続する
 con <- dbConnect( RMariaDB::MariaDB(), dbname = "rr2020", username = user )
 
-# クエリを設定する
-query <- paste( "SELECT data FROM test WHERE token='", token ,"';", sep = "" )
 
-# クエリをサーバーに送り、結果を受けとる。
+################################################################################################
+
+#### サンプルデータを抽出するクエリを作成する
+query <- paste( "SELECT data FROM ", mod, " WHERE token='", token ,"';", sep = "" )
+
+#### クエリをDBに送り、結果を受けとる。
 res <- dbSendQuery( con, query )
 
-# 結果から塊データを受け取る
+#### 結果から塊データを受け取る
 solid <- dbFetch( res,  row.names = FALSE )
 
-# 塊データをタブ区切りのベクトルにする
+#### 塊データをタブ区切りのベクトルにする
 c <- strsplit( solid[1,1], "\t" )[[1]]
 
-# 数値データに変換
+#### タブ区切りは文字なので数値データに変換する
 nc <- as.numeric( c )
 
-# フレームデータの変換する
-data <- data.frame( TEST=nc )
+#### 数値データはベクトル型をフレームデータ型の変換する（カラム名はSAMPLE）
+data <- data.frame( SAMPLE=nc )
 
-# 結果をクリアする
+#### 結果をクリアする
 dbClearResult( res )
 
 
-#### データを統計処理
-# TEST行の値の平均値を計算
-result <- mean( data$TEST )
+#################################################################################################
+
+#### データフレームのTEST行の平均値を計算し、SQLを作成
+mean_r <- mean( data$SAMPLE )
+mean_s <- paste( " mean='", mean_r, "'", sep = "" )
 
 
-#### MariaDBにデータを受け渡し
-# クリエを設定する
-query <- paste( "UPDATE test set result='", result, "' WHERE token='", token ,"';", sep = "" )
+#################################################################################################
 
-# クエリをサーバーに送り、結果を受けとる。
+#### 結果をDBに格納するクリエを作成する
+query <- paste( "UPDATE ", mod, " set", mean_s, "' WHERE token='", token ,"';", sep = "" )
+
+#### クエリをDBに送り、結果を受けとる
 res <- dbSendQuery( con, query )
 
 #### 結果をクリアする
 dbClearResult( res )
 
 
-#### MariaDBサーバーとの接続を切る。
+#################################################################################################
+
+#### DBサーバーとの接続を切る
 dbDisconnect( con )

@@ -1,9 +1,10 @@
-# TokeR module for test 0.00b
+#データの特徴
+# TokeR module for overlook 0.00b
 #encoding: utf-8
 
 def table_check( table )
 	r = mdbr( "SHOW TABLES LIKE '#{table}';", false, false )
-	mdbr( "CREATE TABLE #{table} ( token VARCHAR(20), data TEXT, result TEXT );", false, false ) unless r.first
+	mdbr( "CREATE TABLE #{table} ( token VARCHAR(20) NOT NULL PRIMARY KEY, data TEXT, mean VARCHAR(32), weight VARCHAR(32), geometric VARCHAR(32), harmonic VARCHAR(32), median VARCHAR(32), mode VARCHAR(32), range_ VARCHAR(32), variance VARCHAR(32), sd VARCHAR(32), cv VARCHAR(32), histgram MEDIUMBLOB );", false, false ) unless r.first
 end
 
 
@@ -21,25 +22,24 @@ def toker_module( cgi, user, debug )
 		token = "#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}"
 
 html = <<-"HTML"
-		<div class='row'><h5>統計(R) #{mod} フォーム</h5></div>
+		<div class='row'><h5>#{mod}</h5>集団の基礎統計値を算出します。</div>
 		<br>
 
-		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="tokerTESTready( '#{token}' )">データ送信</button>
-			</div>
-		</div>
-		<br>
 
 		<div class='row'>
 			<div class='col'>
 				<div class="form-group">
 					<label for="test_group">データ形式：半角数字（区切りは改行、カンマ、空白）</label>
-					<textarea class="form-control" id="test_group" rows="10"></textarea>
+					<textarea class="form-control" id="test_group" rows="3"></textarea>
 				</div>
 			</div>
 		</div>
-
+		<br>
+		<div class='row'>
+			<div class='col-2'>
+				<button class='btn btn-sm btn-primary' onclick="tokerSampleReady( '#{token}' )">サンプルデータ送信</button>
+			</div>
+		</div>
 HTML
 	when 'ready'
 		html = "<div class='row'><h5>#{mod}: データ確認</h5></div>"
@@ -67,12 +67,12 @@ HTML
 				html << "<div class='col-2'>サンプル</div><div class='col-10'>#{clean_data[0..100]}</div>"
 				html << "</div>"
 				html << "<br>"
-				html << "<button class='btn btn-sm btn-primary' onclick=\"tokerTESTprocess( '#{token}' )\">データ処理</button>"
+				html << "<button class='btn btn-sm btn-primary' onclick=\"tokerSampleAnalyize( '#{token}' )\">サンプルデータ解析</button>"
 
 				html << "<div align='right'class='code'>#{token}</div>"
 			rescue
 				html << "<div class='row'>"
-				html << "送信データの格納に失敗しました。"
+				html << "送信データのDBへの格納に失敗しました。"
 				html << "</div>"
 			end
 		end
@@ -80,15 +80,18 @@ HTML
 	when 'process'
 		require "open3"
 
-		html = "<div class='row'><h5>#{mod}: 処理結果</h5></div>"
-		stdo, stde = Open3.capture3( "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token}" )
+		html = "<div class='row'><h5>#{mod}: 解析結果</h5></div>"
 
-		r = mdbr( "SELECT result FROM #{mod} WHERE token='#{token}';", false, false )
+		puts "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" if @debug
+		stdo, stde = Open3.capture3( "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" )
+
+		r = mdbr( "SELECT * FROM #{mod} WHERE token='#{token}';", false, false )
 		if r.first
-			if r.first['result'] != 'NA'
-				html << "<div class='row'>"
-				html << "<div class='col-2'>平均</div><div class='col-10'>#{r.first['result']}</div>"
-				html << "</div>"
+			if r.first['mean'] != 'NA'
+				html << "<table class='table table-striped'>"
+				html << "<tr><td>平均値</td><td>#{r.first['mean']}</td><td>最も単純な算術平均値。データの重心。</td></tr>"
+				html << "<tr><td>中央値</td><td>#{r.first['median']}</td><td>データの中央に位置する代表値。極端な値が混ざるデータで有効。</td></tr>"
+				html << "</table>"
 			else
 				html << "<div class='row'>"
 				html << "Rでの処理中にエラーが発生しました。"
@@ -114,15 +117,21 @@ def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
 
-var tokerTESTready = function( token ){
+var tokerSampleReady = function( token ){
 	var test_group = document.getElementById( "test_group" ).value;
 	$.post( "toker.cgi", { mod:'#{mod}', command:'ready', token:token, test_group:test_group }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'none';
+
+	flashBW();
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
-var tokerTESTprocess = function( token ){
+var tokerSampleAnalyize = function( token ){
 	$.post( "toker.cgi", { mod:'#{mod}', command:'process', token:token }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+
+	dl2 = true;
+	displayBW();
 };
 
 </script>
