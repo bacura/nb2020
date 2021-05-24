@@ -259,11 +259,12 @@ var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
 // Koyomi insert panel
 var addKoyomi = function( code ){
 	$.post( "koyomi-add.cgi", { command:"init", code:code }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "koyomi.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
 
 	pushBW();
 	flashBW();
 	dlf = true;
-	dline = false;
+	dline = true;
 	displayBW();
 };
 

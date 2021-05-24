@@ -205,9 +205,6 @@ def module_js()
 
 //
 var koyomiex_cfg = function( step, del_id, del_no ){
-	closeBroseWindows( 1 );
-	displayLINE( 'on' );
-
 	if( step == 'update' ){
 		var koyomiy = document.getElementById( "koyomiy" ).value;
 
@@ -265,12 +262,16 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 	}else{
 		$.post( "config.cgi", { mod:'koyomi', step:step,  }, function( data ){ $( "#L1" ).html( data );});
 	}
-	document.getElementById( "L1" ).style.display = 'block';
+
+	flashBW();
+	dl1 = true;
+	dline = true;
+	displayBW();
 };
 
 var kexChangeselect = function( no ){
 	var select_id = 'kex_select' + no;
-	displayVideo( document.getElementById( select_id ).value );
+	displayVIDEO( document.getElementById( select_id ).value );
 
 	if( document.getElementById( select_id ).value == 1 ){
 

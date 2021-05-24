@@ -26,10 +26,10 @@ def sub_menu( lp )
 	html = <<-"MENU"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initKoyomi()">#{lp[23]}</span></div>
-		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initKoyomiex()">#{lp[24]}</span></div>
-		<div class='col-2'><span class='badge rounded-pill bg-secondry' onclick="">#{lp[25]}</span></div>
-		<div class='col-2'><span class='badge rounded-pill bg-secondry' onclick="">#{lp[26]}</span></div>
+		<div class='col-2'><span class='btn badge rounded-pill bg-info text-dark' onclick="initKoyomi()">#{lp[23]}</span></div>
+		<div class='col-2'><span class='btn badge rounded-pill bg-info text-dark' onclick="initKoyomiex()">#{lp[24]}</span></div>
+		<div class='col-2'><span class='btn badge rounded-pill bg-secondry' onclick="">#{lp[25]}</span></div>
+		<div class='col-2'><span class='btn badge rounded-pill bg-secondry' onclick="">#{lp[26]}</span></div>
 		<div class='col-2'></div>
 	</div>
 </div>

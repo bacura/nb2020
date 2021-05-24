@@ -1,4 +1,4 @@
-name	sex	period_class	reriods	reriode	EAR	RDA	AI	UL	unit	DG_min	DG_max	DG_unit
+name	sex	period_class	periods	periode	EAR	RDA	AI	UL	unit	DG_min	DG_max	DG_unit
 protein	m	m	0	5	-	-	10	-	g/day	-	-	%E
 protein	m	m	6	8	-	-	15	-	g/day	-	-	%E
 protein	m	m	9	11	-	-	25	-	g/day	-	-	%E

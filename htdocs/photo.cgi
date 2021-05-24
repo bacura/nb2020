@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.02b
+#Nutrition browser 2020 recipe photo 0.12b
 
 #==============================================================================
 #LIBRARY
@@ -89,6 +89,7 @@ when 'upload'
 	puts 'Upload<br>' if @debug
 	media = Media.new( user )
 	media.code = code
+	media.type = 'jpg'
 	media.date = @datetime
 
 	media.origin = @cgi['photo'].original_filename

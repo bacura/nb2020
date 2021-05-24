@@ -6,6 +6,7 @@
 #LIBRARY
 #==============================================================================
 require '../nb2020-soul'
+require 'fileutils'
 
 
 #==============================================================================
@@ -40,7 +41,7 @@ def init( lp )
 
 	html = ''
 	mod_list.size.times do |c|
-		html << "<span class='badge rounded-pill bg-info text-dark' onclick=\"tokerForm( '#{mod_list[c]}' )\">#{mod_name_list[c]}</span>&nbsp;"
+		html << "<span class='badge rounded-pill bg-info text-dark btn' onclick=\"tokerForm( '#{mod_list[c]}' )\">#{mod_name_list[c]}</span>&nbsp;"
 	end
 
 	return html

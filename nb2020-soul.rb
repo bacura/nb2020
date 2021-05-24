@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.07b
+#Nutrition browser 2020 soul 0.09b
 
 #==============================================================================
 # LIBRARY
@@ -322,7 +322,7 @@ def generate_code( uname, c )
       query = "SELECT * FROM #{$MYSQL_TB_FCS} WHERE code='#{code}';"
     when 'z'
       query = "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}';"
-    when 'p'
+    when 'p', 'png', 'pdf'
       query = "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE code='#{code}';"
     else
       skip = true
@@ -710,9 +710,54 @@ end
 
 
 class Config
-  attr_accessor :x
+  attr_accessor :recipel, :recipel_max, :reciperr, :menul, :his_sg, :his_max, :calcc, :icalc, :koyomiy, :koyomiex, :koyomiexn, :icache, :ifix, :school, :sex, :age, :height, :weight, :schooll
 
-  def initialize()
+  def initialize( user )
+    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_CFG} WHERE user='#{user}';" )
+    db.close
+    if res.first
+      @recipel = res.first['recipel']
+      @recipel_max = res.first['recipel_max']
+      @reciperr = res.first['reciperr']
+      @menul = res.first['menul']
+      @his_sg = res.first['his_sg']
+      @his_max = res.first['his_max']
+      @calcc = res.first['calcc']
+      @icalc = res.first['icalc']
+      @koyomiy = res.first['koyomiy']
+      @koyomiex = res.first['koyomiex']
+      @koyomiexn = res.first['koyomiexn']
+      @icache = res.first['icache']
+      @ifix = res.first['ifix']
+      @school = res.first['school']
+      @schooll = res.first['schooll']
+      @sex = res.first['sex']
+      @age = res.first['age']
+      @height = res.first['height']
+      @weight = res.first['weight']
+    end
+  end
+
+  def debug()
+    puts "recipel:#{@recipel}<br>"
+    puts "recipel_max:#{@recipel_max}<br>"
+    puts "reciperr:#{@reciperr}<br>"
+    puts "menul:#{@menul}<br>"
+    puts "his_sg:#{@his_sg}<br>"
+    puts "his_max:#{@his_max}<br>"
+    puts "calcc:#{@calcc}<br>"
+    puts "koyomiy:#{@koyomiy}<br>"
+    puts "koyomiex:#{@koyomiex}<br>"
+    puts "koyomiexn:#{@koyomiexn}<br>"
+    puts "icache:#{@icache}<br>"
+    puts "ifix:#{@ifix}<br>"
+    puts "school:#{@school}<br>"
+    puts "schooll:#{@schooll}<br>"
+    puts "sex:#{@sex}<br>"
+    puts "age:#{@age}<br>"
+    puts "height:#{@height}<br>"
+    puts "weight:#{@weight}<br>"
   end
 end
 
@@ -1071,13 +1116,14 @@ class Menu
 end
 
 class Media
-  attr_accessor :user, :code, :mcode, :series, :origin, :date
+  attr_accessor :user, :code, :mcode, :series, :origin, :type, :date
 
   def initialize( user )
     @code = nil
     @user = user.name
     @mcode = nil
     @origin = nil
+    @type = nil
     @date = nil
     @series = []
   end
@@ -1091,6 +1137,7 @@ class Media
       @mcode = res['mcode'].to_s
       @code = res['code'].to_s
       @origin = res['origin'].to_s
+      @type = res['type'].to_s
       @date = res['date']
     else
       puts "<span class='error'>[Media load]ERROR!!<br>"
@@ -1101,7 +1148,7 @@ class Media
 
   def save_db()
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', date='#{@date}'" )
+    db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', type='#{@type}', date='#{@date}'" )
     db.close
   end
 

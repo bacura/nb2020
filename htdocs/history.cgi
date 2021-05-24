@@ -69,25 +69,25 @@ end
 #### Sub group HTML
 def sub_menu( lp )
 	html_sub = <<-"HTML_SUB"
-<span class="badge rounded-pill bg-info text-dark" id="category1" onclick="historySub( '1' )">#{lp[7]}</span>
-<span class="badge rounded-pill bg-info text-dark" id="category2" onclick="historySub( '2' )">#{lp[8]}</span>
-<span class="badge rounded-pill bg-info text-dark" id="category3" onclick="historySub( '3' )">#{lp[9]}</span>
-<span class="badge rounded-pill bg-danger" id="category4" onclick="historySub( '4' )">#{lp[10]}</span>
-<span class="badge rounded-pill bg-warning text-dark" id="category5" onclick="historySub( '5' )">#{lp[11]}</span>
-<span class="badge rounded-pill bg-success" id="category6" onclick="historySub( '6' )">#{lp[12]}</span>
-<span class="badge rounded-pill bg-info text-dark" id="category7" onclick="historySub( '7' )">#{lp[13]}</span>
-<span class="badge rounded-pill bg-success" id="category8" onclick="historySub( '8' )">#{lp[14]}</span>
-<span class="badge rounded-pill bg-success" id="category9" onclick="historySub( '9' )">#{lp[15]}</span>
-<span class="badge rounded-pill bg-danger" id="category10" onclick="historySub( '10' )">#{lp[16]}</span>
-<span class="badge rounded-pill bg-danger" id="category11" onclick="historySub( '11' )">#{lp[17]}</span>
-<span class="badge rounded-pill bg-danger" id="category12" onclick="historySub( '12' )">#{lp[18]}</span>
-<span class="badge rounded-pill bg-light text-dark" id="category13" onclick="historySub( '13' )">#{lp[19]}</span>
-<span class="badge rounded-pill bg-warning text-dark" id="category14" onclick="historySub( '14' )">#{lp[20]}</span>
-<span class="badge rounded-pill bg-secondary" id="category15" onclick="historySub( '15' )">#{lp[21]}</span>
-<span class="badge rounded-pill bg-primary" id="category16" onclick="historySub( '16' )">#{lp[22]}</span>
-<span class="badge rounded-pill bg-light text-dark" id="category17" onclick="historySub( '17' )">#{lp[23]}</span>
-<span class="badge rounded-pill bg-secondary" id="category18" onclick="historySub( '18' )">#{lp[24]}</span>
-<span class="badge rounded-pill bg-light text-dark" id="category0" onclick="historySub( '00' )">#{lp[25]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" id="category1" onclick="historySub( '1' )">#{lp[7]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" id="category2" onclick="historySub( '2' )">#{lp[8]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" id="category3" onclick="historySub( '3' )">#{lp[9]}</span>
+<span class="btn badge rounded-pill bg-danger" id="category4" onclick="historySub( '4' )">#{lp[10]}</span>
+<span class="btn badge rounded-pill bg-warning text-dark" id="category5" onclick="historySub( '5' )">#{lp[11]}</span>
+<span class="btn badge rounded-pill bg-success" id="category6" onclick="historySub( '6' )">#{lp[12]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" id="category7" onclick="historySub( '7' )">#{lp[13]}</span>
+<span class="btn badge rounded-pill bg-success" id="category8" onclick="historySub( '8' )">#{lp[14]}</span>
+<span class="btn badge rounded-pill bg-success" id="category9" onclick="historySub( '9' )">#{lp[15]}</span>
+<span class="btn badge rounded-pill bg-danger" id="category10" onclick="historySub( '10' )">#{lp[16]}</span>
+<span class="btn badge rounded-pill bg-danger" id="category11" onclick="historySub( '11' )">#{lp[17]}</span>
+<span class="btn badge rounded-pill bg-danger" id="category12" onclick="historySub( '12' )">#{lp[18]}</span>
+<span class="btn badge rounded-pill bg-light text-dark" id="category13" onclick="historySub( '13' )">#{lp[19]}</span>
+<span class="btn badge rounded-pill bg-warning text-dark" id="category14" onclick="historySub( '14' )">#{lp[20]}</span>
+<span class="btn badge rounded-pill bg-secondary" id="category15" onclick="historySub( '15' )">#{lp[21]}</span>
+<span class="btn badge rounded-pill bg-primary" id="category16" onclick="historySub( '16' )">#{lp[22]}</span>
+<span class="btn badge rounded-pill bg-light text-dark" id="category17" onclick="historySub( '17' )">#{lp[23]}</span>
+<span class="btn badge rounded-pill bg-secondary" id="category18" onclick="historySub( '18' )">#{lp[24]}</span>
+<span class="btn badge rounded-pill bg-light text-dark" id="category0" onclick="historySub( '00' )">#{lp[25]}</span>
 HTML_SUB
 	puts html_sub
 	exit

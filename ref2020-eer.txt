@@ -1,4 +1,4 @@
-sex	period_class	reriods	reriode	pal1	pal2	pal3	unit
+sex	period_class	periods	periode	pal1	pal2	pal3	unit
 m	m	0	5	-	550	-	kcal/day
 m	m	6	8	-	650	-	kcal/day
 m	m	9	11	-	700	-	kcal/day

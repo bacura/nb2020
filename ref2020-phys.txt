@@ -1,4 +1,4 @@
-sex	period_class	reriods	reriode	height	weight	height_unit	weight_unit
+sex	period_class	periods	periode	height	weight	height_unit	weight_unit
 m	m	0	5	61.5	6.3	cm	kg
 m	m	6	11	71.6	8.8	cm	kg
 m	m	6	8	69.8	8.4	cm	kg

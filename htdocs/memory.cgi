@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.10b
+#Nutrition browser 2020 memory editor 0.11b
 
 #==============================================================================
 #LIBRARY
@@ -208,6 +208,7 @@ end
 def alike_pointer( key )
 	pointer = ''
 	pointer_h = Hash.new
+	score = 0.0
 
 	begin
 		normal = key.tr( 'ぁ-ん０-９A-ZA-Z', 'ァ-ン0-9a-za-z' )
@@ -227,6 +228,7 @@ def alike_pointer( key )
 		normal.gsub!( '＝', '=' )
 		normal.gsub!( '＋', '+' )
 		normal.gsub!( '－', '-' )
+
 		r = mdb( "SELECT pointer from #{$MYSQL_TB_MEMORY};", false, @debug )
 		r.each do |e|
 			normal_pointer = e['pointer'].tr( 'ぁ-ん０-９A-ZA-Z', 'ァ-ン0-9a-za-z' )
@@ -249,7 +251,8 @@ def alike_pointer( key )
 			small = ''
 			large = ''
 			large_size = 1
-			score = 0.0
+			score_ = 0.0
+
 			if normal.size <= normal_pointer.size
 				small = normal
 				large = normal_pointer
@@ -259,30 +262,35 @@ def alike_pointer( key )
 				large = normal
 				large_size = normal.size
 			end
+
 			a = small.split( '' )
 			follower = ''
+
 			a.each do |ee|
-				if ee != '+'
+				begin
 					if /#{follower}#{ee}/ =~ large
-						score += 3 if /#{follower}#{ee}/ =~ large
+						score_ += 3 if /#{follower}#{ee}/ =~ large
 						follower = ee
 					elsif /#{ee}/ =~ large
-						score += 1 if /#{ee}/ =~ large
+						score_ += 1 if /#{ee}/ =~ large
 						follower = ee
 					else
 						follower = ''
 					end
+				rescue
+					follower = ''
 				end
 			end
-			pointer_h[e['pointer']] = score / large_size
+			pointer_h[e['pointer']] = score_ / large_size
 		end
 
-		@ap = pointer_h.max do |k, v| k[1] <=> v[1] end
-		pointer = @ap[0] if @ap[1] >= 1.5
+		ap = pointer_h.max do |k, v| k[1] <=> v[1] end
+		score = ap[1].round( 1 )
+		pointer = ap[0] if score >= 1.5
 	rescue
 	end
 
-	return pointer, @ap[1]
+	return pointer, score
 end
 
 
@@ -398,9 +406,11 @@ when 'refer'
 	pointer.gsub!( /\s+/, ' ' )
 	a = pointer.split( ' ' )
 	score = 0
+
 	a.each do |e|
 		r = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{e}';", false, @debug )
 		if r.first
+			puts "Finding in DB<br>" if @debug
 			pointer = ''
 			memory_html << "<span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">再検索</span><br><br>"
 			r.each do |ee|
@@ -413,6 +423,7 @@ when 'refer'
 			mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{e}';", false, @debug )
 			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='9', date='#{@datetime}';", false ,@debug )
 		else
+			puts "No finding in DB<br>" if @debug
 			a_pointer, score = alike_pointer( e )
 			unless a_pointer == ''
 				rr = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{a_pointer}';", false, @debug )

@@ -4,7 +4,7 @@
 
 def table_check( table )
 	r = mdbr( "SHOW TABLES LIKE '#{table}';", false, false )
-	mdbr( "CREATE TABLE #{table} ( token VARCHAR(20) NOT NULL PRIMARY KEY, data TEXT, mean VARCHAR(32), weight VARCHAR(32), geometric VARCHAR(32), harmonic VARCHAR(32), median VARCHAR(32), mode VARCHAR(32), range_ VARCHAR(32), variance VARCHAR(32), sd VARCHAR(32), cv VARCHAR(32), histgram MEDIUMBLOB );", false, false ) unless r.first
+	mdbr( "CREATE TABLE #{table} ( token VARCHAR(20) NOT NULL PRIMARY KEY, date DATETIME, data TEXT, num_ VARCHAR(32), sum_ VARCHAR(32), mean_ VARCHAR(32), min_ VARCHAR(32 ), max_ VARCHAR(32), median_ VARCHAR(32), var_ VARCHAR(32), sd_ VARCHAR(32));", false, false ) unless r.first
 end
 
 
@@ -82,16 +82,49 @@ HTML
 
 		html = "<div class='row'><h5>#{mod}: 解析結果</h5></div>"
 
-		puts "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" if @debug
-		stdo, stde = Open3.capture3( "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" )
+		rquery = "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{mod} #{token} #{$MYSQL_DBR} #{$MYSQL_USERR}"
+		puts rquery if true
+		stdo, stde = Open3.capture3( rquery )
+		puts "#{stdo}<br>" if true
+		puts "#{stde}<br>" if true
+
+
+		puts "Moving png image to photo path" if @debug
+		png = Media.new( user )
+		png.origin = token
+		png.type = 'png'
+		png.date = @datetime
+		png.mcode = generate_code( user.name, 'p' )
+		FileUtils.mv( "#{$TMP_PATH}/#{token}.png", "#{$PHOTO_PATH}/#{png.mcode}.png" )
+		png.save_db
+
+		puts "Moving pdf image to photo path" if @debug
+		pdf = Media.new( user )
+		pdf.origin = token
+		png.type = 'pdf'
+		png.date = @datetime
+		pdf.mcode = generate_code( user.name, 'p' )
+		FileUtils.mv( "#{$TMP_PATH}/#{token}.pdf", "#{$PHOTO_PATH}/#{pdf.mcode}.pdf" )
+		pdf.save_db
 
 		r = mdbr( "SELECT * FROM #{mod} WHERE token='#{token}';", false, false )
 		if r.first
 			if r.first['mean'] != 'NA'
 				html << "<table class='table table-striped'>"
-				html << "<tr><td>平均値</td><td>#{r.first['mean']}</td><td>最も単純な算術平均値。データの重心。</td></tr>"
-				html << "<tr><td>中央値</td><td>#{r.first['median']}</td><td>データの中央に位置する代表値。極端な値が混ざるデータで有効。</td></tr>"
+				html << "<tr><td>サンプル数</td><td>#{r.first['num_']}</td><td>説明なし</td></tr>"
+				html << "<tr><td>合計値</td><td>#{r.first['sum_']}</td><td>説明なし。</td></tr>"
+				html << "<tr><td>平均値</td><td>#{r.first['mean_']}</td><td>最も単純な算術平均値。データの重心。</td></tr>"
+				html << "<tr><td>中央値</td><td>#{r.first['median_']}</td><td>データの中央に位置する代表値。極端な値が混ざるデータで有効。</td></tr>"
+				html << "<tr><td>最小値</td><td>#{r.first['min_']}</td><td>説明なし。</td></tr>"
+				html << "<tr><td>最大値</td><td>#{r.first['max_']}</td><td>説明なし。</td></tr>"
+				html << "<tr><td>分散</td><td>#{r.first['var_']}</td><td>データのばらけ具合。各データと平均値の差を2乗して合算した値。</td></tr>"
+				html << "<tr><td>標準偏差</td><td>#{r.first['sd_']}</td><td>分散を平方根。分散同様ばらけ具合を示すが、単位がデータと同じに戻っている。</td></tr>"
 				html << "</table>"
+
+				rr = mdb( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND mcode='#{png.mcode}';", false, @debug )
+				if rr.first
+					html << "<img src='#{$PHOTO}/#{rr.first['mcode']}.png' class='img-fluid'>"
+				end
 			else
 				html << "<div class='row'>"
 				html << "Rでの処理中にエラーが発生しました。"

@@ -81,14 +81,15 @@ HTML
 
 		html = "<div class='row'><h5>#{mod}: 処理結果</h5></div>"
 
-		puts "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" if @debug
-		stdo, stde = Open3.capture3( "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{token} #{$MYSQL_USERR}" )
+		rquery = "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{mod} #{token} #{$MYSQL_DBR} #{$MYSQL_USERR}"
+		puts rquery if @debug
+		stdo, stde = Open3.capture3( rquery )
 
 		r = mdbr( "SELECT result FROM #{mod} WHERE token='#{token}';", false, false )
 		if r.first
 			if r.first['result'] != 'NA'
 				html << "<table class='table table-striped'>"
-				html << "<tr><td>平均値</td><td>#{r.first['mean']}</td><td>最も単純な算術平均値。データの重心。</td></tr>"
+				html << "<tr><td>平均値</td><td>#{r.first['result']}</td><td>最も単純な算術平均値。データの重心。</td></tr>"
 				html << "</table>"
 			else
 				html << "<div class='row'>"
