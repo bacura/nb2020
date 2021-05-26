@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.04b
+#Nutrition browser 2020 koyomi 0.05b
 
 
 #==============================================================================
@@ -348,7 +348,7 @@ puts "Multi calc process<br>" if @debug
 					puts 'Recipe<br>' if @debug
 					code_set.size.times do |cc|
 						code = code_set[cc]
-						rate = BigDecimal( rate_set[cc] )
+						food_weight, rate = food_weight_check( rate_set[cc] )
 						unit = unit_set[cc].to_i
 
 						if /\?/ =~ code

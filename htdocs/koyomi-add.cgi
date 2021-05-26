@@ -100,7 +100,7 @@ unless yyyy_mm_dd == ''
 	dd = a[2].to_i
 end
 code = @cgi['code']
-ev = @cgi['ev'].to_i
+ev = @cgi['ev']
 eu = @cgi['eu'].to_i
 tdiv = @cgi['tdiv'].to_i
 hh = @cgi['hh']
@@ -108,7 +108,7 @@ order = @cgi['order'].to_i
 copy = @cgi['copy'].to_i
 origin = @cgi['origin']
 dd = 1 if dd == 0
-ev = 100 if ev == 0
+ev = 100 if ev == 0 || ev == '' || ev == nil
 if hh == '' || command == 'modify'
 	hh = 99
 else

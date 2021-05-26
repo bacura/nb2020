@@ -96,7 +96,8 @@ def meals( e, lp, uname, freeze_flag )
 			mb_html << "<td#{onclick}>#{aa[1]}&nbsp;#{unit}</td>"
 		else
 			uw = ''
-			uw = "&nbsp;(#{unit_weight( aa[1], aa[2], aa[0] ).to_f} g)" if aa[2] != '0'
+			food_weight, rate = food_weight_check( aa[1] )
+			uw = "&nbsp;(#{unit_weight( rate, aa[2], aa[0] ).to_f} g)" if aa[2] != '0'
 			mb_html << "<td#{onclick}>#{aa[1]}&nbsp;#{unit}#{uw}</td>"
 		end
 
@@ -157,7 +158,7 @@ def multi_calc_sub( uname, yyyy, mm, dd, tdiv, fc_items, fct_start, fct_end, fct
 
 			code_set.size.times do |c|
 				code = code_set[c]
-				rate = BigDecimal( rate_set[c] )
+				food_weight, rate = food_weight_check( rate_set[c] )
 				unit = unit_set[c].to_i
 
 				if /^\?/ =~ code

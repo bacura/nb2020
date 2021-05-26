@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser meta data viewer 0.00b
+#Nutrition browser meta data viewer 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -99,11 +99,11 @@ def meta_user( lp )
 	<tbody>
 		<tr>
 			<td>#{lp[26]}</td>
-			<td>#{cumulative_user_num - 1}</td>
+			<td>#{cumulative_user_num}</td>
 		</tr>
 		<tr>
 			<td>#{lp[10]}</td>
-			<td>#{general_user_num - 1}</td>
+			<td>#{general_user_num}</td>
 		</tr>
 		<tr>
 			<td>#{lp[11]}</td>
