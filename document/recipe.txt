@@ -1,4 +1,4 @@
-#Nutrition browser 2020 recipe editor 0.01b
+#Nutrition browser 2020 recipe editor 0.02b
 
 #==============================================================================
 # OVERVIEW
@@ -62,3 +62,6 @@ recipe.js/photoDel = function( slot, code )	->	photo.cgi{ command:'delete', code
 20210131	0.00b	βスタート
 20210324	0.01b	バグ修正	：コードがないのに写真をアップロードできた。
 					対策		：コードがない場合はフォームをDISABLEDにした。
+20210629	0.02b	問題；写真があると名前変更による複製に失敗する。
+					解決：ファイルコピーのためにrequire 'fileutils'を追加。
+

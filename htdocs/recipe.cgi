@@ -1,11 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.01b
+#Nutrition browser 2020 recipe editor 0.02b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require '../nb2020-soul'
+require 'fileutils'
 
 
 #==============================================================================
@@ -64,7 +65,6 @@ when 'save'
 
 	# Updating recipe
 	else
-
 		pre_recipe = Recipe.new( user.name )
 		pre_recipe.code = recipe.code
 		pre_recipe.load_db( code, true )
@@ -117,7 +117,7 @@ when 'save'
 				recipe.name = "#{pre_recipe.name}(#{sn})"
 			end
 
-			puts "Copying photo<br>" if @debug
+			puts "checking media<br>" if @debug
 			new_media_code = generate_code( user.name, 'p' )
 			r = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
 			if r.first
@@ -126,6 +126,8 @@ when 'save'
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
+
+					puts "Inserting into DB<br>" if @debug
 					mdb( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{recipe.code}', mcode='#{new_media_code}', origin='#{e['origin']}', date='#{@datetime}';", false, @debug )
 				end
 			end
