@@ -1,6 +1,9 @@
 ## R script for test module of TokeR 0.00b
 
 
+#### 作業ディレクトリの設定
+setwd( "/tmp" )
+
 #### MariaDBライブラリの呼び出し
 library( RMariaDB )
 

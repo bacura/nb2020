@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.09b
+#Nutrition browser 2020 soul 0.10b
 
 #==============================================================================
 # LIBRARY
@@ -1159,10 +1159,12 @@ class Media
   end
 
   def load_series()
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' AND code='#{@code}';" )
-    db.close
-    res.each do |e| @series << e['mcode'] end
+    unless @code == '' || @code == nil
+      db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+      res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' AND code='#{@code}';" )
+      db.close
+      res.each do |e| @series << e['mcode'] end
+    end
 
     return @series
   end

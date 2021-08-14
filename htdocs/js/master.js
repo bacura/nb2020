@@ -143,11 +143,14 @@ var updateColor = function(){
 
 // Food name dictionary init
 var initDic = function( command, sg ){
-	closeBroseWindows( 1 );
 	$.post( "gm-dic.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
 	$.post( "gm-dic.cgi", { command:command, sg:sg }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
+
+	flashBW();
+	dl1 = true;
+	dline = true;
+	displayBW();
+
 };
 
 // Food name dictionary Sub group
@@ -158,8 +161,9 @@ var changeDic = function( sg ){
 // Direct food name dictionary button
 var saveDic = function( org_name ){
 	var aliases = document.getElementById( org_name ).value;
-	$.post( "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases }, function( data ){});
-	displayVIDEO( org_name + ' modified' );
+	$.post( "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases }, function( data ){ $( "#L1" ).html( data );});
+//	displayVIDEO( org_name + ' modified' );
+	displayVIDEO( aliases );
 };
 
 

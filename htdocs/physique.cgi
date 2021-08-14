@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition assessment tools 0.00b
+#Nutrition browser 2020 nutrition physical tools 0.00b
 
 
 #==============================================================================
@@ -12,7 +12,7 @@ require '../nb2020-soul'
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'ginmi'
+script = 'physique'
 @debug = false
 
 

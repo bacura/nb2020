@@ -496,6 +496,9 @@ var pseudoDelete = function( code ){
 
 // Display Bookshelf
 var bookOpen = function( url, depth ){
+	dline = false;
+	displayBW();
+
 	closeBroseWindows( depth );
 	$.ajax({ url:url, type:'GET', dataType:'html', success:function( data ){ $( "#L" + depth ).html( data ); }});
 	document.getElementById( "L" + depth ).style.display = 'block';

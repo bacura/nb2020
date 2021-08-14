@@ -1,6 +1,9 @@
 ## R script for TokeR module for overlook 0.00b
 
 
+#### 作業ディレクトリの設定
+setwd( "/tmp" )
+
 #### MariaDBライブラリの呼び出し
 library( RMariaDB )
 library( ggplot2)
@@ -88,43 +91,42 @@ sd_s <- paste( " sd_='", sd_r, "'", sep = "" )
 #################################################################################################
 
 #### 一時ファイルの名前を合成
-tmp_file <- paste( "/tmp/", token, ".png", sep = "" )
+tmp_file <- paste( token, ".png", sep = "" )
+tmp_file
 
 #### 新しい描画デバイスを開き、マージンを調節する。
-dev.new()
+#dev.new()
 par( 'mar' = c( 1, 1, 1, 1 ))
 
 #### PNG形式のパラメーターを設定する。
-png( tmp_file, width = 1000, height = 1000, units = 'px', pointsize = 12, bg = 'white' )
-
+png( tmp_file, width = 1000, height = 1000, units = 'px', pointsize = 16, bg = 'white', type="cairo" )
 
 #### ggplot2でヒストグラムを描画
-#df <- data.frame( value = rnorm( 1000, 1, 1))
-g <- ggplot( data, aes( x = data$SAMPLE ))
+g <- ggplot( data, aes( x = SAMPLE ))
 g <- g + geom_histogram()
-
-
-
+plot( g )
 
 #### グラフを書いて、描画デバイスを閉じる
-plot( g )
 dev.off()
 
 
 #################################################################################################
 
 #### 一時ファイルの名前を合成
-tmp_file <- paste( "/tmp/", token, ".pdf", sep = "" )
+tmp_file <- paste( token, ".pdf", sep = "" )
+tmp_file
 
 #### 新しい描画デバイスを開き、マージンを調節する。
-dev.new()
+#dev.new()
 par( 'mar' = c( 1, 1, 1, 1 ))
 
 #### PDF形式のパラメーターを設定する。
-pdf( tmp_file, width = 1000, height = 1000, pointsize = 12, bg = 'white' )
+cairo_pdf( tmp_file )
 
 #### グラフを書く
-plot( sin, type='l', lty = 1, xlim = c( -2, 2 ), ylim = c(-2, 3 ))
+# プロットは同じなので省略
+plot( g )
+
 
 #### 描画デバイスを閉じる
 dev.off()

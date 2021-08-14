@@ -9,8 +9,8 @@ var initKoyomi = function(){
 	$.post( "koyomi.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
 	dl1 = true;
+	dline = true;
 	displayBW();
-	displayLINE( 'on');
 };
 
 // Koyomi change
@@ -43,6 +43,7 @@ var editKoyomi = function( com, dd ){
 	$.post( "koyomi-edit.cgi", { command:com, yyyy_mm:yyyy_mm, dd:dd }, function( data ){ $( "#L2" ).html( data );});
 	flashBW();
 	dl2 = true;
+	dline = true;
 	displayBW();
 };
 
@@ -363,6 +364,7 @@ var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
 	pushBW();
 	flashBW();
 	dlf = true;
+	dline = true;
 	displayBW();
 };
 

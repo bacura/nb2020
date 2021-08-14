@@ -22,10 +22,15 @@ def toker_module( cgi, user, debug )
 		token = "#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}"
 
 html = <<-"HTML"
-		<div class='row'><h5>#{mod}</h5>集団の基礎統計値を算出します。</div>
+
+		<div class='row'>
+			<div class='col-11'><h5>#{mod}</h5></div>
+			<div class='col-1'><a href='pass-text.cgi?toker=#{mod}' target="source"><span class='badge bg-dark'>R source</span></a></div>
+		</div>
+		<div class='row'>
+			集団の基礎統計値を算出します。
+		</div>
 		<br>
-
-
 		<div class='row'>
 			<div class='col'>
 				<div class="form-group">
@@ -82,14 +87,13 @@ HTML
 
 		html = "<div class='row'><h5>#{mod}: 解析結果</h5></div>"
 
-		rquery = "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{mod} #{token} #{$MYSQL_DBR} #{$MYSQL_USERR}"
-		puts rquery if true
-		stdo, stde = Open3.capture3( rquery )
-		puts "#{stdo}<br>" if true
-		puts "#{stde}<br>" if true
+		rsquery = "Rscript  #{$HTDOCS_PATH}/toker_/mod_#{mod}.R #{mod} #{token} #{$MYSQL_DBR} #{$MYSQL_USERR}"
+		puts rsquery if debug
+		stdo, stde = Open3.capture3( rsquery )
+		puts "#{stdo}<br>" if debug
+		puts "#{stde}<br>" if debug
 
-
-		puts "Moving png image to photo path" if @debug
+		puts "Moving png image to photo path<br>" if debug
 		png = Media.new( user )
 		png.origin = token
 		png.type = 'png'
@@ -98,11 +102,11 @@ HTML
 		FileUtils.mv( "#{$TMP_PATH}/#{token}.png", "#{$PHOTO_PATH}/#{png.mcode}.png" )
 		png.save_db
 
-		puts "Moving pdf image to photo path" if @debug
+		puts "Moving pdf image to photo path<br>" if debug
 		pdf = Media.new( user )
 		pdf.origin = token
-		png.type = 'pdf'
-		png.date = @datetime
+		pdf.type = 'pdf'
+		pdf.date = @datetime
 		pdf.mcode = generate_code( user.name, 'p' )
 		FileUtils.mv( "#{$TMP_PATH}/#{token}.pdf", "#{$PHOTO_PATH}/#{pdf.mcode}.pdf" )
 		pdf.save_db
@@ -121,10 +125,21 @@ HTML
 				html << "<tr><td>標準偏差</td><td>#{r.first['sd_']}</td><td>分散を平方根。分散同様ばらけ具合を示すが、単位がデータと同じに戻っている。</td></tr>"
 				html << "</table>"
 
-				rr = mdb( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND mcode='#{png.mcode}';", false, @debug )
+				html << "<div class='row'>"
+				html << "<div class='col-3'>"
+
+				rr = mdb( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND mcode='#{png.mcode}';", false, debug )
 				if rr.first
-					html << "<img src='#{$PHOTO}/#{rr.first['mcode']}.png' class='img-fluid'>"
+					html << "<img src='#{$PHOTO}/#{rr.first['mcode']}.png' class='img-thumbnail'><br>"
 				end
+
+				rr = mdb( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND mcode='#{pdf.mcode}';", false, debug )
+				if rr.first
+					html << "<div align='right'><a href='#{$PHOTO}/#{pdf.mcode}.pdf' target='pdf'><img src='bootstrap-dist/icons/file-earmark-pdf.svg' style='height:1.5em; width:1.5em;'>PDF</a></div>"
+				end
+
+				html << "</div>"
+				html << "</div>"
 			else
 				html << "<div class='row'>"
 				html << "Rでの処理中にエラーが発生しました。"

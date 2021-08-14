@@ -179,7 +179,8 @@ html = <<-"HTML"
 <h3 align="center">[基礎の献立コース] 献立を選んで予約してください。</h3>
 <hr>
 <ul>
-	<li>受講料は5品献立：1人2000円。3品献立：1人1500円。</li>
+	<li><del>受講料は5品献立：1人2000円。3品献立：1人1500円。</del></li>
+	<li>受講料は諸事情により5品も3品も材料費500円です。</li>
 	<li>3品献立にはレトルトまたは冷凍のご飯が付きます。</li>
 	<li>1～2人で受講できます。※5品献立は2人での受講をオススメします。<br>
 	<li>5品献立を2人で調理、試食、後片付けを含め、最大3時間程かかります。<br>
@@ -290,7 +291,8 @@ html = <<-"HTML"
 <h3 align="center">[季節の献立コース] 献立を選んで予約してください。</h3>
 <hr>
 <ul>
-	<li>受講料は5品献立：1人2000円。3品献立：1人1500円。</li>
+	<li><del>受講料は5品献立：1人2000円。3品献立：1人1500円。</del></li>
+	<li>受講料は諸事情により5品も3品も材料費500円です。</li>
 	<li>3品献立にはレトルトまたは冷凍のご飯が付きます。</li>
 	<li>1～2人で受講できます。※5品献立は2人での受講をオススメします。<br>
 	<li>5品献立を2人で調理、試食、後片付けを含め、最大3時間程かかります。<br>
@@ -527,7 +529,7 @@ html = <<-"HTML"
 		<div class='col-6 scs_course' onmouseover="this.style.backgroundColor='lightyellow';" onmouseout="this.style.backgroundColor='white';">
 			<h4 class='scs_menu' style='text-decoration: line-through'>自由な献立コース</h4>
     		<ul>
-     			<li style='color: red'>新型コロナにつき縮小営業中のため選択できません。</li>
+     			<li style='color: red'>新型コロナのため選択できません。</li>
      			<li>レシピデーターベースからお好きな料理を選べます。</li>
     			<li>料理の幅を広げたい方にオススメです。<br>
     		</ul>
@@ -536,7 +538,7 @@ html = <<-"HTML"
 <!--		<div class='col-6 scs_course' onmouseover="this.style.backgroundColor='lightyellow';" onmouseout="this.style.backgroundColor='white';" onclick='window.location.href="#{script}.cgi?command=sfree&yyyy=#{yyyy}&mm=#{mm}&dd=#{dd}&ampm=#{ampm}";'>-->
 			<h4 class='scs_menu' style='text-decoration: line-through'>キッチン間借りコース</h4>
     		<ul>
-     			<li style='color: red'>新型コロナにつき縮小営業中のため選択できません。</li>
+     			<li style='color: red'>新型コロナのため選択できません。</li>
      			<li>教室の台所を使用してご自身で調理していただきます。</li>
     			<li>基礎調味料以外の食材は持ち込みになります。</li>
     			<li>ご利用できる調味料・機材一覧</li>

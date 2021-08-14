@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu list 0.02b
+#Nutrition browser 2020 menu list 0.03b
 
 
 #==============================================================================
@@ -117,7 +117,7 @@ lp = user.load_lp( script )
 #### Getting POST data
 command = @cgi['command']
 code = @cgi['code']
-page = @cgi['page']
+page = @cgi['page'].to_i
 if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
@@ -126,25 +126,23 @@ if @debug
 end
 
 
+#### Getting page
 if command == 'view'
-	r = mdb( "SELECT menul FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-	if r.first[0]
-		a = r.first['menul'].split( ':' )
-		page = a[0].to_i
-		range = a[1].to_i
-		label = a[2]
-		page = 1 if page < 1
-	else
-		page = 1
-		range = 0
-		label = ''
-	end
-else
-	page = @cgi['page'].to_i
-	page = 1 if page < 1
 	range = @cgi['range'].to_i
 	label = @cgi['label']
+
+	if page == 0
+		r = mdb( "SELECT menul FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		if r.first
+			a = r.first['menul'].split( ':' )
+			page = a[0].to_i
+			range = a[1].to_i
+			label = a[2]
+		end
+	end
 end
+page = 1 if page < 1
+label = '' if label == nil
 if @debug
 	puts "page: #{page}<br>"
 	puts "range: #{range}<br>"
@@ -153,8 +151,8 @@ if @debug
 end
 
 
-#### Deleting menu
 if command == 'delete'
+	puts 'Deleting menu' if @debug
 	r = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
 	r.each do |e|
 		File.unlink "#{$PHOTO_PATH}/#{e.mcode}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e.mcode}-tns.jpg" )
@@ -187,7 +185,6 @@ if command == 'import'
 		new_code = generate_code( user.name, 'm' )
 #		mdb( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{new_code}', user='#{user.name}', public='0', name='*#{r.first['name']}', type='#{r.first['type']}', role='#{r.first['role']}', tech='#{r.first['tech']}', time='#{r.first['time']}', cost='#{r.first['cost']}', sum='#{r.first['sum']}', protocol='#{r.first['protocol']}', fig1='0', fig2='0', fig3='0', date='#{$DATETIME}';", false, @debug )
 	end
-
 end
 
 
@@ -247,7 +244,7 @@ end
 html_paging = pageing_html( page, page_start, page_end, page_max, lp )
 
 
-#### ページ内範囲抽出
+puts "Menu range<br>" if @debug
 menu_start = page_limit * ( page - 1 )
 menu_end = menu_start + page_limit - 1
 menu_end = r.size if menu_end >= r.size
@@ -350,6 +347,7 @@ HTML
 
 puts html
 
-#### 検索設定の保存
+
+puts 'Saving menul config<br>' if @debug
 menul = "#{page}:#{range}:#{label}"
 mdb( "UPDATE #{$MYSQL_TB_CFG} SET menul='#{menul}' WHERE user='#{user.name}';", false, @debug )

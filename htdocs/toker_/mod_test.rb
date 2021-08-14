@@ -22,7 +22,13 @@ def toker_module( cgi, user, debug )
 		token = "#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}"
 
 html = <<-"HTML"
-		<div class='row'><h5>#{mod}</h5>Rの基礎的な統計テンプレ</div>
+		<div class='row'>
+			<div class='col-11'><h5>#{mod}</h5></div>
+			<div class='col-1'><a href='pass-text.cgi?toker=#{mod}' target="source"><span class='badge bg-dark'>R source</span></a></div>
+		</div>
+		<div class='row'>
+			Rの基礎的な統計テンプレ
+		</div>
 		<br>
 		<div class='row'>
 			<div class='col'>

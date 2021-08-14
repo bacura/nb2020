@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser cooking school 0.01b
+#Nutrition browser cooking school 0.02b
 
 
 #==============================================================================
@@ -33,6 +33,8 @@ def sub_menu( lp )
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initSchool()">#{lp[23]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-success' onclick="window.open( 'yoyaku-pc.cgi', 'calendar' )">#{lp[20]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-success' onclick="window.open( 'yoyaku-mobi.cgi', 'calendar' );">#{lp[21]}</span></div>
 		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initSchoolMenu()">#{lp[24]}</span></div>
 		<div class='col-2'><span class='badge rounded-pill bg-light text-light' onclick="">#{lp[25]}</span></div>
 		<div class='col-2'></div>

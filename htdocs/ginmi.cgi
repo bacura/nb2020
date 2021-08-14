@@ -45,7 +45,7 @@ end
 
 ####
 def init( lp )
-	puts "<div align='center'>lp[15]</div>"
+	puts "<div align='center'>#{lp[15]}</div>"
 end
 
 #==============================================================================

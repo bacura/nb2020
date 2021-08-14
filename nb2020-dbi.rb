@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.08b
+#nb2020-dbi.rb 0.09b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -712,6 +712,13 @@ def palette_init()
 	else
 		query = 'CREATE TABLE palette (user VARCHAR(32) NOT NULL, name VARCHAR(64), palette VARCHAR(128));'
 		$DB.query( query )
+
+		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
+			0.upto( 3 ) do |i|
+				query = "INSERT INTO palette SET user='#{e}', name='#{$PALETTE_DEFAULT_NAME[$DEFAULT_LP][i]}', palette='#{$PALETTE_DEFAULT[$DEFAULT_LP][i]}';"
+				$DB.query( query )
+			end
+		end
 		puts 'palette table has been created.'
 	end
 end
