@@ -20,6 +20,7 @@ require 'natto'
 #==============================================================================
 $MYSQL_HOST = 'localhost'
 $MYSQL_USER = 'userr'
+$MYSQL_PW = 'password'
 $MYSQL_DB = 'nb2020'
 $MYSQL_TB_TAG = 'tag'
 $MYSQL_TB_DIC = 'dic'
@@ -42,7 +43,7 @@ $MYSQL_TB_RECIPEI = 'recipei'
 mecab = Natto::MeCab.new()
 words = Hash.new
 
-db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 db.query( "update #{$MYSQL_TB_RECIPEI} SET f=0;" )
 
 
