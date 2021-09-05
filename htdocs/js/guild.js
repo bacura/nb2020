@@ -238,8 +238,13 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 
 		var fx = function(){
 			$.post( "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){ $( "#L2" ).html( data );});
+
+
 		};
 		setTimeout( fx , 1000 );
+
+		dl3 = false;
+		displayBW();
 	} else{
 		displayVIDEO( 'Food name! (>_<)' );
 	}

@@ -24,8 +24,6 @@ def init( lp, user )
 	bio = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'bio' )\">#{lp[11]}</span>" if user.status >= 2
 	koyomiex = ''
 	koyomiex = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'koyomi' )\">#{lp[9]}</span>" if user.status >= 2
-	school = ''
-	school = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'school' )\">#{lp[71]}</span>" if user.status >= 5 && user.status != 6
 
 	html = <<-"HTML"
 <span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'account' )">#{lp[1]}</span>
@@ -33,9 +31,10 @@ def init( lp, user )
 <span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'palette' )">#{lp[2]}</span>
 <span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'history' )">#{lp[6]}</span>
 <span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'sum' )">#{lp[7]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'convert' )">#{lp[72]}</span>
 #{bio}
 #{koyomiex}
-#{school}
+
 <span class="badge rounded-pill bg-danger" onclick="configForm( 'release' )">#{lp[8]}</span>
 HTML
 

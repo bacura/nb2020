@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.02b
+#Nutrition browser 2020 index page 0.03b
 
 
 #==============================================================================
@@ -223,12 +223,12 @@ def html_nav( user, lp )
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[42]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[43]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[44]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[49]}</button>
       </nav>
       </nav>
       <nav class='container-fluid' id='gs_menu' style='display:none;'>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initAccountM()">#{lp[48]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initSchool()">#{lp[47]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[49]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initToker()">#{lp[50]}</button>
       </nav>
       <nav class='container-fluid' id='gm_menu' style='display:none;'>

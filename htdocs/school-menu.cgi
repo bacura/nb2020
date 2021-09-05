@@ -311,10 +311,18 @@ html = <<-"HTML"
 		</div>
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<select class='form-select' id='week_select' onchange="selectSchoolMenu()">
+				<select class='form-select' id='week_select' onchange="selectSchoolMenu()" disabled>
 					#{week_html}
 				</select>
 				<label class='input-group-text'>#{lp[12]}</label>
+			</div>
+		</div>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<select class='form-select' id='week_select' onchange="selectSchoolMenu()" disabled>
+					#{week_html}
+				</select>
+				<label class='input-group-text'>#{lp[13]}</label>
 			</div>
 		</div>
 	</div>

@@ -79,9 +79,24 @@ var selectSchoolMenu = function(){
 
 // menu
 var initSchoolStock = function(){
-	closeBroseWindows( 1 );
 	$.post( "school-stock.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	flashBW();
+	dline = true;
+	dl1 = true;
+	displayBW();
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Cooking school custom //////////////////////////////////////////////////////////////
+
+// custom
+var initSchoolCustom = function(){
+	$.post( "school-custom.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
+	flashBW();
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
 

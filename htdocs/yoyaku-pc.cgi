@@ -24,7 +24,7 @@ require 'mail'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 script = 'yoyaku-pc'
 
 ampm_time = []
@@ -136,6 +136,10 @@ if @debug
   puts "<hr>\n"
 end
 
+palette = @cgi['palette']
+palette = @cgi['palette']
+
+
 
 case command
 #==============================================================================
@@ -143,6 +147,20 @@ case command
 when 'basic'
 #==============================================================================
 menu_html = ''
+
+if user.status >= 8
+	menu_html << '<select>'
+	r = mdb( "SELECT label FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}';", false, @debug )
+	r.each do |e|
+		menu_html << "<option value='#{e['label']}'>#{e['label']}</option>"
+	end
+	menu_html << '</select>'
+end
+
+
+
+
+
 basic_label.each do |e|
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE label='#{e}' AND protect='1';", false, @debug )
 	if r.first

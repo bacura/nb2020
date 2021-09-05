@@ -1,4 +1,4 @@
-#Nutrition browser 2020 config & mod 0.10b
+#Nutrition browser 2020 config & mod 0.20b
 
 #==============================================================================
 # OVERVIEW
@@ -30,7 +30,7 @@ mod_history.rb	0.00b
 mod_account.rb	0.00b
 mod_sum.rb		0.00b
 mod_koyomiex.rb	0.00b
-mod_school.rb	0.00b
+mod_convert.rb	0.00b
 mod_release.rb	0.00b
 
 
@@ -49,3 +49,5 @@ core.js/configForm( mod ) -> config.cgi{ mod:mod }
 #==============================================================================
 20210128	0.00b	βスタート
 20210426	0.10b	更新：お料理教室項目を追加
+20210905	0.20b	更新：お料理教室項目を食品番号変換に変更
+

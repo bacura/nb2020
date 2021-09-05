@@ -37,6 +37,7 @@ def sub_menu( lp )
 		<div class='col-2'><span class='badge rounded-pill bg-success' onclick="window.open( 'yoyaku-mobi.cgi', 'calendar' );">#{lp[21]}</span></div>
 		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initSchoolMenu()">#{lp[24]}</span></div>
 		<div class='col-2'><span class='badge rounded-pill bg-light text-light' onclick="">#{lp[25]}</span></div>
+		<div class='col-2'><span class='badge rounded-pill bg-info text-dark' onclick="initSchoolCustom()">#{lp[32]}</span></div>
 		<div class='col-2'></div>
 	</div>
 </div>
