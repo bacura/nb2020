@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.09b
+#nb2020-dbi.rb 0.10b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -597,7 +597,7 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), school TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
@@ -1053,6 +1053,20 @@ def schoolm_init()
 end
 
 
+#### Making cooking school custom table
+def schoolc_init()
+	query = "SHOW TABLES LIKE 'schoolc';"
+	res = $DB.query( query )
+	if res.first
+		puts 'schoolc already exists.'
+	else
+		query = 'CREATE TABLE schoolc ( user VARCHAR(32) NOT NULL, cs_code VARCHAR(32), format TINYINT(1), document VARCHAR(1024), menu_group VARCHAR(64), title VARCHAR(64), enable TINYINT(1), c_order TINYINT(1));'
+		$DB.query( query )
+		puts 'schoolc table has been created.'
+	end
+end
+
+
 #### 生体情報
 def bio_init()
 	puts '栄養成分安定テーブルの作成'
@@ -1170,6 +1184,7 @@ ref_intake_init( ref_intake )
 
 schoolk_init()
 schoolm_init()
+schoolc_init()
 
 
 #bio_init()

@@ -443,10 +443,12 @@ recipes.each do |e|
 			recipe_html << "<td>-</td>"
 		end
 
+		tags = ''
+		e.tag.each do |ee| tags << "&nbsp;<span class='list_tag'>#{ee}</span>" end
 		if e.user == user.name
-			recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}' )\">#{e.name}</td>"
+			recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}' )\">#{e.name}#{tags}</td>"
 		else
-			recipe_html << "<td>#{e.name}</td>"
+			recipe_html << "<td>#{e.name}#{tags}</td>"
 		end
 
 		recipe_html << "<td>"

@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.10b
+#Nutrition browser 2020 soul 0.11b
 
 #==============================================================================
 # LIBRARY
@@ -55,7 +55,7 @@ $MYSQL_TB_METS = 'mets'
 $MYSQL_TB_METST = 'metst'
 $MYSQL_TB_SCHOOLK = 'schoolk'
 $MYSQL_TB_SCHOOLM = 'schoolm'
-$MYSQL_TB_SCHOOLS = 'schools'
+$MYSQL_TB_SCHOOLC = 'schoolc'
 
 $PHOTO = 'photo_'
 $PHOTO_PATH = "#{$HTDOCS_PATH}/#{$PHOTO}"
@@ -952,6 +952,28 @@ class Recipe
     db.query( "DELETE FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@user}' and code='#{@code}';" )
     db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" )
     db.close
+  end
+
+  def tag()
+    tags = []
+    if /^\#/ =~ @protocol
+      a = @protocol.split( "\n" )
+      a[0].sub!( '#', '' )
+      a[0].gsub!( '　', "\s" )
+      tags = a[0].split( "\t" )
+    end
+
+    return tags
+  end
+
+  def note()
+    note = ''
+    if /^\#/ =~ @protocol
+      a = @protocol.split( "\n" )
+      note = a[1].sub( '#', '' ) if /^\#/ =~ a[1]
+    end
+
+    return note
   end
 
   def debug

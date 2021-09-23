@@ -11,7 +11,7 @@ require '../nb2020-soul'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 script = 'gm-dic'
 
 
@@ -41,8 +41,8 @@ end
 command = @cgi['command']
 sg = @cgi['sg']
 sg = '01' if command == 'init'
-org_name = @cgi['org_name']
-aliases = @cgi['aliases']
+org_name = @cgi['org_name'].to_s
+aliases = @cgi['aliases'].to_s
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "sg:#{sg}<br>\n"
@@ -82,7 +82,6 @@ when 'update'
 	aliases.gsub!( "\s", '' )
 	aliases.gsub!( '、', ',' )
 	aliases.gsub!( '，', ',' )
-
 	mdb( "UPDATE #{$MYSQL_TB_DIC} SET alias='#{aliases}' WHERE org_name='#{org_name}';", false, @debug )
 
 	exit

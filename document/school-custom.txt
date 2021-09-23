@@ -1,9 +1,9 @@
-#Nutrition browser cooking school 0.02b
+#Nutrition browser cooking school 0.00b
 
 #==============================================================================
 # OVERVIEW
 #==============================================================================
-栄養ブラウザのお料理教室の管理スクリプト。
+栄養ブラウザのお料理教室のカスタムスクリプト。
 
 
 #==============================================================================
@@ -16,33 +16,18 @@ nb2020-soul
 # ITEM FROM GET / POST
 #==============================================================================
 #POST
-command		#コマンド
-yyyy		#年
-mm			#月
-dd 			#日
-yyyy_mm		#年月
-ampm		#午前午後
-status		#ステータス
+command			#コマンド
+cs_code.to_s	#教室コード
+cs_format.to_i	#教室形式
 
 
 #==============================================================================
 # TRANSITION
 #==============================================================================
-shun.js/initSchool()	->	school.cgi{ command:"menu" }
-							school.cgi{ command:"init" }
+shun.js/updateSchoolCustom()	->	school-custom.cgi{ command:"update" }
 
-// School koyomi change
-shun.js/changeSchoolk()	->	school.cgi{ command:"init", yyyy_mm:yyyy_mm }
-
-// School status change
-shun.js/changeSchoolkSt( dd, ampm, status )	->	school.cgi{ command:"changest", yyyy_mm:yyyy_mm, dd:dd, ampm:ampm, status:status }
-
-// School open
-shun.js/openSchoolk( dd, ampm )	->	school.cgi{ command:"open", yyyy_mm:yyyy_mm, dd:dd, ampm:ampm }
 
 #==============================================================================
 #CHANGE LOG
 #==============================================================================
 20200805	0.00b	βスタート
-20210426	0.01b	更新：成分パレット標準化への対応。
-20210815	0.02b	更新：ラインメニューに「カスタム」を追加。

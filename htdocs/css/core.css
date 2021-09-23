@@ -207,6 +207,11 @@ nav {
   margin-bottom: 1em;
 }
 
+.list_tag{
+  font-size: x-small;
+  color: chocolate;
+}
+
 /*===============*/
 /* お膳 ＋ 献立帳 */
 /*===============*/

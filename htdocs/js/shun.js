@@ -99,6 +99,40 @@ var initSchoolCustom = function(){
 	displayBW();
 };
 
+// Update school code
+var saveSchoolCustom = function(){
+	var cs_code = document.getElementById( 'cs_code' ).value;
+	var cs_name = document.getElementById( 'cs_name' ).value;
+	var format = 0;
+displayVIDEO( cs_name );
+	if( document.getElementById( 'enable0' ).checked ){ var enable0 = 1; }else{ var enable0 = 0; }
+	if( document.getElementById( 'enable1' ).checked ){ var enable1 = 1; }else{ var enable1 = 0; }
+	if( document.getElementById( 'enable2' ).checked ){ var enable2 = 1; }else{ var enable2 = 0; }
+	if( document.getElementById( 'enable3' ).checked ){ var enable3 = 1; }else{ var enable3 = 0; }
+	var title0 = document.getElementById( 'title0' ).value;
+	var title1 = document.getElementById( 'title1' ).value;
+	var title2 = document.getElementById( 'title2' ).value;
+	var title3 = document.getElementById( 'title3' ).value;
+	var menu_group0 = document.getElementById( 'menu_group0' ).value;
+	var menu_group1 = document.getElementById( 'menu_group1' ).value;
+	var menu_group2 = document.getElementById( 'menu_group2' ).value;
+	var menu_group3 = document.getElementById( 'menu_group3' ).value;
+	var document0 = document.getElementById( 'document0' ).value;
+	var document1 = document.getElementById( 'document1' ).value;
+	var document2 = document.getElementById( 'document2' ).value;
+	var document3 = document.getElementById( 'document3' ).value;
+	var print_ins = document.getElementById( 'print_ins' ).value;
+	var qr_ins = document.getElementById( 'qr_ins' ).value;
+
+	$.post( "school-custom.cgi", { command:"save", cs_code:cs_code, cs_name:cs_name, format:format,
+		enable0:enable0, enable1:enable1, enable2:enable2, enable3:enable3,
+		title0:title0, title1:title1, title2:title2, title3:title3,
+		menu_group0:menu_group0, menu_group1:menu_group1, menu_group2:menu_group2, menu_group3:menu_group3,
+		document0:document0, document1:document1, document2:document2, document3:document3,
+		print_ins:print_ins, qr_ins:qr_ins
+	}, function( data ){ $( "#L1" ).html( data );});
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Management of account M //////////////////////////////////////////////////////////////

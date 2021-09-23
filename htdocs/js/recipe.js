@@ -291,8 +291,8 @@ var recipeList = function( com ){
 
 
 // Refreshing list
-var fxRLR = function( range, type, role, tech, time, cost, page ){
-	$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#L1" ).html( data );});
+var fxRLR = function( command, range, type, role, tech, time, cost, page ){
+	$.post( "recipel.cgi", { command:command, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#L1" ).html( data );});
 };
 
 
@@ -304,7 +304,7 @@ var recipeList2 = function( page ){
 	var tech = document.getElementById( "tech" ).value;
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
-	fxRLR( range, type, role, tech, time, cost, page )
+	fxRLR( 'limit', range, type, role, tech, time, cost, page );
 };
 
 
@@ -318,7 +318,8 @@ var recipeDelete = function( code, page ){
 	var cost = document.getElementById( "cost" ).value;
 
 	if( document.getElementById( code ).checked ){
-		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
+		fxRLR( 'limit', range, type, role, tech, time, cost, page );
 		displayVIDEO( 'Removed' );
 	} else{
 		displayVIDEO( 'Check! (>_<)' );

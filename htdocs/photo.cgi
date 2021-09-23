@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.12b
+#Nutrition browser 2020 recipe photo 0.13b
 
 #==============================================================================
 #LIBRARY
@@ -141,12 +141,12 @@ when 'upload'
 		photo = photo.thumbnail( photo_ratio ) if photo_ratio != 1.0
 
 		puts "water mark<br>" if @debug
-		wm_text = "NB2020 #{code} by #{user.name}"
+		wm_text = "Nutrition Browser:#{media.mcode}"
 		wm_img = Magick::Image.new( photo.columns, photo.rows )
 		wm_drew = Magick::Draw.new
 		wm_drew.annotate( wm_img, 0, 0, 0, 0, wm_text ) do
 			self.gravity = Magick::SouthWestGravity
-			self.pointsize = 72
+			self.pointsize = 18
 			self.font_family = $WM_FONT
 			self.font_weight = Magick::BoldWeight
 			self.stroke = "none"
