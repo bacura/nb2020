@@ -159,11 +159,10 @@ var changeDic = function( sg ){
 };
 
 // Direct food name dictionary button
-var saveDic = function( org_name ){
+var saveDic = function( org_name, sg ){
 	var aliases = document.getElementById( org_name ).value;
-	$.post( "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases }, function( data ){ $( "#L1" ).html( data );});
-//	displayVIDEO( org_name + ' modified' );
-	displayVIDEO( aliases );
+	$.post( "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases, sg:sg }, function( data ){});
+	displayVIDEO( org_name + ' modified' );
 };
 
 

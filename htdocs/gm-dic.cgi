@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM food alias dictionary editor 0.00b
+#Nutrition browser GM food alias dictionary editor 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -79,11 +79,17 @@ HTML_SUB
 	exit
 
 when 'update'
-	aliases.gsub!( "\s", '' )
+	aliases.gsub!( "\s", ',' )
+	aliases.gsub!( '　', ',' )
 	aliases.gsub!( '、', ',' )
 	aliases.gsub!( '，', ',' )
-	mdb( "UPDATE #{$MYSQL_TB_DIC} SET alias='#{aliases}' WHERE org_name='#{org_name}';", false, @debug )
+	aliases.gsub!( ',,', ',' )
 
+	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND FG ='#{sg}';", false, @debug )
+	a = aliases.split( ',' )
+	a.each do |e|
+		mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET alias='#{e}', org_name='#{org_name}', FG ='#{sg}';", false, @debug )
+	end
 	exit
 else
 	r = mdb( "SELECT DISTINCT org_name FROM #{$MYSQL_TB_DIC} WHERE FG ='#{sg}';", false, @debug )
@@ -99,7 +105,7 @@ else
 		rr.each do |ee| alias_value << "#{ee['alias']}," end
 		alias_value.chop!
 
-		list_html << "<input type='text' class='form-control' id=\'#{e['org_name']}' value='#{alias_value}' onchange=\"saveDic( '#{e['org_name']}' )\">"
+		list_html << "<input type='text' class='form-control' id=\'#{e['org_name']}' value='#{alias_value}' onchange=\"saveDic( '#{e['org_name']}', '#{sg}' )\">"
 		list_html << '</div>'
 		list_html << '</div>'
 	end

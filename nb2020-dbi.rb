@@ -390,7 +390,7 @@ def dic_init()
 	if res.first
 		puts 'dic table already exists.'
 	else
-		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128) NOT NULL PRIMARY KEY, user VARCHAR(32));'
+		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), user VARCHAR(32));'
 		$DB.query( query )
 		puts 'dic table has been created.'
 
