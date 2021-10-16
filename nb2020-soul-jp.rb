@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.05b
+#Nutrition browser 2020 soul Japanese pack 0.07b
 
 #==============================================================================
 # STATIC
@@ -21,14 +21,14 @@ $PALETTE_DEFAULT_NAME = { 'jp' => @palette_default_name }
 @palette_default = ['0000001001001000001000000000000000000000000000000000000001', '0000001001001000001000000000000000000000000000000000000001', '0000001001001000101001110110000000000001000000110000000001', '0000111111111111111111111111111111111111111111111111111111']
 $PALETTE_DEFAULT = { 'jp' => @palette_default }
 
-@recipe_type = ['未設定','和食','洋食','中華','イタリアン','フレンチ','エスニック','肴','ジャンク']
-@recipe_role = ['未設定','主食','主菜','副菜','汁物','デザート・おやつ','飲み物','調味料','離乳食']
+@recipe_type = ['未設定','日本の料理（和食）','日本の料理（洋食）','中華な料理','イタリアの料理','フランスの料理','エスニックな料理','西洋ぽい料理','謎な料理']
+@recipe_role = ['未設定','主食（兼主菜）','主菜','副菜','汁物','デザート・おやつ','飲み物','調味料','離乳食','ベース']
 @recipe_tech = ['未設定','茹でる・煮る・炊く','直火・炙る','炒める・ソテー','蒸す','揚げる','和える','生・非加熱','冷蔵・冷凍','オーブン・グリル','電子レンジ']
 @recipe_time = ['未設定','～5分','～10分','～15分','～20分','～30分','～45分','～60分','～120分','121分～']
 @recipe_cost = ['未設定','～50円','～100円','～150円','～200円','～300円','～400円','～500円','～600円','～800円','～1000円', '1000円～']
 
 #         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15       16    17
-@unit = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身/匹S','切身/匹M','切身/匹L','個/枚S','個/枚M','個/枚L','SV', '単位', '廃棄前', 'cm', '標準']
+@unit = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身・匹S','切身・匹M','切身・匹L','個・枚S','個・枚M','個・枚L','SV', '単位', '廃棄前', 'cm', '標準']
 
 #              0    1           2         3     4       5
 @sub_group = ['','緑黄色野菜','普通牛乳','味噌','醤油','食塩']
@@ -76,14 +76,20 @@ def html_head( interrupt, status, sub_title )
   <meta name="description" content="食品成分表の検索,栄養計算,栄養評価, analysis, calculation,無料のwebサイト">
   <meta name="robots" content="index,follow">
   <meta name="author" content="Shinji Yoshiyama@ばきゅら京都Lab">
+
+  <!-- Jquery -->
+  <script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
+
   <!-- bootstrap -->
   <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
-
-<!-- Jquery -->
-  <script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
-<!-- bootstrap -->
   <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
+
+  <!-- d3/c3.js -->
+  <link rel="stylesheet" href="c3/c3.min.css">
+  <script type="text/javascript" src="d3/d3.min.js"></script>
+  <script type="text/javascript" src="c3/c3.min.js"></script>
+
+  <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
   <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
   <script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
   #{js_guild}
@@ -126,7 +132,8 @@ end
 # DATE & TIME
 #==============================================================================
 @time_now = Time.now
-@datetime = @time_now.strftime("%Y-%m-%d %H:%M:%S")
+@datetime = @time_now.strftime( "%Y-%m-%d %H:%M:%S" )
+
 
 #==============================================================================
 # MEDIA

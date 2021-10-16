@@ -490,7 +490,7 @@ when 'fctb_l5'
 
 		# 追加・変更ボタン
 		if user.name && base == 'cb'
-			add_button = "<button type='button' class='btn btn btn-dark btn-sm' onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{lp[1]}</button>"
+			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{lp[1]}</span>"
 		elsif user.name
 			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{lp[2]}</span>"
 		else
@@ -498,7 +498,7 @@ when 'fctb_l5'
 		end
 
 		# Koyomi button
-		if user.status >= 2
+		if user.status >= 2 && base != 'cb'
 			koyomi_button = "<span onclick=\"addKoyomi( '#{food_no_list[c]}', -5 )\">#{lp[3]}</span>"
 		else
 			koyomi_button = ''
@@ -533,9 +533,13 @@ when 'fctb_l5'
  	# Recipe search badge
  	recipe_search = "&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"searchDR( '#{food_name}' )\">#{lp[16]}</span><br><br>"
 
+ 	#
+	return_button = ''
+	return_button = "<div align='center' class='joystic_koyomi' onclick=\"changingCB( '', '' )\">#{lp[17]}</div><br>" if base == 'cb'
+
 
 	html = <<-"HTML"
-	<div class='container-fluid'><div class="row">
+	<div class='container-fluid'>#{return_button}<div class="row">
   		<div class="col-3"><span class='h5'>#{food_name}</span>#{recipe_search}</div>
   		<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
 		<div class="col-3">

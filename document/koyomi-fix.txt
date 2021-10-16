@@ -1,4 +1,4 @@
-#Nutrition browser koyomi fix fct editer 0.00b
+#Nutrition browser koyomi fix fct editer 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -41,3 +41,4 @@ guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy_mm:yyyy_
 #CHANGE LOG
 #==============================================================================
 20210312	0.00b	βスタート
+20210903	0.01b	更新；戻るUIを追加

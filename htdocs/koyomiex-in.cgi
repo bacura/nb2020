@@ -13,7 +13,7 @@ require '../nb2020-soul'
 #STATIC
 #==============================================================================
 script = 'koyomiex-in'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -90,6 +90,7 @@ end
 
 case command
 when 'upload'
+	puts 'Upload' if @debug
 	file_origin = @cgi['extable'].original_filename
 	file_type = @cgi['extable'].content_type
 	file_body = @cgi['extable'].read

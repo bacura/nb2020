@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser print page selector 0.00
+#Nutrition browser print page selector 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -67,26 +67,31 @@ end
 palette_sets.size.times do |c| palette_html << "<option value='#{c}'>#{palette_name[c]}</option>" end
 
 
+#### Cooking school HTML
+csc = ''
+cs_disabled = ''
+if user.status == 5 ||  user.status >= 8
+	r = mdb( "SELECT code FROM #{$MYSQL_TB_SCHOOLC} WHERE user='#{user.name}';", false, @dubug )
+	if r.first
+		csc = r.first['code']
+		cs_disabled = 'DISABLED' if csc == ''
+	else
+		cs_disabled = 'DISABLED'
+	end
+else
+	cs_disabled = 'DISABLED'
+end
+
 #### HTML生成
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-11'>
-			<h4>#{recipe_name}</h4>
-		</div>
-		<div class='col-1'>
-			<button class="btn btn-success" onclick="print_templateReturen()">#{lp[3]}</button>
-		</div>
+		<div class='col-6'><h4>#{recipe_name}</h4></div>
+		<div align="center" class='col-6 joystic_koyomi' onclick="print_templateReturen()">#{lp[3]}</div>
 	</div>
+	<br>
+
 	<div class='row'>
-		<div class='col-2'>
-			<div class="input-group input-group-sm">
-    			<span class="input-group-text" for="dish">#{lp[4]}</span>
-  				<input type='number' min='1' class="form-control" id='dish' value='#{recipe_dish}'>
-			</div>
-		</div>
-		<div class='col-1'>
-		</div>
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="palette">#{lp[5]}</label>
@@ -113,13 +118,11 @@ html = <<-"HTML"
 				</select>
 			</div>
 		</div>
-	</div>
-	<br>
-
-	<div class='row'>
-		<div class='col-2' align='center'>
-			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="hr_image">#{lp[12]}
+		<div class='col-1'></div>
+		<div class='col-2'>
+			<div class="form-check form-switch">
+  				<input class="form-check-input" type="checkbox" id="csc" value='#{csc}' #{cs_disabled}>
+  				<label class="form-check-label">#{lp[4]} (#{csc})</label>
 			</div>
 		</div>
 	</div>
@@ -127,7 +130,7 @@ html = <<-"HTML"
 
 	<div class='row'>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '2' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '2', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_2.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[13]}</h6>
@@ -135,7 +138,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '4' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '4', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_4.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[14]}</h6>
@@ -143,7 +146,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '6' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '6', '#{recipe_dish})' )">
   				<img class="card-img-top" src="photo_/pvt_sample_6.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[15]}</h6>
@@ -151,7 +154,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '8' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '8', '#{recipe_dish})' )">
   				<img class="card-img-top" src="photo_/pvt_sample_8.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[16]}</h6>

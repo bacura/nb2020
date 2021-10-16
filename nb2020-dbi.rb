@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.10b
+#nb2020-dbi.rb 0.12b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -597,7 +597,7 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED);'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomiy VARCHAR(16), koyomiex VARCHAR(255), koyomiexn VARCHAR(256), icache TINYINT(1), ifix TINYINT(1), sex TINYINT(1), birth DATE, age TINYINT UNSIGNED, height FLOAT UNSIGNED, weight FLOAT UNSIGNED, bio_kexow TINYINT(1));'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
@@ -1073,6 +1073,20 @@ def bio_init()
 	# テーブル作成
 	query = 'CREATE TABLE bio (user VARCHAR(32), auto TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height TINYINT UNSIGNED, weight TINYINT UNSIGNED);'
 	$DB.query( query )
+end
+
+
+#### Making module JSON data
+def modj_init()
+	query = "SHOW TABLES LIKE 'modj';"
+	res = $DB.query( query )
+	if res.first
+		puts 'mod_cnf already exists.'
+	else
+		query = 'CREATE TABLE modj ( user VARCHAR(32) NOT NULL, module VARCHAR(64), json VARCHAR(1024));'
+		$DB.query( query )
+		puts 'modj table has been created.'
+	end
 end
 
 

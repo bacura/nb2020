@@ -1,4 +1,4 @@
-#Nutrition browser 2020 koyomi menu copy / move 0.02b
+#Nutrition browser 2020 koyomi menu copy / move 0.03b
 
 #==============================================================================
 # OVERVIEW
@@ -45,3 +45,5 @@ guild.js/cmmSaveKoyomi_direct( cm_mode, yyyy, mm, dd, tdiv, origin ) -> koyomi-c
 20210312	0.00b	βスタート
 20210429	0.01b	更新：Joystic対応
 20210509	0.02b	更新：こよみ直行を追加
+20211015	0.03b	問題：fzcodeもコピーしてしまう
+					解決：fzcodeはコピーしないようしする。

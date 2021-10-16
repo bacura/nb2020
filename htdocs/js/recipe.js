@@ -28,11 +28,13 @@ var refreshCB = function(){
 
 // 変更ボタンを押してsumの食品を変更する
 var changingCB = function( fn, base_fn ){
-	var weight = document.getElementById( "weight" ).value;
+	if( fn !='' ){
+		var weight = document.getElementById( "weight" ).value;
+		$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){ $( "#CBN" ).html( data );});
+		if( fn != '' ){ displayVIDEO( fn + 'has modified' ); }
+		$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){ $( "#L1" ).html( data );});
+	}
 
-	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){ $( "#CBN" ).html( data );});
-	if( fn != '' ){ displayVIDEO( fn + 'has modified' ); }
-	$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
 	dl1 = true;
 	displayBW();
@@ -193,7 +195,6 @@ var gnExchange = function( code ){
 var cb_summon = function( key, weight, base_fn ){
 	$.get( "square.cgi", { channel:"fctb_l5", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){ $( "#L5" ).html( data );});
 	flashBW()
-	dl1 = true;
 	dl5 = true;
 	displayBW();
 };
@@ -490,8 +491,7 @@ var print_templateReturen = function(){
 };
 
 // 印刷テンプレート画面の印刷表示ボタンを押して新規タブに印刷画面を表示する。
-var openPrint = function( uname, code, template ){
-	var dish = document.getElementById( "dish" ).value;
+var openPrint = function( uname, code, template, dish ){
 	var palette = document.getElementById( "palette" ).value;
 	var frct_mode = document.getElementById( "frct_mode" ).value;
 
@@ -507,14 +507,12 @@ var openPrint = function( uname, code, template ){
 		var ew_mode = 0;
 	}
 
-	if( document.getElementById( "hr_image" ).checked ){
-		var hr_image = 1;
+	if( document.getElementById( "csc" ).checked ){
+		var csc = document.getElementById( "csc" ).value;
+		var url = 'printv.cgi?&c=' + code + '&t=' + template + '&d=' + dish + '&p=' + palette + '&fa=' + frct_accu + '&ew=' + ew_mode + '&fm=' + frct_mode + '&cs=' + csc;
 	}else{
-		var hr_image = 0;
+		var url = 'printv.cgi?&c=' + code + '&t=' + template + '&d=' + dish + '&p=' + palette + '&fa=' + frct_accu + '&ew=' + ew_mode + '&fm=' + frct_mode;
 	}
-
-	var url = 'printv.cgi?&c=' + code + '&t=' + template + '&d=' + dish + '&p=' + palette + '&fa=' + frct_accu + '&ew=' + ew_mode + '&fm=' + frct_mode + '&hr=' + hr_image;
-
 	window.open( url, 'print' );
 	displayVIDEO( 'Printing page' );
 };

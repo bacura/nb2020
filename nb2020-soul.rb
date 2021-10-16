@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.11b
+#Nutrition browser 2020 soul 0.12b
 
 #==============================================================================
 # LIBRARY
@@ -56,6 +56,7 @@ $MYSQL_TB_METST = 'metst'
 $MYSQL_TB_SCHOOLK = 'schoolk'
 $MYSQL_TB_SCHOOLM = 'schoolm'
 $MYSQL_TB_SCHOOLC = 'schoolc'
+$MYSQL_TB_MODJ = 'modj'
 
 $PHOTO = 'photo_'
 $PHOTO_PATH = "#{$HTDOCS_PATH}/#{$PHOTO}"
@@ -73,6 +74,7 @@ $DEFAULT_LP = $LP[0]
 
 $DEBUG = false
 
+$DATE = Time.now.strftime( "%Y-%m-%d" )
 #==============================================================================
 # CORE LANGAGE & CGI
 #==============================================================================

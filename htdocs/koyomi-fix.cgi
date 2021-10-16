@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.00b
+#Nutrition browser koyomi fix fct editer 0.01b
 
 #==============================================================================
 # LIBRARY
@@ -277,6 +277,10 @@ hh_html << "</select>"
 puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
+	<div class="row">
+		<div align='center' class='joystic_koyomi' onclick="koyomiFixR()">#{lp[7]}</div>
+	</div>
+	<br>
 	<div class="row">
 		<div class="col-4">
 			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">

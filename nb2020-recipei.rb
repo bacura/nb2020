@@ -1,11 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe search index builder 0.01b
-
-#==============================================================================
-#CHANGE LOG
-#==============================================================================
-#20210311, 0.00b, start
+#Nutrition browser 2020 recipe search index builder 0.02b
 
 
 #==============================================================================
@@ -19,7 +14,7 @@ require 'natto'
 #STATIC
 #==============================================================================
 $MYSQL_HOST = 'localhost'
-$MYSQL_USER = 'userr'
+$MYSQL_USER = 'user'
 $MYSQL_PW = 'password'
 $MYSQL_DB = 'nb2020'
 $MYSQL_TB_TAG = 'tag'
@@ -66,10 +61,27 @@ res.each do |e|
 	res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e['name']}' AND user='#{e['user']}';" )
 	db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', f=1, user='#{e['user']}', code='#{e['code']}', word='#{e['name']}';" ) unless res2.first
 
-	#comment 1st line
 	a = e['protocol'].split( "\n" )
-	if a[0] != nil
-		target << a[0] if /^\#.+/ =~ a[0]
+	#tag line
+	if a[0] != nil && /^\#.+/ =~ a[0]
+		a[0].gsub( '#', '' )
+		if a[0] != ''
+			a[0].gsub( "　", "\s" )
+			tags = a[0].split( "\s" )
+			tags.each do |ee|
+				if ee != ''
+					target << ee
+					res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{ee}' AND user='#{e['user']}';" )
+					db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', f=1, user='#{e['user']}', code='#{e['code']}', word='#{ee}';" ) unless res2.first
+				end
+			end
+		end
+	end
+
+	#comment line
+	if a[1] != nil && /^\#.+/ =~ a[1]
+		a[1].gsub( '#', '' )
+		target << a[1] if a[1] != ''
 	end
 
 	target.each do |ee|

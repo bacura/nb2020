@@ -88,11 +88,11 @@ when 'update'
 	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND FG ='#{sg}';", false, @debug )
 	a = aliases.split( ',' )
 	a.each do |e|
-		mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET alias='#{e}', org_name='#{org_name}', FG ='#{sg}';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET alias='#{e}', org_name='#{org_name}', FG ='#{sg}', user='#{user.name}';", false, @debug )
 	end
 	exit
 else
-	r = mdb( "SELECT DISTINCT org_name FROM #{$MYSQL_TB_DIC} WHERE FG ='#{sg}';", false, @debug )
+	r = mdb( "SELECT DISTINCT org_name FROM #{$MYSQL_TB_DIC} WHERE FG ='#{sg}' ORDER BY org_name ASC;", false, @debug )
 	r.each do |e|
 		rr = mdb( "SELECT alias from #{$MYSQL_TB_DIC} WHERE org_name='#{e['org_name']}' AND FG ='#{sg}';", false, @debug )
 		list_html << "<div class='row'>"

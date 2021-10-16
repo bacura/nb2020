@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.01b
+#Nutrition browser 2020 koyomi menu copy / move 0.03b
 
 
 #==============================================================================
@@ -109,7 +109,7 @@ if command == 'save'
 				koyomi << "\t#{koyomi_}"
 			end
 
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}', fzcode='' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
 			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi_}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
 		end

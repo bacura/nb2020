@@ -140,19 +140,19 @@ when 'upload'
 		puts "resize 2k<br>" if @debug
 		photo = photo.thumbnail( photo_ratio ) if photo_ratio != 1.0
 
-		puts "water mark<br>" if @debug
-		wm_text = "Nutrition Browser:#{media.mcode}"
-		wm_img = Magick::Image.new( photo.columns, photo.rows )
-		wm_drew = Magick::Draw.new
-		wm_drew.annotate( wm_img, 0, 0, 0, 0, wm_text ) do
-			self.gravity = Magick::SouthWestGravity
-			self.pointsize = 18
-			self.font_family = $WM_FONT
-			self.font_weight = Magick::BoldWeight
-			self.stroke = "none"
-		end
-		wm_img = wm_img.shade( true, 315 )
-		photo.composite!( wm_img, Magick::CenterGravity, Magick::HardLightCompositeOp )
+#		puts "water mark<br>" if @debug
+#		wm_text = "Nutrition Browser:#{media.mcode}"
+#		wm_img = Magick::Image.new( photo.columns, photo.rows )
+#		wm_drew = Magick::Draw.new
+#		wm_drew.annotate( wm_img, 0, 0, 0, 0, wm_text ) do
+#			self.gravity = Magick::SouthWestGravity
+#			self.pointsize = 18
+#			self.font_family = $WM_FONT
+#			self.font_weight = Magick::BoldWeight
+#			self.stroke = "none"
+#		end
+#		wm_img = wm_img.shade( true, 315 )
+#		photo.composite!( wm_img, Magick::CenterGravity, Magick::HardLightCompositeOp )
 		photo.write( "#{$PHOTO_PATH}/#{media.mcode}.jpg" )
 
 		puts "insert DB<br>" if @debug

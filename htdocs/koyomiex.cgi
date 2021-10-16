@@ -171,7 +171,7 @@ html = <<-"HTML"
 		<div class='col-4'>
 			<form method='post' enctype='multipart/form-data' id='table_form'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text btn-info" onclick="importkoyomiex()">#{lp[14]}</label>
+				<label class="input-group-text">#{lp[14]}</label>
 				<input type='file' class='form-control' name='extable' onchange="importkoyomiex()">
 			</div>
 			</form>

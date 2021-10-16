@@ -131,6 +131,7 @@ var calcKoyomiR = function( yyyy, mm ){
 // Koyomi fix
 var fixKoyomi = function( com, yyyy, mm, dd, tdiv ){
 	$.post( "koyomi-fix.cgi", { command:com, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){ $( "#L3" ).html( data );});
+	dl2 = false;
 	dl3 = true;
 	displayBW();
 };
@@ -238,11 +239,10 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 
 		var fx = function(){
 			$.post( "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){ $( "#L2" ).html( data );});
-
-
 		};
 		setTimeout( fx , 1000 );
 
+		dl2 = true;
 		dl3 = false;
 		displayBW();
 	} else{
@@ -250,6 +250,13 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 	}
 };
 
+
+// Koyomi modify or copy panel fix
+var koyomiFixR = function(){
+	dl2 = true;
+	dl3 = false;
+	displayBW();
+};
 
 // Koyomi modify or copy panel fix
 var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh, order ){
@@ -501,9 +508,20 @@ var ginmiForm = function( mod ){
 
 // Physique init
 var initPhysique = function(){
-
+//	$.post( "physique.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
+//	$.post( "physique.cgi", { mod:'form' }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "physique.cgi", { mod:'weight', step:'form' }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "physique.cgi", { mod:'weight', step:'chart' }, function( data ){ $( "#L2" ).html( data );});
+	flashBW();
+//	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
+var PhysiqueForm = function( mod ){
+	$.post( "physique.cgi", { mod:mod, step:'form' }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "physique.cgi", { mod:mod, step:'chart' }, function( data ){ $( "#L2" ).html( data );});
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Mother and child //////////////////////////////////////////////////////////////

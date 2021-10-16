@@ -214,17 +214,14 @@ end
 
 
 #### 写真構成
-def arrange_photo( code, mcode, hr_image )
+def arrange_photo( code, mcode )
 	main_photo = ''
+	main_photo = "<img src='#{$PHOTO}/#{mcode[0]}.jpg' width='100%' height='100%' class='img-fluid rounded'>\n" if mcode.size > 0
+
 	sub_photos = ''
-	thumbnail = '-tn.jpg'
-	thumbnail = '.jpg' if hr_image == 1
-
-	main_photo = "<img src='#{$PHOTO}/#{mcode[0]}#{thumbnail}' width='100%' height='100%' class='img-fluid rounded'>\n" if mcode.size > 0
-
 	if mcode.size > 1
 		1.upto( mcode.size - 1 ) do |c|
-			sub_photos << "<img src='#{$PHOTO}/#{mcode[c]}#{thumbnail}' width='25%' height='25%' class='img-fluid rounded'>\n"
+			sub_photos << "<img src='#{$PHOTO}/#{mcode[c]}-tn.jpg' width='25%' height='25%' class='img-fluid rounded'>\n"
 		end
 	end
 
@@ -281,8 +278,15 @@ palette = get_data['p'].to_i
 frct_accu = get_data['fa'].to_i
 ew_mode = get_data['ew'].to_i
 frct_mode = get_data['fm'].to_i
-hr_image = get_data['hr'].to_i
-url = "https://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}&hr=#{hr_image}"
+csc = get_data['cs'].to_s
+
+url= ''
+if csc == ''
+	url = "https://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}"
+else
+	url = "https://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}&cs=#{csc}"
+end
+
 if @debug
 	puts "code: #{code}<br>"
 	puts "template: #{template}<br>"
@@ -335,7 +339,7 @@ protocol = modify_protocol( protocol )
 
 
 puts 'Photo html<br>' if @debug
-main_photo, sub_photos = arrange_photo( code, mcode, hr_image )
+main_photo, sub_photos = arrange_photo( code, mcode )
 
 
 puts 'Generating QR code<br>' if @debug
@@ -511,16 +515,14 @@ html_head = <<-"HTML"
 <div class='container'>
 	<br>
 	<div class='row'>
-		<div class='col-5'>
+		<div class='col-9'>
 			<h4>#{recipe_name}</h4>
 		</div>
 		<div class='col-3'>
 			<form action='' method='get'>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span for="dish_num" class="input-group-text">人数</span>
-					</div>
-					<input type='number' name='d' size='3' min='1' value='#{dish}' class="form-control">&nbsp;
+				<div class="input-group input-group-sm">
+					<span for="dish_num" class="input-group-text">人数</span>
+					<input type='number' name='d' size='3' min='1' value='#{dish}' class="form-control">
 					<input type='submit' value='変更' class='btn btn-sm btn-outline-primary'>
 				</div>
 				<input type='hidden' name='c' value='#{code}'>
@@ -529,13 +531,7 @@ html_head = <<-"HTML"
 				<input type='hidden' name='fa' value='#{frct_accu}'>
 				<input type='hidden' name='ew' value='#{ew_mode}'>
 				<input type='hidden' name='fm' value='#{frct_mode}'>
-				<input type='hidden' name='hr' value='#{hr_image}'>
 			</form>
-		</div>
-		<div class='col-1'>
-		</div>
-		<div class='col-3'>
-			Recipe code:#{code}
 		</div>
 	</div>
 	<hr>
@@ -543,12 +539,13 @@ HTML
 
 
 #### 共通フッタ
-html_foot = <<-"HTML"
+if csc == ''
+	html_foot = <<-"HTML"
 	<hr>
 	<div class='row'>
 		<div class='col-10'>
 			<a href='https://nb.bacura.jp/'>栄養ブラウザ</a><br>
-			#{url}
+			Recipe code:<a href='#{url}'>#{code}</a>
 		</div>
 		<div class='col-2'>
 			<img src='#{$PHOTO}/#{code}-qr.png'>
@@ -556,7 +553,44 @@ html_foot = <<-"HTML"
 	</div>
 </div>
 HTML
+else
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_SCHOOLC} WHERE code='#{csc}';", false, @debug )
+	print_ins = ''
+	school_name = ''
+	qr_ins = ''
+	qr_img= ''
+	if r.first
+		print_ins = r.first['print_ins']
+		school_name = r.first['name']
+		if r.first['qr_ins'] != ''
+			makeQRcode( r.first['qr_ins'], csc )
+			qr_img = "<img src='#{$PHOTO}/#{csc}-qr.png'>"
+		end
+	end
 
+
+	html_foot = <<-"HTML"
+	<hr>
+	<div class='row'>
+		<div class='col-5'>
+			<h5>#{school_name}</h5>
+			#{print_ins}
+		</div>
+		<div class='col-2'>
+			#{qr_img}
+		</div>
+		<div class='col-3'>
+			<a href='https://nb.bacura.jp/'>栄養ブラウザ</a><br>
+			Recipe code:<br>
+			<a href='#{url}'>#{code}</a>
+		</div>
+		<div class='col-2'>
+			<img src='#{$PHOTO}/#{code}-qr.png'>
+		</div>
+	</div>
+</div>
+HTML
+end
 
 case template
 #### 基本レシピ・写真有
