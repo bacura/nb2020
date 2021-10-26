@@ -25,6 +25,8 @@ script = 'physique'
 def line( lp )
 	html = <<-"HTML"
 	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight' )">#{lp[1]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight' )">#{lp[3]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight' )">#{lp[4]}</span>
 HTML
 
 	return html

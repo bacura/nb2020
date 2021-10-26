@@ -1,9 +1,9 @@
-# Weight module for Physique 0.20b
+# Growth curve module for MomChai 0.00b
 #encoding: utf-8
 
 require 'time'
 
-@module = 'weight'
+@module = 'growth-curve'
 
 def physique_module( cgi, user, debug )
 	lp = module_lp( user.language )
@@ -73,6 +73,9 @@ html = <<-"HTML"
 					<span class='input-group-text'>#{lp[10]}</span>
 					<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}'>
 				</div>
+			</div>
+			<div class='col-2' align="right">
+				<button class='btn btn-sm btn-primary' onclick="drawChart()">#{lp[11]}</button>
 			</div>
 		</div>
 HTML
@@ -173,8 +176,6 @@ HTML
 
 		#Intake enargy
 		ienergy = []
-		total_enargy = [0, 0, 0, 0]
-		total_day = [0, 0, 0, 0]
 		persed_date = Time.parse( start_date )
 		0.upto( 95 ) do |c|
 			break if persed_date > persed_today
@@ -190,14 +191,7 @@ HTML
 			else
 				ienergy[c] = 0
 			end
-			total_enargy[( c/24 ).to_i] += ienergy[c]
-			total_day[( c/24 ).to_i] += 1
 			persed_date += 86400
-		end
-		ave_energy = [0, 0, 0, 0]
-		0.upto( 3 ) do |c|
-			ave_energy[c] = total_enargy[c] / total_day[c] if total_day[c] != 0
-			ave_energy[c] = lp[108] if total_day[c] == 0
 		end
 
 
@@ -239,32 +233,20 @@ HTML
 
 		raw = []
 		raw[0] = x_day.unshift( 'x_day' ).join( ',' )
-		raw[1] = guide.unshift( lp[103] ).join( ',' )
-		raw[2] = theoletic.unshift( lp[104] ).join( ',' )
-		raw[3] = d4sw.unshift( lp[105] ).join( ',' )
+		raw[1] = guide.unshift( 'ガイド体重' ).join( ',' )
+		raw[2] = theoletic.unshift('理論体重').join( ',' )
+		raw[3] = d4sw.unshift( 'D4安定体重' ).join( ',' )
 		raw[4] = ienergy.unshift( lp[100] ).join( ',' )
 		raw[5] = denergy.unshift( lp[101] ).join( ',' )
 		raw[6] = aenergy.unshift( lp[102] ).join( ',' )
-		raw[7] = ave_energy.join( ',' )
 		puts raw.join( ':' )
 		exit
 
 	when 'chart'
 		html = '<div class="row">'
-		html << '<div class="col-1 weight_chart">'
-		html << "#{lp[109]}<br>"
-		html << '1st period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep1' value='ごんぶと' DISABLED><br>"
-		html << '2nd period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep2' value='ごんぶと' DISABLED><br>"
-		html << '3rd period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep3' value='ごんぶと' DISABLED><br>"
-		html << 'Fianl period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep4' value='ごんぶと' DISABLED><br>"
-
-		html << '</div>'
+		html << '<div class="col-1"></div>'
 		html << '<div class="col-10"><div id="physique_weight_chart" align="center"></div></div>'
-		html << "<div class='col-1'><span onclick='drawChart()''>#{lp[11]}</span></div>"
+		html << '<div class="col-1"></div>'
 		html << '</div>'
 	end
 
@@ -290,6 +272,7 @@ def module_js( lp )
 <script type='text/javascript'>
 
 var drawChart = function(){
+	dl2 = true;
 //	dl3 = true;
 	displayBW();
 
@@ -362,16 +345,8 @@ var drawChart = function(){
 			bar: { width: { ratio: 1.0 }},
 			point: { show: true, r: 2 }
 		});
-		var average_e = ( String( column[7] )).split(',')
-		document.getElementById( 'aveep1' ).value = average_e[0];
-		document.getElementById( 'aveep2' ).value = average_e[1];
-		document.getElementById( 'aveep3' ).value = average_e[2];
-		document.getElementById( 'aveep4' ).value = average_e[3];
 	});
-
 };
-
-
 </script>
 JS
 	puts js
@@ -391,7 +366,7 @@ def module_lp( language )
 	mlp['jp'][8] = "開始日"
 	mlp['jp'][9] = "身体活動レベル"
 	mlp['jp'][10] = "予定エネルギー（kcal）"
-	mlp['jp'][11] = "<img src='bootstrap-dist/icons/bar-chart-line.svg' style='height:2em; width:2em;'>"
+	mlp['jp'][11] = "描画・更新"
 	mlp['jp'][100] = "摂取エネルギー"
 	mlp['jp'][101] = "Δ消費エネルギー"
 	mlp['jp'][102] = "実エネルギー"
@@ -400,8 +375,6 @@ def module_lp( language )
 	mlp['jp'][105] = "D4安定体重"
 	mlp['jp'][106] = "体重 (kg)"
 	mlp['jp'][107] = "エネルギー (kcal)"
-	mlp['jp'][108] = "ごんぶと"
-	mlp['jp'][109] = "Ave.Energy"
 
 	return mlp[language]
 end

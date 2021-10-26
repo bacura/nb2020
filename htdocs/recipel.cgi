@@ -40,7 +40,7 @@ def range_html( range, lp )
 	html << "<option value='2' #{range_select[2]}>#{lp[25]}</option>"
 	html << "<option value='3' #{range_select[3]}>#{lp[26]}</option>"
 	html << "<option value='4' #{range_select[4]}>#{lp[27]}</option>"
-	html << "<option value='5' #{range_select[5]}>#{lp[26]}</option>"
+	html << "<option value='5' #{range_select[5]}>#{lp[28]}</option>"
 	html << '</select>'
 
 	return html

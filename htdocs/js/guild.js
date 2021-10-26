@@ -508,12 +508,10 @@ var ginmiForm = function( mod ){
 
 // Physique init
 var initPhysique = function(){
-//	$.post( "physique.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
-//	$.post( "physique.cgi", { mod:'form' }, function( data ){ $( "#L1" ).html( data );});
-	$.post( "physique.cgi", { mod:'weight', step:'form' }, function( data ){ $( "#L1" ).html( data );});
-	$.post( "physique.cgi", { mod:'weight', step:'chart' }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "physique.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
+	$.post( "physique.cgi", { mod:'form' }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
-//	dline = true;
+	dline = true;
 	dl1 = true;
 	displayBW();
 };
@@ -521,16 +519,27 @@ var initPhysique = function(){
 var PhysiqueForm = function( mod ){
 	$.post( "physique.cgi", { mod:mod, step:'form' }, function( data ){ $( "#L1" ).html( data );});
 	$.post( "physique.cgi", { mod:mod, step:'chart' }, function( data ){ $( "#L2" ).html( data );});
+	dl2 = true;
+	displayBW();
 };
 
 /////////////////////////////////////////////////////////////////////////////////
 // Mother and child //////////////////////////////////////////////////////////////
 
 // Mother and child init
-var initMC = function(){
-
+var initMomChai = function(){
+	$.post( "momchai.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
+	$.post( "momchai.cgi", { mod:'form' }, function( data ){ $( "#L1" ).html( data );});
+	flashBW();
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
+var MomChaiForm = function( mod ){
+	$.post( "momchai.cgi", { mod:mod, step:'form' }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "momchai.cgi", { mod:mod, step:'chart' }, function( data ){ $( "#L2" ).html( data );});
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Elderly //////////////////////////////////////////////////////////////
