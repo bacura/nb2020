@@ -1,21 +1,28 @@
-# Weight module for Physique 0.20b
+# Weight loss module for Physique 0.21b
 #encoding: utf-8
 
 require 'time'
 
-@module = 'weight'
+@module = 'weight-loss'
 
 def physique_module( cgi, user, debug )
 	lp = module_lp( user.language )
 	persed_today = Time.parse( $DATE )
 
 	#importing from config
-	res = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
-	birth = res.first['birth']
-	sex = res.first['sex'].to_i
-	weight = res.first['weight'].to_f
-	height = res.first['height'].to_f * 100
-	age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
+	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
+	if r.first
+		if r.first['bio'] != nil && r.first['bio'] != ''
+			bio = JSON.parse( r.first['bio'] )
+			sex = bio['sex'].to_i
+			birth = Time.parse( bio['birth'] )
+			height = bio['height'].to_f * 100
+			weight = bio['weight'].to_f
+			kexow = bio['kexow'].to_i
+			pgene = bio['pgen'].to_i
+			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
+		end
+	end
 
 	html = ''
 	case cgi['step']
@@ -24,13 +31,11 @@ def physique_module( cgi, user, debug )
 
 		start_date = $DATE
 		pal = 1.50
-
-
 		eenergy = calc_energy( weight, height, age, sex, pal )
 
-		res = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, debug )
-		if res.first
-			mod_cfg_h = JSON.parse( res.first['json'] )
+		r = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, debug )
+		if r.first
+			mod_cfg_h = JSON.parse( r.first['json'] )
 			start_date = mod_cfg_h[@module]['start_date']
 			pal = mod_cfg_h[@module]['pal'].to_f
 			eenergy = mod_cfg_h[@module]['eenergy'].to_i
@@ -42,7 +47,8 @@ def physique_module( cgi, user, debug )
 
 html = <<-"HTML"
 		<div class='row'>
-		<h5>#{lp[3]}</h5>
+			<div class='col-11'><h5>#{lp[3]}</h5></div>
+			<div class="col-1">#{lp[110]}</div>
 		</div>
 
 		<div class='row'>
@@ -58,20 +64,20 @@ html = <<-"HTML"
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>#{lp[8]}</span>
-					<input type='date' class='form-control' id='start_date' value='#{start_date}'>
+					<input type='date' class='form-control' id='start_date' value='#{start_date}' onchange='drawChart()'>
 				</div>
 			</div>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
 					<label class="input-group-text">#{lp[9]}</label>
-					<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}'>
+					<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
 				</div>
 			</div>
 
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>#{lp[10]}</span>
-					<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}'>
+					<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}' onchange='drawChart()'>
 				</div>
 			</div>
 		</div>
@@ -251,20 +257,36 @@ HTML
 
 	when 'chart'
 		html = '<div class="row">'
-		html << '<div class="col-1 weight_chart">'
-		html << "#{lp[109]}<br>"
-		html << '1st period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep1' value='ごんぶと' DISABLED><br>"
-		html << '2nd period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep2' value='ごんぶと' DISABLED><br>"
-		html << '3rd period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep3' value='ごんぶと' DISABLED><br>"
-		html << 'Fianl period<br>'
-		html << "<input type='text' class='form-control form-control-sm' id='aveep4' value='ごんぶと' DISABLED><br>"
-
+		html << "<div class='col'><div id='physique_#{@module}-chart' align='center'></div>"
 		html << '</div>'
-		html << '<div class="col-10"><div id="physique_weight_chart" align="center"></div></div>'
-		html << "<div class='col-1'><span onclick='drawChart()''>#{lp[11]}</span></div>"
+
+	when 'notice'
+		html = "<h5>#{lp[109]}</h5>"
+		html << '<div class="row">'
+		html << '<div class="col-2">'
+		html << "<div class='input-group input-group-sm'>"
+		html << "  <span class='input-group-text'>1st period</span>"
+		html << "  <input type='text' class='form-control form-control-sm' id='aveep1' value='' DISABLED>"
+		html << "</div>"
+		html << "</div>"
+		html << '<div class="col-2">'
+		html << "<div class='input-group input-group-sm'>"
+		html << "  <span class='input-group-text'>2nd period</span>"
+		html << "  <input type='text' class='form-control form-control-sm' id='aveep2' value='' DISABLED>"
+		html << "</div>"
+		html << "</div>"
+		html << '<div class="col-2">'
+		html << "<div class='input-group input-group-sm'>"
+		html << "  <span class='input-group-text'>3rd period</span>"
+		html << "  <input type='text' class='form-control form-control-sm' id='aveep3' value='' DISABLED>"
+		html << "</div>"
+		html << "</div>"
+		html << '<div class="col-2">'
+		html << "<div class='input-group input-group-sm'>"
+		html << "  <span class='input-group-text'>fainal period</span>"
+		html << "  <input type='text' class='form-control form-control-sm' id='aveep4' value='' DISABLED>"
+		html << "</div>"
+		html << "</div>"
 		html << '</div>'
 	end
 
@@ -290,19 +312,19 @@ def module_js( lp )
 <script type='text/javascript'>
 
 var drawChart = function(){
-//	dl3 = true;
+	dl3 = true;
 	displayBW();
 
 	var start_date = document.getElementById( "start_date" ).value;
 	var pal = document.getElementById( "pal" ).value;
 	var eenergy = document.getElementById( "eenergy" ).value;
 
-//	$.post( "physique.cgi", { mod:'weight', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( "#L3" ).html( data );});
-	$.post( "physique.cgi", { mod:'weight', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
+	$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
+	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
 
 		var column = ( String( raw )).split( ':' );
 		var chart = c3.generate({
-			bindto: '#physique_weight_chart',
+			bindto: '#physique_#{@module}-chart',
 //			size: { width: 960, height: 450 },
 
 			data: {
@@ -343,12 +365,13 @@ var drawChart = function(){
 				},
 				y: {
 		    		type: 'linear',
+					padding: {top: 50, bottom: 100 },
 					label: { text: '#{lp[106]}', position: 'outer-middle' }
 				},
 				y2: {
 					show: true,
 		    		type: 'linear',
-		    		max: 4000,
+					padding: {top: 400, bottom: 0 },
 					label: { text: '#{lp[107]}', position: 'outer-middle' }
 				}
 			},
@@ -371,6 +394,7 @@ var drawChart = function(){
 
 };
 
+drawChart();
 
 </script>
 JS
@@ -401,7 +425,7 @@ def module_lp( language )
 	mlp['jp'][106] = "体重 (kg)"
 	mlp['jp'][107] = "エネルギー (kcal)"
 	mlp['jp'][108] = "ごんぶと"
-	mlp['jp'][109] = "Ave.Energy"
+	mlp['jp'][109] = "平均摂取エネルギー"
 
 	return mlp[language]
 end

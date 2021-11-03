@@ -7,7 +7,6 @@
 #LIBRARY
 #==============================================================================
 require '../nb2020-soul'
-require 'json'
 
 
 #==============================================================================
@@ -24,9 +23,9 @@ script = 'physique'
 #### line menu
 def line( lp )
 	html = <<-"HTML"
-	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight' )">#{lp[1]}</span>
-	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight' )">#{lp[3]}</span>
-	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight' )">#{lp[4]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight-loss' )">#{lp[1]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight-keep' )">#{lp[3]}</span>
+	<span class='badge rounded-pill bg-info text-dark' onclick="PhysiqueForm( 'weight-gain' )">#{lp[4]}</span>
 HTML
 
 	return html
@@ -35,7 +34,7 @@ end
 
 ####
 def init( lp )
-	html = puts lp[2]
+	html = "<div align='center'>#{lp[2]}</div>"
 
 	return html
 end

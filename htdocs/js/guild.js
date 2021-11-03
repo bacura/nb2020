@@ -509,7 +509,7 @@ var ginmiForm = function( mod ){
 // Physique init
 var initPhysique = function(){
 	$.post( "physique.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
-	$.post( "physique.cgi", { mod:'form' }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "physique.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
 	dline = true;
 	dl1 = true;

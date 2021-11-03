@@ -7,6 +7,7 @@ require 'cgi'
 require 'mysql2'
 require 'bigdecimal'
 require 'securerandom'
+require 'json'
 
 
 #==============================================================================
