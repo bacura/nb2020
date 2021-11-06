@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM food alias dictionary editor 0.01b
+#Nutrition browser GM food alias dictionary editor 0.11b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '../nb2020-soul'
+require './probe'
 
 
 #==============================================================================

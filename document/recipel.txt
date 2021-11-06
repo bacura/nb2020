@@ -1,4 +1,4 @@
-#Nutrition browser 2020 recipe list 0.01b
+#Nutrition browser 2020 recipe list 0.02b
 
 #==============================================================================
 # OVERVIEW
@@ -56,4 +56,4 @@ guild.js/addKoyomi_BWF( code ) -> koyomi-add.cgi{ command:"init", code:code }
 20200131	0.00b	βスタート
 20210424	0.01b	問題：レシピ検索リストから更に絞り込みを行うとエラーとなる。
 					解決：絞り込みの結果弾かれたDBの結果(nil)を表示リストに追加していたので、nilを追加しないようにした。
-20210920	0.10b	追加：
+20211106	0.02b	更新：probeへの対応。

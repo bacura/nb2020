@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser statistics tools 0.00b
+#Nutrition browser statistics tools 0.01b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '../nb2020-soul'
+require './probe'
 require 'fileutils'
 
 

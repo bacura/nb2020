@@ -1,4 +1,4 @@
-#Nutrition browser 2020 cboard interface 0.10b
+#Nutrition browser 2020 cboard interface 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -38,3 +38,4 @@ recipe.js/refreshCB() >	cboardm.cgi{ mode:'refresh' }
 #CHANGE LOG
 #==============================================================================
 20201231	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.10b
+#Nutrition browser 2020 print web page 0.12b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '../nb2020-soul'
+require './probe'
 require 'rqrcode'
 
 

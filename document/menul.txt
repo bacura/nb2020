@@ -1,4 +1,4 @@
-#Nutrition browser 2020 menu list 0.02b
+#Nutrition browser 2020 menu list 0.04b
 
 #==============================================================================
 # OVERVIEW
@@ -40,3 +40,4 @@ guild.js/addKoyomi( code, 1 )	->	koyomi-add.cgi{ command:"init", code:code }
 20210510	0.02b	更新：プロテクト献立はゴミ箱から削除できなくした。
 20210724	0.03b	問題：ページング機能が動かない。
 					解決：ページ番号をcfgから得る条件を変更。
+20211106	0.04b	更新：probeへの対応。

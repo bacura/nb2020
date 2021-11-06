@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser cooking school custom 0.00b
+#Nutrition browser cooking school custom 0.01b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '../nb2020-soul'
+require './probe'
 
 
 #==============================================================================

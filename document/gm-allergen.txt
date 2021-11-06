@@ -1,4 +1,4 @@
-#Nutrition browser 2020 GM allergen 0.00b
+#Nutrition browser 2020 GM allergen 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -42,3 +42,4 @@ master.js/offAllergen( code ) -> gm-allergen.cgi", { command:'off', code:code }
 #CHANGE LOG
 #==============================================================================
 20210129	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

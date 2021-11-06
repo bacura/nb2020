@@ -1,4 +1,4 @@
-#Nutrition browser 2020 GM green yellow vegitable 0.00b
+#Nutrition browser 2020 GM green yellow vegitable 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -37,3 +37,4 @@ master.js/offGYCV( food_no ) -> gm-gycv.cgi{ command:'off', food_no:food_no }
 #CHANGE LOG
 #==============================================================================
 20210129	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

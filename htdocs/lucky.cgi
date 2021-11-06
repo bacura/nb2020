@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Lucky sum input driver 0.00b
+#Nutrition browser Lucky sum input driver 0.01b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '../nb2020-soul'
+require './probe'
 
 
 #==============================================================================

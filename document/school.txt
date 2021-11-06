@@ -1,4 +1,4 @@
-#Nutrition browser cooking school 0.02b
+#Nutrition browser cooking school 0.03b
 
 #==============================================================================
 # OVERVIEW
@@ -46,3 +46,4 @@ shun.js/openSchoolk( dd, ampm )	->	school.cgi{ command:"open", yyyy_mm:yyyy_mm, 
 20200805	0.00b	βスタート
 20210426	0.01b	更新：成分パレット標準化への対応。
 20210815	0.02b	更新：ラインメニューに「カスタム」を追加。
+20211106	0.03b	更新：probeへの対応。

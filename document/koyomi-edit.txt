@@ -1,4 +1,4 @@
-#Nutrition browser 2020 koyomi editor 0.05b
+#Nutrition browser 2020 koyomi editor 0.06b
 
 #==============================================================================
 # OVERVIEW
@@ -62,3 +62,4 @@ guild/editKoyomiR( yyyy, mm ) -> koyomi.cgi{ command:"init", yyyy:yyyy, mm:mm }
 20210504	0.04b	問題：何か食べたの選択しに「何も食べていたい」がない。
 					解決：忘れていた何も食べていないコード'?0'に対応させた。
 20210526	0.05b	更新：食品量の整数以外への対応。
+20211106	0.06b	更新：probeへの対応。

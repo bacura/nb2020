@@ -1,4 +1,4 @@
-#Nutrition browser 2020 food dictionary 0.10b
+#Nutrition browser 2020 food dictionary 0.11b
 
 #==============================================================================
 # OVERVIEW
@@ -43,3 +43,4 @@ master.js/saveDic( org_name, tn ) -> gm-dic.cgi{ command:'save', org_name:org_na
 #==============================================================================
 20210129	0.00b	βスタート
 20210926	0.10b	食品群ごとに分けた
+20211106	0.11b	更新：probeへの対応。

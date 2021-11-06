@@ -1,4 +1,4 @@
-#Nutrition browser 2020 price editor 0.00
+#Nutrition browser 2020 price editor 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -51,3 +51,4 @@ recipe.js/clearCT( code ) ->	price.cgi{ command:'clearCT', code:code }
 #CHANGE LOG
 #==============================================================================
 20210209	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

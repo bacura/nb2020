@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.01b
+#Nutrition browser 2020 recipe list 0.02b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require '../nb2020-soul'
+require './probe'
 require 'fileutils'
 
 

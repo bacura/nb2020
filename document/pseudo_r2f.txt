@@ -1,4 +1,4 @@
-#Nutrition browser 2020 recipe to pseudo food 0.01b
+#Nutrition browser 2020 recipe to pseudo food 0.03b
 
 #==============================================================================
 # OVERVIEW
@@ -57,3 +57,4 @@ recipe.js/Pseudo_R2F( code ) ->	pseudo_r2f.cgi{
 					解決：ギルマスがユーザー食品番号を再利用しないようにした。
 20210404	0.02b	問題：公開食品の登録で一々ギルマスアカウントへの切り替えが面倒。
 					解決：サブマスアカウントも強制公開した。
+20211106	0.03b	更新：probeへの対応。

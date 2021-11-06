@@ -1,4 +1,4 @@
-#Nutrition browser cooking school 0.00b
+#Nutrition browser cooking school 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -31,3 +31,4 @@ shun.js/updateSchoolCustom()	->	school-custom.cgi{ command:"update" }
 #CHANGE LOG
 #==============================================================================
 20200805	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

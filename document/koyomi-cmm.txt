@@ -47,3 +47,4 @@ guild.js/cmmSaveKoyomi_direct( cm_mode, yyyy, mm, dd, tdiv, origin ) -> koyomi-c
 20210509	0.02b	更新：こよみ直行を追加
 20211015	0.03b	問題：fzcodeもコピーしてしまう
 					解決：fzcodeはコピーしないようしする。
+20211106	0.04b	更新：probeへの対応。

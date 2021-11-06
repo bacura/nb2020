@@ -1,4 +1,4 @@
-#Nutrition browser 2020 menu calc 0.00b
+#Nutrition browser 2020 menu calc 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -34,3 +34,4 @@ recipe.js/menuRecalcView( code ) ->	menu-calc.cgi{ command:'view', code:code, pa
 #CHANGE LOG
 #==============================================================================
 20210210	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

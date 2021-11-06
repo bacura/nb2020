@@ -1,4 +1,4 @@
-# Weight loss module for Physique 0.21b
+# Weight loss module for Physique 0.23b
 #encoding: utf-8
 
 require 'time'
@@ -6,7 +6,7 @@ require 'time'
 @module = 'weight-loss'
 
 def physique_module( cgi, user, debug )
-	lp = module_lp( user.language )
+	l = module_lp( user.language )
 	persed_today = Time.parse( $DATE )
 
 	#importing from config
@@ -27,7 +27,7 @@ def physique_module( cgi, user, debug )
 	html = ''
 	case cgi['step']
 	when 'form'
-		module_js( lp )
+		module_js( l )
 
 		start_date = $DATE
 		pal = 1.50
@@ -41,20 +41,19 @@ def physique_module( cgi, user, debug )
 			eenergy = mod_cfg_h[@module]['eenergy'].to_i
 		end
 
-		sex_ = [lp[1], lp[2]]
+		sex_ = [l['male'], l['female']]
 		female_selected = ''
 		female_selected = 'SELECTED ' if sex == 1
 
 html = <<-"HTML"
 		<div class='row'>
-			<div class='col-11'><h5>#{lp[3]}</h5></div>
-			<div class="col-1">#{lp[110]}</div>
+			<div class='col'><h5>#{l['chart_name']}</h5></div>
 		</div>
 
 		<div class='row'>
 		<div class='col-6'>
 		<table class='table table-sm'>
-			<thead><th></th><th>#{lp[4]}</th><th>#{lp[5]}</th><th>#{lp[6]}</th><th>#{lp[7]}</th></thead>
+			<thead><th></th><th>#{l['sex']}</th><th>#{l['age']}</th><th>#{l['height']}</th><th>#{l['weight']}</th></thead>
 			<tr><td></td><td>#{sex_[sex]}</td><td>#{age}</td><td>#{height}</td><td>#{weight}</td></tr>
 		</table>
 		</div>
@@ -63,20 +62,20 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{lp[8]}</span>
+					<span class='input-group-text'>#{l['start_date']}</span>
 					<input type='date' class='form-control' id='start_date' value='#{start_date}' onchange='drawChart()'>
 				</div>
 			</div>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<label class="input-group-text">#{lp[9]}</label>
-					<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
+					<label class="input-group-text">#{l['pal']}</label>
+					<input type='number' min='0.5' max='2.5' step='0.1' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
 				</div>
 			</div>
 
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{lp[10]}</span>
+					<span class='input-group-text'>#{l['eenergy']}</span>
 					<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}' onchange='drawChart()'>
 				</div>
 			</div>
@@ -203,7 +202,7 @@ HTML
 		ave_energy = [0, 0, 0, 0]
 		0.upto( 3 ) do |c|
 			ave_energy[c] = total_enargy[c] / total_day[c] if total_day[c] != 0
-			ave_energy[c] = lp[108] if total_day[c] == 0
+			ave_energy[c] = l['empty'] if total_day[c] == 0
 		end
 
 
@@ -245,12 +244,12 @@ HTML
 
 		raw = []
 		raw[0] = x_day.unshift( 'x_day' ).join( ',' )
-		raw[1] = guide.unshift( lp[103] ).join( ',' )
-		raw[2] = theoletic.unshift( lp[104] ).join( ',' )
-		raw[3] = d4sw.unshift( lp[105] ).join( ',' )
-		raw[4] = ienergy.unshift( lp[100] ).join( ',' )
-		raw[5] = denergy.unshift( lp[101] ).join( ',' )
-		raw[6] = aenergy.unshift( lp[102] ).join( ',' )
+		raw[1] = guide.unshift( l['data_guide'] ).join( ',' )
+		raw[2] = theoletic.unshift( l['data_theoletic'] ).join( ',' )
+		raw[3] = d4sw.unshift( l['data_d4sw'] ).join( ',' )
+		raw[4] = ienergy.unshift( l['data_ienergy'] ).join( ',' )
+		raw[5] = denergy.unshift( l['data_denergy'] ).join( ',' )
+		raw[6] = aenergy.unshift( l['data_aenergy'] ).join( ',' )
 		raw[7] = ave_energy.join( ',' )
 		puts raw.join( ':' )
 		exit
@@ -261,7 +260,7 @@ HTML
 		html << '</div>'
 
 	when 'notice'
-		html = "<h5>#{lp[109]}</h5>"
+		html = "<h5>#{l['bw_name']}</h5>"
 		html << '<div class="row">'
 		html << '<div class="col-2">'
 		html << "<div class='input-group input-group-sm'>"
@@ -307,7 +306,7 @@ def calc_energy( weight, height, age, sex, pal )
 end
 
 
-def module_js( lp )
+def module_js( l )
 	js = <<-"JS"
 <script type='text/javascript'>
 
@@ -339,23 +338,23 @@ var drawChart = function(){
 				],
 				x: 'x_day',
 				axes: {
-					#{lp[100]}: 'y2',
-					#{lp[101]}: 'y2',
-					#{lp[102]}: 'y2'
+					#{l['data_ienergy']}: 'y2',
+					#{l['data_denergy']}: 'y2',
+					#{l['data_aenergy']}: 'y2'
 				},
 				labels: false,
 				type : 'line',
-				types: { #{lp[100]}: 'area-step', #{lp[101]}: 'area-step', #{lp[102]}: 'area-step' },
+				types: { #{l['data_ienergy']}: 'area-step', #{l['data_denergy']}: 'area-step', #{l['data_aenergy']}: 'area-step' },
 				colors: {
-					#{lp[103]}: '#d3d3d3',
-					#{lp[104]}: '#228b22',
-					#{lp[105]}: '#dc143c',
-					#{lp[100]}: '#ffd700',
-					#{lp[101]}: '#00ffff',
-					#{lp[102]}: '#d2691e'
+					#{l['data_guide']}: '#d3d3d3',
+					#{l['data_theoletic']}: '#228b22',
+					#{l['data_d4sw']}: '#dc143c',
+					#{l['data_ienergy']}: '#ffd700',
+					#{l['data_denergy']}: '#00ffff',
+					#{l['data_aenergy']}: '#d2691e'
 				},
 				regions: {
-					#{lp[103]}: { 'start':0, 'style':'dashed' }
+					#{l['data_guide']}: { 'start':0, 'style':'dashed' }
 				}
 			},
 
@@ -366,13 +365,13 @@ var drawChart = function(){
 				y: {
 		    		type: 'linear',
 					padding: {top: 50, bottom: 100 },
-					label: { text: '#{lp[106]}', position: 'outer-middle' }
+					label: { text: '#{l['label_weight']}', position: 'outer-middle' }
 				},
 				y2: {
 					show: true,
 		    		type: 'linear',
 					padding: {top: 400, bottom: 0 },
-					label: { text: '#{lp[107]}', position: 'outer-middle' }
+					label: { text: '#{l['label_energy']}', position: 'outer-middle' }
 				}
 			},
 
@@ -403,29 +402,29 @@ end
 
 
 def module_lp( language )
-	mlp = Hash.new
-	mlp['jp'] = []
-	mlp['jp'][1] = "男性"
-	mlp['jp'][2] = "女性"
-	mlp['jp'][3] = "減量チャート"
-	mlp['jp'][4] = "代謝的性別"
-	mlp['jp'][5] = "年齢"
-	mlp['jp'][6] = "身長（cm）"
-	mlp['jp'][7] = "初期体重（kg）"
-	mlp['jp'][8] = "開始日"
-	mlp['jp'][9] = "身体活動レベル"
-	mlp['jp'][10] = "予定エネルギー（kcal）"
-	mlp['jp'][11] = "<img src='bootstrap-dist/icons/bar-chart-line.svg' style='height:2em; width:2em;'>"
-	mlp['jp'][100] = "摂取エネルギー"
-	mlp['jp'][101] = "Δ消費エネルギー"
-	mlp['jp'][102] = "実エネルギー"
-	mlp['jp'][103] = "ガイド体重"
-	mlp['jp'][104] = "理論体重"
-	mlp['jp'][105] = "D4安定体重"
-	mlp['jp'][106] = "体重 (kg)"
-	mlp['jp'][107] = "エネルギー (kcal)"
-	mlp['jp'][108] = "ごんぶと"
-	mlp['jp'][109] = "平均摂取エネルギー"
 
-	return mlp[language]
+	l = Hash.new
+	l['jp'] = { 'male' => "男性",\
+		'female' => "女性",\
+		'chart_name' => "減量チャート",\
+		'sex' => "代謝的性別",\
+		'age' => "年齢",\
+		'height' => "身長（cm）",\
+		'weight' => "初期体重（kg）",\
+		'start_date' => "開始日",\
+		'pal' => "身体活動レベル",\
+		'eenergy' => "予定エネルギー（kcal）",\
+		'data_ienergy' => "摂取エネルギー",\
+		'data_denergy' => "Δ消費エネルギー",\
+		'data_aenergy' => "実エネルギー",\
+		'data_guide' => "ガイド体重",\
+		'data_theoletic' => "理論体重",\
+		'data_d4sw' => "D4安定体重",\
+		'label_weight' => "体重 (kg)",\
+		'label_energy' => "エネルギー (kcal)",\
+		'empty' => "ごんぶと",\
+		'bw_name' => "平均摂取エネルギー",\
+	}
+
+	return l[language]
 end

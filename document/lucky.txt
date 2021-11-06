@@ -1,4 +1,4 @@
-#Nutrition browser 2020 Lucky sum input driver 0.00b
+#Nutrition browser 2020 Lucky sum input driver 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -31,3 +31,4 @@ lucky_data.to_s		#
 #CHANGE LOG
 #==============================================================================
 20210212	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

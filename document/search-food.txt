@@ -1,4 +1,4 @@
-#Nutrition browser 2020 food search 0.00b
+#Nutrition browser 2020 food search 0.01b
 
 #==============================================================================
 # OVERVIEW
@@ -34,3 +34,4 @@ core.js/search()	->	search-food.cgi{ words:words }
 #CHANGE LOG
 #==============================================================================
 20210310	0.00b	βスタート
+20211106	0.01b	更新：probeへの対応。

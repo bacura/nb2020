@@ -46,3 +46,4 @@ photoDel( code, mcode, base )	->	photo.cgi{ command:'delete', code:code, mcode:m
 20210128	0.00b	βスタート
 20210325	0.10b	media classに対応させ、暦からも利用可能にした。
 20210424	0.11b	テンポラリファイルを削除しない設定をつけた。
+20211106	0.12b	更新：probeへの対応。

@@ -6,7 +6,7 @@ require 'time'
 @module = 'weight-keep'
 
 def physique_module( cgi, user, debug )
-	lp = module_lp( user.language )
+	l = module_lp( user.language )
 	persed_today = Time.parse( $DATE )
 
 	#importing from config
@@ -27,7 +27,7 @@ def physique_module( cgi, user, debug )
 	html = ''
 	case cgi['step']
 	when 'form'
-		module_js( lp )
+		module_js( l )
 
 		start_date = $DATE
 		pal = 1.50
@@ -39,20 +39,19 @@ def physique_module( cgi, user, debug )
 			pal = mod_cfg_h[@module]['pal'].to_f
 		end
 
-		sex_ = [lp[1], lp[2]]
+		sex_ = [l['male'], l['female']]
 		female_selected = ''
 		female_selected = 'SELECTED ' if sex == 1
 
 html = <<-"HTML"
 		<div class='row'>
-			<div class='col-11'><h5>#{lp[3]}</h5></div>
-			<div class="col-1">#{lp[110]}</div>
+			<div class='col'><h5>#{l['chart_name']}</h5></div>
 		</div>
 
 		<div class='row'>
 		<div class='col-6'>
 		<table class='table table-sm'>
-			<thead><th></th><th>#{lp[4]}</th><th>#{lp[5]}</th><th>#{lp[6]}</th><th>#{lp[7]}</th></thead>
+			<thead><th></th><th>#{l['sex']}</th><th>#{l['age']}</th><th>#{l['height']}</th><th>#{l['weight']}</th></thead>
 			<tr><td></td><td>#{sex_[sex]}</td><td>#{age}</td><td>#{height}</td><td>#{weight}</td></tr>
 		</table>
 		</div>
@@ -61,13 +60,13 @@ html = <<-"HTML"
 		<div class='row'>
 			<div class='col-3'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{lp[8]}</span>
+					<span class='input-group-text'>#{l['start_date']}</span>
 					<input type='date' class='form-control' id='start_date' value='#{start_date}' onchange='drawChart()'>
 				</div>
 			</div>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<label class="input-group-text">#{lp[9]}</label>
+					<label class="input-group-text">#{l['pal']}</label>
 					<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
 				</div>
 			</div>
@@ -135,28 +134,32 @@ HTML
 			persed_date += 86400
 		end
 
+		m_energy = calc_energy( recent_weight, height, age, sex, pal )
 		delta_weight = recent_weight - weight
 		delta_energy = 0.0
 		if delta_weight > 0
 			if delta_weight > 1
-				delta_energy = -7200 / 24
+				delta_energy = 7200 / 24
+				m_energy = ( m_energy / 100 ).floor * 100 - delta_energy
 			else
-				delta_energy = - delta_weight * 7200 / 24
+				delta_energy = delta_weight * 7200 / 24
+				m_energy = ( m_energy / 100 ).round * 100 - delta_energy
 			end
 		else
 			if delta_weight < -1
-				delta_energy = 7200 /24
+				delta_energy = -7200 /24
+				m_energy = ( m_energy / 100 ).ceil * 100 - delta_energy
 			else
 				delta_energy = delta_weight * 7200 / 24
+				m_energy = ( m_energy / 100 ).round * 100 - delta_energy
 			end
 		end
-		m_energy = calc_energy( recent_weight, height, age, sex, pal ) + delta_energy
 		m_energy -= 200 if pgene == 1
 
 		raw = []
 		raw[0] = x_day.unshift( 'x_day' ).join( ',' )
-		raw[1] = measured_weight.unshift( lp[100] ).join( ',' )
-		raw[2] = bfr.unshift( lp[101] ).join( ',' )
+		raw[1] = measured_weight.unshift( l['data_weight'] ).join( ',' )
+		raw[2] = bfr.unshift( l['data_bfr'] ).join( ',' )
 		raw[9] = m_energy.to_i
 
 		puts raw.join( ':' )
@@ -172,7 +175,7 @@ HTML
 		html << '<div class="row">'
 		html << '<div class="col-3">'
 		html << "<div class='input-group input-group-sm'>"
-		html << "  <span class='input-group-text'>#{lp[11]}</span>"
+		html << "  <span class='input-group-text'>#{l['menergy']}</span>"
 		html << "  <input type='text' class='form-control form-control-sm' id='menergy' value='' DISABLED>"
 		html << "</div>"
 		html << '</div>'
@@ -195,7 +198,7 @@ def calc_energy( weight, height, age, sex, pal )
 end
 
 
-def module_js( lp )
+def module_js( l )
 	js = <<-"JS"
 <script type='text/javascript'>
 
@@ -225,13 +228,13 @@ var drawChart = function(){
 				],
 				x: 'x_day',
 				axes: {
-					#{lp[101]}: 'y2',
+					#{l['data_bfr']}: 'y2',
 				},
 				labels: false,
 				type : 'line',
 				colors: {
-					#{lp[100]}: '#dc143c',
-					#{lp[101]}: '#228b22'
+					#{l['data_weight']}: '#dc143c',
+					#{l['data_bfr']}: '#228b22'
 				},
 			},
 
@@ -243,14 +246,14 @@ var drawChart = function(){
 				y: {
 		    		type: 'linear',
 					padding: {top: 100, bottom: 200 },
-					label: { text: '#{lp[102]}', position: 'outer-middle' }
+					label: { text: '#{l['label_weight']}', position: 'outer-middle' }
 				},
 				y2: {
 					show: true,
 		    		type: 'linear',
 					padding: {top: 200, bottom: 100},
  					tick: { format: d3.format("01d") },
- 					label: { text: '#{lp[103]}', position: 'outer-middle' }
+ 					label: { text: '#{l['label_bfr']}', position: 'outer-middle' }
 				}
 			},
 
@@ -266,11 +269,11 @@ var drawChart = function(){
 
 //--------------------------------------------------------------------------
 		var day_size = x_day.length - 1;
-		var rd_weight = ['#{lp[106]}'];
+		var rd_weight = ['#{l['data_latest']}'];
 		var rd_bfr = ['rd_bfr'];
-		var p_weight = ['#{lp[105]}'];
+		var p_weight = ['#{l['data_recent']}'];
 		var p_bfr = ['p_bfr'];
-		var r_weight = ['#{lp[104]}'];
+		var r_weight = ['#{l['data_past']}'];
 		var r_bfr = ['r_bfr'];
 		var rd_flag = true;
 		var p_flag = true;
@@ -305,20 +308,20 @@ var drawChart = function(){
 					rd_weight,
 					rd_bfr
 				],
-				xs: { #{lp[106]}:'rd_bfr', #{lp[105]}:'p_bfr', #{lp[104]}:'r_bfr' },
+				xs: { #{l['data_latest']}:'rd_bfr', #{l['data_recent']}:'p_bfr', #{l['data_past']}:'r_bfr' },
 				labels: true,
 				type : 'scatter',
-				colors: { #{lp[106]}:'#dc143c', #{lp[105]}:'#00ff00', #{lp[104]}:'#c0c0c0'}
+				colors: { #{l['data_latest']}:'#dc143c', #{l['data_recent']}:'#00ff00', #{l['data_past']}:'#c0c0c0'}
 			},
 
 			axis: {
 		    	x: {
-					label: { text: '#{lp[103]}', position: 'outer-center' },
+					label: { text: '#{l['label_bfr']}', position: 'outer-center' },
 					padding: {left: 1, right: 1 },
 					tick: { fit: false }
 				},
 				y: {
-					label: { text: '#{lp[102]}', position: 'outer-middle' },
+					label: { text: '#{l['label_weight']}', position: 'outer-middle' },
 					padding: {top: 20, bottom: 20 },
 					tick: { fit: false }
 				},
@@ -333,7 +336,6 @@ var drawChart = function(){
 		});
 
 		var menergy = column[9];
-		displayVIDEO(menergy);
 		document.getElementById( 'menergy' ).value = menergy;
 	});
 
@@ -348,26 +350,25 @@ end
 
 
 def module_lp( language )
-	mlp = Hash.new
-	mlp['jp'] = []
-	mlp['jp'][1] = "男性"
-	mlp['jp'][2] = "女性"
-	mlp['jp'][3] = "維持チャート"
-	mlp['jp'][4] = "代謝的性別"
-	mlp['jp'][5] = "年齢"
-	mlp['jp'][6] = "身長（cm）"
-	mlp['jp'][7] = "維持体重（kg）"
-	mlp['jp'][8] = "開始日"
-	mlp['jp'][9] = "身体活動レベル"
-	mlp['jp'][10] = "予定エネルギー（kcal）"
-	mlp['jp'][11] = "目安摂取エネルギー（kcal）"
-	mlp['jp'][100] = "体重"
-	mlp['jp'][101] = "体脂肪率"
-	mlp['jp'][102] = "体重 (kg)"
-	mlp['jp'][103] = "体脂肪率 (%)"
-	mlp['jp'][104] = "過去"
-	mlp['jp'][105] = "最近"
-	mlp['jp'][106] = "直近"
+	l = Hash.new
+	l['jp'] = { 'male' => "男性",\
+		'female' => "女性",\
+		'chart_name' => "維持チャート",\
+		'sex' => "代謝的性別",\
+		'age' => "年齢",\
+		'height' => "身長（cm）",\
+		'weight' => "維持体重（kg）",\
+		'start_date' => "開始日",\
+		'pal' => "身体活動レベル",\
+		'menergy' => "目安摂取エネルギー（kcal）",\
+		'data_weight' => "体重",\
+		'data_bfr' => "体脂肪率",\
+		'label_weight' => "体重 (kg)",\
+		'label_bfr' => "体脂肪率 (%)",\
+		'data_past' => "過去",\
+		'data_recent' => "最近",\
+		'data_latest' => "直近"
+	}
 
-	return mlp[language]
+	return l[language]
 end
