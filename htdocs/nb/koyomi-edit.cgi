@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.06b
+#Nutrition browser 2020 koyomi editor 0.10b
 
 
 #==============================================================================
@@ -14,19 +14,19 @@ require './probe'
 #==============================================================================
 script = 'koyomi-edit'
 @debug = false
-@tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
 
 
 #==============================================================================
 # DEFINITION
 #==============================================================================
-def meals( e, lp, uname, freeze_flag )
+def meals( e, lp, user, freeze_flag )
 	mb_html = "<table class='table table-sm table-hover'>"
 	mb_html << "<thead>"
 	mb_html << "<tr>"
 	mb_html << "<td>#{lp[8]}</td>"
 	mb_html << "<td>#{lp[9]}</td>"
 	mb_html << "<td>#{lp[10]}</td>"
+	mb_html << "<td>#{lp[21]}</td>"
 	mb_html << "<td></td>"
 	mb_html << "</tr>"
 	mb_html << "</thead>"
@@ -34,7 +34,7 @@ def meals( e, lp, uname, freeze_flag )
 	a = e['koyomi'].split( "\t" )
 	c = 0
 	a.each do |ee|
-		aa = ee.split( ':' )
+		aa = ee.split( '~' )
 		if aa[2].to_i == 99
 			unit = '%'
 		else
@@ -56,8 +56,8 @@ def meals( e, lp, uname, freeze_flag )
 				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
 			end
 			onclick = ""
-		elsif /\-f\-/ =~ aa[0]
-			rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
+		elsif /\-z\-/ =~ aa[0]
+			rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{aa[0]}' AND base='fix';", false, @debug )
 			if rr.first
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
@@ -78,7 +78,7 @@ def meals( e, lp, uname, freeze_flag )
 			end
 		else
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
-			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U\d{5}/ =~ aa[0]
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{user.name}';" if /^U\d{5}/ =~ aa[0]
 			rr = mdb( q, false, @debug )
 			if rr.first
 				item_name = rr.first['name']
@@ -90,7 +90,7 @@ def meals( e, lp, uname, freeze_flag )
 		mb_html << "<tr>"
 		mb_html << "<td#{onclick}>#{item_name}</td>"
 
-		if /\-f\-/ =~ aa[0] ||  /^\?/ =~ aa[0]
+		if /\-z\-/ =~ aa[0] ||  /^\?/ =~ aa[0]
 			mb_html << "<td#{onclick}>-</td>"
 		elsif /\-m\-/ =~ aa[0] || /\-/ =~ aa[0]
 			mb_html << "<td#{onclick}>#{aa[1]}&nbsp;#{unit}</td>"
@@ -101,11 +101,8 @@ def meals( e, lp, uname, freeze_flag )
 			mb_html << "<td#{onclick}>#{aa[1]}&nbsp;#{unit}#{uw}</td>"
 		end
 
-		if aa[3] == '99'
-			mb_html << "<td#{onclick}>-</td>"
-		else
-			mb_html << "<td#{onclick}>#{aa[3]}:00</td>"
-		end
+		mb_html << "<td#{onclick}>#{aa[3]}</td>"
+		mb_html << "<td#{onclick}>#{aa[4]}</td>"
 
 		if freeze_flag == 0
 			mb_html << "<td>"
@@ -134,146 +131,7 @@ def meals( e, lp, uname, freeze_flag )
 end
 
 
-#### Multi calc_subset
-def multi_calc_sub( uname, yyyy, mm, dd, tdiv, fc_items, fct_start, fct_end, fct_item, fct_name, fct_frct )
-	results = ''
-	fct_total = Hash.new
-	fct_total.default = BigDecimal( 0 )
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{uname}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
-	if r.first
-  		r.each do |e|
-			menu_set = []
-			code_set = []
-			rate_set = []
-			unit_set = []
-
-			a = e['koyomi'].split( "\t" )
-			a.each do |ee|
-				( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( ':' )
-				code_set << koyomi_code
-				rate_set << koyomi_rate
-				unit_set << koyomi_unit
-			end
-
-			code_set.size.times do |c|
-				code = code_set[c]
-				food_weight, rate = food_weight_check( rate_set[c] )
-				unit = unit_set[c].to_i
-
-				if /^\?/ =~ code
-				elsif /\-f\-/ =~ code
-					puts 'FIX<br>' if @debug
-					rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
-					if rr.first
-						fct_start.upto( fct_end ) do |cc|
-							fct_total[fct_item[cc]] += BigDecimal( num_opt( rr.first[fct_item[cc]], 100, 1, fct_frct[fct_item[cc]] + 3 )) unless rr.first[fct_item[cc]] == '-'
-						end
-					end
-				else
-					recipe_set = []
-					fn_set = []
-					weight_set = []
-					if /\-m\-/ =~ code
-						rr = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, @debug )
-						if rr.first
-							a = rr.first['meal'].split( "\t" )
-							a.each do |e| recipe_set << e end
-						end
-					end
-					recipe_set << code if recipe_set.size == 0
-
-					recipe_set.size.times do |cc|
-						recipe_total_weight = BigDecimal( 0 )
-
-						if /\-r\-/ =~ recipe_set[cc] || /\w+\-\h{4}\-\h{4}/ =~ recipe_set[cc]
-							puts 'Recipe<br>' if @debug
-							rr = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{recipe_set[cc]}';", false, @debug )
-							if rr.first
-								a = rr.first['sum'].split( "\t" )
-								a.each do |eee|
-									( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = eee.split( ':' )
-
-									if sum_no != '+' && sum_no != '-'
-										fn_set << sum_no
-										sum_ew = sum_weight if sum_ew == nil
-										weight_set << ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
-										recipe_total_weight += ( BigDecimal( sum_ew ) / rr.first['dish'].to_i )
-									end
-								end
-							end
-
-							if unit == 99
-								weight_set.map! do |x| x * rate / 100 end
-							else
-								weight_set.map! do |x| x * rate / recipe_total_weight end
-							end
-						end
-					end
-
-					# food
-					if fn_set.size == 0
-						fn_set << code
-						weight_set << rate
-					end
-
-					#
-					if unit != 0 && unit != 99
-						fn_set.size.times do |cc|
-							weight_set[cc] = unit_weight( weight_set[cc], unit, fn_set[cc] )
-						end
-					end
-
-					fn_set.size.times do |cc|
-						query = ''
-						if /^P/ =~ fn_set[cc]
-							query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[cc]}';"
-						elsif /^U/ =~ fn_set[cc]
-							query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{fn_set[cc]}' AND user='#{uname}';"
-						else
-							query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{fn_set[cc]}';"
-						end
-
-						rr = mdb( query, false, @debug )
-						if rr.first
-							fct_start.upto( fct_end ) do |ccc|
-								t = convert_zero( rr.first[fct_item[ccc]] )
-								fct_total[fct_item[ccc]] += BigDecimal( num_opt( t, weight_set[cc], 1, fct_frct[fct_item[ccc]] + 3 ))
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-	fct_total.each do |k, v| fct_total[k] = v.round( fct_frct[k] ) end
-	fc_items.each do |e| results << "#{fct_name[e]}[#{fct_total[e].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;" end
-
-	return results
-end
-
-
-# Getting start year & standard meal time
-def get_starty( uname )
-	start_year = Time.now.year
-	breakfast_st = 0
-	lunch_st = 0
-	dinner_st = 0
-	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		start_year = a[0].to_i if a[0].to_i != 0
-		breakfast_st = a[1].to_i if a[1].to_i != 0
-		lunch_st = a[2].to_i if a[2].to_i != 0
-		dinner_st = a[3].to_i if a[3].to_i != 0
-	end
-	st_set = [ breakfast_st, lunch_st, dinner_st ]
-
-	return start_year, st_set
-end
-
-
-#### View hotos series
+#### View photos series
 def view_series( user, code, del_icon, size, dd )
 	media = Media.new( user )
 	media.code = code
@@ -306,9 +164,19 @@ user = User.new( @cgi )
 user.debug if @debug
 lp = user.load_lp( script )
 
-start_year, st_set = get_starty( user.name )
 
-#### Getting POST
+puts 'Getting koyomi start year<br>' if @debug
+r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+if r.first
+	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+		koyomi = JSON.parse( r.first['koyomi'] )
+		start_yesr = koyomi['start'].to_i
+		p koyomi if @debug
+	end
+end
+
+
+puts 'Getting POST' if @debug
 command = @cgi['command']
 yyyy = @cgi['yyyy'].to_i
 mm = @cgi['mm'].to_i
@@ -319,19 +187,16 @@ unless yyyy_mm == ''
 	yyyy = a[0].to_i
 	mm = a[1].to_i
 end
-hh = @cgi['hh'].to_i
 tdiv = @cgi['tdiv'].to_i
 code = @cgi['code']
 memo = @cgi['memo']
 order = @cgi['order'].to_i
 some = @cgi['some']
-
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
 	puts "mm:#{mm}<br>\n"
 	puts "dd:#{dd}<br>\n"
-	puts "hh:#{hh}<br>\n"
 	puts "tdiv:#{tdiv}<br>\n"
 	puts "code:#{code}<br>\n"
 	puts "memo:#{memo}<br>\n"
@@ -341,8 +206,8 @@ if @debug
 end
 
 
-#### Delete
 if command == 'delete'
+	puts 'Deleting food<br>' if @debug
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 	a = r.first['koyomi'].split( "\t" )
 	new_meal = ''
@@ -352,12 +217,12 @@ if command == 'delete'
 	new_meal.chop!
 
 	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_meal}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
-#	mdb( "DELETE FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug ) 	if /\-f\-/ =~ code
+	mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug ) 	if /\-z\-/ =~ code
 end
 
 
-#### Updating memo
 if command == 'memo'
+	puts 'Updating memo<br>' if @debug
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='4';", false, @debug )
 	if r.first
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{memo}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='4';", false, @debug )
@@ -369,8 +234,7 @@ end
 
 if command == 'some'
 	puts 'Saving Something<br>' if @debug
-	hh = st_set[tdiv] if hh == 99
-	koyomi = "#{some}:100:99:#{hh}"
+	koyomi = "#{some}~0~0~0~0"
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	if r.first
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
@@ -384,7 +248,6 @@ puts 'Deleting empty entry<br>' if @debug
 mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=0 AND ( koyomi='' OR koyomi IS NULL OR DATE IS NULL );", false, @debug )
 
 
-####
 puts 'Setting palette<br>' if @debug
 freeze_flag = 0
 koyomi_html = []
@@ -406,30 +269,22 @@ r.each do |e|
 	if e['tdiv'] == 4
 		koyomi_html[e['tdiv']] = e['koyomi']
 	else
-		koyomi_html[e['tdiv']] = meals( e, lp, user.name, freeze_flag )
-		koyomi_html[e['tdiv']] << multi_calc_sub(  user.name, yyyy, mm, dd, e['tdiv'], fc_items, @fct_start, @fct_end, @fct_item, @fct_name, @fct_frct )
+		koyomi_html[e['tdiv']] = meals( e, lp, user, freeze_flag )
+		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='freeze' AND code='#{e['fzcode']}';", false, @debug )
+		if rr.first
+			total_html = ''
+			fc_items.each do |ee|
+				if ee == 'ENERC_KCAL'
+					total_html << "#{@fct_name[ee]}[#{rr.first[ee].to_i}]&nbsp;&nbsp;&nbsp;&nbsp;"
+				else
+					total_html << "#{@fct_name[ee]}[#{rr.first[ee].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;"
+				end
+			end
+			koyomi_html[e['tdiv']] << total_html
+		end
 	end
 end
 
-
-####
-puts 'Setting something<br>' if @debug
-some_html = [ '', '', '', '' ]
-if freeze_flag == 0
-	0.upto( 3 ) do |c|
-		some_html[c] = <<-"SOME"
-		<select class='form-select form-select-sm' id='some#{c}' onchange="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', #{c}, 'some#{c}' )">
-			<option value='' selected>#{lp[20]}</option>
-			<option value='?--'>#{@something['?--']}</option>
-			<option value='?-'>#{@something['?-']}</option>
-			<option value='?='>#{@something['?=']}</option>
-			<option value='?+'>#{@something['?+']}</option>
-			<option value='?++'>#{@something['?++']}</option>
-			<option value='?0'>#{@something['?0']}</option>
-		</select>
-SOME
-	end
-end
 
 ####
 cmm_html = [ '', '', '', '' ]
@@ -449,8 +304,26 @@ cmm_html = [ '', '', '', '' ]
 end
 
 
-####
-# photo upload form
+puts 'Setting something<br>' if @debug
+some_html = [ '', '', '' ]
+if freeze_flag == 0
+	0.upto( 2 ) do |c|
+		some_html[c] = <<-"SOME"
+		<select class='form-select form-select-sm' id='some#{c}' onchange="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', #{c}, 'some#{c}' )">
+			<option value='' selected>#{lp[20]}</option>
+			<option value='?--'>#{@something['?--']}</option>
+			<option value='?-'>#{@something['?-']}</option>
+			<option value='?='>#{@something['?=']}</option>
+			<option value='?+'>#{@something['?+']}</option>
+			<option value='?++'>#{@something['?++']}</option>
+			<option value='?0'>#{@something['?0']}</option>
+		</select>
+SOME
+	end
+end
+
+
+puts 'photo upload form<br>' if @debug
 form_photo = []
 disabled = ''
 disabled = 'DISABLED' if freeze_flag == 1
@@ -463,7 +336,7 @@ disabled = 'DISABLED' if freeze_flag == 1
 end
 
 
-# photo frame
+puts 'photo frame<br>' if @debug
 photo_frame = []
 disabled = ''
 disabled = 'DISABLED' if freeze_flag == 1
@@ -497,66 +370,75 @@ html = <<-"HTML"
 		<div align='center' class='col-10 joystic_koyomi' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</div>
 	</div>
 	<br>
+
 	<div class='row'>
-		<div class='col-1'><h5>#{lp[1]}</h5></div>
-		<div class='col-6'>
+		<h6>#{lp[1]}</h6>
+		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[0]}
 				#{some_html[0]}
 			</div>
-			#{koyomi_html[0]}
 		</div>
-		<div class='col-5'>
-			#{form_photo[0]}
-			#{photo_frame[0]}
-		</div>
+		<div class='col-3'></div>
+		<div class='col-5'>#{form_photo[0]}</div>
+	</div>
+	<div class='row'>
+		<div class='col-7'>#{koyomi_html[0]}</div>
+		<div class='col-5'>#{photo_frame[0]}</div>
 	</div>
 	<hr>
+
 	<div class='row'>
-		<div class='col-1'><h5>#{lp[2]}</h5></div>
-		<div class='col-6'>
+		<h6>#{lp[2]}</h6>
+		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[1]}
 				#{some_html[1]}
 			</div>
-			#{koyomi_html[1]}
 		</div>
-		<div class='col-5'>
-			#{form_photo[1]}
-			#{photo_frame[1]}
-		</div>
+		<div class='col-3'></div>
+		<div class='col-5'>#{form_photo[1]}</div>
+	</div>
+	<div class='row'>
+		<div class='col-7'>#{koyomi_html[1]}</div>
+		<div class='col-5'>#{photo_frame[1]}</div>
 	</div>
 	<hr>
+
 	<div class='row'>
-		<div class='col-1'><h5>#{lp[3]}</h5></div>
-		<div class='col-6'>
+		<h6>#{lp[3]}</h6>
+		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[2]}
 				#{some_html[2]}
 			</div>
-			#{koyomi_html[2]}
 		</div>
-		<div class='col-5'>
-			#{form_photo[2]}
-			#{photo_frame[2]}
-		</div>
+		<div class='col-3'></div>
+		<div class='col-5'>#{form_photo[2]}</div>
+	</div>
+	<div class='row'>
+		<div class='col-7'>#{koyomi_html[2]}</div>
+		<div class='col-5'>#{photo_frame[2]}</div>
 	</div>
 	<hr>
+
 	<div class='row'>
-		<div class='col-1'><h5>#{lp[4]}</h5></div>
-		<div class='col-6'>
+		<h6>#{lp[4]}</h6>
+		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[3]}
 				#{some_html[3]}
 			</div>
-			#{koyomi_html[3]}
 		</div>
-		<div class='col-5'>
-			#{form_photo[3]}
-			#{photo_frame[3]}
-		</div>
+		<div class='col-3'></div>
+		<div class='col-5'>#{form_photo[3]}</div>
+	</div>
+	<div class='row'>
+		<div class='col-7'>#{koyomi_html[3]}</div>
+		<div class='col-5'>#{photo_frame[3]}</div>
 	</div>
 	<br><br>
+
 	<div class='row'>
 		<div class='col-1'><h5>#{lp[28]}</h5></div>
 		#{memo_html}

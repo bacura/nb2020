@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.02b
+#Nutrition browser 2020 detail viewer 0.03b
 
 #==============================================================================
 # LIBRARY
@@ -178,7 +178,7 @@ html = <<-"HTML"
 
 <div class='container-fluid'>
 	<div class="row">
-		<div class="col-7"><h5 onclick='detailReturn()'>#{fct_opt['Tagnames']}</h5></div>
+		<div class="col"><h5 onclick='detailReturn()'>#{fct_opt['Tagnames']}</h5></div>
 	</div>
 	<br>
 

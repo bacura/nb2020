@@ -1,71 +1,74 @@
-# Ginmi module for Laurel index 0.00
+# Ginmi module for Laurel index 0.10
 #encoding: utf-8
 
+@debug = false
+
 def ginmi_module( cgi, user )
+	l = module_lp( user.language )
 	module_js()
 
 	command = cgi['command']
 	html = ''
 
 	case command
-	when 'form', 'koyomiex'
+	when 'form'
 		#importing from config
 
-		r = mdb( "SELECT height, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
 		height = 0.0
 		weight = 0.0
+		kexow = 0
+		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
-			age = r.first['age']
-			height = r.first['height'].to_f
-			weight = r.first['weight']
-		end
-
-		# inporting from koyomiex
-		if command == 'koyomiex' && r.first['koyomiex']
-			a = r.first['koyomiex'].split( ':' )
-			a.size.times do |c|
-				aa = a[c].split( "\t" )
-				if aa[0] == '2'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						height = rr.first["item#{aa[0]}"].to_f
-					end
-				end
-
-				if aa[0] == '3'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						weight = rr.first["item#{aa[0]}"].to_f
-					end
-				end
+			if r.first['bio'] != nil && r.first['bio'] != ''
+				bio = JSON.parse( r.first['bio'] )
+				height = bio['height'].to_f
+				weight = bio['weight'].to_f
+				kexow = bio['kexow'].to_i
 			end
 		end
 
 
-html = <<-"HTML"
+		# importing from koyomiex
+		if kexow == 1
+			kex_select = Hash.new
+			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+			if r.first
+				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+					koyomi = JSON.parse( r.first['koyomi'] )
+					kex_select = koyomi['kex_select']
+				end
+			end
+
+			kex_select.each do |k, v|
+				if v == 2
+					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
+					height = rr.first["item#{k}"].to_f  if rr.first
+				end
+
+				if v == 3
+					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
+					weight = rr.first["item#{k}"].to_f if rr.first
+				end
+			end
+		end
+
+	html = <<-"HTML"
 		<div class='row'>
 		<h5>ローレル指数 計算フォーム</h5>
 		</div>
 		<br>
 
 		<div class='row'>
-			<div class='col-6'>
-				<button class='btn btn-sm btn-outline-primary' onclick="gginmiLaurelkex()">拡張こよみ適用</button>
-			</div>
-		</div>
-		<br>
-
-		<div class='row'>
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>身長(m)</span>
+					<span class='input-group-text'>#{l['height']}</span>
 					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>体重(kg)</span>
+					<span class='input-group-text'>#{l['weight']}</span>
 					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 				</div>
 			</div>
@@ -74,7 +77,7 @@ html = <<-"HTML"
 
 		<div class='row'>
 			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiLaurelres()">計算</button>
+				<button class='btn btn-sm btn-primary' onclick="ginmiLaurelres()">#{l['calc']}</button>
 			</div>
 		</div>
 HTML
@@ -216,11 +219,21 @@ var ginmiLaurelres = function(){
 	document.getElementById( "L2" ).style.display = 'block';
 };
 
-var ginmiLaurelkex = function(){
-	$.post( "ginmi.cgi", { mod:"laureli", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
-};
 
 </script>
 JS
 	puts js
+end
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'title' => "ローレル指数計算",\
+		'age' => "年齢",\
+		'height' => "身長(m)",\
+		'weight' => "体重(kg)",\
+		'calc' => "計算"
+	}
+
+	return l[language]
 end

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.11b
+#Nutrition browser 2020 memory editor 0.12b
 
 #==============================================================================
 #LIBRARY
@@ -340,7 +340,7 @@ when 'init'
 
 when 'save_category'
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false, @debug )
-	mdb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='', memory='', category='#{category}', rank='1', date='#{@datetime}';", false, @debug ) unless r.first
+	mdb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='', memory='', category='#{category}', total_rank='1', rank='1', date='#{@datetime}';", false, @debug ) unless r.first
 
 	new_html, memory_html = init( lp )
 

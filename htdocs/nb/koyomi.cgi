@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.06b
+#Nutrition browser 2020 koyomi 0.10b
 
 
 #==============================================================================
@@ -14,7 +14,6 @@ require './probe'
 #==============================================================================
 script = 'koyomi'
 @debug = false
-@tdiv_set = [ 'breakfast', 'lunch', 'dinner', 'supple', 'memo' ]
 
 
 #==============================================================================
@@ -41,24 +40,24 @@ end
 
 
 ####
-def meals( meal, uname )
+def meals( meal, user )
 	mb_html = '<ul>'
 	a = meal.split( "\t" )
 	a.each do |e|
-		aa = e.split( ':' )
+		aa = e.split( '~' )
 		if /^\?/ =~ aa[0]
 			mb_html << "<li style='list-style-type: circle'>#{@something[aa[0]]}</li>"
 		elsif /\-m\-/ =~ aa[0]
 			puts 'menu' if @debug
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false, @debug )
+			r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE user='#{user.name} AND code='#{aa[0]}';", false, @debug )
 			if r.first
 				mb_html << "<li>#{r.first['name']}</li>"
 			else
 				mb_html << "<li class='error'>Error: #{aa[0]}</li>"
 			end
-		elsif /\-f\-/ =~ aa[0]
+		elsif /\-z\-/ =~ aa[0]
 			puts 'fix' if @debug
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{aa[0]}';", false, @debug )
+			r = mdb( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{aa[0]}';", false, @debug )
 			if r.first
 				mb_html << "<li style='list-style-type: circle'>#{r.first['name']}</li>"
 			else
@@ -66,7 +65,7 @@ def meals( meal, uname )
 			end
 		elsif /\-/ =~ aa[0]
 			puts 'recipe' if @debug
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
+			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{aa[0]}';", false, @debug )
 			if r.first
 				mb_html << "<li>#{r.first['name']}</li>"
 			else
@@ -106,18 +105,20 @@ class Nutrition_calc
 		@fct_frct = fct_frct
 	end
 
-	def load_freeze( fzcode, fct_start, fct_end )
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@uname}' AND code='#{fzcode}';", false, false )
+	def load_freeze( fzcode, tdiv,fct_start, fct_end )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@uname}' AND code='#{fzcode}' AND base='freeze';", false, false )
 		if r.first
-			fct_start.upto( fct_end ) do |c| @results[@fct_item[c]] = BigDecimal( r.first[@fct_item[c]] ) end
+			fct_start.upto( fct_end ) do |c|
+				@results[@fct_item[c]] = BigDecimal( r.first[@fct_item[c]] )
+			end
 			return true
 		end
 
 		return false
 	end
 
-	def load_fix( code, fct_start, fct_end )
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{@uname}' AND code='#{code}';", false, false )
+	def load_fix( fzcode, fct_start, fct_end )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@uname}' AND code='#{fzcode}' AND base='fix';", false, false )
 		if r.first
 			fct_start.upto( fct_end ) do |c|
 				@results[@fct_item[c]] += BigDecimal( num_opt( r.first[@fct_item[c]], 100, 1, @fct_frct[@fct_item[c]] + 3 )) unless r.first[@fct_item[c]] == '-'
@@ -183,14 +184,26 @@ class Nutrition_calc
 			end
 		end
 	end
+end
 
-	def total_html( fc_items )
+class Nutrition_summary
+	attr_reader :fct
+	def initialize()
+		@fct = Hash.new
+		@fct.default = BigDecimal( 0 )
+	end
+
+	def add( results )
+		results.each do |k, v| @fct[k] += v end
+	end
+
+	def sum_html( fct_name, fc_items )
 		html = ''
 		fc_items.each do |e|
 			if e == 'ENERC_KCAL'
-				html << "#{@fct_name[e]}[#{@results[e].to_i}]&nbsp;&nbsp;&nbsp;&nbsp;"
+				html << "#{fct_name[e]}[#{@fct[e].to_i}]&nbsp;&nbsp;&nbsp;&nbsp;"
 			else
-				html << "#{@fct_name[e]}[#{@results[e].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;"
+				html << "#{fct_name[e]}[#{@fct[e].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;"
 			end
 		end
 
@@ -199,8 +212,8 @@ class Nutrition_calc
 
 	def pfc_html()
 		html = ''
-		pfc_p = ( @results['PROT'] * 4 / @results['ENERC_KCAL'] * 100 ).round( 1 )
-		pfc_f = ( @results['FAT'] * 4 / @results['ENERC_KCAL'] * 100 ).round( 1 )
+		pfc_p = ( @fct['PROT'] * 4 / @fct['ENERC_KCAL'] * 100 ).round( 1 )
+		pfc_f = ( @fct['FAT'] * 4 / @fct['ENERC_KCAL'] * 100 ).round( 1 )
 		pfc_c = 100 - pfc_p - pfc_f
 		pfc_c = 0 if pfc_c == 100
 		html << "<br><span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = <span style='color:crimson'>#{pfc_p.to_f}</span> : <span style='color:green'>#{pfc_f.to_f}</span> : <span style='color:blue'>#{pfc_c.to_f}</span>"
@@ -317,29 +330,27 @@ fc_items.each do |e| fc_names << @fct_name[e] end
 
 puts "Multi calc process<br>" if @debug
 1.upto( calendar.ddl ) do |c|
+	summary = Nutrition_summary.new
+	calc_html = ''
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	if r.first && r.first['koyomi'] != nil
-		calc = Nutrition_calc.new( user.name, [], [], [], @fct_item, @fct_name, @fct_frct )
-		some_set = ''
-		fzcode = r.first['fzcode']
-
-		freeze_flag = false
 		r.each do |e|
-			break if freeze_flag
-
-			if e['tdiv'] != 4
+			if e['tdiv'] < 4
+				calc = Nutrition_calc.new( user.name, [], [], [], @fct_item, @fct_name, @fct_frct )
+				fzcode = e['fzcode']
 				code_set = []
 				rate_set = []
 				unit_set = []
+
 				if e['freeze'] == 1
 					puts 'Freeze<br>' if @debug
-					freeze_flag = calc.load_freeze( fzcode, @fct_start, @fct_end )
+					calc.load_freeze( fzcode, e['tdiv'], @fct_start, @fct_end )
 				else
 					puts 'Row<br>' if @debug
 					a = []
 					a = e['koyomi'].split( "\t" ) if e['koyomi']
 					a.each do |ee|
-						( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( ':' )
+						( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( '~' )
 						code_set << koyomi_code
 						rate_set << koyomi_rate
 						unit_set << koyomi_unit
@@ -348,13 +359,13 @@ puts "Multi calc process<br>" if @debug
 					puts 'Recipe<br>' if @debug
 					code_set.size.times do |cc|
 						code = code_set[cc]
-						food_weight, rate = food_weight_check( rate_set[cc] )
+						z, rate = food_weight_check( rate_set[cc] )
 						unit = unit_set[cc].to_i
 
 						if /\?/ =~ code
-						elsif /\-f\-/ =~ code
+						elsif /\-z\-/ =~ code
 							puts 'FIX<br>' if @debug
-							rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
+							rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{code}' AND base='fix';", false, @debug )
 							calc.load_fix( code, @fct_start, @fct_end ) if rr.first
 						else
 							recipe_set = []
@@ -376,43 +387,52 @@ puts "Multi calc process<br>" if @debug
 							end
 						end
 					end
+					puts 'Start calculation<br>' if @debug
+					calc.calculate( @fct_start, @fct_end, @fct_frct, @fct_item )
+
+					puts "freeze process<br>" if @debug
+					sub_query = ''
+					if calc.results.size > 0
+						calc.results.each do |k, v|
+							t = v.round( @fct_frct[k] )
+							calc.results[k] = t
+							sub_query << " #{k}='#{t}',"
+						end
+						sub_query.chop!
+
+						rr = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='freeze' AND code='#{fzcode}';", false, @debug )
+						if rr.first && fzcode != ''
+							puts "UPDATE(#{fzcode})<br>" if @debug
+							mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{sub_query} WHERE user='#{user.name}' AND base='freeze' AND code='#{fzcode}';", false, @debug )
+							mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{e['tdiv']}';", false, @debug )
+						else
+							fzcode = generate_code( user.name, 'z' )
+							puts "INSERT(#{fzcode})<br>" if @debug
+							mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET user='#{user.name}', base='freeze', origin='#{sql_ym}-#{c}-#{e['tdiv']}', code='#{fzcode}', #{sub_query};", false, @debug )
+							mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{e['tdiv']}';", false, @debug )
+						end
+					else
+						mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{c}-#{e['tdiv']}';", false, @debug )
+					end
 				end
-
+				puts "Summary add<br>" if @debug
+				summary.add( calc.results )
 			end
+			puts "Summary sum html<br>" if @debug
+			calc_html = summary.sum_html( @fct_name, fc_items )
 		end
-		puts 'Start calculation<br>' if @debug
-		calc.calculate( @fct_start, @fct_end, @fct_frct, @fct_item )
-
-		puts "freeze process:#{freeze_flag}<br>" if @debug
-		unless freeze_flag
-			sub_query = ''
-			calc.results.each do |k, v|
-				t = v.round( @fct_frct[k] )
-				calc.results[k] = t
-				sub_query << " #{k}='#{t}',"
-			end
-			sub_query.chop!
-
-			rr = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
-			if sub_query == ''
-			elsif rr.first && fzcode != ''
-				puts "UPDATE(#{fzcode})<br>" if @debug
-				mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{sub_query} WHERE user='#{user.name}' AND code='#{fzcode}';", false, @debug )
-				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-			else
-				new_fzcode = generate_code( user.name, 'z' )
-				puts "INSERT(#{new_fzcode})<br>" if @debug
-				mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET user='#{user.name}', code='#{new_fzcode}', #{sub_query};", false, @debug )
-				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{new_fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-			end
+		if summary.fct.size == 0
+			calc_html_set << ''
+		else
+			calc_html_set << calc_html
 		end
-		calc_html = ''
-		calc_html << calc.total_html( fc_items )
-		calc_html << calc.pfc_html()
-		calc_html_set << calc_html
 	else
 		calc_html_set << ''
-		mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND koyomi='';", false, @debug ) if r.first
+ 		mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND koyomi='';", false, @debug )
+ 		mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{c}-0';", false, @debug )
+ 		mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{c}-1';", false, @debug )
+ 		mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{c}-2';", false, @debug )
+ 		mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{c}-3';", false, @debug )
 	end
 end
 
@@ -449,7 +469,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 		if koyomi_tmp[cc] == nil
 			date_html << "<td #{onclick}>-</td>"
 		else
-			meal_block = meals( koyomi_tmp[cc], user.name )
+			meal_block = meals( koyomi_tmp[cc], user )
 
 			date_html << "<td #{onclick}>#{meal_block}</td>"
 		end
@@ -511,4 +531,4 @@ puts html
 
 
 #### Deleting Empty koyomi
-mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi IS NULL;", false, @debug )
+mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi IS NULL OR koyomi='';", false, @debug )

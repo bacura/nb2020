@@ -19,26 +19,6 @@ script = 'koyomi-add'
 #DEFINITION
 #==============================================================================
 
-#### Getting start year & standard time
-def get_starty( uname )
-	start_year = Time.now.year
-	breakfast_st = 0
-	lunch_st = 0
-	dinner_st = 0
-	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		start_year = a[0].to_i if a[0].to_i != 0
-		breakfast_st = a[1].to_i if a[1].to_i != 0
-		lunch_st = a[2].to_i if a[2].to_i != 0
-		dinner_st = a[3].to_i if a[3].to_i != 0
-	end
-	st_set = [ breakfast_st, lunch_st, dinner_st ]
-
-	return start_year, st_set
-end
-
-
 #### unit select
 def unit_select_html( code, selectu )
 	# 単位の生成と選択
@@ -103,25 +83,20 @@ code = @cgi['code']
 ev = @cgi['ev']
 eu = @cgi['eu'].to_i
 tdiv = @cgi['tdiv'].to_i
-hh = @cgi['hh']
+hh_mm = @cgi['hh_mm']
+meal_time = @cgi['meal_time'].to_i
 order = @cgi['order'].to_i
 copy = @cgi['copy'].to_i
 origin = @cgi['origin']
 dd = 1 if dd == 0
 ev = 100 if ev == 0 || ev == '' || ev == nil
-if hh == '' || command == 'modify'
-	hh = 99
-else
-	hh = hh.to_i
-end
 origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{order}" if command == 'modify' && origin == ''
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "code:#{code}<br>\n"
-	puts "yyyy:#{yyyy}<br>\n"
-	puts "mm:#{mm}<br>\n"
-	puts "dd:#{dd}<br>\n"
-	puts "hh:#{hh}<br>\n"
+	puts "yyyy_mm_dd:#{yyyy_mm_dd}<br>\n"
+	puts "hh_mm:#{hh_mm}<br>\n"
+	puts "meal_time:#{meal_time}<br>\n"
 	puts "tdiv:#{tdiv}<br>\n"
 	puts "ev:#{ev}<br>\n"
 	puts "eu:#{eu}<br>\n"
@@ -139,23 +114,34 @@ sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
 sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 org_ymd = "#{calendar.yyyy}:#{calendar.mm}:#{calendar.dd}"
 
-#### Temp
-( dummy, st_set ) = get_starty( user.name )
-p st_set if @debug
-#### Temp
 
-
-if command == 'exmets'
-	puts 'exmets'
-end
-
-if command == 'exdelta'
-	puts 'exdelta'
+puts 'Getting koyomi start year<br>' if @debug
+r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+if r.first
+	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+		koyomi_cfg = JSON.parse( r.first['koyomi'] )
+		start_yesr = koyomi_cfg['start'].to_i
+		p koyomi_cfg if @debug
+	end
 end
 
 
+puts 'Getting standard meal start & time<br>' if @debug
+start_time_set= []
+meal_tiems_set = []
+r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+if r.first
+	if r.first['bio'] != nil && r.first['bio'] != ''
+		bio = JSON.parse( r.first['bio'] )
+		start_times_set = [bio['bst'], bio['lst'], bio['dst']]
+		meal_tiems_set = [bio['bti'].to_i, bio['lti'].to_i, bio['dti'].to_i]
+	end
+end
+hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
+meal_time = meal_tiems_set[tdiv] if meal_time == 0
 
-#### Move food (deleting origin )
+
+puts 'Move food (deleting origin )<br>' if @debug
 new_solid = ''
 if command == 'move' && copy != 1
 	a = origin.split( ':' )
@@ -172,30 +158,31 @@ if command == 'move' && copy != 1
 end
 
 
-#### Save food
+puts 'Save food<br>' if @debug
 if command == 'save' || command == 'move'
-	hh = st_set[tdiv] if hh == 99
-	hh = @time_now.hour if hh == nil || hh == ''
-
-	if /\-f\-/ =~ code && copy == 1
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
-		copy_name = r.first['name']
-		set_sql = ''
-		@fct_start.upto( @fct_end ) do |c| set_sql << ", #{@fct_item[c]}='#{r.first[@fct_item[c]]}'" end
-		code = generate_code( user.name, 'f' )
-		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{code}', name='#{copy_name}', user='#{user.name}' #{set_sql};", false, @debug )
-	end
-
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
-		koyomi = r.first['koyomi']
-		delimiter = ''
-		delimiter = "\t" if koyomi != ''
-		koyomi << "#{delimiter}#{code}:#{ev}:#{eu}:#{hh}"
+			koyomi = r.first['koyomi']
+			delimiter = ''
+			delimiter = "\t" if koyomi != ''
+		if tdiv == 3
+			koyomi << "#{delimiter}#{ccode}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
+		else
+			a = koyomi.split( delimiter )
+			koyomi_ = []
+			a.each do |e|
+				aa = e.split( '~' )
+				aa[3] = hh_mm
+				aa[4] = meal_time
+				koyomi_ << aa.join( '~' )
+			end
+			koyomi = koyomi_.join( delimiter )
+			koyomi << "#{delimiter}#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
+		end
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 		origin = "#{org_ymd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
 	else
-		koyomi = "#{code}:#{ev}:#{eu}:#{hh}"
+		koyomi = "#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
 		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{sql_ymd}', tdiv='#{tdiv}';", false, @debug )
 		origin = "#{org_ymd}:#{tdiv}:0" if command == 'move'
 	end
@@ -290,20 +277,23 @@ tdiv_html << "<select id='tdiv' class='form-select form-select-sm'>"
 end
 tdiv_html << "</select>"
 
-#### Rate HTML
-hour_html = "<div class='input-group input-group-sm'>"
-hour_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi()\">#{lp[26]}</label>"
-hour_html << "<select id='hh' class='form-select form-select-sm'>"
-hour_html << "<option value='99'>時刻</option>"
-0.upto( 23 ) do |c|
-	if c == hh
-		hour_html << "<option value='#{c}' SELECTED>#{c}</option>"
+
+puts 'SELECT HH block<br>' if @debug
+meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
+eat_time_html = "<div class='input-group input-group-sm'>"
+eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm' )\">#{lp[18]}</label>"
+eat_time_html << "<input type='time' step='60' id='hh_mm' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
+eat_time_html << "<select id='meal_time' class='form-select form-select-sm'>"
+meal_time_set.each do |e|
+	if meal_time == e
+		eat_time_html << "	<option value='#{e}' SELECTED>#{e}</option>"
 	else
-		hour_html << "<option value='#{c}'>#{c}</option>"
+		eat_time_html << "	<option value='#{e}'>#{e}</option>"
 	end
 end
-hour_html << "</select>"
-hour_html << "</div>"
+eat_time_html << "</select>"
+eat_time_html << "<label class='input-group-text'>#{lp[17]}</label>"
+eat_time_html << "</div>"
 
 
 #### Rate HTML
@@ -313,7 +303,7 @@ if command != 'move_fix' && /\-f\-/ !~ code
 	rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
 	rate_html = ''
 	rate_html << "<div class='input-group input-group-sm'>"
-	rate_html << "	<span class='input-group-text'>#{lp[22]}</span>"
+	rate_html << "	<label class='input-group-text'>#{lp[22]}</label>"
 	rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
 	rate_html << "	<select id='eu' class='form-select form-select-sm'>"
 	if /^[UP]?\d{5}/ =~ code
@@ -356,10 +346,10 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			#{tdiv_html}
 		</div>
-		<div class='col-2 form-inline'>
-			#{hour_html}
-		</div>
 		<div class='col-3 form-inline'>
+			#{eat_time_html}
+		</div>
+		<div class='col-2 form-inline'>
 			#{rate_html}
 		</div>
 		<div class='col-1 form-inline'>

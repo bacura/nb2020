@@ -1,35 +1,49 @@
-# Ginmi module for basal metabolism reference 0.00
+# Ginmi module for basal metabolism reference 0.10b
 #encoding: utf-8
 
+@debug = false
+
 def ginmi_module( cgi, user )
+	l = module_lp( user.language )
 	module_js()
 
 	command = cgi['command']
 	html = ''
 
 	case command
-	when 'form', 'koyomiex'
+	when 'form'
 		#importing from config
-		r = mdb( "SELECT age, sex, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
 		sex = 0
-		age = 18
+		age = 0
 		weight = 0.0
+		kexow = 0
+		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
-			sex = r.first['sex'].to_i
-			age = r.first['age'].to_i
-			weight = r.first['weight']
+			if r.first['bio'] != nil && r.first['bio'] != ''
+				bio = JSON.parse( r.first['bio'] )
+				birth = Time.parse( bio['birth'] )
+				age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
+				sex = bio['sex'].to_i
+				weight = bio['weight'].to_f
+				kexow = bio['kexow'].to_i
+			end
 		end
 
-		# inporting from koyomiex
-		if command == 'koyomiex' && r.first['koyomiex']
-			a = r.first['koyomiex'].split( ':' )
-			a.size.times do |c|
-				aa = a[c].split( "\t" )
-				if aa[0] == '3'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						weight = BigDecimal( rr.first["item#{aa[0]}"] )
-					end
+		# importing from koyomiex
+		if kexow == 1
+			kex_select = Hash.new
+			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+			if r.first
+				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+					koyomi = JSON.parse( r.first['koyomi'] )
+					kex_select = koyomi['kex_select']
+				end
+			end
+
+			kex_select.each do |k, v|
+				if v == 3
+					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
+					weight = rr.first["item#{k}"].to_f if rr.first
 				end
 			end
 		end
@@ -43,45 +57,38 @@ def ginmi_module( cgi, user )
 
 html = <<-"HTML"
 		<div class='row'>
-		<h5>基礎代謝量 計算フォーム（参照値）</h5>
-		</div>
-		<br>
-
-		<div class='row'>
-			<div class='col-6'>
-				<button class='btn btn-sm btn-outline-primary' onclick="ginmiEnergyRefkex()">拡張こよみ適用</button>
-			</div>
+		<h5>#{l['title']}</h5>
 		</div>
 		<br>
 
 		<div class='row'>
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<label class="input-group-text">代謝的性別</label>
+					<label class="input-group-text">#{'sex'}</label>
 					<select class="form-select form-select-sm" id="sex">
-						<option value='0' #{sex_select[0]}>男性</option>
-						<option value='1' #{sex_select[1]}>女性</option>
+						<option value='0' #{sex_select[0]}>#{l['male']}</option>
+						<option value='1' #{sex_select[1]}>#{l['female']}</option>
 					</select>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>年齢</span>
+					<span class='input-group-text'>#{l['age']}</span>
 					<input type='number' class='form-control' id='age' min='0' value='#{age}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>体重(kg)</span>
+					<span class='input-group-text'>#{l['weight']}</span>
 					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight.to_f}'>
 				</div>
 			</div>
 
 			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<label class="input-group-text">身体活動レベル</label>
+					<label class="input-group-text">#{l['pal']}</label>
 					<select class="form-select form-select-sm" id="pal">
 						<option value='1.50'>I (1.50)</option>
 						<option value='1.75' SELECTED>II (1.75)</option>
@@ -110,7 +117,6 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<br>
-
 
 		<div class='row'>
 			<div class='col-2'>
@@ -234,14 +240,29 @@ var ginmiEnergyRefres = function(){
 	var pal = document.getElementById( "pal" ).value;
 	var pregnancy = document.getElementById( "pregnancy" ).value;
 	$.post( "ginmi.cgi", { mod:"energy-ref", command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
-};
 
-var ginmiEnergyRefkex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-ref", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
+	dl2 = true;
+	displayBW();
 };
 
 </script>
 JS
 	puts js
+end
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'title' => "基礎代謝量計算（参照値）",\
+		'age' => "年齢",\
+		'sex' => "代謝的性別",\
+		'male' => "男性",\
+		'female' => "女性",\
+		'height' => "身長(m)",\
+		'weight' => "体重(kg)",\
+		'pal' => "身体活動係数",\
+		'calc' => "計算"
+	}
+
+	return l[language]
 end

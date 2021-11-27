@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.02b 20210507
+// Nutorition Browser 2020 core.js 0.03b 20211127
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -449,7 +449,7 @@ var pseudoSave = function( code ){
 		var TOCPHD = document.getElementById( "TOCPHD" ).value;
 		var VITK = document.getElementById( "VITK" ).value;
 
-		var THIAHCL = document.getElementById( "THIAHCL" ).value;
+		var THIA = document.getElementById( "THIA" ).value;
 		var RIBF = document.getElementById( "RIBF" ).value;
 		var NIA = document.getElementById( "NIA" ).value;
 		var NE = document.getElementById( "NE" ).value;
@@ -471,7 +471,7 @@ var pseudoSave = function( code ){
 			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLMF:CHOAVLMF, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
-			THIAHCL:THIAHCL, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
+			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
 			ALC:ALC, NACL_EQ:NACL_EQ,
 			Notice:Notice
 		}, function( data ){ $( "#LF" ).html( data );});

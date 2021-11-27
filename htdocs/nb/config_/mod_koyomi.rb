@@ -1,197 +1,147 @@
-# Nutorition browser 2020 Config module for koyomiex 0.00b
+# Nutorition browser 2020 Config module for koyomiex 0.10b
 #encoding: utf-8
 
+@debug = false
+
 def config_module( cgi, user, lp )
+	l = module_lp( user.language )
 	module_js()
 
 	step = cgi['step']
-	del_no = cgi['del_no'].to_i
-	koyomiy = cgi['koyomiy'].to_i
-	breakfast_st = cgi['breakfast_st'].to_i
-	lunch_st = cgi['lunch_st'].to_i
-	dinner_st = cgi['dinner_st'].to_i
-	item_set = [cgi['item0'], cgi['item1'], cgi['item2'], cgi['item3'], cgi['item4'], cgi['item5'], cgi['item6'], cgi['item7'], cgi['item8'], cgi['item9']]
-	unit_set = [cgi['unit0'], cgi['unit1'], cgi['unit2'], cgi['unit3'], cgi['unit4'], cgi['unit5'], cgi['unit6'], cgi['unit7'], cgi['unit8'], cgi['unit9']]
-	kex_select_set = [cgi['kex_select0'].to_i, cgi['kex_select1'].to_i, cgi['kex_select2'].to_i, cgi['kex_select3'].to_i, cgi['kex_select4'].to_i, cgi['kex_select5'].to_i, cgi['kex_select6'].to_i, cgi['kex_select7'].to_i, cgi['kex_select8'].to_i, cgi['kex_select9'].to_i]
-	if @debug
-		puts "step: #{step}<br>"
-		puts "del_no: #{del_no}<br>"
-		puts "koyomiy: #{koyomiy}<br>"
-		puts "breakfast_st: #{breakfast_st}<br>"
-		puts "lunch_st: #{lunch_st}<br>"
-		puts "dinner_st: #{dinner_st}<br>"
-		puts "item_set: #{item_set}<br>"
-		puts "unit_set: #{unit_set}<br>"
-		puts "kex_select_set: #{kex_select_set}<br>"
-		puts "<hr>"
-	end
+	puts "step: #{step}<br>" if @debug
+
+	kex_select = Hash.new
+	kex_item = Hash.new
+	kex_unit = Hash.new
 
 	case step
 	when 'update'
-		koyomiex_new = ''
-		0.upto( 9 ) do |c| koyomiex_new << "#{kex_select_set[c]}\t#{item_set[c]}\t#{unit_set[c]}:" end
-		koyomiex_new.chop!
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}', koyomiy='#{koyomiy}:#{breakfast_st}:#{lunch_st}:#{dinner_st}' WHERE user='#{user.name}';", false, @debug )
-	when 'delete'
-		r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-		kex_select_set = r.first['koyomiex'].split( ':' )
-		koyomiex_new = ''
-		kex_select_set.size.times do |c|
-			if del_no == c
-				koyomiex_new << "0\t\t:"
-				mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{c}='' WHERE user='#{user.name}';", false, @debug )
-			else
-				koyomiex_new << "#{kex_select_set[c]}:"
+		start = cgi['start'].to_i
+		puts "start: #{start}<br>" if @debug
+
+		0.upto( 9 ) do |c|
+			kex_select[c.to_s] = cgi["kex_select#{c}"].to_i
+			kex_item[c.to_s] = cgi["item#{c}"]
+			kex_unit[c.to_s] = cgi["unit#{c}"]
+			unless kex_select[c.to_s] == 0 || kex_select[c.to_s] == 1
+				kex_item[c.to_s] = ''
+				kex_unit[c.to_s] = ''
 			end
 		end
-		koyomiex_new.chop!
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='#{koyomiex_new}' WHERE user='#{user.name}';", false, @debug )
+		koyomi_ = JSON.generate( { "start" => start,  "kex_select" => kex_select, "kex_item" => kex_item, "kex_unit" => kex_unit } )
+		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, false )
+
+	when 'delete'
+		del_no = cgi['del_no'].to_i
+		puts "del_no: #{del_no}<br>" if @debug
+
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{del_no}='' WHERE user='#{user.name}';", false, @debug )
+
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		if r.first
+			if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+				koyomi = JSON.parse( r.first['koyomi'] )
+				start = koyomi['start'].to_i
+				kex_select = koyomi['kex_select']
+				kex_item = koyomi['kex_item']
+				kex_unit = koyomi['kex_unit']
+				p koyomi if @debug
+			end
+		end
+		kex_select[del_no.to_s] = 0
+		kex_item[del_no.to_s] = ''
+		kex_unit[del_no.to_s] = ''
+
+		koyomi_ = JSON.generate( { "start" => start, "kex_select" => kex_select, "kex_item" => kex_item, "kex_unit" => kex_unit } )
+		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, false )
 	end
 
-
-	r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-	if r.first['koyomiex'] == '' || r.first['koyomiex'] == nil
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t' WHERE user='#{user.name}';", false, @debug )
-		0.upto( 9 ) do |c|
-			kex_select_set[c] = 0
-			item_set[c] = ''
-			unit_set[c] = ''
-		end
-	else
-		a = r.first['koyomiex'].split( ':' )
-		0.upto( 9 ) do |c|
-			aa = a[c].split( "\t" )
-			kex_select_set[c] = aa[0].to_i
-			item_set[c] = aa[1]
-			unit_set[c] = aa[2]
-		end
-	end
-
-
-####
 	t = Time.new
-	koyomiy = t.year
-	breakfast_st = 7
-	lunch_st = 12
-	dinner_st = 19
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		koyomiy = a[0].to_i
-		breakfast_st = a[1].to_i
-		lunch_st = a[2].to_i
-		dinner_st = a[3].to_i
+	start = t.year
+
+	r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	if r.first
+		if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+			koyomi = JSON.parse( r.first['koyomi'] )
+			start = koyomi['start'].to_i
+			kex_select = koyomi['kex_select']
+			kex_item = koyomi['kex_item']
+			kex_unit = koyomi['kex_unit']
+			p koyomi if @debug
+		end
 	end
 
-	# HTML
-	html = '<div class="container">'
-	html << "<div class='row'>"
-	html << "<div class='col-3'>"
-	html << "<div class='input-group input-group-sm'>"
-	html << "<span class='input-group-text'>#{lp[55]}</span>"
-  	html << "<select class='form-select' id='koyomiy'>"
+	puts 'Setting koyomi start year<br>' if @debug
+	start_select = "<select class='form-select' id='start'>"
 	2000.upto(2050) do |c|
-		if c == koyomiy
-			html << "<option value='#{c}' selected>#{c}</option>"
-		else
-			html << "<option value='#{c}'>#{c}</option>"
-		end
+		selectd = ''
+		selected = 'SELECTED' if c == start
+		start_select << "<option value='#{c}' #{selected}>#{c}</option>"
 	end
-  	html << "</select>"
-	html << "</div></div>"
-	html << "</div><hr>"
+  	start_select << "</select>"
 
-	html << "<div class='row'>"
-	html << "<div class='col-3'>"
-	html << "<div class='input-group input-group-sm'>"
-	html << "<span class='input-group-text'>#{lp[56]}</span>"
- 	html << "<select class='form-select' id='breakfast_st'>"
-	0.upto(23) do |c|
-		if c == breakfast_st
-			html << "<option value='#{c}' selected>#{c}</option>"
-		else
-			html << "<option value='#{c}'>#{c}</option>"
-		end
-	end
-  	html << "</select>"
-	html << "</div></div>"
 
-	html << "<div class='col-3'>"
-	html << "<div class='input-group input-group-sm'>"
-	html << "<span class='input-group-text'>#{lp[57]}</span>"
- 	html << "<select class='form-select' id='lunch_st'>"
-	0.upto(23) do |c|
-		if c == lunch_st
-			html << "<option value='#{c}' selected>#{c}</option>"
-		else
-			html << "<option value='#{c}'>#{c}</option>"
-		end
-	end
-  	html << "</select>"
-	html << "</div></div>"
+ 	puts 'HTML<br>' if @debug
+	html = <<-"HTML"
+	<div class="container">
+		<div class='row'>
+			<div class='col-3'>
+				<div class='input-group input-group-sm'>
+					<span class='input-group-text'>#{l['start']}</span>
+					#{start_select}
+				</div>
+			</div>
+		</div>
+		<hr>
 
-	html << "<div class='col-3'>"
-	html << "<div class='input-group input-group-sm'>"
-	html << "<span class='input-group-text'>#{lp[58]}</span>"
- 	html << "<select class='form-select' id='dinner_st'>"
-	0.upto(23) do |c|
-		if c == dinner_st
-			html << "<option value='#{c}' selected>#{c}</option>"
-		else
-			html << "<option value='#{c}'>#{c}</option>"
-		end
-	end
-  	html << "</select>"
-	html << "</div></div>"
-
-	html << "</div><hr>"
-
-	html << "<h5>#{lp[59]}</h5><br>"
+		<h5>#{l['menu_title']}</h5>
+		<br>
+HTML
 
 	0.upto( 9 ) do |c|
 		html << "<div class='row'>"
 		html << "	<div class='col-3'>"
 		html << "		<div class='input-group input-group-sm'>"
-    	html << "			<label class='input-group-text'>#{lp[60]}#{c}</label>"
+    	html << "			<label class='input-group-text'>#{l['item']}#{c}</label>"
   		html << "			<select class='form-select' id='kex_select#{c}' onChange=\"kexChangeselect( '#{c}' )\">"
+
 		@kex_item.size.times do |cc|
-			if cc == kex_select_set[c]
-    			html << "<option value='#{cc}' SELECTED>#{@kex_item[cc]}</option>"
-    		else
-    			html << "<option value='#{cc}'>#{@kex_item[cc]}</option>"
-    		end
+			selected = ''
+			selected = 'SELECTED' if cc == kex_select[c.to_s]
+    		html << "<option value='#{cc}' #{selected}>#{@kex_item[cc]}</option>"
     	end
+
   		html << "			</select>"
 		html << "		</div>"
 		html << "	</div>"
 		html << "	<div class='col-3'>"
 		html << "		<div class='input-group input-group-sm'>"
-		html << "			<span class='input-group-text'>#{lp[61]}</span>"
-		if kex_select_set[c] == 1
-			html << "<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='#{item_set[c]}'>"
-    	else
-			html << "<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='' disabled>"
-    	end
+		html << "			<span class='input-group-text'>#{l['org_name']}</span>"
+
+		disabled = 'DISABLED'
+		disabled = '' if kex_select[c.to_s] == 1
+		html << "<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='#{kex_item[c.to_s]}' #{disabled}>"
+
 		html << "		</div>"
 		html << "	</div>"
 		html << "	<div class='col-2'>"
 		html << "		<div class='input-group input-group-sm'>"
-		html << "				<span class='input-group-text'>#{lp[62]}</span>"
-		if kex_select_set[c] == 1
-			html << "			<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='#{item_set[c]}'>"
-    	else
-			html << "			<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='' disabled>"
-    	end
+		html << "				<span class='input-group-text'>#{l['unit']}</span>"
+
+		disabled = 'DISABLED'
+		disabled = '' if kex_select[c.to_s] == 1
+		html << "<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='#{kex_unit[c.to_s]}' #{disabled}>"
+
 		html << "		</div>"
 		html << "	</div>"
 		html << "	<div class='col-1'></div>"
-		html << "	<div class='col-2'><input type='checkbox' id='kex_del#{c}'>&nbsp;<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"koyomiex_cfg( 'delete', 'kex_del#{c}', '#{c}' )\">#{lp[63]}</button></div>"
+		html << "	<div class='col-2'><input type='checkbox' id='kex_del#{c}'>&nbsp;<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"koyomiex_cfg( 'delete', 'kex_del#{c}', '#{c}' )\">#{l['init']}</button></div>"
 		html << "</div><br>"
 	end
 
   	html << "<div class='row'>"
 	html << "<div class='col-2'></div>"
-	html << "<div class='col-4'><button type='button' class='btn btn-outline-primary btn-sm nav_button' onclick=\"koyomiex_cfg( 'update' )\">#{lp[64]}</button></div>"
+	html << "<div class='col-4'><button type='button' class='btn btn-outline-primary btn-sm nav_button' onclick=\"koyomiex_cfg( 'update' )\">#{l['save']}</button></div>"
 	html << "</div>"
 	html << "</div>"
 
@@ -206,11 +156,7 @@ def module_js()
 //
 var koyomiex_cfg = function( step, del_id, del_no ){
 	if( step == 'update' ){
-		var koyomiy = document.getElementById( "koyomiy" ).value;
-
-		var breakfast_st = document.getElementById( "breakfast_st" ).value;
-		var lunch_st = document.getElementById( "lunch_st" ).value;
-		var dinner_st = document.getElementById( "dinner_st" ).value;
+		var start = document.getElementById( "start" ).value;
 
 		var kex_select0 = document.getElementById( "kex_select0" ).value;
 		var kex_select1 = document.getElementById( "kex_select1" ).value;
@@ -246,7 +192,7 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 		var unit9 = document.getElementById( "unit9" ).value;
 
 		$.post( "config.cgi", {
-			mod:'koyomi', step:step, koyomiy:koyomiy, breakfast_st:breakfast_st, lunch_st:lunch_st, dinner_st:dinner_st,
+			mod:'koyomi', step:step, start:start,
 			kex_select0:kex_select0, kex_select1:kex_select1, kex_select2:kex_select2, kex_select3:kex_select3, kex_select4:kex_select4, kex_select5:kex_select5, kex_select6:kex_select6, kex_select7:kex_select7, kex_select8:kex_select8, kex_select9:kex_select9,
 			item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9,
 			unit0:unit0, unit1:unit1, unit2:unit2, unit3:unit3, unit4:unit4, unit5:unit5, unit6:unit6, unit7:unit7, unit8:unit8, unit9:unit9,
@@ -286,4 +232,20 @@ var kexChangeselect = function( no ){
 </script>
 JS
 	puts js
+end
+
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'start' => "こよみ開始年",\
+		'menu_title' => "こよみ拡張・項目設定:",\
+		'item' => "項目",\
+		'org_name' => "名称",\
+		'unit' => "単位",\
+		'init' => "初期化",\
+		'save' => "保存"
+	}
+
+	return l[language]
 end

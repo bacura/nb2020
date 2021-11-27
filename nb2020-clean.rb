@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-clean.rb 0.00b
+#nb2020-clean.rb for modified1 0.00b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -11,8 +11,8 @@
 # MAIN
 #==============================================================================
 
-source_file = '20201225-mxt_kagsei-mext_01110_012.txt'
-out_file = '20201225-mxt_kagsei-mext_01110_012_clean.txt'
+source_file = '20201225-mxt_kagsei-mext_01110_012-m1.txt'
+out_file = '20201225-mxt_kagsei-mext_01110_012-m1_clean.txt'
 
 data_solid = []
 
@@ -23,7 +23,6 @@ f.each_line do |e|
 
 	#### 共通
 	t = e.force_encoding( 'UTF-8' )
-
 
 	#### 穀類
 	if items[0] == '01'
@@ -42,6 +41,8 @@ f.each_line do |e|
 		t.sub!( '［玄穀］　国産　普通', '小麦玄穀　国産　普通') if items[1] == '01012'
 		t.sub!( '［玄穀］　輸入　軟質', '小麦玄穀　輸入　軟質') if items[1] == '01013'
 		t.sub!( '［玄穀］　輸入　硬質', '小麦玄穀　輸入　硬質') if items[1] == '01014'
+
+		01057
 	end
 
 	#### いも・でん粉類
@@ -261,6 +262,26 @@ f.each_line do |e|
 end
 f.close
 
+
+####
+data_solid.shift
+data_solid_ = []
+c = 0
+data_solid.each do |e|
+	t = e.sub( /\t+\n/, "\n" )
+	t.gsub!( '"', '' )
+	a = t.split( "\t" )
+	if /^\d\d/ =~ e && a.size >= 10
+		data_solid_[c] = t
+	else
+		c -= 1
+		data_solid_[c].chomp!
+		data_solid_[c] << "<br>#{t}"
+	end
+	c += 1
+end
+
 # 成分表データの書き込み
 f = open( out_file, 'w' )
-data_solid.each do |e| f.puts e end
+data_solid_.each do |e| f.puts e end
+f.close

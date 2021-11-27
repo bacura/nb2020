@@ -1,4 +1,4 @@
-#Nutrition browser 2020 koyomi extra 0.11b
+#Nutrition browser 2020 koyomi extra 0.20b
 
 #==============================================================================
 # OVERVIEW
@@ -39,3 +39,4 @@ guild.js/updateKoyomiex( dd, item_no, cell_id ) -> koyomiex.cgi{ command:"update
 20210429	0.01b	更新：Joystic対応
 20210515	0.10b	更新：外部ファイル読み込み機能を追加
 20211106	0.11b	更新：probeへの対応。
+20211121	0.20b	更新：JSON型config対応。

@@ -1,46 +1,55 @@
-# Ginmi module for BMI 0.00b
+# Ginmi module for BMI 0.10b
 #encoding: utf-8
 
+@debug = false
+
 def ginmi_module( cgi, user )
+	l = module_lp( user.language )
 	module_js()
 
 	command = cgi['command']
 	html = ''
 
 	case command
-	when 'form', 'koyomiex'
+	when 'form'
 		#importing from config
 
-		age = 18
+		age = 0
 		height = 0.0
 		weight = 0.0
-		r = mdb( "SELECT age, height, weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, true )
+		kexow = 0
+		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
-			age = r.first['age']
-			age = 18 unless r.first['age']
-			height = r.first['height'].to_f
-			height = 0.0 unless r.first['height']
-			weight = r.first['weight']
-			weight = 0.0 unless r.first['weight']
+			if r.first['bio'] != nil && r.first['bio'] != ''
+				bio = JSON.parse( r.first['bio'] )
+				birth = Time.parse( bio['birth'] )
+				age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
+				height = bio['height'].to_f
+				weight = bio['weight'].to_f
+				kexow = bio['kexow'].to_i
+			end
 		end
 
-		# inporting from koyomiex
-		if command == 'koyomiex' && r.first['koyomiex']
-			a = r.first['koyomiex'].split( ':' )
-			a.size.times do |c|
-				aa = a[c].split( "\t" )
-				if aa[0] == '2'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						height = rr.first["item#{aa[0]}"].to_f / 100
-					end
+		# importing from koyomiex
+		if kexow == 1
+			kex_select = Hash.new
+			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+			if r.first
+				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+					koyomi = JSON.parse( r.first['koyomi'] )
+					kex_select = koyomi['kex_select']
+				end
+			end
+
+			kex_select.each do |k, v|
+				if v == 2
+					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
+					height = rr.first["item#{k}"].to_f / 100 if rr.first
 				end
 
-				if aa[0] == '3'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						weight = rr.first["item#{aa[0]}"].to_f
-					end
+				if v == 3
+					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
+					weight = rr.first["item#{k}"].to_f if rr.first
 				end
 			end
 		end
@@ -56,21 +65,14 @@ def ginmi_module( cgi, user )
 
 html = <<-"HTML"
 		<div class='row'>
-		<h5>BMI 計算フォーム</h5>
+		<h5>#{l['title']}</h5>
 		</div>
 		<br>
 
 		<div class='row'>
-			<div class='col-6'>
-				<button class='btn btn-sm btn-outline-primary' onclick="ginmiBMIkex()">拡張こよみ適用</button>
-			</div>
-		</div>
-		<br>
-
-		<div class='row'>
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class="input-group input-group-sm">
-					<label class="input-group-text">年齢</label>
+					<label class="input-group-text">#{l['age']}</label>
 					<select class="form-select form-select-sm" id="age">
 						<option value='18' #{age_select[0]}>18歳-49歳</option>
 						<option value='50' #{age_select[1]}>50歳-69歳</option>
@@ -81,14 +83,14 @@ html = <<-"HTML"
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>身長(m)</span>
+					<span class='input-group-text'>#{l['height']}</span>
 					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 				</div>
 			</div>
 
 			<div class='col-2'>
 				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>体重(kg)</span>
+					<span class='input-group-text'>#{l['weight']}</span>
 					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 				</div>
 			</div>
@@ -97,7 +99,7 @@ html = <<-"HTML"
 
 		<div class='row'>
 			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiBMIres()">計算</button>
+				<button class='btn btn-sm btn-primary' onclick="ginmiBMIres()">#{l['calc']}</button>
 			</div>
 		</div>
 HTML
@@ -290,14 +292,26 @@ var ginmiBMIres = function(){
 	var height = document.getElementById( "height" ).value;
 	var weight = document.getElementById( "weight" ).value;
 	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+
+	dl2 = true;
+	displayBW();
 };
 
-var ginmiBMIkex = function(){
-	$.post( "ginmi.cgi", { mod:"bmi", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
-};
 
 </script>
 JS
 	puts js
+end
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'title' => "BMI計算",\
+		'age' => "年齢",\
+		'height' => "身長(m)",\
+		'weight' => "体重(kg)",\
+		'calc' => "計算"
+	}
+
+	return l[language]
 end

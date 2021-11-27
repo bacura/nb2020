@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.02b
+#Nutrition browser koyomi fix fct editer 0.10b
 
 #==============================================================================
 # LIBRARY
@@ -19,24 +19,6 @@ script = 'koyomi-fix'
 # DEFINITION
 #==============================================================================
 
-# Getting start year & standard meal time
-def get_starty( uname )
-	start_year = Time.now.year
-	breakfast_st = 0
-	lunch_st = 0
-	dinner_st = 0
-	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		start_year = a[0].to_i if a[0].to_i != 0
-		breakfast_st = a[1].to_i if a[1].to_i != 0
-		lunch_st = a[2].to_i if a[2].to_i != 0
-		dinner_st = a[3].to_i if a[3].to_i != 0
-	end
-	st_set = [ breakfast_st, lunch_st, dinner_st ]
-
-	return start_year, st_set
-end
 
 #==============================================================================
 # Main
@@ -48,7 +30,7 @@ user.debug if @debug
 lp = user.load_lp( script )
 
 
-start_year, st_set = get_starty( user.name )
+koyomi = Calendar.new( user.name, 0, 0, 0 )
 fix_opt = Hash.new
 
 
@@ -58,8 +40,8 @@ yyyy = @cgi['yyyy']
 mm = @cgi['mm']
 dd = @cgi['dd']
 tdiv = @cgi['tdiv'].to_i
-hh = @cgi['hh'].to_i
-hh = 99 if command == 'init'
+hh_mm = @cgi['hh_mm']
+meal_time = @cgi['meal_time'].to_i
 order = @cgi['order'].to_i
 palette = @cgi['palette'].to_i
 modifyf = @cgi['modifyf'].to_i
@@ -75,15 +57,30 @@ if @debug
 	puts "food_weight: #{food_weight}<br>\n"
 	puts "food_number: #{food_number}<br>\n"
 	puts "yyyy: #{yyyy}<br>\n"
-	puts "mm: #{mm}<br>\n"
+	puts "hh_mm: #{hh_mm}<br>\n"
+	puts "meal_time: #{meal_time}<br>\n"
 	puts "dd: #{dd}<br>\n"
 	puts "tdiv: #{tdiv}<br>\n"
-	puts "hh: #{hh}<br>\n"
 	puts "order: #{order}<br>\n"
 	puts "palette: #{palette}<br>\n"
 	puts "modifyf: #{modifyf}<br>\n"
 	puts "<hr>\n"
 end
+
+
+puts 'Getting standard meal start & time<br>' if @debug
+start_time_set= []
+meal_tiems_set = []
+r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+if r.first
+	if r.first['bio'] != nil && r.first['bio'] != ''
+		bio = JSON.parse( r.first['bio'] )
+		start_times_set = [bio['bst'], bio['lst'], bio['dst']]
+		meal_tiems_set = [bio['bti'].to_i, bio['lti'].to_i, bio['dti'].to_i]
+	end
+end
+hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
+meal_time = meal_tiems_set[tdiv] if meal_time == 0
 
 
 puts 'Loading FCT items<br>' if @debug
@@ -114,16 +111,16 @@ if command == 'save'
 		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		if r.first
 			a = r.first['koyomi'].split( "\t" )[order]
-			code = a.split( ":" )[0]
-			mdb( "UPDATE #{$MYSQL_TB_FCS} SET name='#{food_name}', #{fix_set} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
+			code = a.split( "~" )[0]
+			mdb( "UPDATE #{$MYSQL_TB_FCZ} SET name='#{food_name}', #{fix_set} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug )
 		end
 		koyomi_update = ''
 		r.each do |e|
 			a = e['koyomi'].split( "\t" )
 			a.size.times do |c|
 				if c == order
-					aa = a[c].split( ":" )
-					koyomi_update << "#{aa[0]}:#{aa[1]}:#{aa[2]}:#{hh}\t"
+					aa = a[c].split( "~" )
+					koyomi_update << "#{aa[0]}~#{aa[1]}~#{aa[2]}~#{hh_mm}~#{meal_time}\t"
 				else
 					koyomi_update << "#{t[c]}\t"
 				end
@@ -132,17 +129,16 @@ if command == 'save'
 		koyomi_update.chop!
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	else
- 		fix_code = generate_code( user.name, 'f' )
-		mdb( "INSERT INTO #{$MYSQL_TB_FCS} SET code='#{fix_code}', name='#{food_name}',user='#{user.name}', #{fix_set};", false, @debug )
+ 		fix_code = generate_code( user.name, 'z' )
+		mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET base='fix', code='#{fix_code}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}', name='#{food_name}',user='#{user.name}', #{fix_set};", false, @debug )
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
-		hh = st_set[tdiv] if hh == 99
 
 		if r.first
 			koyomi = r.first['koyomi']
-			koyomi << "\t#{fix_code}:100:99:#{hh}"
+			koyomi << "\t#{fix_code}~100:99~#{hh_mm}~#{meal_time}"
 			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
-			koyomi = "#{fix_code}:100:99:#{hh}"
+			koyomi = "#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
 			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
 		end
 	end
@@ -159,9 +155,9 @@ if command == 'modify' || modifyf == 1
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
 		t = r.first['koyomi'].split( "\t" )[order]
-		code = t.split( ":" )[0]
+		code = t.split( "~" )[0]
 
-		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCS} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
+		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug )
 		if rr.first
 			food_name = rr.first['name']
 			@fct_start.upto( @fct_end ) do |i| fix_opt[@fct_item[i]] = rr.first[@fct_item[i]].to_f end
@@ -261,17 +257,21 @@ html_fct_block6 << '</table>'
 
 
 puts 'SELECT HH block<br>' if @debug
-hh_html = ''
-hh_html << "<select class='form-select form-select-sm' id='hh_fix'>"
-hh_html << "	<option value='99'>時刻</option>"
-0.upto( 23 ) do |c|
-	if hh == c
-		hh_html << "<option value='#{c}' SELECTED>#{c}</option>"
+meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
+eat_time_html = "<div class='input-group input-group-sm'>"
+eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm_fix' )\">#{lp[8]}</label>"
+eat_time_html << "<input type='time' step='60' id='hh_mm_fix' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
+eat_time_html << "<select id='meal_time_fix' class='form-select form-select-sm'>"
+meal_time_set.each do |e|
+	if meal_time == e
+		eat_time_html << "	<option value='#{e}' SELECTED>#{e}</option>"
 	else
-		hh_html << "<option value='#{c}'>#{c}</option>"
+		eat_time_html << "	<option value='#{e}'>#{e}</option>"
 	end
 end
-hh_html << "</select>"
+eat_time_html << "</select>"
+eat_time_html << "<label class='input-group-text'>#{lp[9]}</label>"
+eat_time_html << "</div>"
 
 
 puts 'HTML<br>' if @debug
@@ -285,12 +285,12 @@ html = <<-"HTML"
 		<div class="col-4">
 			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">
 		</div>
-		<div class="col-2">
-		#{hh_html}
+		<div class="col-3">
+		#{eat_time_html}
 		</div>
-		<div class="col-4">
+		<div class="col-3">
 		</div>
-		<div class="col-2">
+		<div class="col-2" align="right">
 			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{lp[1]}</button>
 		</div>
 	</div>

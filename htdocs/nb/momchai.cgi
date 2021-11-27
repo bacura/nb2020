@@ -24,7 +24,7 @@ script = 'momchai'
 #### line menu
 def line( lp )
 	html = <<-"HTML"
-	<span class='badge rounded-pill bg-info text-dark' onclick="MomChaiForm( 'growth-curve' )">#{lp[1]}</span>
+	<div align='center' class='badge rounded-pill bg-info text-dark' onclick="MomChaiForm( 'growth-curve' )">#{lp[1]}</div>
 HTML
 
 	return html
@@ -65,8 +65,8 @@ if mod == 'line'
 elsif mod == ''
 	html = init( lp )
 else
-	require "#{$HTDOCS_PATH}/physique_/mod_#{mod}.rb"
-	html = physique_module( @cgi, user, @debug )
+	require "#{$HTDOCS_PATH}/momchai_/mod_#{mod}.rb"
+	html = momchai_module( @cgi, user, @debug )
 end
 html << "</div>"
 

@@ -1,7 +1,5 @@
-# Weight loss module for Physique 0.23b
+# Weight loss module for Physique 0.24b
 #encoding: utf-8
-
-require 'time'
 
 @module = 'weight-loss'
 
@@ -24,11 +22,16 @@ def physique_module( cgi, user, debug )
 		end
 	end
 
+	if height == nil || weight == nil || age == nil
+		puts l['error_no-set']
+		exit( 0 )
+	end
+
+
 	html = ''
 	case cgi['step']
 	when 'form'
 		module_js( l )
-
 		start_date = $DATE
 		pal = 1.50
 		eenergy = calc_energy( weight, height, age, sex, pal )
@@ -402,9 +405,9 @@ end
 
 
 def module_lp( language )
-
 	l = Hash.new
-	l['jp'] = { 'male' => "男性",\
+	l['jp'] = {
+		'male' => "男性",\
 		'female' => "女性",\
 		'chart_name' => "減量チャート",\
 		'sex' => "代謝的性別",\
@@ -424,6 +427,7 @@ def module_lp( language )
 		'label_energy' => "エネルギー (kcal)",\
 		'empty' => "ごんぶと",\
 		'bw_name' => "平均摂取エネルギー",\
+		'error_no-set' => "設定から生体情報を設定してください。"
 	}
 
 	return l[language]

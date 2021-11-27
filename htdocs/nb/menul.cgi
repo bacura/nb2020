@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu list 0.04b
+#Nutrition browser 2020 menu list 0.05b
 
 
 #==============================================================================
@@ -38,6 +38,7 @@ end
 #### HTML of label
 def label_html( user, label, lp )
 	r = mdb( "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND name!='';", false, @debug )
+
 	label_list = []
 	r.each do |e| label_list << e['label'] end
 	label_list.uniq!
@@ -59,15 +60,18 @@ def label_html( user, label, lp )
 		school_label_c = 0
 		r = mdb( "SELECT label FROM #{$MYSQL_TB_SCHOOLM} WHERE user='#{user.name}';", false, @debug )
 		r.each do |e|
-			school_flavor = 'btn-info'
-			a = e['label'].split( "\t" )
-			a.each do |ee|
-				selected = ''
-				selected = 'SELECTED' if ee == label
-				school_label_c += 1
-				html << "<option value='#{ee}' id='school_label_list#{school_label_c}' style='display:none' #{selected}>#{ee}</option>"
+			if e['label'] != nil
+				school_flavor = 'btn-info'
+				a = e['label'].split( "\t" )
+				a.each do |ee|
+					selected = ''
+					selected = 'SELECTED' if ee == label
+					school_label_c += 1
+					html << "<option value='#{ee}' id='school_label_list#{school_label_c}' style='display:none' #{selected}>#{ee}</option>"
+				end
 			end
 		end
+
 	end
 	html << '</select>'
 
@@ -134,13 +138,16 @@ if command == 'view'
 	if page == 0
 		r = mdb( "SELECT menul FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
-			a = r.first['menul'].split( ':' )
-			page = a[0].to_i
-			range = a[1].to_i
-			label = a[2]
+			if r.first['menul'] != nil
+				a = r.first['menul'].split( ':' )
+				page = a[0].to_i
+				range = a[1].to_i
+				label = a[2]
+			end
 		end
 	end
 end
+
 page = 1 if page < 1
 label = '' if label == nil
 if @debug

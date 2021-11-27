@@ -7,7 +7,7 @@
 <img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>
 食事内容
 摂取量
-時刻
+開始時刻
 保存
 小盛
 並盛
@@ -18,7 +18,7 @@
 複製
 移動
 何か食べた
-#
+食事時間
 #
 #
 #

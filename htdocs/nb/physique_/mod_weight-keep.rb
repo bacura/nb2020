@@ -1,4 +1,4 @@
-# Weight keep module for Physique 0.00b
+# Weight keep module for Physique 0.01b
 #encoding: utf-8
 
 require 'time'
@@ -22,6 +22,11 @@ def physique_module( cgi, user, debug )
 			pgene = bio['pgene'].to_i
 			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
 		end
+	end
+
+	if height == nil || weight == nil || age == nil
+		puts l['error_no-set']
+		exit( 0 )
 	end
 
 	html = ''
@@ -367,7 +372,8 @@ def module_lp( language )
 		'label_bfr' => "体脂肪率 (%)",\
 		'data_past' => "過去",\
 		'data_recent' => "最近",\
-		'data_latest' => "直近"
+		'data_latest' => "直近",\
+		'error_no-set' => "設定から生体情報を設定してください。"
 	}
 
 	return l[language]

@@ -156,7 +156,8 @@ var koyomiG100check = function(){
 // Koyomi fix save
 var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 	var food_name = document.getElementById( "food_name" ).value;
-	var hh = document.getElementById( "hh_fix" ).value;
+	var hh_mm = document.getElementById( "hh_mm_fix" ).value;
+	var meal_time = document.getElementById( "meal_time_fix" ).value;
 	var food_number = document.getElementById( "food_number" ).value;
 
 	if( food_name != '' ){
@@ -210,7 +211,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 		var TOCPHD = document.getElementById( "TOCPHD" ).value;
 		var VITK = document.getElementById( "VITK" ).value;
 
-		var THIAHCL = document.getElementById( "THIAHCL" ).value;
+		var THIA = document.getElementById( "THIA" ).value;
 		var RIBF = document.getElementById( "RIBF" ).value;
 		var NIA = document.getElementById( "NIA" ).value;
 		var NE = document.getElementById( "NE" ).value;
@@ -225,13 +226,13 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 		var NACL_EQ = document.getElementById( "NACL_EQ" ).value;
 
 		$.post( "koyomi-fix.cgi", {
-			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh,
+			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
 			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, order:order,
 			ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
 			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLMF:CHOAVLMF, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
-			THIAHCL:THIAHCL, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
+			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
 			ALC:ALC, NACL_EQ:NACL_EQ
 		}, function( data ){ $( "#L3" ).html( data );});
 
@@ -286,39 +287,43 @@ var changeKoyomiAdd = function( com, code, origin ){
 	var yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
 	var tdiv = document.getElementById( "tdiv" ).value;
 	var hh = document.getElementById( "hh" ).value;
+	var meal_time = document.getElementById( "meal_time" ).value;
 	var ev = document.getElementById( "ev" ).value;
 	var eu = document.getElementById( "eu" ).value;
-	$.post( "koyomi-add.cgi", { command:com, code:code, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "koyomi-add.cgi", { command:com, code:code, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, ev:ev, eu:eu, origin:origin }, function( data ){ $( "#LF" ).html( data );});
 };
 
 // Updating code into Koyomi
 var saveKoyomiAdd = function( com, code, origin ){
 	var yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
 	var tdiv = document.getElementById( "tdiv" ).value;
-	var hh = document.getElementById( "hh" ).value;
+	var hh_mm = document.getElementById( "hh_mm" ).value;
+	var meal_time = document.getElementById( "meal_time" ).value;
 	var ev = document.getElementById( "ev" ).value;
 	var eu = document.getElementById( "eu" ).value;
 	var copy = 0;
 	if( document.getElementById( "copy" )){
 		if( document.getElementById( "copy" ).checked ){ copy = 1; }
 	}
-	$.post( "koyomi-add.cgi", { command:com, code:code, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin, copy:copy }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "koyomi-add.cgi", { command:com, code:code, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, ev:ev, eu:eu, origin:origin, copy:copy }, function( data ){ $( "#LF" ).html( data );});
 };
 
 // Saving code into Koyomi direct
 var saveKoyomiAdd_direct = function( code, yyyy, mm, dd, tdiv, origin ){
-	var hh = document.getElementById( "hh" ).value;
+	var hh_mm = document.getElementById( "hh_mm" ).value;
+	var meal_time = document.getElementById( "meal_time" ).value;
 	var ev = document.getElementById( "ev" ).value;
 	var eu = document.getElementById( "eu" ).value;
-	$.post( "koyomi-add.cgi", { command:"save", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, origin:origin }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "koyomi-add.cgi", { command:"save", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, ev:ev, eu:eu, origin:origin }, function( data ){ $( "#LF" ).html( data );});
 };
 
 // Modifying or copying code in Koyomi
 var modifysaveKoyomi_direct = function( code, yyyy, mm, dd, tdiv, origin ){
-	var hh = document.getElementById( "hh" ).value;
+	var hh_mm = document.getElementById( "hh_mm" ).value;
+	var meal_time = document.getElementById( "meal_time" ).value;
 	var copy = 0;
 	if( document.getElementById( "copy" ).checked ){ copy = 1; }
-	$.post( "koyomi-add.cgi", { command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin, copy:copy }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "koyomi-add.cgi", { command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, origin:origin, copy:copy }, function( data ){ $( "#LF" ).html( data );});
 };
 
 // Modifying or copying fix code in Koyomi
@@ -361,17 +366,20 @@ var modifychangeKoyomiFC = function( code, origin ){
 };
 
 // Set time to now
-var nowKoyomi = function(){
+var nowKoyomi = function( id ){
 	var today = new Date();
 	var hh = today.getHours();
-	document.getElementById( 'hh' ).value = hh;
+	var mm = today.getMinutes();
+	if( hh < 10 ){ hh = '0' + hh; }
+	if( mm < 10 ){ mm = '0' + mm; }
+	document.getElementById( id ).value = hh + ':' + mm;
 };
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi menu copy / move //////////////////////////////////////////////////////////////
 
 var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
-	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99 }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){ $( "#LF" ).html( data );});
 
 	pushBW();
 	flashBW();
@@ -383,29 +391,26 @@ var cmmKoyomi = function( cm_mode, yyyy, mm, dd, tdiv ){
 var cmmChangeKoyomi = function( cm_mode, origin ){
 	var yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
 	var tdiv = document.getElementById( "tdiv_cmm" ).value;
-	var hh = document.getElementById( "hh_cmm" ).value;
-	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#LF" ).html( data );});
+	var hh_mm = document.getElementById( "hh_mm_cmm" ).value;
+	var meal_time = document.getElementById( "meal_time_cmm" ).value;
+	$.post( "koyomi-cmm.cgi", { command:"init", cm_mode:cm_mode, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, origin:origin }, function( data ){ $( "#LF" ).html( data );});
 };
 
 var cmmSaveKoyomi = function( cm_mode, origin ){
 	var yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
 	var tdiv = document.getElementById( "tdiv_cmm" ).value;
-	var hh = document.getElementById( "hh_cmm" ).value;
+	var hh_mm = document.getElementById( "hh_mm_cmm" ).value;
+	var meal_time = document.getElementById( "meal_time_cmm" ).value;
 
-	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, origin:origin }, function( data ){ $( "#LF" ).html( data );});
 };
 
 var cmmSaveKoyomi_direct = function( cm_mode, yyyy, mm, dd, tdiv, origin ){
-	var hh = document.getElementById( "hh_cmm" ).value;
-	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, origin:origin }, function( data ){ $( "#LF" ).html( data );});
+	var hh_mm = document.getElementById( "hh_mm_cmm" ).value;
+	var meal_time = document.getElementById( "meal_time_cmm" ).value;
+	$.post( "koyomi-cmm.cgi", { command:"save", cm_mode:cm_mode, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, origin:origin }, function( data ){ $( "#LF" ).html( data );});
 };
 
-// Set time to now
-var cmmNowKoyomi = function(){
-	var today = new Date();
-	var hh = today.getHours();
-	document.getElementById( 'hh_cmm' ).value = hh;
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi EX //////////////////////////////////////////////////////////////
@@ -500,6 +505,9 @@ var initGinmi = function(){
 
 var ginmiForm = function( mod ){
 	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L1" ).html( data );});
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
 
@@ -529,7 +537,7 @@ var PhysiqueForm = function( mod ){
 // Mother and child init
 var initMomChai = function(){
 	$.post( "momchai.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
-	$.post( "momchai.cgi", { mod:'form' }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "momchai.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
 	dline = true;
 	dl1 = true;
@@ -539,6 +547,8 @@ var initMomChai = function(){
 var MomChaiForm = function( mod ){
 	$.post( "momchai.cgi", { mod:mod, step:'form' }, function( data ){ $( "#L1" ).html( data );});
 	$.post( "momchai.cgi", { mod:mod, step:'chart' }, function( data ){ $( "#L2" ).html( data );});
+	dl2 = true;
+	displayBW();
 };
 
 /////////////////////////////////////////////////////////////////////////////////

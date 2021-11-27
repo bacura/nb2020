@@ -1,252 +1,122 @@
-# Growth curve module for MomChai 0.00b
+# Growth curve module for Momchai 0.00b
 #encoding: utf-8
 
 require 'time'
 
 @module = 'growth-curve'
 
-def physique_module( cgi, user, debug )
-	lp = module_lp( user.language )
+def momchai_module( cgi, user, debug )
+	l = module_lp( user.language )
 	persed_today = Time.parse( $DATE )
 
 	#importing from config
-	res = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
-	birth = res.first['birth']
-	sex = res.first['sex'].to_i
-	weight = res.first['weight'].to_f
-	height = res.first['height'].to_f * 100
-	age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
+	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
+	if r.first
+		if r.first['bio'] != nil && r.first['bio'] != ''
+			bio = JSON.parse( r.first['bio'] )
+			sex = bio['sex'].to_i
+			birth = Time.parse( bio['birth'] )
+			birth_ = birth.strftime( "%Y-%m-%d" )
+			height = bio['height'].to_f * 100
+			weight = bio['weight'].to_f
+			kexow = bio['kexow'].to_i
+			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
+			age_yyyy = (( persed_today - birth ) / 31536000 ).to_i
+			age_mm = ((( persed_today - birth ) % 31536000 ) / ( 2628000 )).to_i
+		end
+	end
+
+	if height == nil || weight == nil || age == nil
+		puts l['error_no-set']
+		exit( 0 )
+	end
 
 	html = ''
 	case cgi['step']
 	when 'form'
-		module_js( lp )
+		module_js( l )
 
-		start_date = $DATE
-		pal = 1.50
-
-
-		eenergy = calc_energy( weight, height, age, sex, pal )
-
-		res = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, debug )
-		if res.first
-			mod_cfg_h = JSON.parse( res.first['json'] )
-			start_date = mod_cfg_h[@module]['start_date']
-			pal = mod_cfg_h[@module]['pal'].to_f
-			eenergy = mod_cfg_h[@module]['eenergy'].to_i
-		end
-
-		sex_ = [lp[1], lp[2]]
+		sex_ = [l['male'], l['female']]
 		female_selected = ''
 		female_selected = 'SELECTED ' if sex == 1
 
 html = <<-"HTML"
 		<div class='row'>
-		<h5>#{lp[3]}</h5>
+			<div class='col'><h5>#{l['chart_name']}</h5></div>
 		</div>
 
 		<div class='row'>
 		<div class='col-6'>
 		<table class='table table-sm'>
-			<thead><th></th><th>#{lp[4]}</th><th>#{lp[5]}</th><th>#{lp[6]}</th><th>#{lp[7]}</th></thead>
-			<tr><td></td><td>#{sex_[sex]}</td><td>#{age}</td><td>#{height}</td><td>#{weight}</td></tr>
+			<thead><th></th><th>#{l['start_date']}</th><th>#{l['age']}</th><th>#{l['height']}</th><th>#{l['weight']}</th><th>#{l['sex']}</th></thead>
+			<tr><td></td><td>#{birth_}</td><td>#{age_yyyy}#{l['sai']}#{age_mm}#{l['getsu']}</td><td>#{height}</td><td>#{weight}</td><td>#{sex_[sex]}</td></tr>
 		</table>
 		</div>
 		</div>
 
-		<div class='row'>
-			<div class='col-3'>
-				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{lp[8]}</span>
-					<input type='date' class='form-control' id='start_date' value='#{start_date}'>
-				</div>
-			</div>
-			<div class='col-3'>
-				<div class="input-group input-group-sm">
-					<label class="input-group-text">#{lp[9]}</label>
-					<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}'>
-				</div>
-			</div>
-
-			<div class='col-3'>
-				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{lp[10]}</span>
-					<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}'>
-				</div>
-			</div>
-			<div class='col-2' align="right">
-				<button class='btn btn-sm btn-primary' onclick="drawChart()">#{lp[11]}</button>
-			</div>
-		</div>
 HTML
 	when 'raw'
-		start_date = cgi['start_date']
-		pal = cgi['pal'].to_f
-		eenergy = cgi['eenergy'].to_i
-
-		json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal, "eenergy" => eenergy }} )
-		res = mdb( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' AND module='#{@module}';", false, debug )
-		if res.first
-			mdb( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{user.name}' AND module='#{@module}';", false, debug )
-		else
-			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, debug )
-		end
 
 		# X axis
 		x_day = []
-		persed_date = Time.parse( start_date )
-		0.upto( 95 ) do |c|
-			target_date = persed_date.strftime( "%Y-%m-%d" )
-			x_day[c] = target_date
+		persed_date = birth
+		while persed_date <= persed_today do
+			x_day << persed_date.strftime( "%Y-%m-%d" )
 			persed_date += 86400
 		end
 
 		#Koyomiex config
 		puts "Loading config<br>" if @debug
 		weight_kex = -1
-		denergy_kex = -1
+		height_kex = -1
 		r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
 			a = r.first['koyomiex'].split( ':' )
 			a.size.times do |c|
 				aa = a[c].split( "\t" )
+				height_kex = c if aa[0] == '2'
  				weight_kex = c if aa[0] == '3'
-				denergy_kex = c if aa[0] == '9'
 			end
 		end
 
 
-		# measured weight & delta energy
-		measured = []
-		denergy = []
-		persed_date = Time.parse( start_date )
-		0.upto( 95 ) do |c|
-			break if persed_date > persed_today
+		# measured height & weight
+		height_measured = []
+		weight_measured = []
+		persed_date = birth
+		while persed_date <= persed_today do
 			target_date = persed_date.strftime( "%Y-%m-%d" )
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{target_date}';", false, @debug )
 			if r.first
-				measured[c] = r.first["item#{weight_kex}"].to_f
-				denergy[c] = ( r.first["item#{denergy_kex}"].to_i ) * -1 if denergy_kex >= 0
-				denergy[c] = 0 if denergy[c] == nil
-			else
-				measured[c] = nil
-				denergy[c] = 0
-			end
-			persed_date += 86400
-		end
-
-		#Day 4 stable weight
-		d4sw = []
-		if measured.size >= 1 and measured[0] != nil
-			persed_date = Time.parse( start_date ) + 86400
-			skip = 0
-			0.upto( 95 ) do |c|
-				break if persed_date > persed_today
-				if measured[c] != nil
-					case skip
-					when 0
-						d4sw[c] = measured[c]
-						skip = 1
-					when 1
-						d4sw[c] = ( measured[c] + ( measured[c-1] / 2 )) / 1.5
-						skip = 2
-					when 2
-						d4sw[c] = ( measured[c] + ( measured[c-1] / 2 ) + ( measured[c-2] / 4 )) / 1.75
-						skip = c
-					else
-						d4sw[c] = ( measured[c] + ( measured[c-1] / 2 ) + ( measured[c-2] / 4 ) + ( measured[c-3] / 8 )) / 1.875
-						skip = c
-					end
+				if height_kex >= 0
+					height_measured << r.first["item#{height_kex}"].to_f
 				else
-					d4sw[c] = nil
-					skip = 0
+					height_measured << 'NA'
 				end
-
-				persed_date += 86400
-			end
-			d4sw.map! do |x|
-				if x == nil
-					x = 'NA'
+				if weight_kex >= 0
+					weight_measured << r.first["item#{weight_kex}"].to_f
 				else
-					x.round( 2 )
-				end
-			end
-		end
-
-
-		#Intake enargy
-		ienergy = []
-		persed_date = Time.parse( start_date )
-		0.upto( 95 ) do |c|
-			break if persed_date > persed_today
-			target_date = persed_date.strftime( "%Y-%m-%d" )
-			res_koyomi = mdb( "SELECT fzcode FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=1 AND tdiv!=4 AND date='#{target_date}';", false, debug )
-			if res_koyomi.first
-				res_fcz = mdb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{res_koyomi.first['fzcode']}';", false, debug )
-				if res_fcz.first
-					ienergy[c] = res_fcz.first['ENERC_KCAL'].to_i
-				else
-					ienergy[c] = 0
+					weight_measured << 'NA'
 				end
 			else
-				ienergy[c] = 0
+				height_measured << 'NA'
+				weight_measured << 'NA'
 			end
 			persed_date += 86400
 		end
-
-
-		#Actual enargy
-		aenergy = []
-		persed_date = Time.parse( start_date )
-		0.upto( 95 ) do |c|
-			break if persed_date > persed_today
-			if ienergy[c] == nil
-				aenergy[c] = denergy[c]
-			else
-				aenergy[c] = ienergy[c] + denergy[c]
-			end
-			persed_date += 86400
-		end
-
-		#Guide weight
-		guide = []
-		guide[0] = measured[0]
-		guide[0] = weight if measured[0] == nil
-		1.upto( 95 ) do |c|
-			cenergy = calc_energy( guide[c-1], height, age, sex, pal )
-			guide[c] = ( guide[0] - (( cenergy.to_f - eenergy.to_f ) / 7200 * c ))
-		end
-		guide.map! do |x| x.round( 2 ) end
-
-		#Theoletical weight
-		theoletic = []
-		theoletic[0] = measured[0]
-		theoletic[0] = weight if measured[0] == nil
-		persed_date = Time.parse( start_date ) + 86400
-		1.upto( 95 ) do |c|
-			break if persed_date > persed_today
-			cenergy = calc_energy( theoletic[c-1], height, age, sex, pal )
-			theoletic[c] = ( theoletic[c-1] - (( cenergy.to_f - aenergy[c] ) / 7200 ))
-			persed_date += 86400
-		end
-		theoletic.map! do |x| x.round( 2 ) end
 
 		raw = []
 		raw[0] = x_day.unshift( 'x_day' ).join( ',' )
-		raw[1] = guide.unshift( 'ガイド体重' ).join( ',' )
-		raw[2] = theoletic.unshift('理論体重').join( ',' )
-		raw[3] = d4sw.unshift( 'D4安定体重' ).join( ',' )
-		raw[4] = ienergy.unshift( lp[100] ).join( ',' )
-		raw[5] = denergy.unshift( lp[101] ).join( ',' )
-		raw[6] = aenergy.unshift( lp[102] ).join( ',' )
+		raw[1] = height_measured.unshift( l['data_height'] ).join( ',' )
+		raw[2] = weight_measured.unshift( l['data_weight'] ).join( ',' )
+		raw[9] = sex
 		puts raw.join( ':' )
 		exit
 
 	when 'chart'
 		html = '<div class="row">'
-		html << '<div class="col-1"></div>'
-		html << '<div class="col-10"><div id="physique_weight_chart" align="center"></div></div>'
-		html << '<div class="col-1"></div>'
+		html << "<div class='col-6' align='center'><h6>#{l['data_height']}</h6><div id='momchai_#{@module}-height'></div></div>"
+		html << "<div class='col-6' align='center'><h6>#{l['data_weight']}</h6><div id='momchai_#{@module}-weight'></div></div>"
 		html << '</div>'
 	end
 
@@ -254,99 +124,133 @@ HTML
 end
 
 
-def calc_energy( weight, height, age, sex, pal )
-	result = 0
-	if sex == 0
-		result = (( 0.0481 * weight + 0.0234 * height - 0.0138 * age - 0.4235 ) * 1000 / 4.186 )
-	else
-		result = (( 0.0481 * weight + 0.0234 * height - 0.0138 * age - 0.9708 ) * 1000 / 4.186 )
-	end
-	eer_result = ( result * pal )
-
-	return eer_result
-end
-
-
-def module_js( lp )
+def module_js( l )
 	js = <<-"JS"
 <script type='text/javascript'>
 
 var drawChart = function(){
-	dl2 = true;
 //	dl3 = true;
 	displayBW();
 
-	var start_date = document.getElementById( "start_date" ).value;
-	var pal = document.getElementById( "pal" ).value;
-	var eenergy = document.getElementById( "eenergy" ).value;
-
-//	$.post( "physique.cgi", { mod:'weight', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( "#L3" ).html( data );});
-	$.post( "physique.cgi", { mod:'weight', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
+//	$.post( "momchai.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
+	$.post( "momchai.cgi", { mod:'#{@module}', step:'raw' }, function( raw ){
 
 		var column = ( String( raw )).split( ':' );
-		var chart = c3.generate({
-			bindto: '#physique_weight_chart',
-//			size: { width: 960, height: 450 },
+//		var x_day = ( String( column[0] )).split(',');
+//		var y_heihgt = ( String( column[1] )).split(',');
+//		var y_weight = ( String( column[2] )).split(',');
+		var sex = column[9];
 
+		var x_ps = ["日付",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710,820,1002,1186,1368,1551,1733,1916,2098,2281];
+
+		if( sex == 0 ){
+			var wps3 = ["3%",2.104,2.06,2.01,2,2.034,2.04,2.997021507,3.527472996,4.413282541,5.120157591,5.672046162,6.100724813,6.443201465,6.725328669,6.959842256,7.159872128,7.3391929,7.511226951,7.682091146,7.852706664,8.022985245,8.192822119,8.362086305,8.530634096,8.698311668,8.864957231,9.030402831,9.194475875,9.357000432,9.51779837,10.06453973,10.93631012,11.72029998,12.41717248,13.06562779,13.71386599,14.37421868,15.02652515,15.55221473];
+			var wps10 = ["10%",2.445,2.386,2.33,2.33,2.356,2.35,3.37233801,3.944235026,4.881584529,5.612792871,6.172269253,6.599449868,6.936808396,7.213065322,7.44195839,7.637213612,7.812995993,7.982966873,8.152995933,8.323680215,8.494851534,8.666325934,8.837909238,9.009403118,9.180606022,9.35131397,9.521321245,9.690421009,9.85840584,10.02506822,10.595132,11.51492749,12.35314341,13.10437346,13.80130673,14.4989129,15.23283497,16.02173677,16.84244294];
+			var wps25 = ["25%",2.72,2.616,2.573,2.578,2.602,2.62,3.739001362,4.352365147,5.342984235,6.10169027,6.672591979,7.102316088,7.438582931,7.71290957,7.940011932,8.134203996,8.310031669,8.481373185,8.653786826,8.827526046,9.002376779,9.17811231,9.354503677,9.531321365,9.708335532,9.885316211,10.0620335,10.23825771,10.41375957,10.58831034,11.18861414,12.16818238,13.07292524,13.89208385,14.65323111,15.4167801,16.23765872,17.16552612,18.24060453];
+			var wps50 = ["50%",3,2.894,2.838,2.84,2.88,2.9,4.132990847,4.791782426,5.842381428,6.634319195,7.221660746,7.658471103,7.998000099,8.274748252,8.504466768,8.702091662,8.882558953,9.059936907,9.239335478,9.420579692,9.60342627,9.787631934,9.972953404,10.1591474,10.34597065,10.53317986,10.72053176,10.90778307,11.09469051,11.28101081,11.92515686,12.98837115,13.98504546,14.90015545,15.75802923,16.62234729,17.55850113,18.63188222,19.90788204];
+			var wps75 = ["75%",3.27,3.144,3.086,3.104,3.142,3.173,4.514970485,5.218516904,6.329613643,7.157068148,7.764230994,8.212137483,8.559303659,8.843103219,9.080275841,9.286348559,9.476609111,9.665250281,9.856800202,10.05057809,10.24631331,10.44376322,10.64268291,10.84282676,11.04394837,11.24580044,11.44813476,11.65070217,11.85325243,12.05553431,12.75792639,13.92919328,15.04351509,16.0846731,17.07890762,18.08850974,19.16567838,20.35542995,21.70216643];
+			var wps90 = ["90%",3.5,3.378,3.325,3.35,3.378,3.416,4.849863245,5.593135026,6.758944645,7.619979063,8.247495797,8.708482615,9.066014191,9.359979475,9.607983395,9.826070271,10.0298192,10.23347896,10.44092574,10.65093784,10.86320589,11.07749021,11.29354402,11.51111931,11.72996668,11.94983525,12.17047258,12.39162457,12.61303543,12.83444767,13.60582869,14.90281121,16.15342716,17.34483986,18.5135867,19.71480971,20.94835934,22.18590251,23.43210907];
+			var wps97 = ["97%",3.76,3.634,3.56,3.59,3.618,3.65,5.17313266,5.955125367,7.175077903,8.07052729,8.720201185,9.196723058,9.567535703,9.874968923,10.13747833,10.37162298,10.59326148,10.8166549,11.04491233,11.27618707,11.51010848,11.74643383,11.98490552,12.22526444,12.46724984,12.71059927,12.95504855,13.20033178,13.44618142,13.69232841,14.5524679,16.00978623,17.43443245,18.82383482,20.23991859,21.72366039,23.14868912,24.32532893,25.2526534];
+
+			var hps3 = ["3%",44,'NA','NA','NA','NA','NA',48.71373849,50.88244271,54.51900166,57.48605524,59.9020668,61.88870605,63.56798301,65.02170955,66.2906834,67.41408903,68.43126688,69.38168817,70.30410689,71.21788916,72.12292769,73.01827898,73.90301773,74.77624263,75.63708166,76.48469676,77.31828778,78.13709557,78.94040406,79.72754106,81.11681169,85.18374173,88.79058157,92.03074307,94.99256484,97.7789332,100.5051032,103.2730394,106.153996];
+			var hps10 = ["10%",46,'NA','NA','NA','NA','NA',50.36375576,52.49063357,56.05548996,58.96352115,61.33311148,63.28574809,64.94315243,66.38598129,67.65316037,68.78212742,69.81058042,70.77641228,71.71685678,72.65042303,73.5768072,74.49489528,75.40358452,76.30178545,77.18842368,78.06244158,78.92279962,79.76847744,80.59847454,81.41181055,82.85911435,87.04393018,90.74173353,94.05724895,97.0928414,99.9679787,102.8184881,105.775064,108.9570285];
+			var hps25 = ["25%",47.4,'NA','NA','NA','NA','NA',51.91022181,54.01765269,57.54373668,60.4158318,62.75557766,64.68645135,66.33132434,67.77064593,69.04206961,70.1816531,71.22566227,72.21051628,73.17196424,74.12768959,75.07724782,76.01940921,76.95294812,77.87664335,78.78927851,79.68964226,80.57652859,81.44873697,82.30507251,83.14434595,84.6498178,88.96079822,92.7643295,96.17271012,99.29802738,102.2717577,105.2446351,108.3667304,111.7857343];
+			var hps50 = ["50%",49,'NA','NA','NA','NA','NA',53.50566831,55.61131512,59.12557147,61.98132512,64.30581319,66.22627279,67.86801726,69.31211309,70.59537988,71.75271349,72.81900974,73.82916448,74.81731959,75.8002759,76.77749322,77.74767739,78.70953423,79.66176959,80.6030893,81.5321992,82.44780514,83.34861294,84.23332845,85.1006575,86.66995144,91.12932346,95.06723548,98.59991229,101.8444889,104.9390357,108.0425583,111.3149725,114.9161942];
+			var hps75 = ["75%",50.2,'NA','NA','NA','NA','NA',54.99237122,57.11168673,60.64000434,63.50026862,65.82614402,67.74951236,69.39891866,70.85668672,72.15926649,73.34069633,74.4346807,75.47467611,76.49323582,77.50629683,78.51327687,79.51288091,80.50381867,81.48480452,82.45455738,83.41180066,84.35526214,85.28367389,86.19577224,87.09029775,88.72248431,93.33917964,97.43027423,101.1113573,104.4980504,107.7265509,110.9537868,114.3371504,118.0340077];
+			var hps90 = ["90%",51.5,'NA','NA','NA','NA','NA',56.25102021,58.39259505,61.95121721,64.83063905,67.1703982,69.10688902,70.77196626,72.24946135,73.57578292,74.7843917,75.9080293,76.97889804,78.02811461,79.07083842,80.10648571,81.13381114,82.15159036,83.15861886,84.153711,85.13569888,86.10343146,87.05577383,87.99160671,88.90982623,90.59775374,95.36393014,99.60985991,103.4468518,106.9831272,110.3446354,113.6759868,117.1218255,120.8296815];
+			var hps97 = ["97%",52.6,'NA','NA','NA','NA','NA',57.42922071,59.59991941,63.20179334,66.11216905,68.47615145,70.43464858,72.12297579,73.62668082,74.98232272,76.22291996,77.38032894,78.48552557,79.56818145,80.64267303,81.70843976,82.76432829,83.80923761,84.8421151,85.86195253,86.8677823,87.85867411,88.83373234,89.79209438,90.73292993,92.47501416,97.39629768,101.8116568,105.8249529,109.5311191,113.0366938,116.4627751,119.9319508,123.5799288];
+		}else{
+			var wps3 = ["3%",2.126,2.074,2.038,2.028,2.046,2.026,2.904588275,3.385274946,4.190423697,4.836802159,5.345693616,5.743739816,6.060660433,6.318261327,6.529358771,6.706954221,6.864446093,7.015475936,7.16371711,7.312128351,7.46009534,7.607674194,7.754921096,7.901894467,8.048656975,8.195277403,8.341832403,8.488408121,8.635101695,8.782022587,9.299115082,10.18433539,11.03779616,11.8277484,12.55938392,13.2730179,14.00921998,14.80802862,15.71038281];
+			var wps10 = ["10%",2.408,2.338,2.289,2.28,2.306,2.31,3.222909263,3.733726818,4.578665342,5.247796815,5.768929172,6.173230025,6.493683752,6.75390794,6.967461378,7.147879279,7.308986586,7.46478961,7.6186588,7.773438637,7.928418348,8.083613664,8.23904131,8.394719915,8.550670884,8.706919219,8.863494324,9.02043076,9.17776897,9.335555945,9.891685857,10.84527045,11.76468916,12.61321081,13.39387732,14.14805984,14.9181889,15.74647858,16.67585143];
+			var wps25 = ["25%",2.662,2.56,2.508,2.508,2.535,2.54,3.540745221,4.084628154,4.974890806,5.671548824,6.20881087,6.622491974,6.94903818,7.21404769,7.431932033,7.616843061,7.783094032,7.945101407,8.105921013,8.268287001,8.431406503,8.595271676,8.759875439,8.925211694,9.091275554,9.258063562,9.425573914,9.593806667,9.762763961,9.932450217,10.53191994,11.56395252,12.56271442,13.48585036,14.33325455,15.14625191,15.96792496,16.84147063,17.81063595];
+			var wps50 = ["50%",2.935,2.814,2.761,2.761,2.788,2.81,3.889054583,4.472274662,5.418334236,6.150714762,6.710370843,7.138257079,7.474785616,7.747892085,7.973035602,8.165132827,8.339100421,8.509855043,8.680088897,8.852417053,9.025973611,9.200746117,9.376722116,9.553889156,9.732234782,9.911746541,10.09241198,10.27421864,10.45715408,10.64120583,11.29378159,12.42536853,13.52986374,14.55837511,15.50639967,16.41382362,17.32246311,18.2741343,19.31065333];
+			var wps75 = ["75%",3.18,3.056,2.99,3,3.036,3.0645,4.232843066,4.85779424,5.864931826,6.638291138,7.225109306,7.671372689,8.021526149,8.305950108,8.541235072,8.743133483,8.927221408,9.108956925,9.290646718,9.474785837,9.660453195,9.847655049,10.0363977,10.22668757,10.41853135,10.61193609,10.8069094,11.00345953,11.20159562,11.40132788,12.11279866,13.35890911,14.59126614,15.75487983,16.84060561,17.88578624,18.92845584,20.00488953,21.14914941];
+			var wps90 = ["90%",3.414,3.28,3.223,3.23,3.256,3.284,4.538788678,5.203112772,6.269414323,7.084025943,7.69940669,8.165926272,8.531672227,8.829287577,9.076433726,9.289663644,9.485186302,9.678975957,9.872965924,10.06953708,10.26773182,10.46759306,10.66916595,10.87249805,11.0776397,11.28464435,11.49356903,11.704475,11.91742833,12.13250078,12.90247417,14.26633203,15.63636877,16.95350248,18.20543403,19.42737862,20.65208588,21.90575364,23.20628708];
+			var wps97 = ["97%",3.666,3.534,3.458,3.47,3.5,3.544,4.837853635,5.542558848,6.670907236,7.530194969,8.177620612,8.667710848,9.052128069,9.365782097,9.627423279,9.854427667,10.0636568,10.27161422,10.47983185,10.690566,10.9028323,11.1167275,11.33235633,11.54983167,11.76927486,11.99081629,12.21459627,12.44076611,12.66948968,12.9009452,13.73431286,15.22993883,16.76078002,18.26641566,19.73441328,21.20047399,22.69226026,24.22056848,25.77266115];
+
+			var hps3 = ["3%",44,'NA','NA','NA','NA','NA',48.08829116,50.00233687,53.26251971,55.98051634,58.24071634,60.13219411,61.7463834,63.14887846,64.37850716,65.47393873,66.47454055,67.42007633,68.34960025,69.28197204,70.21581082,71.14884222,72.07878719,73.00336927,73.92031953,74.82737941,75.72230158,76.60284921,77.46679372,78.31191128,79.8244394,84.05231983,87.70282112,90.91465121,93.8222199,96.52723655,99.10325381,101.6340035,104.2256317];
+			var hps10 = ["10%",45.5,'NA','NA','NA','NA','NA',49.66530673,51.59652178,54.87665602,57.60338934,59.86706572,61.76094216,63.37921698,64.78849824,66.02724062,67.13330563,68.14501341,69.10097278,70.03910686,70.97788428,71.91624914,72.85228343,73.78405867,74.70963841,75.62708022,76.53443709,77.42975842,78.3110904,79.17647597,80.02395431,81.52706745,85.81911899,89.57240394,92.92683848,96.02063479,98.95942038,101.8178512,104.6736042,107.6117817];
+			var hps25= ["25%",47,'NA','NA','NA','NA','NA',51.14153098,53.08757564,56.38555341,59.12126291,61.39017904,63.28918539,64.91492363,66.3349147,67.58729164,68.70921556,69.73807836,70.71142905,71.66609882,72.62006294,73.57238976,74.52132066,75.4650926,76.40193852,77.33008765,78.24776572,79.15319523,80.04459559,80.92018326,81.7781718,83.29395916,87.6729029,91.53472992,95.02160644,98.27434901,101.400077,104.4724752,107.5645472,110.7505029];
+			var hps50 = ["50%",48.5,'NA','NA','NA','NA','NA',52.66274801,54.62285487,57.93830397,60.68385214,62.95986897,64.86672404,66.5034566,67.93850869,69.20972507,70.35362023,71.40670864,72.40550475,73.38572606,74.36475951,75.34166154,76.31469156,77.28210902,78.24217334,79.19314397,80.13328034,81.06084187,81.97408802,82.87127821,83.75067187,85.30814305,89.81203595,93.79998746,97.41781355,100.8098192,104.0855566,107.3198249,110.5859124,113.9571075];
+			var hps75 = ["75%",50,'NA','NA','NA','NA','NA',54.07873641,56.05085168,59.38167789,62.13676037,64.42070655,66.33693111,67.98661378,69.43904792,70.73186001,71.90104465,72.98239177,74.01153423,75.02320155,76.03420499,77.04350549,78.04928268,79.04970954,80.04295205,81.02716881,82.00051074,82.96112086,83.9071342,84.83667775,85.74787065,87.37764365,92.03946138,96.15972325,99.88901092,103.3783934,106.7445959,110.069464,113.4338353,116.9192002];
+			var hps90 = ["90%",51,'NA','NA','NA','NA','NA',55.27639687,57.25787627,60.60101458,63.36434817,65.65585274,67.58138524,69.24387786,70.71334609,72.02727529,73.22128985,74.3306483,75.39031732,76.43425273,77.47878957,78.5227779,79.56428845,80.60136787,81.63203598,82.65428326,83.66606847,84.66531661,85.6499174,86.6177243,87.56655444,89.28896249,94.12398449,98.3689593,102.1796041,105.7185127,109.1161636,112.4678891,115.8674671,119.4090757];
+			var hps97 = ["97%",52,'NA','NA','NA','NA','NA',56.39660532,58.38620063,61.74026318,64.5114074,66.810595,68.7458675,70.42175464,71.9089531,73.24485572,74.46480294,75.60363147,76.69576282,77.77449829,78.8557596,79.93829435,81.0200637,82.09897755,83.17288655,84.23957405,85.29674828,86.34203518,87.37297211,88.38700326,89.38147735,91.22221068,96.25987358,100.6335139,104.5045801,108.0548193,111.437859,114.7700858,118.162985,121.726103];
+		}
+
+		var chart_gch = c3.generate({
+			bindto: '#momchai_#{@module}-height',
+			size: { height: 600 },
 			data: {
+				x:'日付',
 				columns: [
-					( String( column[0] )).split(','),	// x_day
-					( String( column[1] )).split(','),	// ガイド体重
-					( String( column[2] )).split(','),	// 理論体重
-					( String( column[3] )).split(','),	// D4安定体重
-					( String( column[4] )).split(','),	// 摂取エネルギー
-					( String( column[5] )).split(','), 	// Δ消費エネルギー
-					( String( column[6] )).split(',') 	// 実エネルギー
+					x_ps,
+					hps3, hps10, hps25, hps50, hps75, hps90, hps97
 				],
-				x: 'x_day',
-				axes: {
-					#{lp[100]}: 'y2',
-					#{lp[101]}: 'y2',
-					#{lp[102]}: 'y2'
-				},
-				labels: false,
-				type : 'line',
-				types: { #{lp[100]}: 'area-step', #{lp[101]}: 'area-step', #{lp[102]}: 'area-step' },
+				type: 'spline',
 				colors: {
-					#{lp[103]}: '#d3d3d3',
-					#{lp[104]}: '#228b22',
-					#{lp[105]}: '#dc143c',
-					#{lp[100]}: '#ffd700',
-					#{lp[101]}: '#00ffff',
-					#{lp[102]}: '#d2691e'
-				},
-				regions: {
-					#{lp[103]}: { 'start':0, 'style':'dashed' }
+					'3%': '#969696',
+					'10%': '#646464',
+					'25%': '#646464',
+					'50%': '#000000',
+					'75%': '#646464',
+					'90%': '#646464',
+					'97%': '#969696'
 				}
 			},
-
 			axis: {
-		    	x: {
-		    		type: 'timeseries',
-				},
-				y: {
-		    		type: 'linear',
-					label: { text: '#{lp[106]}', position: 'outer-middle' }
-				},
-				y2: {
-					show: true,
-		    		type: 'linear',
-		    		max: 4000,
-					label: { text: '#{lp[107]}', position: 'outer-middle' }
+				x: { label: '#{l['label_day']}' },
+				y: { label: '#{l['label_height']}' }
+			},
+			grid: {
+				x: { show: true },
+				y: { show: true }
+			},
+			tooltip: { show: false },
+			zoom: { enabled: true },
+			point: { show: false },
+			line: { connectNull: true }
+		});
+//--------------------------------------------------------------------------
+		var chart_gcw = c3.generate({
+			bindto: '#momchai_#{@module}-weight',
+			size: { height: 600 },
+			data: {
+				x:'日付',
+				columns: [
+					x_ps,
+					wps3, wps10, wps25, wps50, wps75, wps90, wps97
+				],
+				type: 'spline',
+				colors: {
+					'3%': '#969696',
+					'10%': '#646464',
+					'25%': '#646464',
+					'50%': '#000000',
+					'75%': '#646464',
+					'90%': '#646464',
+					'97%': '#969696'
 				}
 			},
-
-			legend: {
-				show: true,
-				position: 'bottom'
+			axis: {
+				x: { label: '#{l['label_day']}' },
+				y: { label: '#{l['label_weight']}' }
 			},
-
-			line: { connectNull: true, step: { type: 'step' }},
-			bar: { width: { ratio: 1.0 }},
-			point: { show: true, r: 2 }
+			grid: {
+				x: { show: true },
+				y: { show: true }
+			},
+			tooltip: { show: false },
+			zoom: { enabled: true },
+			point: { show: false },
+			line: { connectNull: true }
 		});
 	});
-};
+}
+
+
+
+drawChart();
+
 </script>
 JS
 	puts js
@@ -354,27 +258,24 @@ end
 
 
 def module_lp( language )
-	mlp = Hash.new
-	mlp['jp'] = []
-	mlp['jp'][1] = "男性"
-	mlp['jp'][2] = "女性"
-	mlp['jp'][3] = "減量チャート"
-	mlp['jp'][4] = "代謝的性別"
-	mlp['jp'][5] = "年齢"
-	mlp['jp'][6] = "身長（cm）"
-	mlp['jp'][7] = "初期体重（kg）"
-	mlp['jp'][8] = "開始日"
-	mlp['jp'][9] = "身体活動レベル"
-	mlp['jp'][10] = "予定エネルギー（kcal）"
-	mlp['jp'][11] = "描画・更新"
-	mlp['jp'][100] = "摂取エネルギー"
-	mlp['jp'][101] = "Δ消費エネルギー"
-	mlp['jp'][102] = "実エネルギー"
-	mlp['jp'][103] = "ガイド体重"
-	mlp['jp'][104] = "理論体重"
-	mlp['jp'][105] = "D4安定体重"
-	mlp['jp'][106] = "体重 (kg)"
-	mlp['jp'][107] = "エネルギー (kcal)"
+	l = Hash.new
+	l['jp'] = { 'male' => "男性",\
+		'female' => "女性",\
+		'chart_name' => "成長曲線",\
+		'sex' => "代謝的性別",\
+		'age' => "年齢",\
+		'sai' => "歳",\
+		'getsu' => "ヶ月",\
+		'height' => "身長（cm）",\
+		'weight' => "体重（kg）",\
+		'start_date' => "出生日",\
+		'data_height' => "身長",\
+		'data_weight' => "体重",\
+		'label_height' => "身長 (cm)",\
+		'label_weight' => "体重 (kg)",\
+		'label_day' => "時間 (日)",\
+		'error_no-set' => "設定から生体情報を設定してください。"
+	}
 
-	return mlp[language]
+	return l[language]
 end

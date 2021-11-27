@@ -1,9 +1,12 @@
 # Ginmi module for METs 0.00b
 #encoding: utf-8
 
+@debug = false
 
 def ginmi_module( cgi, user )
+	l = module_lp( user.language )
 	module_js()
+
 	command = cgi['command']
 	weight = cgi['weight']
 	heading = cgi['heading']
@@ -21,26 +24,39 @@ def ginmi_module( cgi, user )
 
 	html = ''
 	case command
-	when 'form', 'koyomiex'
+	when 'form'
 		#importing from config
 
-		r = mdb( "SELECT weight, koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 		weight = 0.0
-		weight = r.first['weight'] if r.first
+		kexow = 0
+		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		if r.first
+			if r.first['bio'] != nil && r.first['bio'] != ''
+				bio = JSON.parse( r.first['bio'] )
+				weight = bio['weight'].to_f
+				kexow = bio['kexow'].to_i
+			end
+		end
 
-		# inporting from koyomiex
-		if command == 'koyomiex' && r.first['koyomiex']
-			a = r.first['koyomiex'].split( ':' )
-			a.size.times do |c|
-				aa = a[c].split( "\t" )
-				if aa[0] == '3'
-					rr = mdb( "SELECT item#{aa[0]} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{aa[0]}!='' ORDER BY date DESC LIMIT 1;", false, true )
-					if rr.first
-						weight = rr.first["item#{aa[0]}"].to_f
-					end
+		# importing from koyomiex
+		if kexow == 1
+			kex_select = Hash.new
+			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+			if r.first
+				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+					koyomi = JSON.parse( r.first['koyomi'] )
+					kex_select = koyomi['kex_select']
+				end
+			end
+
+			kex_select.each do |k, v|
+				if v == 3
+					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
+					weight = rr.first["item#{k}"].to_f if rr.first
 				end
 			end
 		end
+
 	when 'result', 'display'
 		mets_mm = hh * 60 + mm
 		mets = ''
@@ -278,9 +294,6 @@ RESULT_HTML
 				<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 			</div>
 		</div>
-		<div class='col-2'>
-			<button class='btn btn-sm btn-outline-primary' onclick="ginmiEnergyMETskex()">拡張こよみ適用</button>
-		</div>
 	</div>
 	<br>
 
@@ -430,4 +443,17 @@ var ginmiEnergyMETexDelta = function( exdelta, exdelta_no ){
 </script>
 JS
 	puts js
+end
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'title' => "BMI 計算フォーム",\
+		'age' => "年齢",\
+		'height' => "身長(m)",\
+		'weight' => "体重(kg)",\
+		'calc' => "計算"
+	}
+
+	return l[language]
 end

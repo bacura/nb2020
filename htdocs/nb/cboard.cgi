@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.01b
+#Nutrition browser 2020 cutting board 0.02b
 
 #==============================================================================
 #LIBRARY
@@ -58,10 +58,11 @@ def energy_calc( food_list, uname, dish_num )
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCT} WHERE FN='#{e.fn}';"
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
 			r = mdb( q, false, @debug )
-			t = convert_zero( r.first['ENERC_KCAL'] )
-
-			energy += ( t * BigDecimal( e.weight.to_s ) / 100 )
-			energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
+			if r.first
+				t = convert_zero( r.first['ENERC_KCAL'] )
+				energy += ( t * BigDecimal( e.weight.to_s ) / 100 )
+				energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
+			end
 		end
 	end
 	energy = ( energy / dish_num.to_i ).to_i
@@ -663,29 +664,33 @@ food_list.each do |e|
 
 	# 単位の生成と選択
   	unless e.fn == '-' || e.fn == '+'
-		unit_set = []
+		unit_set = [ 0, 1, 15 ]
 		unit_select = []
+		if e.unit == '15'
+			unit_select = [ '', '', 'SELECTED' ]
+		elsif e.unit == '1'
+			unit_select = [ '', 'SELECTED', '' ]
+		else
+			unit_select = [ 'SELECTED', '', '' ]
+		end
+
 		r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{e.fn}';", false, @debug )
-		unless r.first['unitc'] == nil || r.first['unitc'] == ''
-			t = r.first['unitc'].split( ':' )
-			t.size.times do |cc|
-				unless t[cc] == '0.0'
-					unit_set << cc
-					if cc == e.unit.to_i
-						unit_select << 'SELECTED'
-					else
-						unit_select << ''
+
+		if r.first
+			unless r.first['unitc'] == nil || r.first['unitc'] == ''
+				unit_set = []
+				unit_select = []
+				t = r.first['unitc'].split( ':' )
+				t.size.times do |cc|
+					unless t[cc] == '0.0'
+						unit_set << cc
+						if cc == e.unit.to_i
+							unit_select << 'SELECTED'
+						else
+							unit_select << ''
+						end
 					end
 				end
-			end
-		else
-			unit_set = [ 0, 1, 15 ]
-			if e.unit == '15'
-				unit_select = [ '', '', 'SELECTED' ]
-			elsif e.unit == '1'
-				unit_select = [ '', 'SELECTED', '' ]
-			else
-				unit_select = [ 'SELECTED', '', '' ]
 			end
 		end
 	end

@@ -85,27 +85,18 @@ sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 
 
 puts "Loading config<br>" if @debug
-item_nos = []
-item_names = []
-item_units = []
-r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+kex_select = Hash.new
+kex_item = Hash.new
+kex_unit = Hash.new
+r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
-	a = r.first['koyomiex'].split( ':' )
-	0.upto( item_max ) do |c|
-		aa = a[c].split( "\t" )
-		if aa[0] == "0"
-			item_nos << 0
-			item_names << ''
-			item_units << ''
-		elsif aa[0] == "1"
-			item_nos << 1
-			item_names << aa[1]
-			item_units << aa[2]
-		else
-			item_nos << aa[0].to_i
-			item_names << @kex_item[aa[0].to_i]
-			item_units << @kex_unit[aa[0].to_i]
-		end
+	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+		koyomi = JSON.parse( r.first['koyomi'] )
+		start = koyomi['start'].to_i
+		kex_select = koyomi['kex_select']
+		kex_item = koyomi['kex_item']
+		kex_unit = koyomi['kex_unit']
+		p koyomi if @debug
 	end
 end
 
@@ -121,16 +112,20 @@ if command == 'update'
 end
 
 
-####
+puts "Header html<br>" if @debug
 th_html = '<thead><tr>'
 th_html << "<th align='center'></th>"
 0.upto( item_max ) do |c|
-	th_html << "<th align='center'>#{item_names[c]} (#{item_units[c]})</th>" if item_nos[c] != 0
+	if kex_select[c.to_s] == 1
+		th_html << "<th align='center'>#{kex_item[c.to_s]} (#{kex_unit[c.to_s]})</th>"
+	elsif kex_select[c.to_s] != 0
+		th_html << "<th align='center'>#{@kex_item[kex_select[c.to_s]]} (#{@kex_unit[kex_select[c.to_s]]})</th>"
+	end
 end
 th_html << '</tr></thead>'
 
 
-####
+puts "Week html<br>" if @debug
 date_html = ''
 week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
@@ -138,6 +133,8 @@ r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND ( da
 koyomir = []
 r.each do |e| koyomir[e['date'].day] = e end
 
+
+puts "Cell data html<br>" if @debug
 1.upto( calendar.ddl ) do |c|
 	date_html << "<tr id='day#{c}'>"
 	if week_count == 0
@@ -145,22 +142,25 @@ r.each do |e| koyomir[e['date'].day] = e end
 	else
 		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
 	end
+
 	if koyomir[c] == nil
 		0.upto( item_max ) do |cc|
-			date_html << "<td><input type='text' id='id#{c}_#{item_nos[cc]}' value='' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{item_nos[cc]}' )\"></td>" if item_nos[cc] != 0
+			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 0
 		end
 	else
 		0.upto( item_max ) do |cc|
 			t = koyomir[c]["item#{cc}"]
-			date_html << "<td><input type='text' id='id#{c}_#{item_nos[cc]}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{item_nos[cc]}' )\"></td>" if item_nos[cc] != 0
+			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 0
 		end
 	end
+
 	date_html << "</tr>"
 	week_count += 1
 	week_count = 0 if week_count > 6
 end
 
 
+puts "HTML<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>

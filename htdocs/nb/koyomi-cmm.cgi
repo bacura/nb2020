@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.04b
+#Nutrition browser 2020 koyomi menu copy / move 0.10b
 
 
 #==============================================================================
@@ -20,24 +20,6 @@ script = 'koyomi-cmm'
 #DEFINITION
 #==============================================================================
 
-#### Getting start year & standard time
-def get_starty( uname )
-	start_year = Time.now.year
-	breakfast_st = 0
-	lunch_st = 0
-	dinner_st = 0
-	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, false )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		start_year = a[0].to_i if a[0].to_i != 0
-		breakfast_st = a[1].to_i if a[1].to_i != 0
-		lunch_st = a[2].to_i if a[2].to_i != 0
-		dinner_st = a[3].to_i if a[3].to_i != 0
-	end
-	st_set = [ breakfast_st, lunch_st, dinner_st ]
-
-	return start_year, st_set
-end
 
 #==============================================================================
 # Main
@@ -47,7 +29,6 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 lp = user.load_lp( script )
-start_year, st_set = get_starty( user.name )
 
 
 #### Getting POST
@@ -63,7 +44,8 @@ unless yyyy_mm_dd == ''
 	dd = a[2].to_i
 end
 tdiv = @cgi['tdiv'].to_i
-hh = @cgi['hh'].to_i
+hh_mm = @cgi['hh_mm']
+meal_time = @cgi['meal_time'].to_i
 cm_mode = @cgi['cm_mode']
 origin = @cgi['origin']
 origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}" if origin == ''
@@ -73,21 +55,47 @@ if @debug
 	puts "mm:#{mm}<br>\n"
 	puts "dd:#{dd}<br>\n"
 	puts "tdiv:#{tdiv}<br>\n"
-	puts "hh:#{hh}<br>\n"
+	puts "hh_mm:#{hh_mm}<br>\n"
+	puts "meal_time:#{meal_time}<br>\n"
 	puts "cm_mode:#{cm_mode}<br>\n"
 	puts "origin:#{origin}<br>\n"
 	puts "<hr>\n"
 end
 
 
-#### Getting date
+puts 'Getting date<br>' if @debug
 calendar = Calendar.new( user.name, yyyy, mm, dd )
 calendar.debug if @debug
 
 
-#### Save food
+puts 'Getting koyomi start year<br>' if @debug
+r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+if r.first
+	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+		koyomi_cfg = JSON.parse( r.first['koyomi'] )
+		start_yesr = koyomi_cfg['start'].to_i
+		p koyomi_cfg if @debug
+	end
+end
+
+
+puts 'Getting standard meal start & time<br>' if @debug
+start_time_set= []
+meal_tiems_set = []
+r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+if r.first
+	if r.first['bio'] != nil && r.first['bio'] != ''
+		bio = JSON.parse( r.first['bio'] )
+		start_times_set = [bio['bst'], bio['lst'], bio['dst']]
+		meal_tiems_set = [bio['bti'].to_i, bio['lti'].to_i, bio['dti'].to_i]
+	end
+end
+hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
+meal_time = meal_tiems_set[tdiv] if meal_time == 0
+
+
+puts 'Save food<br>' if @debug
 if command == 'save'
-	hh = st_set[tdiv] if hh == 99
 	( yyyy_, mm_, dd_, tdiv_ ) = origin.split( ':' )
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
 	if r.first
@@ -95,8 +103,22 @@ if command == 'save'
 		t = ''
 		a = koyomi_.split( "\t" )
 		a.each do |e|
-			aa = e.split( ':' )
-			t << "#{aa[0]}:#{aa[1]}:#{aa[2]}:#{hh}\t"
+			aa = e.split( '~' )
+			if /\-z\-/ =~ aa[0]
+				rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE code='#{aa[0]}' AND base='fix' AND user='#{user.name}';", false, @debug )
+				if rr.first
+					fzcode = generate_code( user.name, 'z' )
+					db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+					db.query( "CREATE TEMPORARY TABLE tmp SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{aa[0]}' AND base='fix' AND user='#{user.name}';" )
+					db.query( "UPDATE tmp SET code='#{fzcode}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}' WHERE base='fix' AND user='#{user.name}';" )
+					db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SELECT * FROM tmp;" )
+					db.query( "DROP TABLE tmp;" )
+					db.close
+					t << "#{fzcode}~#{aa[1]}~#{aa[2]}~#{hh_mm}~#{meal_time}\t"
+				end
+			else
+				t << "#{aa[0]}~#{aa[1]}~#{aa[2]}~#{hh_mm}~#{meal_time}\t"
+			end
 		end
 		koyomi_ = t.chop
 
@@ -116,22 +138,20 @@ if command == 'save'
 
 		if cm_mode == 'move' && ( yyyy != yyyy_.to_i || mm != mm_.to_i || dd != dd_.to_i || tdiv != tdiv_.to_i )
 			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='' WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
+			origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}"
 		end
-		( yyyy, mm, dd, tdiv ) = yyyy_.to_i, mm_.to_i, dd_.to_i, tdiv_.to_i
+		calendar = Calendar.new( user.name, yyyy, mm, dd )
 	end
 end
 
 
-####
-save_button = ''
-if cm_mode == 'copy'
-	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{origin}' )\">#{lp[12]}</button>"
-else
-	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{origin}' )\">#{lp[8]}</button>"
-end
+puts 'Save button<br>' if @debug
+save_button_txt = lp[12]
+save_button_txt = lp[8] if cm_mode == 'move'
+save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{origin}' )\">#{save_button_txt}</button>"
 
 
-#### Date HTML
+puts 'Date HTML<br>' if @debug
 date_html = ''
 week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
@@ -174,34 +194,24 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 end
 
 
-#### tdiv HTML
+puts 'tdiv HTML<br>' if @debug
 tdiv_html = ''
 tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
 tdiv_html << "<select id='tdiv_cmm' class='form-select form-select-sm'>"
-0.upto( 3 ) do |c|
-	if tdiv == c
-		tdiv_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
-	else
-		tdiv_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
-	end
-end
+0.upto( 3 ) do |c| tdiv_html << "<option value='#{c}' #{$SELECT[tdiv == c]}>#{tdiv_set[c]}</option>" end
 tdiv_html << "</select>"
 
 
-#### hour HTML
-hour_html = "<div class='input-group input-group-sm'>"
-hour_html << "<label class='input-group-text btn-info' onclick=\"cmmNowKoyomi()\">#{lp[18]}</label>"
-hour_html << "<select id='hh_cmm' class='form-select form-select-sm'>"
-hour_html << "<option value='99'>#{lp[19]}</option>"
-0.upto( 23 ) do |c|
-	if c == hh
-		hour_html << "<option value='#{c}' SELECTED>#{c}</option>"
-	else
-		hour_html << "<option value='#{c}'>#{c}</option>"
-	end
-end
-hour_html << "</select>"
-hour_html << "</div>"
+puts 'SELECT HH block<br>' if @debug
+meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
+eat_time_html = "<div class='input-group input-group-sm'>"
+eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm_cmm' )\">#{lp[18]}</label>"
+eat_time_html << "<input type='time' step='60' id='hh_mm_cmm' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
+eat_time_html << "<select id='meal_time_cmm' class='form-select form-select-sm'>"
+meal_time_set.each do |e| eat_time_html << "<option value='#{e}' #{$SELECT[meal_time == e]}>#{e}</option>" end
+eat_time_html << "</select>"
+eat_time_html << "<label class='input-group-text'>#{lp[19]}</label>"
+eat_time_html << "</div>"
 
 
 html = <<-"HTML"
@@ -220,12 +230,12 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			#{tdiv_html}
 		</div>
-		<div class='col-2 form-inline'>
-			#{hour_html}
+		<div class='col-3 form-inline'>
+			#{eat_time_html}
 		</div>
-		<div class='col-1 form-inline'>
+		<div class='col-3 form-inline'>
 		</div>
-		<div class='col-1 form-inline'>
+		<div class='col-1 form-inline' align="right">
 			#{save_button}
 		</div>
 	</div>

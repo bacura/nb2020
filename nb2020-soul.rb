@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.12b
+#Nutrition browser 2020 soul 0.13b
 
 #==============================================================================
 # LIBRARY
@@ -8,15 +8,18 @@ require 'mysql2'
 require 'bigdecimal'
 require 'securerandom'
 require 'json'
+require 'time'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
+$DEBUG = false
+
 $GM = 'gm'
 
 $SERVER_PATH = '/var/www'
-$HTDOCS_PATH = "#{$SERVER_PATH}/nb2020/htdocs"
+$HTDOCS_PATH = "#{$SERVER_PATH}/htdocs/nb"
 $TMP_PATH = '/tmp'
 
 $COOKIE_UID = 'UID2020'
@@ -70,15 +73,17 @@ $JS_PATH = 'js'
 $CSS_PATH = 'css'
 $BOOK_PATH = 'books'
 
-$LP = ['jp']
-$DEFAULT_LP = $LP[0]
+#$DATE = Time.now.strftime( "%Y-%m-%d" )
 
-$DEBUG = false
+$SELECT = { true => 'SELECTED', false => ''}
+$CHECK = { true => 'CHESCKED', false => ''}
+$DISABLE = { true => 'DISABLED', false => ''}
 
-$DATE = Time.now.strftime( "%Y-%m-%d" )
 #==============================================================================
 # CORE LANGAGE & CGI
 #==============================================================================
+$LP = ['jp']
+$DEFAULT_LP = $LP[0]
 @cgi = CGI.new
 
 soul_language = $DEFAULT_LP
@@ -93,7 +98,7 @@ if uname != nil && uid != nil
   soul_language = res.first['language'] if res.first
 end
 
-require "#{$HTDOCS_PATH}/../nb2020-soul-#{soul_language}"
+require "#{$SERVER_PATH}/nb2020-soul-#{soul_language}"
 
 
 #==============================================================================
@@ -668,12 +673,14 @@ class Calendar
 
     @yyyyf = Time.now.year
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    res = db.query( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';" )
+    res = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';" )
     db.close
 
-    if res.first['koyomiy']
-      a = res.first['koyomiy'].split( ':' )
-      @yyyyf = a[0].to_i if a[0].to_i != 0
+    if res.first
+       if res.first['koyomi'] != nil && res.first['koyomi'] != ''
+        koyomi = JSON.parse( res.first['koyomi'] )
+        @yyyyf = koyomi['start']
+      end
     end
 
     @mms = @mm
@@ -708,59 +715,6 @@ class Calendar
     puts "calender.ddl:#{@ddl}<br>"
     puts "calender.wf:#{@wf}<br>"
     puts "calender.wl:#{@wl}<br>"
-  end
-end
-
-
-class Config
-  attr_accessor :recipel, :recipel_max, :reciperr, :menul, :his_sg, :his_max, :calcc, :icalc, :koyomiy, :koyomiex, :koyomiexn, :icache, :ifix, :school, :sex, :age, :height, :weight, :schooll
-
-  def initialize( user )
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    res = db.query( "SELECT * from #{$MYSQL_TB_CFG} WHERE user='#{user}';" )
-    db.close
-    if res.first
-      @recipel = res.first['recipel']
-      @recipel_max = res.first['recipel_max']
-      @reciperr = res.first['reciperr']
-      @menul = res.first['menul']
-      @his_sg = res.first['his_sg']
-      @his_max = res.first['his_max']
-      @calcc = res.first['calcc']
-      @icalc = res.first['icalc']
-      @koyomiy = res.first['koyomiy']
-      @koyomiex = res.first['koyomiex']
-      @koyomiexn = res.first['koyomiexn']
-      @icache = res.first['icache']
-      @ifix = res.first['ifix']
-      @school = res.first['school']
-      @schooll = res.first['schooll']
-      @sex = res.first['sex']
-      @age = res.first['age']
-      @height = res.first['height']
-      @weight = res.first['weight']
-    end
-  end
-
-  def debug()
-    puts "recipel:#{@recipel}<br>"
-    puts "recipel_max:#{@recipel_max}<br>"
-    puts "reciperr:#{@reciperr}<br>"
-    puts "menul:#{@menul}<br>"
-    puts "his_sg:#{@his_sg}<br>"
-    puts "his_max:#{@his_max}<br>"
-    puts "calcc:#{@calcc}<br>"
-    puts "koyomiy:#{@koyomiy}<br>"
-    puts "koyomiex:#{@koyomiex}<br>"
-    puts "koyomiexn:#{@koyomiexn}<br>"
-    puts "icache:#{@icache}<br>"
-    puts "ifix:#{@ifix}<br>"
-    puts "school:#{@school}<br>"
-    puts "schooll:#{@schooll}<br>"
-    puts "sex:#{@sex}<br>"
-    puts "age:#{@age}<br>"
-    puts "height:#{@height}<br>"
-    puts "weight:#{@weight}<br>"
   end
 end
 
