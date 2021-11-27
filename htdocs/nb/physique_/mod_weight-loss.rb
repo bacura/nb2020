@@ -5,7 +5,7 @@
 
 def physique_module( cgi, user, debug )
 	l = module_lp( user.language )
-	persed_today = Time.parse( $DATE )
+	persed_today = Time.parse( @datetime )
 
 	#importing from config
 	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
@@ -43,7 +43,6 @@ def physique_module( cgi, user, debug )
 			pal = mod_cfg_h[@module]['pal'].to_f
 			eenergy = mod_cfg_h[@module]['eenergy'].to_i
 		end
-
 		sex_ = [l['male'], l['female']]
 		female_selected = ''
 		female_selected = 'SELECTED ' if sex == 1

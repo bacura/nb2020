@@ -7,7 +7,7 @@ require 'time'
 
 def physique_module( cgi, user, debug )
 	lp = module_lp( user.language )
-	persed_today = Time.parse( $DATE )
+	persed_today = Time.parse( @datetime )
 
 	#importing from config
 	res = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
