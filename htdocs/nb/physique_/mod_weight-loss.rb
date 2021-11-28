@@ -2,13 +2,14 @@
 #encoding: utf-8
 
 @module = 'weight-loss'
+@degug = false
 
-def physique_module( cgi, user, debug )
+def physique_module( cgi, user )
 	l = module_lp( user.language )
 	persed_today = Time.parse( @datetime )
 
 	#importing from config
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
+	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -36,7 +37,7 @@ def physique_module( cgi, user, debug )
 		pal = 1.50
 		eenergy = calc_energy( weight, height, age, sex, pal )
 
-		r = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, debug )
+		r = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, @debug )
 		if r.first
 			mod_cfg_h = JSON.parse( r.first['json'] )
 			start_date = mod_cfg_h[@module]['start_date']
@@ -89,11 +90,11 @@ HTML
 		eenergy = cgi['eenergy'].to_i
 
 		json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal, "eenergy" => eenergy }} )
-		res = mdb( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' AND module='#{@module}';", false, debug )
+		res = mdb( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
 		if res.first
-			mdb( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{user.name}' AND module='#{@module}';", false, debug )
+			mdb( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, @debug )
 		end
 
 		# X axis
@@ -109,16 +110,15 @@ HTML
 		puts "Loading config<br>" if @debug
 		weight_kex = -1
 		denergy_kex = -1
-		r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
-			a = r.first['koyomiex'].split( ':' )
-			a.size.times do |c|
-				aa = a[c].split( "\t" )
- 				weight_kex = c if aa[0] == '3'
-				denergy_kex = c if aa[0] == '9'
+			koyomi = JSON.parse( r.first['koyomi'] )
+			kex_select = koyomi['kex_select']
+			0.upto( 9 ) do |c|
+ 				weight_kex = c if kex_select[c.to_s] == 3
+				denergy_kex = c if kex_select[c.to_s] == 9
 			end
 		end
-
 
 		# measured weight & delta energy
 		measured = []
@@ -177,48 +177,120 @@ HTML
 			end
 		end
 
-
-		#Intake enargy
-		ienergy = []
-		total_enargy = [0, 0, 0, 0]
-		total_day = [0, 0, 0, 0]
+		#Intake enargy 1pass
+		tdiv_enargy = [[],[],[],[]]
 		persed_date = Time.parse( start_date )
 		0.upto( 95 ) do |c|
 			break if persed_date > persed_today
 			target_date = persed_date.strftime( "%Y-%m-%d" )
-			res_koyomi = mdb( "SELECT fzcode FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=1 AND tdiv!=4 AND date='#{target_date}';", false, debug )
-			if res_koyomi.first
-				res_fcz = mdb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{res_koyomi.first['fzcode']}';", false, debug )
-				if res_fcz.first
-					ienergy[c] = res_fcz.first['ENERC_KCAL'].to_i
+			res_koyomi = mdb( "SELECT fzcode, koyomi, tdiv FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=1 AND tdiv!=4 AND date='#{target_date}';", false, @debug )
+			res_koyomi.each do |e|
+				tdiv = e['tdiv'].to_i
+				if /^\?\-\-/ =~ e['koyomi']
+					tdiv_enargy[tdiv][c] = '?--'
+				elsif /^\?\-/ =~ e['koyomi']
+					tdiv_enargy[tdiv][c] = '?-'
+				elsif /^\?\=/ =~ e['koyomi']
+					tdiv_enargy[tdiv][c] = '?='
+				elsif /^\?\+\+/ =~ e['koyomi']
+					tdiv_enargy[tdiv][c] = '?++'
+				elsif /^\?\+/ =~ e['koyomi']
+					tdiv_enargy[tdiv][c] = '?+'
+				elsif /^\?0/ =~ e['koyomi']
+					tdiv_enargy[tdiv][c] = ''
 				else
-					ienergy[c] = 0
+					res_fcz = mdb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{e['fzcode']}';", false, @debug )
+					tdiv_enargy[tdiv][c] = res_fcz.first['ENERC_KCAL'].to_i
 				end
-			else
-				ienergy[c] = 0
 			end
-			total_enargy[( c/24 ).to_i] += ienergy[c]
-			total_day[( c/24 ).to_i] += 1
 			persed_date += 86400
 		end
-		ave_energy = [0, 0, 0, 0]
-		0.upto( 3 ) do |c|
-			ave_energy[c] = total_enargy[c] / total_day[c] if total_day[c] != 0
-			ave_energy[c] = l['empty'] if total_day[c] == 0
+
+		#tdiv energy / period
+		tdiv_p0 = [[], [], [], []]
+		tdiv_p1 = [[], [], [], []]
+		tdiv_p2 = [[], [], [], []]
+		tdiv_p3 = [[], [], [], []]
+		tdiv_pset = [tdiv_p0, tdiv_p1, tdiv_p2, tdiv_p3]
+		0.upto( 3 ) do |tdiv|
+			0.upto( 95 ) do |c|
+				if /\d/ =~ tdiv_enargy[tdiv][c].to_s
+					period = ( c / 24 ).to_i
+					tdiv_pset[period][tdiv] << tdiv_enargy[tdiv][c].to_i
+				end
+			end
 		end
 
+		#tdiv average & SE / period
+		period_energy_ave = [[], [], [], []]
+		period_energy_std = [[], [], [], []]
+		0.upto( 3 ) do |period|
+			0.upto( 3 ) do |tdiv|
+				if  tdiv_pset[period][tdiv].size > 0
+					period_energy_ave[period][tdiv] = BigDecimal(  tdiv_pset[period][tdiv].sum ) / tdiv_pset[period][tdiv].size
+					a = tdiv_pset[period][tdiv].map do |x| ( x - period_energy_ave[period][tdiv] )**2 end
+					period_energy_std[period][tdiv] = Math.sqrt( a.sum / a.size )
+				else
+					period_energy_ave[period][tdiv] = 0
+					period_energy_std[period][tdiv] = 0
+				end
+			end
+		end
 
-		#Actual enargy
+		#Intake enargy 2pass
+		ienergy = []
+		0.upto( 3 ) do |tdiv|
+			persed_date = Time.parse( start_date )
+			0.upto( 95 ) do |c|
+				break if persed_date > persed_today
+				ienergy[c] = 0 if ienergy[c] == nil
+				period = ( c / 24 ).to_i
+
+				tdiv_enargy[tdiv][c] = '' if tdiv_enargy[tdiv][c] == nil && tdiv == 3
+				tdiv_enargy[tdiv][c] = '?=' if tdiv_enargy[tdiv][c] == nil
+
+				case tdiv_enargy[tdiv][c].to_s
+				when '?--'
+					tdiv_enargy[tdiv][c] = period_energy_ave[period][tdiv] - period_energy_std[period][tdiv]
+				when '?-'
+					tdiv_enargy[tdiv][c] = period_energy_ave[period][tdiv] - period_energy_std[period][tdiv] / 2
+				when '?='
+					tdiv_enargy[tdiv][c] = period_energy_ave[period][tdiv]
+				when '?+'
+					tdiv_enargy[tdiv][c] = period_energy_ave[period][tdiv] + period_energy_std[period][tdiv] / 2
+				when '?++'
+					tdiv_enargy[tdiv][c] = period_energy_ave[period][tdiv] + period_energy_std[period][tdiv]
+				when ''
+					tdiv_enargy[tdiv][c] = 0
+				end
+				ienergy[c] += tdiv_enargy[tdiv][c].to_i
+				persed_date += 86400
+			end
+		end
+
+		#Actual enargy (intake + delta )
 		aenergy = []
+		acutual_period_day = [0, 0, 0 ,0]
+		acutual_period_total = [0, 0, 0 ,0]
 		persed_date = Time.parse( start_date )
 		0.upto( 95 ) do |c|
 			break if persed_date > persed_today
+			period = ( c / 24 ).to_i
 			if ienergy[c] == nil
 				aenergy[c] = denergy[c]
 			else
 				aenergy[c] = ienergy[c] + denergy[c]
 			end
+			acutual_period_day[period] += 1
+			acutual_period_total[period] += aenergy[c]
 			persed_date += 86400
+		end
+
+		#Actual average / period
+		ave_energy = [0, 0, 0 ,0]
+		0.upto( 3 ) do |period|
+			ave_energy[period] = ( acutual_period_total[period] / acutual_period_day[period] ).to_i if acutual_period_day[period] != 0
+			ave_energy[period] = l['empty'] if ave_energy[period] == 0
 		end
 
 		#Guide weight
@@ -314,6 +386,7 @@ def module_js( l )
 
 var drawChart = function(){
 	dl3 = true;
+	dl4 = true;
 	displayBW();
 
 	var start_date = document.getElementById( "start_date" ).value;
@@ -322,6 +395,7 @@ var drawChart = function(){
 
 	$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
 	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
+	$.post( 'physique.cgi', { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( '#L4' ).html( data );});
 
 		var column = ( String( raw )).split( ':' );
 		var chart = c3.generate({

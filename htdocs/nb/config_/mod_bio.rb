@@ -74,33 +74,15 @@ def config_module( cgi, user, lp )
 	end
 
   	bti_select = "<select class='form-select' id='bti'>"
-	time_set.each do |e|
-		if e == bti
-			bti_select << "<option value='#{e}' SELECTED>#{e}</option>"
-		else
-			bti_select << "<option value='#{e}'>#{e}</option>"
-		end
-	end
+	time_set.each do |e| bti_select << "<option value='#{e}' #{$SELECT[e == bti]}>#{e}</option>" end
   	bti_select << "</select>"
 
   	lti_select = "<select class='form-select' id='lti'>"
-	time_set.each do |e|
-		if e == lti
-			lti_select << "<option value='#{e}' SELECTED>#{e}</option>"
-		else
-			lti_select << "<option value='#{e}'>#{e}</option>"
-		end
-	end
+	time_set.each do |e| lti_select << "<option value='#{e}' #{$SELECT[e == lti]}>#{e}</option>" end
   	lti_select << "</select>"
 
   	dti_select = "<select class='form-select' id='dti'>"
-	time_set.each do |e|
-		if e == dti
-			dti_select << "<option value='#{e}' SELECTED>#{e}</option>"
-		else
-			dti_select << "<option value='#{e}'>#{e}</option>"
-		end
-	end
+	time_set.each do |e| dti_select << "<option value='#{e}' #{$SELECT[e == dti]}>#{e}</option>" end
   	dti_select << "</select>"
 
 	html = <<-"HTML"
@@ -162,7 +144,7 @@ def config_module( cgi, user, lp )
 	    	<div class='col-2'>#{l['bst']}</div>
 			<div class='col-4'>
 				<div class='input-group input-group-sm'>
-					<input type='time' id='bst' value='#{bst}'>
+					<input type='time' class='form-control' id='bst' value='#{bst}'>
 					<span class='input-group-text'>#{l['meal_start']}</span>
 					#{bti_select}
 					<span class='input-group-text'>#{l['meal_time']}</span>
@@ -175,7 +157,7 @@ def config_module( cgi, user, lp )
 	    	<div class='col-2'>#{l['lst']}</div>
 			<div class='col-4'>
 				<div class='input-group input-group-sm'>
-					<input type='time' id='lst' value='#{lst}'>
+					<input type='time' class='form-control' id='lst' value='#{lst}'>
 					<span class='input-group-text'>#{l['meal_start']}</span>
 					#{lti_select}
 					<span class='input-group-text'>#{l['meal_time']}</span>
@@ -188,7 +170,7 @@ def config_module( cgi, user, lp )
 	    	<div class='col-2'>#{l['dst']}</div>
 			<div class='col-4'>
 				<div class='input-group input-group-sm'>
-					<input type='time' id='dst' value='#{dst}'>
+					<input type='time' class='form-control' id='dst' value='#{dst}'>
 					<span class='input-group-text'>#{l['meal_start']}</span>
 					#{dti_select}
 					<span class='input-group-text'>#{l['meal_time']}</span>

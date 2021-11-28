@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 file into koyomi extra 0.01b
+#Nutrition browser 2020 file into koyomi extra 0.10b
 
 
 #==============================================================================
@@ -13,24 +13,12 @@ require './probe'
 #STATIC
 #==============================================================================
 script = 'koyomiex-in'
-@debug = true
+@debug = false
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
-
-#### Getting start year
-def get_starty( uname )
-	start_year = @time_now.year
-	r = mdb( "SELECT koyomiy FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';", false, @debug )
-	if r.first['koyomiy']
-		a = r.first['koyomiy'].split( ':' )
-		start_year = a[0].to_i if a[0].to_i != 0
-	end
-
-	return start_year
-end
 
 
 #==============================================================================
@@ -65,27 +53,21 @@ end
 
 
 puts "Loading config<br>" if @debug
-config = Config.new( user.name )
-item_nos = []
-item_names = []
-item_units = []
-a = config.koyomiex.split( ':' )
-0.upto( @kex_column ) do |c|
-	aa = a[c].split( "\t" )
-	if aa[0] == "0"
-		item_nos << 0
-		item_names << ''
-		item_units << ''
-	elsif aa[0] == "1"
-		item_nos << 1
-		item_names << aa[1]
-		item_units << aa[2]
-	else
-		item_nos << aa[0].to_i
-		item_names << @kex_item[aa[0].to_i]
-		item_units << @kex_unit[aa[0].to_i]
+kex_select = Hash.new
+kex_item = Hash.new
+kex_unit = Hash.new
+r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+if r.first
+	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+		koyomi = JSON.parse( r.first['koyomi'] )
+		start = koyomi['start'].to_i
+		kex_select = koyomi['kex_select']
+		kex_item = koyomi['kex_item']
+		kex_unit = koyomi['kex_unit']
+		p koyomi if @debug
 	end
 end
+p kex_select
 
 
 case command
@@ -139,8 +121,8 @@ when 'upload'
 			puts "<SELECT class='form-select form-select-sm' id='item#{c}'>"
 			puts "<OPTION value='0'>#{lp[8]}</OPTION>"
 			puts "<OPTION value='99'>#{lp[12]}</OPTION>"
-			item_nos.size.times do |cc|
-				puts "<OPTION value='#{item_nos[cc]}'>#{item_names[cc]}</OPTION>" if item_nos[cc] != 0
+			0.upto( @kex_column ) do |cc|
+				puts "<OPTION value='#{kex_select[cc.to_s]}'>#{@kex_item[kex_select[cc.to_s]]}</OPTION>" if kex_select[cc.to_s] != 0
 			end
 			puts "/<SELECT>"
 			puts "</td>"
@@ -194,9 +176,9 @@ when 'update'
 
 	item_column_posi = []
 	0.upto( @kex_column ) do |c|
-		if item_nos[c] != 0
+		if kex_select[c.to_s] != 0
 			file_item_nos.size.times do |cc|
-				if item_nos[c] == file_item_nos[cc].to_i
+				if kex_select[c.to_s] == file_item_nos[cc].to_i
 					item_column_posi[c] = cc
 				end
 			end

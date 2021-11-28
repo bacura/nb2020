@@ -67,7 +67,7 @@ elsif mod == ''
 	html = init( lp )
 else
 	require "#{$HTDOCS_PATH}/physique_/mod_#{mod}.rb"
-	html = physique_module( @cgi, user, @debug )
+	html = physique_module( @cgi, user )
 end
 html << "</div>"
 

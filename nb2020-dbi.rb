@@ -278,7 +278,7 @@ def ext_update( gycv_file, shun_file, unit_file )
 	f = open( gycv_file, 'r' )
 	f.each_line do |e|
 		food_no = e.chomp
-		query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN=#{food_no};"
+		query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
 		$DB.query( query )
 	end
 	f.close

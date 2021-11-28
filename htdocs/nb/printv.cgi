@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.12b
+#Nutrition browser 2020 print web page 0.13b
 
 #==============================================================================
 #LIBRARY
@@ -142,21 +142,21 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 					food_name = fi.sub( '=', '' )
 					fi = ''
 				end
-				return_foods << "<tr><td>#{class_add}#{food_name}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td></tr>\n" if res.first
+				return_foods << "<tr><td>#{class_add}#{food_name}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td></tr>\n" if res.first
 			when 3, 4
 				tags = bind_tags( res )
 				if /^\=/ =~ fi
 					tags = fi.sub( '=', '' )
 					fi = ''
 				end
-				return_foods << "<tr><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td></tr>\n" if res.first
+				return_foods << "<tr><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td></tr>\n" if res.first
 			when 5, 6
 				tags = bind_tags( res )
 				if /^\=/ =~ fi
 					tags = fi.sub( '=', '' )
 					fi = ''
 				end
-				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td><td align='right'>#{few_v}</td></tr>\n" if res.first
+				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td><td align='right'>#{few_v.ceil( 1 )}</td></tr>\n" if res.first
 			when 7, 8
 				tags = bind_tags( res )
 				fi.sub!( '=', '' )
