@@ -386,7 +386,7 @@ def module_js( l )
 
 var drawChart = function(){
 	dl3 = true;
-	dl4 = true;
+//	dl4 = true;
 	displayBW();
 
 	var start_date = document.getElementById( "start_date" ).value;
@@ -395,7 +395,7 @@ var drawChart = function(){
 
 	$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
 	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
-	$.post( 'physique.cgi', { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( '#L4' ).html( data );});
+//	$.post( 'physique.cgi', { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( '#L4' ).html( data );});
 
 		var column = ( String( raw )).split( ':' );
 		var chart = c3.generate({

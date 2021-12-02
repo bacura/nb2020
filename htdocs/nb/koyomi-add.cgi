@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.03b
+#Nutrition browser 2020 koyomi adding panel 0.13b
 
 #==============================================================================
 #LIBRARY
@@ -162,23 +162,22 @@ puts 'Save food<br>' if @debug
 if command == 'save' || command == 'move'
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
-			koyomi = r.first['koyomi']
-			delimiter = ''
-			delimiter = "\t" if koyomi != ''
-		if tdiv == 3
-			koyomi << "#{delimiter}#{ccode}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
-		else
-			a = koyomi.split( delimiter )
-			koyomi_ = []
-			a.each do |e|
-				aa = e.split( '~' )
+		koyomi = r.first['koyomi']
+		delimiter = ''
+		delimiter = "\t" if koyomi != ''
+		a = koyomi.split( delimiter )
+		koyomi_ = []
+		a.each do |e|
+			aa = e.split( '~' )
+			if tdiv != 3
 				aa[3] = hh_mm
 				aa[4] = meal_time
-				koyomi_ << aa.join( '~' )
 			end
-			koyomi = koyomi_.join( delimiter )
-			koyomi << "#{delimiter}#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
+			koyomi_ << aa.join( '~' )
 		end
+		koyomi = koyomi_.join( delimiter )
+		koyomi << "#{delimiter}#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
+
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 		origin = "#{org_ymd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
 	else
@@ -281,7 +280,7 @@ tdiv_html << "</select>"
 puts 'SELECT HH block<br>' if @debug
 meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
 eat_time_html = "<div class='input-group input-group-sm'>"
-eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm' )\">#{lp[18]}</label>"
+eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm' )\">#{lp[26]}</label>"
 eat_time_html << "<input type='time' step='60' id='hh_mm' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
 eat_time_html << "<select id='meal_time' class='form-select form-select-sm'>"
 meal_time_set.each do |e|
@@ -349,7 +348,7 @@ html = <<-"HTML"
 		<div class='col-3 form-inline'>
 			#{eat_time_html}
 		</div>
-		<div class='col-2 form-inline'>
+		<div class='col-3 form-inline'>
 			#{rate_html}
 		</div>
 		<div class='col-1 form-inline'>

@@ -1,4 +1,4 @@
-//guild.js ver 0.02b
+//guild.js ver 0.03b 20211130
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -229,7 +229,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
 			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, order:order,
 			ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
-			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLMF:CHOAVLMF, CHOCDF:CHOCDF, OA:OA,
+			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLMF:CHOAVLMF, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
 			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
@@ -306,6 +306,13 @@ var saveKoyomiAdd = function( com, code, origin ){
 		if( document.getElementById( "copy" ).checked ){ copy = 1; }
 	}
 	$.post( "koyomi-add.cgi", { command:com, code:code, yyyy_mm_dd:yyyy_mm_dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, ev:ev, eu:eu, origin:origin, copy:copy }, function( data ){ $( "#LF" ).html( data );});
+	if( com == 'move' ){
+		dl2 = true;
+		dlf = false;
+		displayBW();
+		var fx = function(){ $.post( "koyomi-edit.cgi", { command:'init', yyyy_mm_dd:yyyy_mm_dd }, function( data ){ $( "#L2" ).html( data );}); }
+		setTimeout( fx() , 1000 );
+	}
 };
 
 // Saving code into Koyomi direct
@@ -324,6 +331,12 @@ var modifysaveKoyomi_direct = function( code, yyyy, mm, dd, tdiv, origin ){
 	var copy = 0;
 	if( document.getElementById( "copy" ).checked ){ copy = 1; }
 	$.post( "koyomi-add.cgi", { command:"move", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time:meal_time, origin:origin, copy:copy }, function( data ){ $( "#LF" ).html( data );});
+
+	dl2 = true;
+	dlf = false;
+	displayBW();
+	var fx = function(){ $.post( "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){ $( "#L2" ).html( data );}); }
+	setTimeout( fx() , 1000 );
 };
 
 // Modifying or copying fix code in Koyomi
@@ -352,6 +365,7 @@ var koyomiReturn2KE = function( yyyy, mm, dd ){
 var modifyKoyomi = function( code, yyyy, mm, dd, tdiv, hh, ev, eu, order ){
 	$.post( "koyomi-add.cgi", {command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:hh, ev:ev, eu:eu, order:order }, function( data ){ $( "#LF" ).html( data );});
 
+	dl2 = false;
 	dlf = true;
 	displayBW();
 };

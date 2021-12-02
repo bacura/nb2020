@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.10b
+#Nutrition browser 2020 koyomi editor 0.11b
 
 
 #==============================================================================
@@ -187,6 +187,15 @@ unless yyyy_mm == ''
 	yyyy = a[0].to_i
 	mm = a[1].to_i
 end
+
+yyyy_mm_dd = @cgi['yyyy_mm_dd']
+unless yyyy_mm_dd == ''
+	a = yyyy_mm_dd.split( '-' )
+	yyyy = a[0].to_i
+	mm = a[1].to_i
+	dd = a[2].to_i
+end
+
 tdiv = @cgi['tdiv'].to_i
 code = @cgi['code']
 memo = @cgi['memo']
