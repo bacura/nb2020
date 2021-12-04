@@ -331,7 +331,6 @@ fc_items.each do |e| fc_names << @fct_name[e] end
 puts "Multi calc process<br>" if @debug
 1.upto( calendar.ddl ) do |c|
 	summary = Nutrition_summary.new
-	calc_html = ''
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	if r.first && r.first['koyomi'] != nil
 		r.each do |e|
@@ -419,12 +418,11 @@ puts "Multi calc process<br>" if @debug
 				summary.add( calc.results )
 			end
 			puts "Summary sum html<br>" if @debug
-			calc_html = summary.sum_html( @fct_name, fc_items )
 		end
 		if summary.fct.size == 0
 			calc_html_set << ''
 		else
-			calc_html_set << calc_html
+			calc_html_set << summary.sum_html( @fct_name, fc_items ) + summary.pfc_html()
 		end
 	else
 		calc_html_set << ''

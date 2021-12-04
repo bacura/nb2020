@@ -135,7 +135,7 @@ if command == 'save'
 
 		if r.first
 			koyomi = r.first['koyomi']
-			koyomi << "\t#{fix_code}~100:99~#{hh_mm}~#{meal_time}"
+			koyomi << "\t#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
 			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
 			koyomi = "#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
