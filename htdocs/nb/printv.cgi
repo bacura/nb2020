@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.13b
+#Nutrition browser 2020 print web page 0.14b
 
 #==============================================================================
 #LIBRARY
@@ -23,7 +23,7 @@ fct_num = 14
 #### html_header for printv
 def html_head_pv( code, mcode, recipe_name )
 	tw_image = ''
-	tw_image = "<meta name='twitter:image' content='https://nb.bacura.jp/#{$PHOTO}/#{mcode[0]}-tn.jpg' />" if mcode.size > 0
+	tw_image = "<meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/#{mcode[0]}-tn.jpg' />" if mcode.size > 0
 
 	html = <<-"HTML"
 <!DOCTYPE html>
