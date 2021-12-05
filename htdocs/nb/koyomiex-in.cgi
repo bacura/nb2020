@@ -67,7 +67,6 @@ if r.first
 		p koyomi if @debug
 	end
 end
-p kex_select
 
 
 case command
@@ -206,11 +205,12 @@ when 'update'
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
 			if r.first
 				item_column_posi.size.times do |c|
-					if item_column_posi[c] != 0 && ( r.first["item#{c}"] == '' || r.first["item#{c}"] == nil ) || overwrite == '1'
+					if item_column_posi[c] != 0 && ( r.first["item#{c}"] == '' || r.first["item#{c}"] == nil ) || ( overwrite == '1' && item_column_posi[c] != 0 )
 						sql_set << "item#{c}='#{ea[item_column_posi[c]]}',"
 					end
 				end
 				sql_set.chop!
+
 				if sql_set != 'SET'
 					mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} #{sql_set} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
 					count += 1
@@ -222,6 +222,7 @@ when 'update'
 					end
 				end
 				sql_set.chop!
+
  				if sql_set != 'SET'
 					mdb( "INSERT #{$MYSQL_TB_KOYOMIEX} #{sql_set}, user='#{user.name}', date='#{yyyymmdd}';", false, @debug )
 					count += 1

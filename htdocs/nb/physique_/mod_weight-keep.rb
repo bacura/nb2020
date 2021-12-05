@@ -1,16 +1,15 @@
-# Weight keep module for Physique 0.01b
+# Weight keep module for Physique 0.02b
 #encoding: utf-8
 
-require 'time'
-
 @module = 'weight-keep'
+@debug = false
 
-def physique_module( cgi, user, debug )
+def physique_module( cgi, user )
 	l = module_lp( user.language )
 	persed_today = Time.parse( @datetime )
 
 	#importing from config
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
+	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -33,11 +32,10 @@ def physique_module( cgi, user, debug )
 	case cgi['step']
 	when 'form'
 		module_js( l )
-
 		start_date = $DATE
 		pal = 1.50
 
-		res = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, debug )
+		res = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, @debug )
 		if res.first
 			mod_cfg_h = JSON.parse( res.first['json'] )
 			start_date = mod_cfg_h[@module]['start_date']
@@ -82,11 +80,11 @@ HTML
 		pal = cgi['pal'].to_f
 
 		json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal }} )
-		res = mdb( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' AND module='#{@module}';", false, debug )
+		res = mdb( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
 		if res.first
-			mdb( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{user.name}' AND module='#{@module}';", false, debug )
+			mdb( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, debug )
+			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, @debug )
 		end
 
 		# X axis
@@ -101,15 +99,17 @@ HTML
 		puts "Loading config<br>" if @debug
 		weight_kex = -1
 		bfr_kex = -1
-		r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
-			a = r.first['koyomiex'].split( ':' )
-			a.size.times do |c|
-				aa = a[c].split( "\t" )
- 				weight_kex = c if aa[0] == '3'
-				bfr_kex = c if aa[0] == '5'
+			koyomi = JSON.parse( r.first['koyomi'] )
+			kex_select = koyomi['kex_select']
+			0.upto( 9 ) do |c|
+ 				weight_kex = c if kex_select[c.to_s] == 3
+				bfr_kex = c if kex_select[c.to_s] == 5
 			end
 		end
+		puts "weight_kex:#{weight_kex}<br>" if @debug
+		puts "bfr_kex:#{bfr_kex}<br>" if @debug
 
 
 		# measured weight & body fat tate
@@ -121,13 +121,13 @@ HTML
 			target_date = persed_date.strftime( "%Y-%m-%d" )
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{target_date}';", false, @debug )
 			if r.first
-				if weight_kex >= 0
+				if weight_kex >= 0 && r.first["item#{weight_kex}"].to_f != 0
 					measured_weight << r.first["item#{weight_kex}"].to_f
 					recent_weight = r.first["item#{weight_kex}"].to_f if r.first["item#{weight_kex}"].to_f != 0
 				else
 					measured_weight << 'NA'
 				end
-				if bfr_kex >= 0
+				if bfr_kex >= 0 && r.first["item#{bfr_kex}"].to_f != 0
 					bfr << r.first["item#{bfr_kex}"].to_f
 				else
 					bfr << 'NA'
@@ -209,12 +209,14 @@ def module_js( l )
 
 var drawChart = function(){
 	dl3 = true;
+//	dl4 = true;
 	displayBW();
 
 	var start_date = document.getElementById( "start_date" ).value;
 	var pal = document.getElementById( "pal" ).value;
 
 	$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
+//	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal }, function( raw ){ $( "#L4" ).html( raw );});
 	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal }, function( raw ){
 
 		var column = ( String( raw )).split( ':' );
@@ -280,6 +282,8 @@ var drawChart = function(){
 		var p_bfr = ['p_bfr'];
 		var r_weight = ['#{l['data_past']}'];
 		var r_bfr = ['r_bfr'];
+		var f_weight = ['#{l['data_first']}'];
+		var	f_bfr = ['f_bfr'];
 		var rd_flag = true;
 		var p_flag = true;
 		for( i = day_size; i >= 1; i-- ){
@@ -300,12 +304,16 @@ var drawChart = function(){
 				}
 			}
 		}
+		f_weight[1] = r_weight.pop();
+		f_bfr[1] = r_bfr.pop();
 
 		var chart_sub = c3.generate({
 			bindto: '#physique_#{@module}-chart-sub',
 
 			data: {
 				columns: [
+					f_weight,
+					f_bfr,
 					r_weight,
 					r_bfr,
 					p_weight,
@@ -313,10 +321,10 @@ var drawChart = function(){
 					rd_weight,
 					rd_bfr
 				],
-				xs: { #{l['data_latest']}:'rd_bfr', #{l['data_recent']}:'p_bfr', #{l['data_past']}:'r_bfr' },
+				xs: { #{l['data_first']}:'f_bfr', #{l['data_latest']}:'rd_bfr', #{l['data_recent']}:'p_bfr', #{l['data_past']}:'r_bfr' },
 				labels: true,
 				type : 'scatter',
-				colors: { #{l['data_latest']}:'#dc143c', #{l['data_recent']}:'#00ff00', #{l['data_past']}:'#c0c0c0'}
+				colors: { #{l['data_first']}:'#4b0082', #{l['data_latest']}:'#dc143c', #{l['data_recent']}:'#00ff00', #{l['data_past']}:'#c0c0c0'}
 			},
 
 			axis: {
@@ -370,6 +378,7 @@ def module_lp( language )
 		'data_bfr' => "体脂肪率",\
 		'label_weight' => "体重 (kg)",\
 		'label_bfr' => "体脂肪率 (%)",\
+		'data_first' => "開始",\
 		'data_past' => "過去",\
 		'data_recent' => "最近",\
 		'data_latest' => "直近",\

@@ -2,7 +2,7 @@
 #encoding: utf-8
 
 @module = 'weight-loss'
-@degug = false
+@debug = false
 
 def physique_module( cgi, user )
 	l = module_lp( user.language )
@@ -18,7 +18,7 @@ def physique_module( cgi, user )
 			height = bio['height'].to_f * 100
 			weight = bio['weight'].to_f
 			kexow = bio['kexow'].to_i
-			pgene = bio['pgen'].to_i
+			pgene = bio['pgene'].to_i
 			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
 		end
 	end
@@ -27,7 +27,6 @@ def physique_module( cgi, user )
 		puts l['error_no-set']
 		exit( 0 )
 	end
-
 
 	html = ''
 	case cgi['step']
