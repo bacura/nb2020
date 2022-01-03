@@ -234,6 +234,7 @@ def html_nav( user, lp )
       </nav>
       <nav class='container-fluid' id='gm_menu' style='display:none;'>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnitc( 'init' )">#{lp[29]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnit( 'init' )">#{lp[29]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initColor( 'init' )">#{lp[30]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initAllergen( 'init' )">#{lp[31]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGYCV( 'init' )">#{lp[35]}</button>

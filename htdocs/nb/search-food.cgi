@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser food search 0.01b
+#Nutrition browser food search 0.10b
 
 #==============================================================================
 #LIBRARY
@@ -76,6 +76,17 @@ def shun_result( words )
 	return h, sm
 end
 
+#### food number result
+def fn_result( code )
+	h = Hash.new
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}';", false, @debug )
+	if r.first
+		h["#{r.first['FG']}:#{r.first['class1']}:#{r.first['class2']}:#{r.first['class3']}:#{r.first['name']}"] = 1
+	end
+
+	return h
+end
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -110,6 +121,10 @@ if /#{lp[1]}/ =~ words || /#{lp[2]}/ =~ words
 elsif /#{lp[4]}/ =~ words
 	result_keys_hash, sm = shun_result( words )
 	words = "#{sm}#{lp[5]}"
+
+elsif /\d{5}/ =~ words
+	result_keys_hash = fn_result( words )
+	words = "#{lp[9]}[#{words}]"
 
 else
 	puts "Dictionary<br>" if @debug

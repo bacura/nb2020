@@ -49,6 +49,65 @@ var updateUintc = function(){
 };
 
 
+// Unit exchange init
+var initUnit = function( com ){
+	if( com == 'init' ){
+		var code = '';
+	} else{
+		var code = document.getElementById( "food_no" ).value;
+	}
+
+	$.post( "gm-unit.cgi", { command:com, code:code }, function( data ){ $( "#LF" ).html( data );});
+
+	flashBW();
+	dl1 = true;
+	dlf = true;
+	displayBW();
+};
+
+// Direct unit exchange button
+var directUnit = function( code ){
+	$.post( "gm-unit.cgi", { command:'init', code:code }, function( data ){ $( "#LF" ).html( data );});
+
+	dlf = true;
+	displayBW();
+};
+
+// Update unit exchange button
+var updateUint = function(){
+	var code = document.getElementById( "food_no" ).value;
+
+	if( code != '' ){
+		var uk0 = document.getElementById( "uk0" ).value;
+		var uk1 = document.getElementById( "uk1" ).value;
+		var uk2 = document.getElementById( "uk2" ).value;
+		var uk3 = document.getElementById( "uk3" ).value;
+		var uk4 = document.getElementById( "uk4" ).value;
+		var uk5 = document.getElementById( "uk5" ).value;
+		var uk6 = document.getElementById( "uk6" ).value;
+
+		var uv0 = document.getElementById( "uv0" ).value;
+		var uv1 = document.getElementById( "uv1" ).value;
+		var uv2 = document.getElementById( "uv2" ).value;
+		var uv3 = document.getElementById( "uv3" ).value;
+		var uv4 = document.getElementById( "uv4" ).value;
+		var uv5 = document.getElementById( "uv5" ).value;
+		var uv6 = document.getElementById( "uv6" ).value;
+
+		var note = document.getElementById( "note" ).value;
+		$.post( "gm-unit.cgi", { command:'update', code:code, uk0:uk0, uk1:uk1, uk2:uk2, uk3:uk3, uk4:uk4, uk5:uk5, uk6:uk6,
+			uv0:uv0, uv1:uv1, uv2:uv2, uv3:uv3, uv4:uv4, uv5:uv5, uv6:uv6, note:note}, function( data ){ $( "#LF" ).html( data );});
+		displayVIDEO( code + ' saved' );
+	}
+};
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////
 // Food color ////////////////////////////////////////////////////////////////////////
 

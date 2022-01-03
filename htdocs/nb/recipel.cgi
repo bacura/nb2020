@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.02b
+#Nutrition browser 2020 recipe list 0.03b
 
 
 #==============================================================================
@@ -264,6 +264,7 @@ when 'reset'
 when 'refer'
 	recipe_code_list = referencing( words, user.name ) if words != '' && words != nil
 	words = lp[1] if recipe_code_list.size == 0
+	page = 1
 
 when 'delete'
 	puts "Deleting photos<br>" if @debug
@@ -402,6 +403,7 @@ else
 		recipes << o
 	end
 end
+page = 1 if command == 'limit' && page > ( recipes.size / page_limit ) + 1
 
 
 puts "Paging parts<br>" if @debug

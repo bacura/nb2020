@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.11b
+#Nutrition browser 2020 koyomi 0.08b
 
 
 #==============================================================================
@@ -155,7 +155,7 @@ class Nutrition_calc
 			end
 		end
 
-		if unit == 99
+		if unit == '%'
 			weight_set_.map! do |x| x * rate / 100 end
 		else
 			weight_set_.map! do |x| x * rate / recipe_total_weight end
@@ -176,7 +176,7 @@ class Nutrition_calc
 
 			r = mdb( query, false, false )
 			if r.first
-				@weight_set[c] = unit_weight( @weight_set[c], @unit_set[c], @fn_set[c] ) if @unit_set[c] != 0 && @unit_set[c] != 99
+				@weight_set[c] = unit_weight( @weight_set[c], @unit_set[c], @fn_set[c] ) if @unit_set[c] != 'g' && @unit_set[c] != '%'
 				fct_start.upto( fct_end ) do |cc|
 					t = convert_zero( r.first[@fct_item[cc]] )
 					@results[@fct_item[cc]] += BigDecimal( num_opt( t, @weight_set[c], 1, fct_frct[fct_item[cc]] + 3 ))
@@ -359,7 +359,7 @@ puts "Multi calc process<br>" if @debug
 					code_set.size.times do |cc|
 						code = code_set[cc]
 						z, rate = food_weight_check( rate_set[cc] )
-						unit = unit_set[cc].to_i
+						unit = unit_set[cc]
 
 						if /\?/ =~ code
 						elsif /\-z\-/ =~ code

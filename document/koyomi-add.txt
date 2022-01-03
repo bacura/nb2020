@@ -51,4 +51,5 @@ guild.js/koyomiReturn2KE( yyyy, mm, dd ) -> koyomi-edit.cgi{ command:'init', yyy
 20210509	0.02b	更新：暦直帰を追加
 20211106	0.03b	更新：probeへの対応。
 20211113	0.04b	更新：時間設定は捕食だけ、あとは自動で現在時間へ変更。
-20211121	0.10b	更新：JSON型config対応。食事開始＆食事時間に対応。
+20211121	0.05b	更新：JSON型config対応。食事開始＆食事時間に対応。
+20211220	0.06b	更新：JSON型unit対応。

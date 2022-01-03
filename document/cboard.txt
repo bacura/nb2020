@@ -95,3 +95,4 @@ recipe.js/cb_summon( key, weight, base_fn ) ->	square.cgi{ channel:"fctb_l5", fo
 20210131	0.00b	βスタート
 20211106	0.01b	更新：probeへの対応。
 20211120	0.02b	更新：データベース処理補強。
+20211219	0.03b	更新：単位データのJSON化への対応。

@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.20b
+#nb2020-dbi.rb 0.23b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -304,17 +304,16 @@ def ext_update( gycv_file, shun_file, unit_file )
 	puts 'Shun in ext has been updated.'
 
 	# Unit
-	f = open( unit_file, 'r' )
-	f.each_line do |e|
-		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-		food_no = a[0]
-		unitc = a[2]
-		unitn = a[3]
-		query = "UPDATE #{$MYSQL_TB_EXT} SET unitc='#{unitc}', unitn='#{unitn}' WHERE FN='#{food_no}';"
-		$DB.query( query )
-	end
-	f.close
-	puts 'Unit in ext has been updated.'
+#	f = open( unit_file, 'r' )
+#	f.each_line do |e|
+#		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+#		food_no = a[0]
+#		unit[a[1]] = a[2]
+#		query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit}' WHERE FN='#{food_no}';"
+#		$DB.query( query )
+#	end
+#	f.close
+#	puts 'Unit in ext has been updated.'
 end
 
 
@@ -326,7 +325,7 @@ def ext_init( gycv_file, shun_file, unit_file )
 		puts 'ext table already exists.'
 		ext_update( gycv_file, shun_file, unit_file )
 	else
-		query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen TINYINT(1), unitc VARCHAR(255), unitn VARCHAR(255), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
+		query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen TINYINT(1), unit VARCHAR(1000), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
 		$DB.query( query )
 
 		query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
@@ -369,11 +368,11 @@ def ext_init( gycv_file, shun_file, unit_file )
 		# Unit
 		f = open( unit_file, 'r' )
 		f.each_line do |e|
+			unith = {}
 			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 			food_no = a[0]
-			unitc = a[2]
-			unitn = a[3]
-			query = "UPDATE #{$MYSQL_TB_EXT} SET unitc='#{unitc}', unitn='#{unitn}' WHERE FN='#{food_no}';"
+			unit[a[1]] = a[2]
+			query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit}' WHERE FN='#{food_no}';"
 			$DB.query( query )
 		end
 		f.close
@@ -596,7 +595,7 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomi VARCHAR(512), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255));'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomi VARCHAR(512), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255), school VARCHAR(512));'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
@@ -629,7 +628,7 @@ def sum_init()
 	if res.first
 		puts 'sum table already exists.'
 	else
-		query = 'CREATE TABLE sum (user VARCHAR(32) NOT NULL PRIMARY KEY, code VARCHAR(32), name VARCHAR(255), sum varchar(1024), protect TINYINT(1), dish TINYINT);'
+		query = 'CREATE TABLE sum (user VARCHAR(32) NOT NULL PRIMARY KEY, code VARCHAR(32), name VARCHAR(255), sum varchar(2000), protect TINYINT(1), dish TINYINT);'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
@@ -648,7 +647,7 @@ def recipe_init()
 	if res.first
 		puts 'recipe table already exists.'
 	else
-		query = 'CREATE TABLE recipe (code VARCHAR(32) PRIMARY KEY, user VARCHAR(32) NOT NULL, root VARCHAR(32), branch TINYINT, public TINYINT(1), protect TINYINT(1), draft TINYINT(1), name VARCHAR(255) NOT NULL, dish TINYINT, type TINYINT, role TINYINT, tech TINYINT, time TINYINT, cost TINYINT, sum VARCHAR(1024), protocol VARCHAR(2048), date DATETIME);'
+		query = 'CREATE TABLE recipe (code VARCHAR(32) PRIMARY KEY, user VARCHAR(32) NOT NULL, root VARCHAR(32), branch TINYINT, public TINYINT(1), protect TINYINT(1), draft TINYINT(1), name VARCHAR(255) NOT NULL, dish TINYINT, type TINYINT, role TINYINT, tech TINYINT, time TINYINT, cost TINYINT, sum VARCHAR(2000), protocol VARCHAR(2048), date DATETIME);'
 		$DB.query( query )
 		puts 'recipe table has been created.'
 	end
@@ -1003,7 +1002,7 @@ def schoolk_init()
 	if res.first
 		puts 'schoolk already exists.'
 	else
-		query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), num TINYINT, pass VARCHAR(64), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE );'
+		query = 'CREATE TABLE schoolk ( user VARCHAR(32), student VARCHAR(32), num TINYINT, pass VARCHAR(64), status TINYINT, menu VARCHAR(32), ampm TINYINT(1), date DATE, mail VARCHAR(64), cs_code VARCHAR(8));'
 		$DB.query( query )
 		puts 'schoolk table has been created.'
 	end
@@ -1017,7 +1016,7 @@ def schoolm_init()
 	if res.first
 		puts 'schoolm already exists.'
 	else
-		query = 'CREATE TABLE schoolm ( user VARCHAR(32) NOT NULL, label_group VARCHAR(64), label VARCHAR(256));'
+		query = 'CREATE TABLE schoolm ( user VARCHAR(32) NOT NULL, label_group VARCHAR(64), label VARCHAR(256), cs_code VARCHAR(8), ampm TINYINT(1), date DATE);'
 		$DB.query( query )
 		puts 'schoolm table has been created.'
 	end
@@ -1031,7 +1030,7 @@ def schoolc_init()
 	if res.first
 		puts 'schoolc already exists.'
 	else
-		query = 'CREATE TABLE schoolc ( user VARCHAR(32) NOT NULL, cs_code VARCHAR(32), format TINYINT(1), document VARCHAR(1024), menu_group VARCHAR(64), title VARCHAR(64), enable TINYINT(1), c_order TINYINT(1));'
+		query = 'CREATE TABLE schoolc ( user VARCHAR(32) NOT NULL, cs_code VARCHAR(8), format TINYINT(1), title VARCHAR(64), enable TINYINT(1));'
 		$DB.query( query )
 		puts 'schoolc table has been created.'
 	end
@@ -1103,7 +1102,7 @@ def db_create_rr_user()
 end
 
 #==============================================================================
-source_file = '20201225-mxt_kagsei-mext_01110_012-m1_clean.txt'
+source_file = '20201225-mxt_kagsei-mext_01110_012-m20211228_clean.txt'
 gycv_file = 'nb2020-gycv.txt'
 shun_file = 'nb2020-shun.txt'
 unit_file = 'nb2020-unit.txt'

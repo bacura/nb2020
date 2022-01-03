@@ -23,6 +23,7 @@ def momchai_module( cgi, user, debug )
 			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
 			age_yyyy = (( persed_today - birth ) / 31536000 ).to_i
 			age_mm = ((( persed_today - birth ) % 31536000 ) / ( 2628000 )).to_i
+			age_dd = (( persed_today - birth ) / 86400).to_i
 		end
 	end
 
@@ -60,27 +61,34 @@ HTML
 		# X axis
 		x_day = []
 		persed_date = birth
+		c = 0
 		while persed_date <= persed_today do
-			x_day << persed_date.strftime( "%Y-%m-%d" )
+#			x_day << persed_date.strftime( "%Y-%m-%d" )
+			x_day << c
 			persed_date += 86400
+			c += 1
 		end
+
 
 		#Koyomiex config
 		puts "Loading config<br>" if @debug
-		weight_kex = -1
 		height_kex = -1
-		r = mdb( "SELECT koyomiex FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		weight_kex = -1
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
-			a = r.first['koyomiex'].split( ':' )
-			a.size.times do |c|
-				aa = a[c].split( "\t" )
-				height_kex = c if aa[0] == '2'
- 				weight_kex = c if aa[0] == '3'
+			koyomi = JSON.parse( r.first['koyomi'] )
+			kex_select = koyomi['kex_select']
+			0.upto( 9 ) do |c|
+				height_kex = c if kex_select[c.to_s] == 2
+ 				weight_kex = c if kex_select[c.to_s] == 3
 			end
 		end
 
 
 		# measured height & weight
+		c = 0
+		height_x_day = []
+		weight_x_day = []
 		height_measured = []
 		weight_measured = []
 		persed_date = birth
@@ -88,27 +96,33 @@ HTML
 			target_date = persed_date.strftime( "%Y-%m-%d" )
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{target_date}';", false, @debug )
 			if r.first
-				if height_kex >= 0
+				if height_kex >= 0 && r.first["item#{height_kex}"].to_f != 0
 					height_measured << r.first["item#{height_kex}"].to_f
-				else
-					height_measured << 'NA'
+					height_x_day << c
 				end
-				if weight_kex >= 0
+				if weight_kex >= 0 && r.first["item#{weight_kex}"].to_f != 0
 					weight_measured << r.first["item#{weight_kex}"].to_f
-				else
-					weight_measured << 'NA'
+					weight_x_day << c
 				end
-			else
-				height_measured << 'NA'
-				weight_measured << 'NA'
 			end
 			persed_date += 86400
+			c += 1
+		end
+
+		if age_dd < 6
+			age_select = 0
+		elsif age_dd < 711
+			age_select = 1
+		else
+			age_select = 2
 		end
 
 		raw = []
-		raw[0] = x_day.unshift( 'x_day' ).join( ',' )
+		raw[0] = height_x_day.unshift( 'hx_day' ).join( ',' )
 		raw[1] = height_measured.unshift( l['data_height'] ).join( ',' )
-		raw[2] = weight_measured.unshift( l['data_weight'] ).join( ',' )
+		raw[2] = weight_x_day.unshift( 'wx_day' ).join( ',' )
+		raw[3] = weight_measured.unshift( l['data_weight'] ).join( ',' )
+		raw[8] = age_select
 		raw[9] = sex
 		puts raw.join( ':' )
 		exit
@@ -132,16 +146,21 @@ var drawChart = function(){
 //	dl3 = true;
 	displayBW();
 
-//	$.post( "momchai.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
+//	$.post( "momchai.cgi", { mod:'#{@module}', step:'raw' }, function( data ){ $( "#L3" ).html( data );});
 	$.post( "momchai.cgi", { mod:'#{@module}', step:'raw' }, function( raw ){
 
 		var column = ( String( raw )).split( ':' );
-//		var x_day = ( String( column[0] )).split(',');
-//		var y_heihgt = ( String( column[1] )).split(',');
-//		var y_weight = ( String( column[2] )).split(',');
+		var hx_day = ( String( column[0] )).split(',');
+		var y_heihgt = ( String( column[1] )).split(',');
+		var wx_day = ( String( column[2] )).split(',');
+		var y_weight = ( String( column[3] )).split(',');
+		var age_select = column[8];
 		var sex = column[9];
-
-		var x_ps = ["日付",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710,820,1002,1186,1368,1551,1733,1916,2098,2281];
+		var x_range = new Array;
+		x_range[0] = ["日付",0,1,2,3,4,5];
+		x_range[1] = ["日付",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710];
+		x_range[2] = ["日付",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710,820,1002,1186,1368,1551,1733,1916,2098,2281];
+		var x_ps = x_range[age_select];
 
 		if( sex == 0 ){
 			var wps3 = ["3%",2.104,2.06,2.01,2,2.034,2.04,2.997021507,3.527472996,4.413282541,5.120157591,5.672046162,6.100724813,6.443201465,6.725328669,6.959842256,7.159872128,7.3391929,7.511226951,7.682091146,7.852706664,8.022985245,8.192822119,8.362086305,8.530634096,8.698311668,8.864957231,9.030402831,9.194475875,9.357000432,9.51779837,10.06453973,10.93631012,11.72029998,12.41717248,13.06562779,13.71386599,14.37421868,15.02652515,15.55221473];
@@ -181,13 +200,25 @@ var drawChart = function(){
 			bindto: '#momchai_#{@module}-height',
 			size: { height: 600 },
 			data: {
-				x:'日付',
 				columns: [
+					hx_day, y_heihgt,
 					x_ps,
 					hps3, hps10, hps25, hps50, hps75, hps90, hps97
 				],
 				type: 'spline',
+				xs:{
+					#{l['data_height']}: 'hx_day',
+					'3%': '日付',
+					'10%': '日付',
+					'25%': '日付',
+					'50%': '日付',
+					'75%': '日付',
+					'90%': '日付',
+					'97%': '日付'
+				},
+				types:{ '#{l['data_height']}': 'scatter' },
 				colors: {
+					#{l['data_height']}: '#00BB00',
 					'3%': '#969696',
 					'10%': '#646464',
 					'25%': '#646464',
@@ -207,7 +238,7 @@ var drawChart = function(){
 			},
 			tooltip: { show: false },
 			zoom: { enabled: true },
-			point: { show: false },
+			point: { show: false, r:5 },
 			line: { connectNull: true }
 		});
 //--------------------------------------------------------------------------
@@ -215,13 +246,25 @@ var drawChart = function(){
 			bindto: '#momchai_#{@module}-weight',
 			size: { height: 600 },
 			data: {
-				x:'日付',
 				columns: [
+					wx_day, y_weight,
 					x_ps,
 					wps3, wps10, wps25, wps50, wps75, wps90, wps97
 				],
 				type: 'spline',
+				xs:{
+					#{l['data_weight']}: 'wx_day',
+					'3%': '日付',
+					'10%': '日付',
+					'25%': '日付',
+					'50%': '日付',
+					'75%': '日付',
+					'90%': '日付',
+					'97%': '日付'
+				},
+				types:{ '#{l['data_weight']}': 'scatter' },
 				colors: {
+					#{l['data_weight']}: '#BB00BB',
 					'3%': '#969696',
 					'10%': '#646464',
 					'25%': '#646464',
@@ -241,7 +284,7 @@ var drawChart = function(){
 			},
 			tooltip: { show: false },
 			zoom: { enabled: true },
-			point: { show: false },
+			point: { show: false, r:5 },
 			line: { connectNull: true }
 		});
 	});
@@ -273,7 +316,7 @@ def module_lp( language )
 		'data_weight' => "体重",\
 		'label_height' => "身長 (cm)",\
 		'label_weight' => "体重 (kg)",\
-		'label_day' => "時間 (日)",\
+		'label_day' => "経過(日)",\
 		'error_no-set' => "設定から生体情報を設定してください。"
 	}
 

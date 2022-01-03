@@ -146,7 +146,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '6', '#{recipe_dish})' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '6', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_6.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[15]}</h6>
@@ -154,7 +154,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '8', '#{recipe_dish})' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '8', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_8.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[16]}</h6>

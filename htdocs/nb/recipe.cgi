@@ -233,7 +233,8 @@ form_photo << '</form></div>'
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-3'><h5>#{lp[6]}</h5></div>
+		<div class='col-2'><h5>#{lp[6]}</h5></div>
+		<div class='col-1'>#{lp[6]}</div>
 		<div class="col-3">
 			<div class="form-check form-check-inline">
   				<label class="form-check-label">

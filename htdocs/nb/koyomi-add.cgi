@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.13b
+#Nutrition browser 2020 koyomi adding panel 0.06b
 
 #==============================================================================
 #LIBRARY
@@ -25,32 +25,24 @@ def unit_select_html( code, selectu )
 	unit_select_html = ''
 	unit_set = []
 	unit_select = []
-	r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, false )
-	if r.first['unitc'] != nil && r.first['unitc'] != ''
-		t = r.first['unitc'].split( ':' )
-		t.size.times do |c|
-			unless t[c] == '0.0'
-				unit_set << c
-				if c == selectu.to_i
+	r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, @debug )
+	if r.first
+		unith = JSON.parse( r.first['unit'] )
+		unith.each do |k, v|
+			if k != 'note'
+				unit_set << k
+				if k == selectu
 					unit_select << 'SELECTED'
 				else
 					unit_select << ''
 				end
 			end
 		end
-	else
-		unit_set = [ 0, 1, 15 ]
-		if selectu == 15
-			unit_select = [ '', '', 'SELECTED' ]
-		elsif selectu == 1
-			unit_select = [ '', 'SELECTED', '' ]
-		else
-			unit_select = [ 'SELECTED', '', '' ]
-		end
 	end
 
 	unit_set.size.times do |c|
-		unit_select_html << "<option value='#{unit_set[c]}' #{unit_select[c]}>#{@unit[unit_set[c]]}</option>"
+		p unit_set[c]
+		unit_select_html << "<option value='#{unit_set[c]}' #{unit_select[c]}>#{unit_set[c]}</option>"
 	end
 
 	return unit_select_html
@@ -81,7 +73,7 @@ unless yyyy_mm_dd == ''
 end
 code = @cgi['code']
 ev = @cgi['ev']
-eu = @cgi['eu'].to_i
+eu = @cgi['eu']
 tdiv = @cgi['tdiv'].to_i
 hh_mm = @cgi['hh_mm']
 meal_time = @cgi['meal_time'].to_i
@@ -308,8 +300,8 @@ if command != 'move_fix' && /\-f\-/ !~ code
 	if /^[UP]?\d{5}/ =~ code
 		rate_html << unit_select_html( code, eu )
 	else
-		rate_html << "		<option value='99'>%</option>"
-		rate_html << "		<option value='0' #{rate_selected}>g</option>"
+		rate_html << "		<option value='%'>%</option>"
+		rate_html << "		<option value='g' #{rate_selected}>g</option>"
 	end
 	rate_html << "	</select>"
 	rate_html << "</div>"

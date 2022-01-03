@@ -96,9 +96,9 @@ def html_head( interrupt, status, sub_title )
   #{js_shun}
   #{js_master}
 
-  #{tracking()}
-
+  #{tracking}
 </head>
+
 
 <body class="body" id='top'>
   <span class="world_frame" id="world_frame">

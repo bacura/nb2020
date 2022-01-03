@@ -1,4 +1,4 @@
-# Weight loss module for Physique 0.24b
+# Weight loss module for Physique 0.26b
 #encoding: utf-8
 
 @module = 'weight-loss'
@@ -141,7 +141,7 @@ HTML
 		#Day 4 stable weight
 		d4sw = []
 		if measured.size >= 1 and measured[0] != nil
-			persed_date = Time.parse( start_date ) + 86400
+			persed_date = Time.parse( start_date )
 			skip = 0
 			0.upto( 95 ) do |c|
 				break if persed_date > persed_today
@@ -335,25 +335,25 @@ HTML
 	when 'notice'
 		html = "<h5>#{l['bw_name']}</h5>"
 		html << '<div class="row">'
-		html << '<div class="col-2">'
+		html << '<div class="col-3">'
 		html << "<div class='input-group input-group-sm'>"
 		html << "  <span class='input-group-text'>1st period</span>"
 		html << "  <input type='text' class='form-control form-control-sm' id='aveep1' value='' DISABLED>"
 		html << "</div>"
 		html << "</div>"
-		html << '<div class="col-2">'
+		html << '<div class="col-3">'
 		html << "<div class='input-group input-group-sm'>"
 		html << "  <span class='input-group-text'>2nd period</span>"
 		html << "  <input type='text' class='form-control form-control-sm' id='aveep2' value='' DISABLED>"
 		html << "</div>"
 		html << "</div>"
-		html << '<div class="col-2">'
+		html << '<div class="col-3">'
 		html << "<div class='input-group input-group-sm'>"
 		html << "  <span class='input-group-text'>3rd period</span>"
 		html << "  <input type='text' class='form-control form-control-sm' id='aveep3' value='' DISABLED>"
 		html << "</div>"
 		html << "</div>"
-		html << '<div class="col-2">'
+		html << '<div class="col-3">'
 		html << "<div class='input-group input-group-sm'>"
 		html << "  <span class='input-group-text'>fainal period</span>"
 		html << "  <input type='text' class='form-control form-control-sm' id='aveep4' value='' DISABLED>"
@@ -392,9 +392,8 @@ var drawChart = function(){
 	var pal = document.getElementById( "pal" ).value;
 	var eenergy = document.getElementById( "eenergy" ).value;
 
-	$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
-	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
 //	$.post( 'physique.cgi', { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( '#L4' ).html( data );});
+	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
 
 		var column = ( String( raw )).split( ':' );
 		var chart = c3.generate({
@@ -435,7 +434,7 @@ var drawChart = function(){
 
 			axis: {
 		    	x: {
-		    		type: 'timeseries',
+		    		type: 'timeseries'
 				},
 				y: {
 		    		type: 'linear',
@@ -459,11 +458,15 @@ var drawChart = function(){
 			bar: { width: { ratio: 1.0 }},
 			point: { show: true, r: 2 }
 		});
+
 		var average_e = ( String( column[7] )).split(',')
-		document.getElementById( 'aveep1' ).value = average_e[0];
-		document.getElementById( 'aveep2' ).value = average_e[1];
-		document.getElementById( 'aveep3' ).value = average_e[2];
-		document.getElementById( 'aveep4' ).value = average_e[3];
+		$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){
+			$( "#L3" ).html( data );
+			document.getElementById( 'aveep1' ).value = average_e[0];
+			document.getElementById( 'aveep2' ).value = average_e[1];
+			document.getElementById( 'aveep3' ).value = average_e[2];
+			document.getElementById( 'aveep4' ).value = average_e[3];
+		});
 	});
 
 };

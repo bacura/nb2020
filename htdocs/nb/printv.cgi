@@ -54,8 +54,9 @@ def html_head_pv( code, mcode, recipe_name )
 	<script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
 	<script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
 
-	#{tracking()}
+	#{tracking}
 </head>
+
 
 <body class="body">
   <span class="world_frame" id="world_frame">
@@ -119,10 +120,6 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 			few = BigDecimal( few ) / dish_recipe * dish
 			few_v = few.to_f
 			few_v = few.to_i if few_v >= 10
-
-			# 単位補完
-			fu = '0' if fu == 'g' || fu == ''
-			fu = @unit[fu.to_i]
 
 			query = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{fn}';"
 			res = db.query( query )

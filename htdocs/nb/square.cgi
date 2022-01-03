@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.02b
+#Nutrition browser 2020 food square 0.03b
 
 
 #==============================================================================
@@ -506,7 +506,7 @@ when 'fctb_l5'
 
 		# GM/SGM専用単位変換ボタン
 		gm_unitc = ''
-		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnitc( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if user.status >= 8
+		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if user.status >= 8
 
 		gm_color = ''
 #		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{lp[5]}</button>" if user.status >= 8

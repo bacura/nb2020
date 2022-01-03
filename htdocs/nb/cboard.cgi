@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.02b
+#Nutrition browser 2020 cutting board 0.03b
 
 #==============================================================================
 #LIBRARY
@@ -305,25 +305,11 @@ when 'weight'
 	food_list[order_no].unitv = food_weight
 
 	# 食品ごとの単位読み込み
-	r = mdb( "SELECT unitc from #{$MYSQL_TB_EXT} WHERE FN='#{food_list[order_no].fn}';", false, @debug )
 	uk = BigDecimal( '1' )
-	if food_list[order_no].unit.to_i == 1
-		# カロリー換算
-		puts 'カロリー' if @debug
-		rr = mdb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].fn}';", false, @debug )
-		uk = BigDecimal( '100' ) / rr.first['ENERC_KCAL'] if rr.first['ENERC_KCAL']
-	elsif food_list[order_no].unit.to_i == 15
-		# 廃棄前g
-		puts '廃棄前g' if @debug
-		rr = mdb( "SELECT REFUSE FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_list[order_no].fn}';", false, @debug )
-		uk = BigDecimal(( 100 - rr.first['REFUSE'].to_i ).to_s ) / 100 if rr.first['REFUSE']
-	elsif r.first['unitc']
-		# 単位変換
-		puts 'その他' if @debug
-		a = r.first['unitc'].split( ':' )
-		t = a[food_list[order_no].unit.to_i]
-		t = '1' if t == '' || t == '-' || t == nil
-		uk = BigDecimal( t )
+	if unit != 'g'
+		r = mdb( "SELECT unit from #{$MYSQL_TB_EXT} WHERE FN='#{food_list[order_no].fn}';", false, @debug )
+		unith = JSON.parse( r.first['unit'] )
+		uk = unith[unit]
 	end
 
 	# 換算重量の小数点処理
@@ -573,7 +559,8 @@ puts 'HTML upper part<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-10'><h5>#{lp[1]}: #{update}#{recipe_name}</h5></div>
+		<div class='col-9'><h5>#{lp[1]}: #{update}#{recipe_name}</h5></div>
+		<div class='col-1' align="right">#{lp[34]}</div>
 		<div class='col-2' align='right'>
 			<input type='checkbox' id='all_check'>&nbsp;
 			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clearCB( 'all', '#{code}' )\">#{lp[8]}</button>
@@ -592,6 +579,7 @@ html = <<-"HTML"
 		<script language='javascript' type='text/javascript'>
 			document.getElementById( 'chomi_cell' ).innerHTML = '#{chomi_html}';
 		</script>
+		</div>
 	</div>
 	<br>
 	<div class='row'>
@@ -663,39 +651,24 @@ food_list.each do |e|
 	check = 'CHECKED' if e.check == '1'
 
 	# 単位の生成と選択
+	unit_set = []
+	unit_select = []
   	unless e.fn == '-' || e.fn == '+'
-		unit_set = [ 0, 1, 15 ]
-		unit_select = []
-		if e.unit == '15'
-			unit_select = [ '', '', 'SELECTED' ]
-		elsif e.unit == '1'
-			unit_select = [ '', 'SELECTED', '' ]
-		else
-			unit_select = [ 'SELECTED', '', '' ]
-		end
-
-		r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{e.fn}';", false, @debug )
-
+		r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{e.fn}';", false, @debug )
 		if r.first
-			unless r.first['unitc'] == nil || r.first['unitc'] == ''
-				unit_set = []
-				unit_select = []
-				t = r.first['unitc'].split( ':' )
-				t.size.times do |cc|
-					unless t[cc] == '0.0'
-						unit_set << cc
-						if cc == e.unit.to_i
-							unit_select << 'SELECTED'
-						else
-							unit_select << ''
-						end
-					end
+			unith = JSON.parse( r.first['unit'] )
+			unith.each do |k, v|
+				unit_set << k
+				if k == e.unit
+					unit_select << 'SELECTED'
+				else
+					unit_select << ''
 				end
 			end
 		end
 	end
 
-	# フードキーの生成
+	puts 'Generating food key<br>' if @debug
 	food_key = ''
   	unless e.fn == '-' || e.fn == '+'
   		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e.fn}';"
@@ -704,6 +677,7 @@ food_list.each do |e|
 		food_key = "#{r.first['FG']}:#{r.first['class1']}:#{r.first['class2']}:#{r.first['class3']}:#{r.first['name']}" if r.first
 	end
 
+	puts 'HTML<br>' if @debug
 	html << "<div class='row'>"
  	html << "	<div class='col-2'>"
  	html << "		<span onclick=\"upperCB( '#{c}', '#{code}' )\">#{lp[31]}</span>"
@@ -721,7 +695,7 @@ food_list.each do |e|
   		html << "	<div class='col-3 fct_value' onclick=\"cb_summon( '#{food_key}', '#{e.weight}', '#{e.fn}' )\">#{food_tag[c]}</div>"
   		html << "	<div class='col-3'>"
   		html << "		<div class='row cb_form'>"
-  		html << "			<div class='col-6'><input type='text'  maxlength='8' class='form-control form-control-sm' id='food_init_#{c}' value='#{e.init}' onchange=\"initCB_SS( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
+  		html << "			<div class='col-6'><input type='text'  maxlength='20' class='form-control form-control-sm' id='food_init_#{c}' value='#{e.init}' onchange=\"initCB_SS( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
   		html << "			<div align='right' class='col-3 fct_value'>#{e.weight.to_f}</div>"
   		html << "			<div align='right' class='col-3 fct_value'>#{e.ew.to_f}</div>"
 		html << "		</div>"
@@ -735,7 +709,7 @@ food_list.each do |e|
   		end
   		html << "			<div class='col-4'><select class='form-select form-select-sm' id='unit_#{c}' onchange=\"weightCB( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\">"
   		unit_set.size.times do |cc|
-  			html << "				<option value='#{unit_set[cc]}' #{unit_select[cc]}>#{@unit[unit_set[cc]]}</option>"
+  			html << "				<option value='#{unit_set[cc]}' #{unit_select[cc]}>#{unit_set[cc]}</option>"
   		end
 		html << "				</select>"
 		html << "			</div>"
@@ -767,7 +741,7 @@ html << "<div class='col-2'>"
 html <<	"		<button class='btn btn-primary btn-sm' onclick='Pseudo_R2F(\"#{code}\")'>#{lp[24]}</button>"
 html << "</div>"
 
-#### Quick保存
+#### Quick Save
 if recipe_name == '' || protect == 1
 	html << "	<div class='col-2'></div>"
 else

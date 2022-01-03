@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.03b
+#Nutrition browser recipe to pseudo food 0.04b
 
 #==============================================================================
 # LIBRARY
@@ -229,17 +229,24 @@ if command == 'save'
 		end
 	end
 
+	puts 'Generating units<br>' if @debug
+	unith = Hash.new
+	unith['g'] = 1
+	unith['kcal'] = fct_opt['ENERC_KCAL'].to_f / 100 if fct_opt['ENERC_KCAL'] != 0
+	unith_ = unith.sort.to_h
+	unit = JSON.generate( unith_ )
+
 	puts '食品番号のチェック<br>' if @debug
 	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	if r.first
 		# 擬似食品テーブルの更新
 		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
-		mdb( "UPDATE #{$MYSQL_TB_EXT} SET user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+		mdb( "UPDATE #{$MYSQL_TB_EXT} SET user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0', unit='#{unit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 	else
 		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',user='#{user.name}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
 		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0', unit='#{unit}';", false, @debug )
 	end
 end
 

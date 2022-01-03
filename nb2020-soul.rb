@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.13b
+#Nutrition browser 2020 soul 0.14b
 
 #==============================================================================
 # LIBRARY
@@ -134,17 +134,18 @@ end
 def tracking()
   code = <<-"CODE"
 <!-- Matomo -->
-<script type="text/javascript">
+<script>
   var _paq = window._paq = window._paq || [];
   /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
   _paq.push(['trackPageView']);
   _paq.push(['enableLinkTracking']);
   (function() {
     var u="https://bacura.jp/matomo/";
     _paq.push(['setTrackerUrl', u+'matomo.php']);
-    _paq.push(['setSiteId', '3']);
+    _paq.push(['setSiteId', '1']);
     var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.type='text/javascript'; g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
   })();
 </script>
 <!-- End Matomo Code -->
@@ -499,12 +500,12 @@ end
 #### from unit volume to weight
 def unit_weight( vol, uc, fn )
   w = 0.0
-  r = mdb( "SELECT unitc FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
+  r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
   if r.first
-    if r.first['unitc']
+    if r.first['unit'] != nil && r.first['unit'] != ''
+      unith = JSON.parse( r.first['unit'] )
       begin
-        a = r.first['unitc'].split( ':' )
-        w = ( BigDecimal( a[uc.to_i] ) * vol.to_f ).round( 1 )  unless  a[uc.to_i] == ''
+        w = ( BigDecimal( unith[uc].to_s ) * vol ).round( 1 )
       rescue
         puts "<span class='error'>[unit_weight]ERROR!!<br>"
         puts "vol:#{vol}<br>"

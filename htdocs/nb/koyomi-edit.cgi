@@ -35,70 +35,68 @@ def meals( e, lp, user, freeze_flag )
 	c = 0
 	a.each do |ee|
 		aa = ee.split( '~' )
-		if aa[2].to_i == 99
-			unit = '%'
-		else
-			unit = @unit[aa[2].to_i]
-		end
+		code = aa[0]
+		wt = aa[1]
+		unit = aa[2]
 
 		item_name = ''
 		onclick = ''
 		fix_copy_button = ''
 		recipe_button = ''
 
-		if /^\?/ =~ aa[0]
-			item_name = @something[aa[0]]
-		elsif /\-m\-/ =~ aa[0]
-			rr = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{aa[0]}';", false, @debug )
+		if /^\?/ =~ code
+			item_name = @something[code]
+		elsif /\-m\-/ =~ code
+			rr = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';", false, @debug )
 			if rr.first
 				item_name = rr.first['name']
 			else
-				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
+				item_name = "<span class='error'>ERROR: #{code}</span>"
 			end
 			onclick = ""
-		elsif /\-z\-/ =~ aa[0]
-			rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{aa[0]}' AND base='fix';", false, @debug )
+		elsif /\-z\-/ =~ code
+			rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{code}' AND base='fix';", false, @debug )
 			if rr.first
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
-				onclick = " onclick=\"modifysaveKoyomiFC( '#{aa[0]}', '#{origin}' )\"" if freeze_flag == 0
-				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\">#{lp[30]}</span>"
+				onclick = " onclick=\"modifysaveKoyomiFC( '#{code}', '#{origin}' )\"" if freeze_flag == 0
+				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\">#{lp[30]}</span>"
 			else
-				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
+				item_name = "<span class='error'>ERROR: #{code}</span>"
 				onclick = ''
 			end
-		elsif /\-/ =~ aa[0]
-			rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{aa[0]}';", false, @debug )
+		elsif /\-/ =~ code
+			rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 			if rr.first
 				item_name = rr.first['name']
-				onclick = " onclick=\"modifyKoyomi( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{aa[1]}', '#{aa[2]}', '#{c}' )\"" if freeze_flag == 0
-				recipe_button = "<span onclick=\"initCB( 'load', '#{aa[0]}' )\">#{lp[31]}</span>"
+				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
+				recipe_button = "<span onclick=\"initCB( 'load', '#{code}' )\">#{lp[31]}</span>"
 			else
-				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
+				item_name = "<span class='error'>ERROR: #{code}</span>"
 			end
 		else
-			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
-			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{user.name}';" if /^U\d{5}/ =~ aa[0]
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}';"
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';" if /^U\d{5}/ =~ code
 			rr = mdb( q, false, @debug )
 			if rr.first
 				item_name = rr.first['name']
-				onclick = " onclick=\"modifyKoyomi( '#{aa[0]}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{aa[1]}', '#{aa[2]}', '#{c}' )\"" if freeze_flag == 0
+				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
 			else
-				item_name = "<span class='error'>ERROR: #{aa[0]}</span>"
+				item_name = "<span class='error'>ERROR: #{code}</span>"
 			end
 		end
 		mb_html << "<tr>"
 		mb_html << "<td#{onclick}>#{item_name}</td>"
 
-		if /\-z\-/ =~ aa[0] ||  /^\?/ =~ aa[0]
+		if /\-z\-/ =~ code ||  /^\?/ =~ code
 			mb_html << "<td#{onclick}>-</td>"
-		elsif /\-m\-/ =~ aa[0] || /\-/ =~ aa[0]
-			mb_html << "<td#{onclick}>#{aa[1]}&nbsp;#{unit}</td>"
+		elsif /\-m\-/ =~ code || /\-/ =~ code
+			mb_html << "<td#{onclick}>#{wt}&nbsp;#{unit}</td>"
 		else
 			uw = ''
-			food_weight, rate = food_weight_check( aa[1] )
-			uw = "&nbsp;(#{unit_weight( rate, aa[2], aa[0] ).to_f} g)" if aa[2] != '0'
-			mb_html << "<td#{onclick}>#{aa[1]}&nbsp;#{unit}#{uw}</td>"
+			food_weight, rate = food_weight_check( wt )
+			uw = "&nbsp;(#{unit_weight( rate, unit, code ).to_f} g)" if unit != 'g'
+			mb_html << "<td#{onclick}>#{wt}&nbsp;#{unit}#{uw}</td>"
 		end
 
 		mb_html << "<td#{onclick}>#{aa[3]}</td>"
@@ -114,7 +112,7 @@ def meals( e, lp, user, freeze_flag )
 			mb_html << "	</div>"
 
 			mb_html << "<div class='col-6'>"
-			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[0]}', '#{c}' )\">#{lp[27]}</span>"
+			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{code}', '#{c}' )\">#{lp[27]}</span>"
 			mb_html << "</div>"
 
 			mb_html << "</div>"
