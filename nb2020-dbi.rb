@@ -304,16 +304,14 @@ def ext_update( gycv_file, shun_file, unit_file )
 	puts 'Shun in ext has been updated.'
 
 	# Unit
-#	f = open( unit_file, 'r' )
-#	f.each_line do |e|
-#		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-#		food_no = a[0]
-#		unit[a[1]] = a[2]
-#		query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit}' WHERE FN='#{food_no}';"
-#		$DB.query( query )
-#	end
-#	f.close
-#	puts 'Unit in ext has been updated.'
+	f = open( unit_file, 'r' )
+	f.each_line do |e|
+		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+		query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+		$DB.query( query )
+	end
+	f.close
+	puts 'Unit in ext has been updated.'
 end
 
 
@@ -388,7 +386,7 @@ def dic_init()
 	if res.first
 		puts 'dic table already exists.'
 	else
-		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), user VARCHAR(32));'
+		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), default VARCHAR(8), user VARCHAR(32));'
 		$DB.query( query )
 		puts 'dic table has been created.'
 

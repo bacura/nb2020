@@ -182,8 +182,6 @@ def html_nav( user, lp )
   gm_account = ''
   if user.status == 9
     gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount( 'init' )\">#{lp[34]}</button>"
-    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initExport( 'init' )\">#{lp[3]}</button>"
-    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initImport( 'init' )\">#{lp[38]}</button>"
   end
 
   html = <<-"HTML"
@@ -233,7 +231,6 @@ def html_nav( user, lp )
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[10]}</button>
       </nav>
       <nav class='container-fluid' id='gm_menu' style='display:none;'>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnitc( 'init' )">#{lp[29]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnit( 'init' )">#{lp[29]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initColor( 'init' )">#{lp[30]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initAllergen( 'init' )">#{lp[31]}</button>

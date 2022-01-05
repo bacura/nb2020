@@ -264,7 +264,7 @@ f.close
 
 
 ####
-data_solid.shift
+header = data_solid.shift
 data_solid_ = []
 c = 0
 data_solid.each do |e|
@@ -280,6 +280,7 @@ data_solid.each do |e|
 	end
 	c += 1
 end
+data_solid_.unshift( header )
 
 # 成分表データの書き込み
 f = open( out_file, 'w' )

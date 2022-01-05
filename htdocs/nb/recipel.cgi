@@ -515,9 +515,10 @@ html = <<-"HTML"
 		<div class='col'>#{html_cost}</div>
 	</div><br>
 	<div class='row'>
-		<div class='col-5'></div>
-		<div class='col-5'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList2( '#{page}' )">#{lp[13]}</button></div>
-		<div class='col-2'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
+		<div class='col-2'></div>
+		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList2( '#{page}' )">#{lp[13]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
+		<div class='col-2'><button class="btn btn-primary btn-sm" type="button" onclick="">#{lp[38]}</button></div>
 	</div>
 	<br>
 

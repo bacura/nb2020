@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.03b
+#Nutrition browser 2020 food square 0.04b
 
 
 #==============================================================================
@@ -106,14 +106,6 @@ else
 	@fg = "0#{category}"
 end
 puts "@fg: #{@fg}<br>" if @debug
-
-
-#### 食品重量の決定
-food_weight = BigDecimal( food_weight_check( food_weight ).first )
-
-
-#### 端数処理の設定
-frct_mode, frct_select = frct_check( frct_mode )
 
 
 #### 名前の履歴の取得
@@ -393,6 +385,11 @@ HTML
 #### L5 final page
 when 'fctb_l5'
 	puts 'L5 final page<br>' if @debug
+
+	require './brain'
+	food_weight = BigDecimal( food_weight_check( food_weight ).first )
+	frct_mode, frct_select = frct_check( frct_mode )
+
 	query = ''
 	food_no_list = []
 	food_name_list = []

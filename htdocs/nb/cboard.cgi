@@ -1,11 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.03b
+#Nutrition browser 2020 cutting board 0.04b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './probe'
+require './brain'
 
 
 #==============================================================================
@@ -751,11 +752,9 @@ end
 html << "</div>"
 html << "<div class='code'>#{code}</div>"
 html << "</div>"
-
-
-
 puts html
-#### まな板データ更新
+
+puts 'Updating cboard sum<br>' if @debug
 sum_new = ''
 food_list.each do |e| sum_new << "#{e.fn}:#{e.weight}:#{e.unit}:#{e.unitv}:#{e.check}:#{e.init}:#{e.rr}:#{e.ew}\t" end
 sum_new.chop!

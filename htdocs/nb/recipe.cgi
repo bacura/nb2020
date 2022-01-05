@@ -14,12 +14,72 @@ require 'fileutils'
 #==============================================================================
 script = 'recipe'
 @debug = false
+#$UDIC = '/usr/local/share/mecab/dic/ipadic/sys.dic'
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+def index( recipe )
+	require 'natto'
+end
+
+def calc( recipe, user )
+	food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, 0 )
+p food_no
+	fct = []
+
+	food_no.each do |e|
+		fct_tmp = []
+		if e == '-' || e == '+' || e == '00000'
+			fct << nil
+		else
+			if /P|U/ =~ e
+				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{user.name}' OR user='#{$GM}' );"
+			else
+				q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
+			end
+			r = mdb( q, false, false )
+			@fct_item.size.times do |c|
+				if c >= @fct_start && c <= @fct_end
+					fct_tmp << r.first[@fct_item[c]]
+				else
+					fct_tmp << 0
+				end
+			end
+			fct << Marshal.load( Marshal.dump( fct_tmp ))
+		end
+	end
+
+p fct.size
+
+	puts 'データ計算 <br>' if @debug
+	fct_sum = []
+	@fct_item.size.times do fct_sum << BigDecimal( 0 ) end
+p 'vv'
+	fct.size.times do |fn|
+		unless fct[fn] == nil
+			@fct_item.size.times do |fi|
+				if fi >= @fct_start && fi <= @fct_end
+p fct[fn][fi]
+					t = convert_zero( fct[fn][fi] )
+p t
+					fct[fn][fi] = num_opt( t, food_weight[fn], 1, @fct_frct[@fct_item[fi]] )
+					fct_sum[fi] += BigDecimal( num_opt( t, food_weight[fn], 1, @fct_frct[@fct_item[fi]] + 3 ))
+				end
+			end
+		end
+	end
+p fct_sum
+
+
+	puts '合計値の桁合わせ <br>' if @debug
+	fct_sum = adjust_digit( fct_item, fct_sum, frct_mode )
+
+
+
+end
 
 #==============================================================================
 # Main
@@ -291,3 +351,5 @@ html = <<-"HTML"
 HTML
 
 puts html
+
+calc( recipe, user ) if command == 'save'
