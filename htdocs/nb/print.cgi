@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser print page selector 0.02b
+#Nutrition browser print page selector 0.03b
 
 #==============================================================================
 #LIBRARY
@@ -12,7 +12,7 @@ require './probe'
 #STATIC
 #==============================================================================
 script = 'print'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -30,7 +30,7 @@ user.debug if @debug
 lp = user.load_lp( script )
 
 
-#### POSTデータの取得
+puts 'Getting POST<br>' if @debug
 command = @cgi['command']
 code = @cgi['code']
 if @debug
@@ -40,7 +40,7 @@ if @debug
 end
 
 
-#### Checking recipe code
+puts 'Checking recipe code<br>' if @debug
 r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 unless r.first
 	puts "#{lp[1]}(#{code})#{lp[2]}"
@@ -50,7 +50,7 @@ recipe_name = r.first['name']
 recipe_dish = r.first['dish']
 
 
-#### Generating palette HTML
+puts 'Generating palette HTML<br>' if @debug
 palette_html = ''
 #### Setting palette
 palette_sets = []
@@ -67,14 +67,14 @@ end
 palette_sets.size.times do |c| palette_html << "<option value='#{c}'>#{palette_name[c]}</option>" end
 
 
-#### Cooking school HTML
+puts 'Cooking school HTML<br>' if @debug
 csc = ''
 cs_disabled = ''
 if user.status == 5 ||  user.status >= 8
-	r = mdb( "SELECT code FROM #{$MYSQL_TB_SCHOOLC} WHERE user='#{user.name}';", false, @dubug )
+	r = mdb( "SELECT enable FROM #{$MYSQL_TB_SCHOOLC} WHERE user='#{user.name}';", false, @dubug )
 	if r.first
-		csc = r.first['code']
-		cs_disabled = 'DISABLED' if csc == ''
+		enable = r.first['enable']
+		cs_disabled = 'DISABLED' if enable != 1
 	else
 		cs_disabled = 'DISABLED'
 	end
@@ -82,7 +82,7 @@ else
 	cs_disabled = 'DISABLED'
 end
 
-#### HTML生成
+puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>

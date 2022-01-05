@@ -1,11 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.04b
+#Nutrition browser recipe to pseudo food 0.05b
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
 require './probe'
+require './brain'
 
 
 #==============================================================================

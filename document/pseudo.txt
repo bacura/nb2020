@@ -1,4 +1,4 @@
-#Nutrition browser 2020 pseudo food 0.06b
+#Nutrition browser 2020 pseudo food 0.07b
 
 #==============================================================================
 # OVERVIEW
@@ -56,3 +56,4 @@ core.js/pseudoSave( code ) -> pseudo.cgi
 					解決：同じFGに同じFNがあったら、codeは変更なしでUPDATEするようにした。
 20211106	0.05b	更新：probeへの対応。
 20211219	0.06b	更新：単位データのJSON化への対応。
+20211106	0.07b	更新：brainへの対応。
