@@ -1,4 +1,4 @@
-#Nutrition browser 2020 print page selector 0.03b
+#Nutrition browser 2020 print page selector 0.04b
 
 #==============================================================================
 # OVERVIEW
@@ -34,3 +34,4 @@ recipe.js/print_templateReturen() ->
 20210926	0.01b	高解像度オプションを廃止
 20211106	0.02b	更新：probeへの対応。
 20220106	0.03b	更新：brainへの対応。
+20220109	0.04b	更新：printv更新への対応。テンプレート番号の最適化。

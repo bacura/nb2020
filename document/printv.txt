@@ -1,4 +1,4 @@
-#Nutrition browser 2020 print web page 0.12b
+#Nutrition browser 2020 print web page 0.13b
 
 #==============================================================================
 # OVERVIEW
@@ -43,3 +43,4 @@ form -> printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu
 20210926	0.11b	高解像度オプションを廃止。料理教室対応。
 20211106	0.12b	更新：probeへの対応。
 20220106	0.13b	更新：brainへの対応。
+20220109	0.14b	更新：リンク修正とコントロールの強化。

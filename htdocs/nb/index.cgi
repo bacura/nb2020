@@ -164,19 +164,19 @@ def html_nav( user, lp )
   else
     cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"CBN\">#{cb_num}</span>"
     mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"MBN\">#{meal_num}</span>"
-    special_button = "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm nav_button\" onclick=\"displayVideo( '#{lp[8]}' )\">#{@category[0]}</button>"
-    his_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[4]}</button>"
-    sum_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{cb}</button>"
-    recipe_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[5]}</button>"
-    menu_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{mb}</button>"
-    set_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[6]}</button>"
-    config_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVideo( '#{lp[8]}' )\">#{lp[7]}</button>"
+    special_button = "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm nav_button\" onclick=\"displayVIDEO( '#{lp[8]}' )\">#{@category[0]}</button>"
+    his_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[4]}</button>"
+    sum_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{cb}</button>"
+    recipe_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[5]}</button>"
+    menu_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{mb}</button>"
+    set_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[6]}</button>"
+    config_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[7]}</button>"
   end
 
   if user.status >= 3
     g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu( '#{user.status}' )\">G</button>"
   else
-    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVideo( '#{lp[9]}' )\">G</button>"
+    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVIDEO( '#{lp[9]}' )\">G</button>"
   end
 
   gm_account = ''

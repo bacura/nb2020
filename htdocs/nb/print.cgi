@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser print page selector 0.03b
+#Nutrition browser print page selector 0.04b
 
 #==============================================================================
 #LIBRARY
@@ -12,7 +12,7 @@ require './probe'
 #STATIC
 #==============================================================================
 script = 'print'
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -56,15 +56,8 @@ palette_html = ''
 palette_sets = []
 palette_name = []
 r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
-if r.first
-	r.each do |e|
-		a = e['palette'].split( '' )
-		a.map! do |x| x.to_i end
-		palette_sets << a
-		palette_name << e['name']
-	end
-end
-palette_sets.size.times do |c| palette_html << "<option value='#{c}'>#{palette_name[c]}</option>" end
+r.each do |e| palette_name << e['name'] end
+palette_name.size.times do |c| palette_html << "<option value='#{c}'>#{palette_name[c]}</option>" end
 
 
 puts 'Cooking school HTML<br>' if @debug
@@ -130,7 +123,7 @@ html = <<-"HTML"
 
 	<div class='row'>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '2', '#{recipe_dish}' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '0', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_2.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[13]}</h6>
@@ -138,7 +131,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '4', '#{recipe_dish}' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '1', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_4.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[14]}</h6>
@@ -146,7 +139,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '6', '#{recipe_dish}' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '2', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_6.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[15]}</h6>
@@ -154,7 +147,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col print_card'>
-			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '8', '#{recipe_dish}' )">
+			<div class="card" style="width: 14rem;" onclick="openPrint( '#{user.name}', '#{code}', '3', '#{recipe_dish}' )">
   				<img class="card-img-top" src="photo_/pvt_sample_8.png" alt="Card image cap">
   				<div class="card-body">
     				<h6 class="card-title">#{lp[16]}</h6>

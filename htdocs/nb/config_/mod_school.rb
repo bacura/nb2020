@@ -1,11 +1,10 @@
-# Nutorition browser 2020 Config module for school 0.00b
+# Nutorition browser 2020 Config module for school 0.10b
 #encoding: utf-8
 
 
 def config_module( cgi, user, lp )
 	l = module_lp( user.language )
 	module_js()
-
 
 	step = cgi['step']
 	r = mdb( "SELECT school FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
@@ -14,6 +13,8 @@ def config_module( cgi, user, lp )
 			school = JSON.parse( r.first['school'] )
 			cs_name = school['name']
 			cs_code = school['code']
+			cs_url = school['url']
+			cs_doc = school['doc']
 			cs_format = school['format']
 			week = 0
 			week = 1 if cs_format == 'week'
@@ -23,6 +24,8 @@ def config_module( cgi, user, lp )
 	if step ==  'change'
 		cs_name = cgi['cs_name']
 		cs_code = cgi['cs_code']
+		cs_url = cgi['cs_url']
+		cs_doc = cgi['cs_doc']
 		month = cgi['month'].to_i
 		week = cgi['week'].to_i
 		cs_format = 'week'
@@ -30,7 +33,7 @@ def config_module( cgi, user, lp )
 
 
 		# Updating bio information
-		school_ = JSON.generate( { "name" => cs_name, "code" => cs_code, "format" => cs_format } )
+		school_ = JSON.generate( { "name" => cs_name, "code" => cs_code, "url" => cs_url, "doc" => cs_doc, "format" => cs_format } )
 		mdb( "UPDATE #{$MYSQL_TB_CFG} SET school='#{school_}' WHERE user='#{user.name}';", false, false )
 	end
 
@@ -54,6 +57,14 @@ def config_module( cgi, user, lp )
     	<div class='row'>
 	    	<div class='col-2'>#{l['cs_code']}</div>
 			<div class='col-3'><input type="text" id="cs_code" class="form-control login_input" value="#{cs_code}"></div>
+		</div>
+    	<div class='row'>
+	    	<div class='col-2'>#{l['cs_url']}</div>
+			<div class='col-10'><input type="text" id="cs_url" class="form-control login_input" value="#{cs_url}"></div>
+		</div>
+    	<div class='row'>
+	    	<div class='col-2'>#{l['cs_doc']}</div>
+			<div class='col-10'><input type="text" id="cs_doc" class="form-control login_input" value="#{cs_doc}"></div>
 		</div>
 
     	<div class='row'>
@@ -89,16 +100,20 @@ def module_js()
 var school_cfg = function( step ){
 	var cs_name = '';
 	var cs_code = '';
+	var cs_url = '';
+	var cs_doc = '';
 	var month = 0;
 	var week = 0;
 
 	if( step == 'change' ){
 		cs_name = document.getElementById( "cs_name" ).value;
 		cs_code = document.getElementById( "cs_code" ).value;
+		cs_url = document.getElementById( "cs_url" ).value;
+		cs_doc = document.getElementById( "cs_doc" ).value;
 		if( document.getElementById( "week" ).checked ){ week = 1; }
 		if( document.getElementById( "month" ).checked ){ month = 1; }
 	}
-	$.post( "config.cgi", { mod:'school', step:step, cs_name:cs_name, cs_code:cs_code, week:week, month:month }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "config.cgi", { mod:'school', step:step, cs_name:cs_name, cs_code:cs_code, cs_url:cs_url, cs_doc:cs_doc, week:week, month:month }, function( data ){ $( "#L1" ).html( data );});
 
 	flashBW();
 	dl1 = true;
@@ -117,6 +132,8 @@ def module_lp( language )
 	l['jp'] = {
 		'cs_code' => "教室コード",\
 		'cs_name' => "教室名",\
+		'cs_url' => "教室URL",\
+		'cs_doc' => "教室紹介",\
 		'format' => "教室スタイル",\
 		'month' => "月替り",\
 		'week' => "週替り",\

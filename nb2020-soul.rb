@@ -94,7 +94,7 @@ if uname != nil && uid != nil
   soul_language = res.first['language'] if res.first
 end
 
-require "#{$SERVER_PATH}/nb2020-soul-#{soul_language}"
+require "#{$SERVER_PATH}/nb2020-local-#{soul_language}"
 
 
 #==============================================================================

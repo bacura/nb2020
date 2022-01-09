@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.13b
+#Nutrition browser 2020 print web page 0.14b
 
 #==============================================================================
 #LIBRARY
@@ -15,6 +15,9 @@ require 'rqrcode'
 #==============================================================================
 @debug = false
 fct_num = 14
+frct_select = %w( 四捨五入 四捨五入 切り上げ 切り捨て )
+accu_check = %w( 通常合計 精密合計 )
+ew_check = %w( 単純g 予想g )
 
 
 #==============================================================================
@@ -22,14 +25,17 @@ fct_num = 14
 #==============================================================================
 
 #### html_header for printv
-def html_head_pv( code, mcode, recipe_name )
+def html_head_pv( recipe )
+	code = recipe.code
+	mcode = recipe.media
+	recipe_name = recipe.name
 	tw_image = ''
 	tw_image = "<meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/#{mcode[0]}-tn.jpg' />" if mcode.size > 0
 
 	html = <<-"HTML"
 <!DOCTYPE html>
 <head>
- 	<title>栄養ブラウザ レシピ</title>
+ 	<title>栄養ブラウザ レシピ：#{recipe_name}</title>
  	<meta charset="UTF-8">
  	<meta name="keywords" content="栄養,nutrition, Nutritionist, food,検索,計算,解析,評価">
  	<meta name="description" content="食品成分表の検索,栄養計算,栄養評価, analysis, calculation">
@@ -39,8 +45,8 @@ def html_head_pv( code, mcode, recipe_name )
  	<!-- Twitter card -->
  	<meta name="twitter:card" content="summary" />
  	<meta name="twitter:site" content="@ho_meow" />
- 	<meta name="twitter:title" content="栄養ブラウザ by ばきゅら京都Lab" />
- 	<meta name="twitter:description" content="フリーの栄養計算・管理webサービス //// レシピ紹介 [#{recipe_name}]" />
+ 	<meta name="twitter:title" content="ユビキタス総合栄養ツール：栄養ブラウザ" />
+ 	<meta name="twitter:description" content="公開レシピ紹介///#{recipe_name}" />
  	#{tw_image}
  	<meta name="twitter:image:alt" content="ばきゅら京都Labロゴ" />
 
@@ -49,7 +55,7 @@ def html_head_pv( code, mcode, recipe_name )
  	<link rel="stylesheet" href="#{$CSS_PATH}/core.css">
 
 	<!-- Jquery -->
-  	<script type="text/javascript" src="./jquery-3.5.1.min.js"></script>
+  	<script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
 	<!-- bootstrap -->
 	<script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
@@ -57,7 +63,6 @@ def html_head_pv( code, mcode, recipe_name )
 
 	#{tracking}
 </head>
-
 
 <body class="body">
   <span class="world_frame" id="world_frame">
@@ -87,17 +92,21 @@ end
 
 
 #### 食材抽出
-def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
+def extract_foods( recipe, dish, template, ew_mode )
+	sum = recipe.sum
+	dish_recipe = recipe.dish
+	uname = recipe.user
 	calc_weight = [ '単純換算g','予想摂取g' ]
 	return_foods = "<table class='table table-sm'>\n"
+
 	case template
-	when 1, 2
+	when 0
 		return_foods << "<thead><tr><th class='align_c'>食材</th><th class='align_r'>数量</th><th class='align_r'>単位</th></tr></thead>\n"
-	when 3, 4
+	when 1
 		return_foods << "<thead><tr><th class='align_c'>食材</th><th class='align_c'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th></tr></thead>\n"
-	when 5, 6
+	when 2
 		return_foods << "<thead><tr><th>食品番号</th><th class='align_c'>食材</th><th class='align_c'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th><th class='align_r'>#{calc_weight[ew_mode]}</th></tr></thead>\n"
-	when 7, 8
+	when 3
 		return_foods << "<thead><tr><th>食品番号</th><th class='align_c'>食材</th><th class='align_c'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th><th class='align_r'>#{calc_weight[ew_mode]}</th><th class='align_r'>廃棄率%</th><th class='align_r'>発注量kg</th></tr></thead>\n"
 	end
 
@@ -126,7 +135,7 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 			res = db.query( query )
 
 			case template
-			when 1, 2
+			when 0
   				class_add = ''
   				if /\+/ =~ res.first['class1']
     				class_add = "<span class='tagc'>#{res.first['class1'].sub( '+', '' )}</span> "
@@ -141,21 +150,21 @@ def extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
 					fi = ''
 				end
 				return_foods << "<tr><td>#{class_add}#{food_name}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td></tr>\n" if res.first
-			when 3, 4
+			when 1
 				tags = bind_tags( res )
 				if /^\=/ =~ fi
 					tags = fi.sub( '=', '' )
 					fi = ''
 				end
 				return_foods << "<tr><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td></tr>\n" if res.first
-			when 5, 6
+			when 2
 				tags = bind_tags( res )
 				if /^\=/ =~ fi
 					tags = fi.sub( '=', '' )
 					fi = ''
 				end
 				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td><td align='right'>#{few_v.ceil( 1 )}</td></tr>\n" if res.first
-			when 7, 8
+			when 3
 				tags = bind_tags( res )
 				fi.sub!( '=', '' )
 				refuse = 0
@@ -212,7 +221,9 @@ end
 
 
 #### 写真構成
-def arrange_photo( code, mcode )
+def arrange_photo( recipe )
+	code = recipe.code
+	mcode = recipe.media
 	main_photo = ''
 	main_photo = "<img src='#{$PHOTO}/#{mcode[0]}.jpg' width='100%' height='100%' class='img-fluid rounded'>\n" if mcode.size > 0
 
@@ -227,47 +238,15 @@ def arrange_photo( code, mcode )
 end
 
 
-#### 端数処理の選択
-def frct_select( frct_mode )
-	frct_select = ''
-	case frct_mode
-	when 3
-		frct_select = '切り捨て'
-	when 2
-		frct_select = '切り上げ'
-	else
-		frct_select = '四捨五入'
-	end
-
-	return frct_select
-end
-
-
-#### 合計精密チェック
-def accu_check( frct_accu )
-  accu_check = '通常合計'
-  accu_check = '精密合計' if frct_accu == 1
-
-  return accu_check
-end
-
-
-#### 予想重量チェック
-def ew_check( ew_mode )
-  ew_check = '単純g'
-  ew_check = '予想g' if ew_mode == 1
-
-  return ew_check
-end
-
-
 #==============================================================================
 # Main
 #==============================================================================
 
 html_init( nil )
 
-#### GETデータの取得
+user = User.new( @cgi )
+
+puts "Getting GET<br>" if @debug
 get_data = get_data()
 code = get_data['c']
 template = get_data['t'].to_i
@@ -277,14 +256,8 @@ frct_accu = get_data['fa'].to_i
 ew_mode = get_data['ew'].to_i
 frct_mode = get_data['fm'].to_i
 csc = get_data['cs'].to_s
-
-url= ''
-if csc == ''
-	url = "https://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}"
-else
-	url = "https://nb.bacura.jp/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}&fa=#{frct_accu}&ew=#{ew_mode}&fm=#{frct_mode}&cs=#{csc}"
-end
-
+url = "https://bacura.jp/nb/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}"
+url << "&cs=#{csc}" unless csc == ''
 if @debug
 	puts "code: #{code}<br>"
 	puts "template: #{template}<br>"
@@ -294,76 +267,92 @@ if @debug
 end
 
 
-#### コードの読み込み
-r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @degug )
-unless r.first
-	puts "指定のレシピコード(#{code})は存在しません。"
-	exit( 9 )
-end
-uname = r.first['user']
-recipe_name = r.first['name']
-sum = r.first['sum']
-dish_recipe = r.first['dish'].to_i
-protocol = r.first['protocol']
-if @debug
-	puts "uname: #{uname}<br>"
-	puts "recipe_name: #{recipe_name}<br>"
-	puts "sum: #{sum}<br>"
-	puts "dish_recipe: #{dish_recipe}<br>"
-	puts "protocol: #{protocol}<br>"
-	puts "<hr>"
-end
-
-
-puts "MEDIA<br>" if @debug
-mcode = []
-r = mdb( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE code='#{code}';", false, @degug )
-r.each do |e| mcode << e['mcode'] end
-photo_num = mcode.size
+puts "Loading recipe<br>" if @debug
+recipe = Recipe.new( user )
+recipe.load_db( code, true )
+dish = recipe.dish if dish = 0
+recipe.load_media
+photo_num = recipe.media.size
 
 
 puts "html header<br>" if @debug
-html_head_pv( code, mcode, recipe_name )
+html_head_pv( recipe )
 
 
-#### 食材変換
 puts "extract foods<br>" if @debug
-foods = extract_foods( sum, dish_recipe, dish, template, ew_mode, uname )
+foods = extract_foods( recipe, dish, template, ew_mode )
 puts "foods: #{foods}<br>" if @debug
 
 
 puts 'Protocol html<br>' if @debug
-protocol = modify_protocol( protocol )
+protocol = modify_protocol( recipe.protocol )
 
 
 puts 'Photo html<br>' if @debug
-main_photo, sub_photos = arrange_photo( code, mcode )
+main_photo, sub_photos = arrange_photo( recipe )
 
 
 puts 'Generating QR code<br>' if @debug
 makeQRcode( url, code )
+
+
+puts 'Mode select HTML<br>' if @debug
+mode_list = %w( シンプル表示 標準表示 栄養表示 完全栄養表示 )
+mode_selected = selected( 0, 3, template )
+mode_html = '<div class="input-group input-group-sm">'
+mode_html << '<span class="input-group-text">表示モード</span>'
+mode_html << "<select class='form-select' name='t'>"
+0.upto( 3 ) do |c| mode_html << "<option value='#{c}' #{mode_selected[c]}>#{mode_list[c]}</option>" end
+mode_html << "</select>"
+mode_html << '</div>'
+
+
+puts 'Palette select HTML<br>' if @debug
+palette_sets = []
+palette_name = []
+palette_html = ''
+palette_start = 0
+if template >= 2
+	if user.name
+		r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
+		r.each do |e|
+			a = e['palette'].split( '' )
+			a.map! do |x| x.to_i end
+			palette_sets << a
+			palette_name << e['name']
+		end
+	else
+		@palette_default.each do |e|
+			a = e.split( '' )
+			a.map! do |x| x.to_i end
+			palette_sets << a
+		end
+		palette_name = @palette_default_name
+		palette_start = 1
+	end
+
+	palette_selected = selected( 0, palette_name.size - 1, palette )
+	palette_html = '<div class="input-group input-group-sm">'
+	palette_html << '<span class="input-group-text">栄養パレット</span>'
+	palette_html << "<select class='form-select' name='p'>"
+	palette_start.upto( palette_name.size - 1  ) do |c| palette_html << "<option value='#{c}' #{palette_selected[c]}>#{palette_name[c]}</option>" end
+	palette_html << "</select>"
+	palette_html << '</div>'
+end
+
+
+puts 'Nimono alart select HTML<br>' if @debug
+nimono_html = ''
+if recipe.dish != dish
+end
+
 
 #### 食品番号から食品成分と名前を抽出
 fct = []
 fct_name = []
 fct_sum = []
 
-if template > 4
-	# セレクト＆チェック設定
-	frct_select = frct_select( frct_mode )
-	accu_check = accu_check( frct_accu )
-	ew_check = ew_check( ew_mode )
-
-	# Setting palette
-	palette_sets = []
-	r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @degug )
-	if r.first
-		r.each do |e|
-			a = e['palette'].split( '' )
-			a.map! do |x| x.to_i end
-			palette_sets << a
-		end
-	end
+if template >= 2
 	palette_set = palette_sets[palette]
 
 	# 成分項目の抽出
@@ -372,8 +361,7 @@ if template > 4
 		fct_item << @fct_item[c] if palette_set[c] == 1
 	end
 
-
-	food_no, food_weight, total_weight = extract_sum( sum, dish_recipe, ew_mode )
+	food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, ew_mode )
 	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
 	# 食品成分データの抽出と名前の書き換え
@@ -435,15 +423,16 @@ if template > 4
 	fct_sum = adjust_digit( fct_item, fct_sum, frct_mode )
 end
 
-if template > 4
-	fct_html = "<div class='fct_item'>#{frct_select} / #{accu_check} / #{ew_check}</div>\n"
-	table_num = fct_item.size / fct_num + 1
+if template >= 2
+	fct_html = ''
+	table_num = fct_item.size / fct_num
+	table_num += 1 if ( fct_item.size % fct_num ) != 0
 	table_num.times do |c|
 		fct_html << '<table class="table table-sm">'
 
 		# 項目名
 		fct_html << '<tr>'
-		if template > 6
+		if template > 2
 			fct_html << '<th align="center" width="6%" class="fct_item">食品番号</th>'
 			fct_html << '<th align="center" width="20%" class="fct_item align_c">食品名</th>'
 			fct_html << '<th align="center" width="4%" class="fct_item">重量</th>'
@@ -461,7 +450,7 @@ if template > 4
 
 		# 単位
 		fct_html << '<tr>'
-		if template > 6
+		if template > 2
 			fct_html << '<td colspan="2" align="center"></td>'
 			fct_html << "<td align='center' class='fct_unit'>( g )</td>"
 		end
@@ -475,7 +464,7 @@ if template > 4
 		end
 		fct_html << '</tr>'
 
-		if template > 6
+		if template > 2
 		# 各成分値
 			food_no.size.times do |cc|
 				unless food_no[cc] == '-' || food_no[cc] == '+'
@@ -494,7 +483,7 @@ if template > 4
 
 		# 合計値
 		fct_html << '    <tr>'
-		if template > 6
+		if template > 2
 			fct_html << '      <td colspan="2" align="center" class="fct_sum">合計</td>'
 			fct_html << "      <td align='right' class='fct_sum'>#{total_weight.to_f}</td>"
 		end
@@ -504,6 +493,7 @@ if template > 4
 		end
 		fct_html << '    </tr>'
 		fct_html << '</table>'
+		fct_html << "<div class='fct_item'>#{frct_select[frct_mode]} / #{accu_check[frct_accu]} / #{ew_check[ew_mode]}</div>\n"
 	end
 end
 
@@ -511,27 +501,34 @@ end
 #### 共通ヘッダ
 html_head = <<-"HTML"
 <div class='container'>
-	<br>
 	<div class='row'>
-		<div class='col-9'>
-			<h4>#{recipe_name}</h4>
+		<div class='col-8'><h4>#{recipe.name}</h4></div>
+		<div class='col-4' align="right">Recipe code: #{code}</div>
+	</div>
+	<hr>
+	<form action='' method='get'>
+	<div class='row' align='center'>
+		<div class='col'>
+			<div class="input-group input-group-sm">
+				<span for="dish_num" class="input-group-text">人数</span>
+				<input type='number' name='d' size='3' min='1' value='#{dish}' class="form-control">
+			</div>
 		</div>
-		<div class='col-3'>
-			<form action='' method='get'>
-				<div class="input-group input-group-sm">
-					<span for="dish_num" class="input-group-text">人数</span>
-					<input type='number' name='d' size='3' min='1' value='#{dish}' class="form-control">
-					<input type='submit' value='変更' class='btn btn-sm btn-outline-primary'>
-				</div>
+		<div class='col'>
+				#{mode_html}
+		</div>
+		<div class='col'>
+				#{palette_html}
+		</div>
+		<div class='col'>
 				<input type='hidden' name='c' value='#{code}'>
-				<input type='hidden' name='t' value='#{template}'>
-				<input type='hidden' name='p' value='#{palette}'>
 				<input type='hidden' name='fa' value='#{frct_accu}'>
 				<input type='hidden' name='ew' value='#{ew_mode}'>
 				<input type='hidden' name='fm' value='#{frct_mode}'>
-			</form>
+				<input type='submit' value='変更' class='btn btn-sm btn-outline-primary'>
 		</div>
 	</div>
+	</form>
 	<hr>
 HTML
 
@@ -542,10 +539,11 @@ if csc == ''
 	<hr>
 	<div class='row'>
 		<div class='col-10'>
-			<a href='https://nb.bacura.jp/'>栄養ブラウザ</a><br>
-			Recipe code:<a href='#{url}'>#{code}</a>
+			栄養士・管理栄養士のための欲しい機能を無節操に同化するユビキタス総合栄養ツール<br><br>
+			<a href='https://bacura.jp/nb/' class='h4 alert alert-danger'>栄養ブラウザ</a>
 		</div>
 		<div class='col-2'>
+			レシピQRコード<br>
 			<img src='#{$PHOTO}/#{code}-qr.png'>
 		</div>
 	</div>
@@ -579,7 +577,7 @@ else
 		</div>
 		<div class='col-3'>
 			<a href='https://nb.bacura.jp/'>栄養ブラウザ</a><br>
-			Recipe code:<br>
+			レシピコード：<br>
 			<a href='#{url}'>#{code}</a>
 		</div>
 		<div class='col-2'>
@@ -592,7 +590,7 @@ end
 
 case template
 #### 基本レシピ・写真有
-when 2
+when 0
 html = <<-"HTML"
 	<div class='row'>
 		<div class='col'>
@@ -614,7 +612,7 @@ HTML
 
 
 #### 詳細レシピ・写真有
-when 4
+when 1
 html = <<-"HTML"
 	<div class='row'>
 		<div class='col-5'>
@@ -633,7 +631,7 @@ HTML
 
 
 #### 栄養レシピ・写真有
-when 6
+when 2, 3
 html = <<-"HTML"
 	<div class='row'>
 		<div class='col-8'>
@@ -651,29 +649,7 @@ html = <<-"HTML"
 			#{protocol}
 		</div>
 	</div>
-	#{fct_html}
-HTML
-
-
-#### フルレシピ・写真有
-when 8
-html = <<-"HTML"
-	<div class='row'>
-		<div class='col'>
-			<h5>材料</h5>
-			#{foods}
-		</div>
-	</div>
-	<hr>
-	<div class='row'>
-		<div class='col-8'>
-			<h5>作り方</h5>
-			#{protocol}
-		</div>
-		<div class='col-4'>
-			#{main_photo}
-		</div>
-	</div>
+	<h5>栄養成分</h5>
 	#{fct_html}
 HTML
 

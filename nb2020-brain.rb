@@ -227,19 +227,19 @@ end
 
 
 #### 端数処理の設定
-def frct_check( frct_mode )
-  frct_mode = 1 if frct_mode == nil
-  fs = []
-  0.upto( 3 ) do |c|
-    if frct_mode.to_i == c
-      fs << 'selected'
-    else
-      fs << ''
-    end
-  end
+#def frct_check( frct_mode )
+# frct_mode = 1 if frct_mode == nil
+#fs = []
+#  0.upto( 3 ) do |c|
+#    if frct_mode.to_i == c
+#      fs << 'selected'
+#    else
+#      fs << ''
+#    end
+#  end
 
-  return frct_mode, fs
-end
+#  return frct_mode, fs
+#end
 
 
 #### from unit volume to weight
