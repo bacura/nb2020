@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 regist 0.02b
+#Nutrition browser 2020 regist 0.03b
 
 #==============================================================================
 #LIBRARY
@@ -172,6 +172,11 @@ when 'confirm'
   # Checking character limit
   elsif @cgi['id'].size > 30
     msg = "<p class='msg_small_red'>#{lp[2]}</p>"
+    html_regist_form( nil, @cgi['mail'], nil, msg, @cgi['aliasu'], lp )
+
+  # Checking character limit
+  elsif @cgi['id'].size < 4
+    msg = "<p class='msg_small_red'>#{lp[32]}</p>"
     html_regist_form( nil, @cgi['mail'], nil, msg, @cgi['aliasu'], lp )
 
   # OK

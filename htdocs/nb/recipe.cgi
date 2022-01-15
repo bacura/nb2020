@@ -1,11 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.03b
+#Nutrition browser 2020 recipe editor 0.04b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './probe'
+require './brain'
 require 'fileutils'
 
 
@@ -25,61 +26,6 @@ def index( recipe )
 	require 'natto'
 end
 
-def calc( recipe, user )
-	food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, 0 )
-p food_no
-	fct = []
-
-	food_no.each do |e|
-		fct_tmp = []
-		if e == '-' || e == '+' || e == '00000'
-			fct << nil
-		else
-			if /P|U/ =~ e
-				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{user.name}' OR user='#{$GM}' );"
-			else
-				q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
-			end
-			r = mdb( q, false, false )
-			@fct_item.size.times do |c|
-				if c >= @fct_start && c <= @fct_end
-					fct_tmp << r.first[@fct_item[c]]
-				else
-					fct_tmp << 0
-				end
-			end
-			fct << Marshal.load( Marshal.dump( fct_tmp ))
-		end
-	end
-
-p fct.size
-
-	puts 'データ計算 <br>' if @debug
-	fct_sum = []
-	@fct_item.size.times do fct_sum << BigDecimal( 0 ) end
-p 'vv'
-	fct.size.times do |fn|
-		unless fct[fn] == nil
-			@fct_item.size.times do |fi|
-				if fi >= @fct_start && fi <= @fct_end
-p fct[fn][fi]
-					t = convert_zero( fct[fn][fi] )
-p t
-					fct[fn][fi] = num_opt( t, food_weight[fn], 1, @fct_frct[@fct_item[fi]] )
-					fct_sum[fi] += BigDecimal( num_opt( t, food_weight[fn], 1, @fct_frct[@fct_item[fi]] + 3 ))
-				end
-			end
-		end
-	end
-p fct_sum
-
-
-	puts '合計値の桁合わせ <br>' if @debug
-	fct_sum = adjust_digit( fct_item, fct_sum, frct_mode )
-
-
-
-end
 
 #==============================================================================
 # Main
@@ -105,15 +51,13 @@ recipe.debug if @debug
 case command
 when 'view'
 	# Loading recipe from DB
-	recipe.load_db( code, true ) unless code == ''
+	recipe.load_db( code, true )
 
 when 'save'
 	recipe.load_cgi( @cgi )
 
 	# excepting for tags
-	recipe.protocol.gsub!( '<', '&lt;')
-	recipe.protocol.gsub!( '>', '&gt;')
-	recipe.protocol.gsub!( ';', '；')
+	recipe.protocol = wash( recipe.protocol )
 
 	r = mdb( "SELECT sum, name, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 	# Inserting new recipe
@@ -131,7 +75,20 @@ when 'save'
 		recipe.sum = r.first['sum']
 		recipe.dish = r.first['dish'].to_i
 
+		# Import mode
 		copy_flag = false
+		original_user = nil
+
+		if user.name != pre_recipe.user
+			copy_flag = true
+			import_flag = true
+			original_user = pre_recipe.user
+			recipe.draft = 1
+			recipe.user = user.name
+			recipe.sum = r.first['sum']
+			recipe.dish = r.first['dish'].to_i
+		end
+
 		# Canceling public mode of recipe using puseudo user foods
 		a = recipe.sum.split( "\t" )
 		a.each do |e|
@@ -169,7 +126,7 @@ when 'save'
 			recipe.code = generate_code( user.name, 'r' )
 
 			# Copying name
-			if recipe.name == pre_recipe.name
+			if recipe.name == pre_recipe.name && user.name == pre_recipe.user
 				t = pre_recipe.name.match( /\((\d+)\)$/ )
 				sn = 1
 				sn = t[1].to_i + 1 if t != nil
@@ -179,8 +136,14 @@ when 'save'
 
 			puts "checking media<br>" if @debug
 			new_media_code = generate_code( user.name, 'p' )
-			r = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
-			if r.first
+
+			rr = ''
+			if original_user
+				rr = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+			else
+				rr = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{original_user}' and code='#{code}';", false, @debug )
+			end
+			if rr.first
 				puts "Copying photo<br>" if @debug
 				r.each do |e|
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
@@ -200,35 +163,30 @@ when 'save'
 end
 
 
-# HTML SELECT Recipe attribute
+puts "HTML SELECT Recipe attribute<br>" if @debug
 check_public = checked( recipe.public )
 check_protect = checked( recipe.protect )
 check_draft =  checked( recipe.draft )
+if user.name != recipe.user
+	check_public = 'DISABLED'
+	check_protect = 'DISABLED'
+	check_draft = 'CHECKED DISABLED'
+end
 
 
-# HTML SELECT Recipe type
+puts "HTML SELECT Recipe type<br>" if @debug
 html_type = lp[1]
 html_type << '<select class="form-select form-select-sm" id="type">'
-@recipe_type.size.times do |c|
-	if recipe.type == c
-		html_type << "<option value='#{c}' SELECTED>#{@recipe_type[c]}</option>"
-	else
-		html_type << "<option value='#{c}'>#{@recipe_type[c]}</option>"
-	end
-end
+s = selected( 0, @recipe_type.size - 1, recipe.type )
+@recipe_type.size.times do |i| html_type << "<option value='#{i}' #{s[i]}>#{@recipe_type[i]}</option>" end
 html_type << '</select>'
 
 
-# HTML SELECT Recipe role
+puts "HTML SELECT Recipe role<br>" if @debug
 html_role = lp[2]
 html_role << '<select class="form-select form-select-sm" id="role">'
-@recipe_role.size.times do |c|
-	if recipe.role == c
-		html_role << "<option value='#{c}' SELECTED>#{@recipe_role[c]}</option>"
-	else
-		html_role << "<option value='#{c}'>#{@recipe_role[c]}</option>"
-	end
-end
+s = selected( 0, @recipe_role.size - 1, recipe.role )
+@recipe_role.size.times do |i| html_role << "<option value='#{i}' #{s[i]}>#{@recipe_role[i]}</option>" end
 if recipe.role == 100
 	html_role << "<option value='100' SELECTED>[ 調味％ ]</option>"
 else
@@ -237,46 +195,31 @@ end
 html_role << '</select>'
 
 
-# HTML SELECT Recipe technique
+puts "HTML SELECT Cooking technique<br>" if @debug
 html_tech = lp[3]
 html_tech << '<select class="form-select form-select-sm" id="tech">'
-@recipe_tech.size.times do |c|
-	if recipe.tech == c
-		html_tech << "<option value='#{c}' SELECTED>#{@recipe_tech[c]}</option>"
-	else
-		html_tech << "<option value='#{c}'>#{@recipe_tech[c]}</option>"
-	end
-end
+s = selected( 0, @recipe_tech.size - 1, recipe.tech )
+@recipe_tech.size.times do |i| html_tech << "<option value='#{i}' #{s[i]}>#{@recipe_tech[i]}</option>" end
 html_tech << '</select>'
 
 
-# HTML SELECT Recipe time
+puts "HTML SELECT Cooking time<br>" if @debug
 html_time = lp[4]
 html_time << '<select class="form-select form-select-sm" id="time">'
-@recipe_time.size.times do |c|
-	if recipe.time == c
-		html_time << "<option value='#{c}' SELECTED>#{@recipe_time[c]}</option>"
-	else
-		html_time << "<option value='#{c}'>#{@recipe_time[c]}</option>"
-	end
-end
+s = selected( 0, @recipe_time.size - 1, recipe.time )
+@recipe_time.size.times do |i| html_time << "<option value='#{i}' #{s[i]}>#{@recipe_time[i]}</option>" end
 html_time << '</select>'
 
 
-# HTML SELECT Recipe cost
+puts "HTML SELECT Cooking cost<br>" if @debug
 html_cost = lp[5]
 html_cost << '<select class="form-select form-select-sm" id="cost">'
-@recipe_cost.size.times do |c|
-	if recipe.cost == c
-		html_cost << "<option value='#{c}' SELECTED>#{@recipe_cost[c]}</option>"
-	else
-		html_cost << "<option value='#{c}'>#{@recipe_cost[c]}</option>"
-	end
-end
+s = selected( 0, @recipe_cost.size - 1, recipe.cost )
+@recipe_cost.size.times do |i| html_cost << "<option value='#{i}' #{s[i]}>#{@recipe_cost[i]}</option>" end
 html_cost << '</select>'
 
 
-# photo upload form
+puts "HTML Photo upload form<br>" if @debug
 form_photo = ''
 form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
 form_photo << '<div class="input-group input-group-sm">'
@@ -289,7 +232,7 @@ end
 form_photo << '</form></div>'
 
 
-#### HTML FORM recipe
+puts "HTML FORM recipe<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
@@ -352,4 +295,18 @@ HTML
 
 puts html
 
-calc( recipe, user ) if command == 'save'
+if command == 'save'
+	puts "Save fcz<br>" if @debug
+	food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, 0 )
+
+	palette = Palette.new( user.name )
+	palette.set_bit( @palette_default_name[3] )
+
+	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+	fct.load_palette( palette.bit )
+	fct.set_food( user.name, food_no, food_weight, false )
+	fct.calc( 1, 0 )
+	fct.digit( 0 )
+
+	fct.save_fcz( user, nil, 'reipe', recipe.code )
+end

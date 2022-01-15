@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.24b
+#nb2020-dbi.rb 0.25b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -593,11 +593,11 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipel VARCHAR(32), recipel_max TINYINT, reciperr VARCHAR(128), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomi VARCHAR(512), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255), school VARCHAR(512));'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipe VARCHAR(256), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(8), icalc TINYINT, koyomi VARCHAR(512), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255), school VARCHAR(512));'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
-			$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{e}', his_max=200, recipel='1:0:99:99:99:99:99';" )
+			$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{e}', his_max=200;" )
 		end
 
 		puts 'cfg table has been created.'

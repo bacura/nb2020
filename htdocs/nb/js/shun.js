@@ -3,12 +3,17 @@
 
 //
 var initSchool = function(){
-	$.post( "school.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
-	$.post( "school.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
-	dline = true;
-	dl1 = true;
-	displayBW();
+	$.post( "school.cgi", { command:"menu" }, function( data ){
+		$( "#LINE" ).html( data );
+		dline = true;
+		displayBW();
+	});
+	$.post( "school.cgi", { command:"init" }, function( data ){
+		$( "#L1" ).html( data );
+		dl1 = true;
+		displayBW();
+	});
 };
 
 // School koyomi change
@@ -50,18 +55,22 @@ var mekeSchoolGroup = function(){
 // Deleting school menu label group
 var delSchoolGroup = function( label_group ){
 	if(document.getElementById( "del_check_" + label_group ).checked){
-		$.post( "school-menu.cgi", { command:"group_del", group_new:label_group }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "school-menu.cgi", { command:"group_del", group_new:label_group }, function( data ){
+			$( "#L1" ).html( data );
+			displayVIDEO( label_group );
+		});
 	}else{
 		displayVIDEO( 'Check! (>_<)' );
 	}
-	displayVIDEO( label_group );
 };
 
 // Changing school menu label
 var changeSchoolLabel = function( label_group, group_no, label_no ){
 	var label_new = document.getElementById( 'label' + group_no + '_' + label_no ).value;
-	$.post( "school-menu.cgi", { command:"label_change", label_group:label_group, label_no:label_no, label_new:label_new }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( label_new );
+	$.post( "school-menu.cgi", { command:"label_change", label_group:label_group, label_no:label_no, label_new:label_new }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( label_new );
+	});
 };
 
 // Select school menu selector
@@ -79,11 +88,14 @@ var selectSchoolMenu = function(){
 
 // menu
 var initSchoolStock = function(){
-	$.post( "school-stock.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dline = true;
-	dl1 = true;
-	displayBW();
+	$.post( "school-stock.cgi", { command:"init" }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dline = true;
+		dl1 = true;
+		displayBW();
+	});
 };
 
 
@@ -92,11 +104,14 @@ var initSchoolStock = function(){
 
 // custom
 var initSchoolCustom = function(){
-	$.post( "school-custom.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dline = true;
-	dl1 = true;
-	displayBW();
+	$.post( "school-custom.cgi", { command:"init" }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dline = true;
+		dl1 = true;
+		displayBW();
+	});
 };
 
 // Update school code
@@ -139,10 +154,13 @@ displayVIDEO( cs_name );
 
 // Account list
 var initAccountM = function(){
-	$.post( "account-mom.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dl1 = true;
-	displayBW();
+	$.post( "account-mom.cgi", { command:"init" }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
 };
 
 
@@ -201,12 +219,17 @@ var switchAccountM = function( switch_id, uid_d ){
 
 // Tokei R init
 var initToker = function(){
-	$.post( "toker.cgi", { mod:'line' }, function( data ){ $( "#LINE" ).html( data );});
-	$.post( "toker.cgi", { mod:'' }, function( data ){ $( "#L1" ).html( data );});
 	flashBW();
-	dline = true;
-	dl1 = true;
-	displayBW();
+	$.post( "toker.cgi", { mod:'line' }, function( data ){
+		$( "#LINE" ).html( data );
+		dline = true;
+		displayBW();
+	});
+	$.post( "toker.cgi", { mod:'' }, function( data ){
+		$( "#L1" ).html( data );
+		dl1 = true;
+		displayBW();
+	});
 };
 
 var tokerForm = function( mod ){

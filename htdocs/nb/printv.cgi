@@ -101,13 +101,13 @@ def extract_foods( recipe, dish, template, ew_mode )
 
 	case template
 	when 0
-		return_foods << "<thead><tr><th class='align_c'>食材</th><th class='align_r'>数量</th><th class='align_r'>単位</th></tr></thead>\n"
+		return_foods << "<thead><tr><th class='align_l'>食材</th><th class='align_r'>数量</th><th class='align_r'>単位</th></tr></thead>\n"
 	when 1
-		return_foods << "<thead><tr><th class='align_c'>食材</th><th class='align_c'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th></tr></thead>\n"
+		return_foods << "<thead><tr><th class='align_l'>食材</th><th class='align_l'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th></tr></thead>\n"
 	when 2
-		return_foods << "<thead><tr><th>食品番号</th><th class='align_c'>食材</th><th class='align_c'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th><th class='align_r'>#{calc_weight[ew_mode]}</th></tr></thead>\n"
+		return_foods << "<thead><tr><th>食品番号</th><th class='align_l'>食材</th><th class='align_l'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th><th class='align_r'>#{calc_weight[ew_mode]}</th></tr></thead>\n"
 	when 3
-		return_foods << "<thead><tr><th>食品番号</th><th class='align_c'>食材</th><th class='align_c'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th><th class='align_r'>#{calc_weight[ew_mode]}</th><th class='align_r'>廃棄率%</th><th class='align_r'>発注量kg</th></tr></thead>\n"
+		return_foods << "<thead><tr><th>食品番号</th><th class='align_l'>食材</th><th class='align_l'>備考</th><th class='align_r'>数量</th><th class='align_r'>単位</th><th class='align_r'>#{calc_weight[ew_mode]}</th><th class='align_r'>廃棄率%</th><th class='align_r'>発注量kg</th></tr></thead>\n"
 	end
 
 	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -251,12 +251,12 @@ get_data = get_data()
 code = get_data['c']
 template = get_data['t'].to_i
 dish = get_data['d'].to_i
-palette = get_data['p'].to_i
+palette_ = CGI.unescape( get_data['p'] )
 frct_accu = get_data['fa'].to_i
 ew_mode = get_data['ew'].to_i
 frct_mode = get_data['fm'].to_i
 csc = get_data['cs'].to_s
-url = "https://bacura.jp/nb/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette}"
+url = "https://bacura.jp/nb/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette_}"
 url << "&cs=#{csc}" unless csc == ''
 if @debug
 	puts "code: #{code}<br>"
@@ -270,7 +270,7 @@ end
 puts "Loading recipe<br>" if @debug
 recipe = Recipe.new( user )
 recipe.load_db( code, true )
-dish = recipe.dish if dish = 0
+dish = recipe.dish if dish == 0
 recipe.load_media
 photo_num = recipe.media.size
 
@@ -308,37 +308,20 @@ mode_html << '</div>'
 
 
 puts 'Palette select HTML<br>' if @debug
-palette_sets = []
-palette_name = []
+palette = Palette.new( user.name )
+palette_ = @palette_default_name[1] if palette_ == nil || palette_ == '' || palette_ == '0'
+palette.set_bit( palette_ )
 palette_html = ''
-palette_start = 0
-if template >= 2
-	if user.name
-		r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
-		r.each do |e|
-			a = e['palette'].split( '' )
-			a.map! do |x| x.to_i end
-			palette_sets << a
-			palette_name << e['name']
-		end
-	else
-		@palette_default.each do |e|
-			a = e.split( '' )
-			a.map! do |x| x.to_i end
-			palette_sets << a
-		end
-		palette_name = @palette_default_name
-		palette_start = 1
-	end
-
-	palette_selected = selected( 0, palette_name.size - 1, palette )
-	palette_html = '<div class="input-group input-group-sm">'
-	palette_html << '<span class="input-group-text">栄養パレット</span>'
-	palette_html << "<select class='form-select' name='p'>"
-	palette_start.upto( palette_name.size - 1  ) do |c| palette_html << "<option value='#{c}' #{palette_selected[c]}>#{palette_name[c]}</option>" end
-	palette_html << "</select>"
-	palette_html << '</div>'
+palette_html = '<div class="input-group input-group-sm">'
+palette_html << '<span class="input-group-text">栄養パレット</span>'
+palette_html << "<select class='form-select' name='p'>"
+palette.sets.each_key do |k|
+	s = nil
+	s = 'selected' if k == palette_
+	palette_html << "<option value='#{k}' #{s}>#{k}</option>" if palette_ != @palette_default_name[0] || user.name
 end
+palette_html << "</select>"
+palette_html << '</div>'
 
 
 puts 'Nimono alart select HTML<br>' if @debug
@@ -347,165 +330,88 @@ if recipe.dish != dish
 end
 
 
-#### 食品番号から食品成分と名前を抽出
-fct = []
-fct_name = []
-fct_sum = []
+puts 'FCT Calc<br>' if @debug
+fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+fct.load_palette( palette.bit )
+food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, ew_mode )
+fct.set_food( user.name, food_no, food_weight, false )
+fct.calc( frct_accu, frct_mode )
+fct.digit( frct_mode )
 
+
+puts 'HTML食品成分表の生成 <br>' if @debug
+fct_html = ''
 if template >= 2
-	palette_set = palette_sets[palette]
-
-	# 成分項目の抽出
-	fct_item = []
-	@fct_item.size.times do |c|
-		fct_item << @fct_item[c] if palette_set[c] == 1
-	end
-
-	food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, ew_mode )
-	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-
-	# 食品成分データの抽出と名前の書き換え
-	food_no.each do |e|
-		fct_tmp = []
-		if e == '-'
-			fct << '-'
-		elsif e == '+'
-			fct << '+'
-		elsif e == '00000'
-			fct << '0'
-		else
-			if /P|U/ =~ e
-				query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
-			else
-				query = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
-			end
-			res = db.query( query )
-			fct_name << res.first['Tagnames']
-			@fct_item.size.times do |c|
-				fct_tmp << res.first[@fct_item[c]] if palette_set[c] == 1
-			end
-
-			fct << Marshal.load( Marshal.dump( fct_tmp ))
-		end
-	end
-
-	# 名前の書き換え
-	if true
-		food_no.size.times do |c|
-			query = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{food_no[c]}';"
-			res = db.query( query )
-			fct_name[c] = bind_tags( res ) if res.first
-		end
-	end
-	db.close
-
-	# データ計算
-	fct_item.size.times do |c| fct_sum << BigDecimal( 0 ) end
-	food_no.size.times do |fn|
-		unless food_no[fn] == '-' || food_no[fn] == '+'
-			fct_item.size.times do |fi|
-				t = convert_zero( fct[fn][fi] )
-
-				# 通常計算
-				fct[fn][fi] = num_opt( t, food_weight[fn], frct_mode, @fct_frct[fct_item[fi]] )
-				if frct_accu == 0
-					# 通常計算
-					fct_sum[fi] += BigDecimal( fct[fn][fi] )
-				else
-					# 精密計算
-					fct_sum[fi] += BigDecimal( num_opt( t, food_weight[fn], frct_mode, @fct_frct[fct_item[fi]] + 3 ))
-				end
-			end
-		end
-	end
-
-	# 合計値の桁合わせ
-	fct_sum = adjust_digit( fct_item, fct_sum, frct_mode )
-end
-
-if template >= 2
-	fct_html = ''
-	table_num = fct_item.size / fct_num
-	table_num += 1 if ( fct_item.size % fct_num ) != 0
+	table_num = fct.items.size / fct_num
+	table_num += 1 if ( fct.items.size % fct_num ) != 0
 	table_num.times do |c|
 		fct_html << '<table class="table table-sm">'
 
 		# 項目名
 		fct_html << '<tr>'
 		if template > 2
-			fct_html << '<th align="center" width="6%" class="fct_item">食品番号</th>'
-			fct_html << '<th align="center" width="20%" class="fct_item align_c">食品名</th>'
-			fct_html << '<th align="center" width="4%" class="fct_item">重量</th>'
+			fct_html << '<th width="6%" class="fct_item align_l">食品番号</th>'
+			fct_html << '<th width="20%" class="fct_item align_l">食品名</th>'
+			fct_html << '<th width="4%" class="fct_item align_r">重量</th>'
 		end
-
 		fct_num.times do |cc|
-			fct_no = fct_item[( c * fct_num ) + cc]
-			if @fct_name[fct_no]
-				fct_html << "<th align='center' width='5%' class='fct_item'>#{@fct_name[fct_no]}</th>"
-			else
-				fct_html << "<th align='center' width='5%' class='fct_item'>&nbsp;</th>"
-			end
+			fct_no = ( c * fct_num ) + cc
+			fct_html << "<th width='5%' class='fct_item align_r'>#{fct.names[fct_no]}</th>" unless fct.names[fct_no] == nil
 		end
 		fct_html << '</tr>'
 
 		# 単位
 		fct_html << '<tr>'
 		if template > 2
-			fct_html << '<td colspan="2" align="center"></td>'
-			fct_html << "<td align='center' class='fct_unit'>( g )</td>"
+			fct_html << '<td colspan="2"></td>'
+			fct_html << "<td class='fct_unit align_r'>( g )</td>"
 		end
 		fct_num.times do |cc|
-			fct_no = fct_item[( c * fct_num ) + cc]
-			if @fct_unit[fct_no]
-				fct_html << "<td align='center' class='fct_unit'>( #{@fct_unit[fct_no]} )</td>"
-			else
-				fct_html << "<td align='center' class='fct_unit'>&nbsp;</td>"
-			end
+			fct_no = ( c * fct_num ) + cc
+			fct_html << "<td class='fct_unit align_r'>( #{fct.units[fct_no]} )</td>" unless fct.units[fct_no] == nil
 		end
 		fct_html << '</tr>'
 
+
 		if template > 2
 		# 各成分値
-			food_no.size.times do |cc|
-				unless food_no[cc] == '-' || food_no[cc] == '+'
-					fct_html << '    <tr>'
-					fct_html << "      <td align='center'>#{food_no[cc]}</td>"
-					fct_html << "      <td>#{fct_name[cc]}</td>"
-					fct_html << "      <td align='right'>#{food_weight[cc].to_f}</td>"
-					fct_num.times do |ccc|
-						fct_no = ( c * fct_num ) + ccc
-						fct_html << "      <td align='right'>#{fct[cc][fct_no]}</td>"
-					end
-					fct_html << '    </tr>'
+			fct.foods.size.times do |cc|
+				fct_html << '	<tr>'
+				fct_html << "	<td class='align_l'>#{fct.fns[cc]}</td>"
+				fct_html << "	<td class='align_l'>#{fct.foods[cc]}</td>"
+				fct_html << "	<td class='align_r'>#{fct.weights[cc].to_f}</td>"
+				fct_num.times do |ccc|
+					fct_no = ( c * fct_num ) + ccc
+					fct_html << "	<td class='align_r'>#{fct.solid[cc][fct_no]}</td>" unless fct.solid[cc][fct_no] == nil
 				end
+				fct_html << '	</tr>'
 			end
 		end
 
 		# 合計値
-		fct_html << '    <tr>'
+		fct_html << '	<tr>'
 		if template > 2
-			fct_html << '      <td colspan="2" align="center" class="fct_sum">合計</td>'
-			fct_html << "      <td align='right' class='fct_sum'>#{total_weight.to_f}</td>"
+			fct_html << '	<td colspan="2" class="fct_sum align_c">合計</td>'
+			fct_html << "	<td align='right' class='fct_sum align_r'>#{total_weight.to_f}</td>"
 		end
 		fct_num.times do |cc|
 			fct_no = ( c * fct_num ) + cc
-			fct_html << "      <td align='right' class='fct_sum'>#{fct_sum[fct_no]}</td>"
+			fct_html << "	<td align='right' class='fct_sum align_r'>#{fct.total[fct_no]}</td>" unless fct.total[fct_no] == nil
 		end
-		fct_html << '    </tr>'
+		fct_html << '	</tr>'
 		fct_html << '</table>'
 		fct_html << "<div class='fct_item'>#{frct_select[frct_mode]} / #{accu_check[frct_accu]} / #{ew_check[ew_mode]}</div>\n"
 	end
 end
 
 
-#### 共通ヘッダ
+puts 'Common header <br>' if @debug
 html_head = <<-"HTML"
 <div class='container'>
 	<div class='row'>
-		<div class='col-8'><h4>#{recipe.name}</h4></div>
-		<div class='col-4' align="right">Recipe code: #{code}</div>
+		<h4>#{recipe.name}</h4>
+		<blockquote>#{recipe.note}</blockquote>
 	</div>
-	<hr>
 	<form action='' method='get'>
 	<div class='row' align='center'>
 		<div class='col'>
@@ -533,17 +439,17 @@ html_head = <<-"HTML"
 HTML
 
 
-#### 共通フッタ
+puts 'Common footer <br>' if @debug
 if csc == ''
 	html_foot = <<-"HTML"
 	<hr>
 	<div class='row'>
-		<div class='col-10'>
-			栄養士・管理栄養士のための欲しい機能を無節操に同化するユビキタス総合栄養ツール<br><br>
+		<div class='col-7'>
+			栄養士・管理栄養士の慾を如意自在に同化する<br>
+			ユビキタス総合栄養ツール<br><br>
 			<a href='https://bacura.jp/nb/' class='h4 alert alert-danger'>栄養ブラウザ</a>
 		</div>
-		<div class='col-2'>
-			レシピQRコード<br>
+		<div class='col-5' align="right">#{code}<br>
 			<img src='#{$PHOTO}/#{code}-qr.png'>
 		</div>
 	</div>
@@ -589,8 +495,8 @@ HTML
 end
 
 case template
-#### 基本レシピ・写真有
-when 0
+#### 基本レシピ / 詳細レシピ
+when 0, 1
 html = <<-"HTML"
 	<div class='row'>
 		<div class='col'>
@@ -610,27 +516,7 @@ html = <<-"HTML"
 	</div>
 HTML
 
-
-#### 詳細レシピ・写真有
-when 1
-html = <<-"HTML"
-	<div class='row'>
-		<div class='col-5'>
-			#{main_photo}
-		</div>
-		<div class='col-7'>
-			<h5>材料</h5>
-			#{foods}
-		</div>
-		<div class='col'>
-			<h5>作り方</h5>
-			#{protocol}
-		</div>
-	</div>
-HTML
-
-
-#### 栄養レシピ・写真有
+#### 栄養レシピ / 完全レシピ
 when 2, 3
 html = <<-"HTML"
 	<div class='row'>

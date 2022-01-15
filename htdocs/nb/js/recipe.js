@@ -1,4 +1,4 @@
-// Recipe java script for nb2020 0.01b
+// Recipe java script for nb2020 0.02b
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -7,18 +7,22 @@ var addingCB = function( fn, weight_id, food_name ){
 	if( weight_id != '' ){
 		var weight = document.getElementById( weight_id ).value;
 	}
-	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){ $( "#CBN" ).html( data );});
-	if( fn != '' ){ displayVIDEO( '+' + food_name ); }
+	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){
+		$( "#CBN" ).html( data );
+		refreshCBN();
+//		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#CBN" ).html( data );}
+		if( fn != '' ){ displayVIDEO( '+' + food_name ); }
+	});
 
-	var fxRI = function(){
-		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#CBN" ).html( data );});
-	};
-	setTimeout( fxRI, 1000 );
+//	var fxRI = function(){
+//		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#CBN" ).html( data );});
+//	};
+//	setTimeout( fxRI, 1000 );
 };
 
 
-// Only reload CB counter
-var refreshCB = function(){
+// Only reload CB number
+var refreshCBN = function(){
 	$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#CBN" ).html( data );});
 };
 
@@ -30,24 +34,35 @@ var refreshCB = function(){
 var changingCB = function( fn, base_fn ){
 	if( fn !='' ){
 		var weight = document.getElementById( "weight" ).value;
-		$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){ $( "#CBN" ).html( data );});
-		if( fn != '' ){ displayVIDEO( fn + 'has modified' ); }
-		$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){ $( "#L1" ).html( data );});
-	}
+		$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){
+			$( "#CBN" ).html( data );
+			displayVIDEO( fn + 'has modified' );
 
-	flashBW();
-	dl1 = true;
-	displayBW();
+			$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){
+				$( "#L1" ).html( data );
+
+				flashBW();
+				dl1 = true;
+				displayBW();
+			});
+		});
+//		if( fn != '' ){ displayVIDEO( fn + 'has modified' ); }
+//		$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){ $( "#L1" ).html( data );});
+	}
 };
 
 
 // Display CB sum in L1
-var initCB = function( com, code ){
-	$.post( "cboard.cgi", { command:com, code:code }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dl1 = true;
-	displayBW();
-	setTimeout( refreshCB(), 1000 );
+var initCB = function( com, code, recipe_user ){
+	$.post( "cboard.cgi", { command:com, code:code, recipe_user:recipe_user }, function( data ){
+		$( "#L1" ).html( data );
+		refreshCBN();
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+//	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -55,18 +70,23 @@ var initCB = function( com, code ){
 var clearCB = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'all_check' ).checked ){
-			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
+			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){
+				$( "#L1" ).html( data );
+				refreshCBN();
+			});
 			flashBW();
 			dl1 = true;
 			displayBW();
-			displayVIDEO( 'Cleared' );
 		} else{
 			displayVIDEO( '(>_<)cheack!' );
 		}
 	} else{
-		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){
+			$( "#L1" ).html( data );
+			refreshCBN();
+		});
 	}
-	setTimeout( refreshCB(), 1000 );
+//	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -105,6 +125,14 @@ var energyAdj = function( code ){
 };
 
 
+// Adjusting total food salt
+var saltAdj = function( code ){
+	var salt_adj = document.getElementById( "salt_adj" ).value;
+	$.post( "cboard.cgi", { command:'sadj', code:code, salt_adj:salt_adj }, function( data ){ $( "#L1" ).html( data );});
+		displayVIDEO( 'Adjusted by salt' );
+};
+
+
 // Adjusting feeding rate by food loss
 var lossAdj = function( code ){
 	var loss_adj = document.getElementById( "loss_adj" ).value;
@@ -116,16 +144,22 @@ var lossAdj = function( code ){
 // まな板の食品番号追加ボタンを押して食品を追加してL1にリストを表示。そしてカウンターも更新
 var recipeAdd = function( code ){
 	var fn = document.getElementById( "food_add" ).value;
-	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){ $( "#L1" ).html( data );});
-	setTimeout( refreshCB(), 1000 );
+	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){
+		$( "#L1" ).html( data );
+		refreshCBN();
+	});
+//	setTimeout( refreshCBN(), 1000 );
 };
 
 
 // まな板の調味％ボタンを押してプリセット食品を追加してL1にリストを表示。そしてカウンターも更新
 var seasoningAdd = function( code ){
 	var seasoning = document.getElementById( "seasoning" ).value;
-	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#L1" ).html( data );});
-	setTimeout( refreshCB(), 1000 );
+	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){
+		$( "#L1" ).html( data );
+		refreshCBN();
+	});
+//	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -153,38 +187,36 @@ var initCB_SS = function( order, unitv_id, unit_id, food_init_id, food_rr_id, co
 
 // まな板の食品チェックボックスを押してL1にリストを更新
 var checkCB = function( order, code, check_id ){
-	if( document.getElementById( check_id ).checked ){
-		var checked = 1;
-	} else{
-		var checked = 0;
-	}
+	var checked = 0;
+	if( document.getElementById( check_id ).checked ){ checked = 1; }
 	$.post( "cboard.cgi", { command:'check_box', order:order, food_check:checked, code:code }, function( data ){});
 };
 
 
 // Switching all check box
 var allSwitch = function( code ){
-	if( document.getElementById( 'switch_all' ).checked ){
-		var allSwitch = 1;
-	} else{
-		var allSwitch = 0;
-	}
+	var allSwitch = 0;
+	if( document.getElementById( 'switch_all' ).checked ){ allSwitch = 1; }
 	$.post( "cboard.cgi", { command:'allSwitch', code:code, allSwitch:allSwitch }, function( data ){ $( "#L1" ).html( data );});
 };
 
 
 // Quick Save
 var quickSave = function( code ){
-	$.post( "cboard.cgi", { command:'quick_save', code:code }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( 'Saved' );
+	$.post( "cboard.cgi", { command:'quick_save', code:code }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( 'Saved' );
+	});
 };
 
 
 // GN Exchange
 var gnExchange = function( code ){
 	if( document.getElementById( 'gn_check' ).checked ){
-		$.post( "cboard.cgi", { command:'gn_exchange', code:code }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( 'Adjusted' );
+		$.post( "cboard.cgi", { command:'gn_exchange', code:code }, function( data ){
+			$( "#L1" ).html( data );
+			displayVIDEO( 'Adjusted' );
+		});
 	} else{
 		displayVIDEO( 'Check!!(>_<)' );
 	}
@@ -193,10 +225,13 @@ var gnExchange = function( code ){
 
 // まな板からでL5閲覧ウインドウを表示する。
 var cb_summon = function( key, weight, base_fn ){
-	$.get( "square.cgi", { channel:"fctb_l5", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){ $( "#L5" ).html( data );});
-	flashBW()
-	dl5 = true;
-	displayBW();
+	$.get( "square.cgi", { channel:"fctb_l5", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
+		$( "#L5" ).html( data );
+
+		flashBW();
+		dl5 = true;
+		displayBW();
+	});
 };
 
 // Chomi% category
@@ -220,11 +255,16 @@ var chomiAdd =  function(){
 
 // レシピ編集のレシピボタンを押してL2にレシピを表示
 var recipeEdit = function( com, code ){
-	$.post( "recipe.cgi", { command:com, code:code }, function( data ){ $( "#L2" ).html( data );});
-	$.post( "photo.cgi", { command:'view_series', code:code, base:'recipe' }, function( data ){ $( "#L3" ).html( data );});
-	dl2 = true;
-	dl3 = true;
-	displayBW();
+	$.post( "recipe.cgi", { command:com, code:code }, function( data ){
+		$( "#L2" ).html( data );
+		dl2 = true;
+		displayBW();
+	});
+	$.post( "photo.cgi", { command:'view_series', code:code, base:'recipe' }, function( data ){
+		$( "#L3" ).html( data );
+		dl3 = true;
+		displayBW();
+	});
 };
 
 
@@ -270,11 +310,11 @@ var recipeSave = function( code ){
 		if( document.getElementById( "protect" ).checked ){ var protect = 1 }
 		if( document.getElementById( "draft" ).checked ){ var draft = 1 }
 
-		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, public:public, protect:protect, draft:draft }, function( data ){ $( "#L2" ).html( data );});
-		displayVIDEO( recipe_name );
-
-		var fx = function(){ $.post( "cboard.cgi", { command:'init', code:code }, function( data ){ $( '#L1' ).html( data );});};
-		setTimeout( fx , 1000 );
+		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, public:public, protect:protect, draft:draft }, function( data ){
+			$( "#L2" ).html( data );
+			$.post( "cboard.cgi", { command:'init', code:code }, function( data ){ $( '#L1' ).html( data );});
+			displayVIDEO( recipe_name );
+		});
 	}
 };
 
@@ -284,10 +324,13 @@ var recipeSave = function( code ){
 
 // Dosplaying recipe list with reset
 var recipeList = function( com ){
-	$.post( "recipel.cgi", { command:com }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dl1 = true;
-	displayBW();
+	$.post( "recipel.cgi", { command:com }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
 };
 
 
@@ -309,7 +352,7 @@ var recipeList2 = function( page ){
 };
 
 
-// Dosplaying recipe list after delete
+// Displaying recipe list after delete
 var recipeDelete = function( code, page ){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
@@ -319,16 +362,17 @@ var recipeDelete = function( code, page ){
 	var cost = document.getElementById( "cost" ).value;
 
 	if( document.getElementById( code ).checked ){
-		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){});
-		fxRLR( 'limit', range, type, role, tech, time, cost, page );
-		displayVIDEO( 'Removed' );
+		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){
+			fxRLR( 'limit', range, type, role, tech, time, cost, page );
+			displayVIDEO( 'Removed' );
+		});
 	} else{
 		displayVIDEO( 'Check! (>_<)' );
 	}
 };
 
 
-// Importing public recipe & Generationg subSpecies
+// Generationg subSpecies
 var recipeImport = function( com, code, page ){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
@@ -337,8 +381,10 @@ var recipeImport = function( com, code, page ){
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
 
-	$.post( "recipel.cgi", { command:com, code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( '+recipe' );
+	$.post( "recipel.cgi", { command:com, code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( '+recipe' );
+	});
 };
 
 
@@ -347,9 +393,14 @@ var recipeImport = function( com, code, page ){
 
 // まな板の成分計算表ボタンを押してL2にリストを表示
 var calcView = function( code ){
-	$.post( "calc.cgi", { command:'view', code:code }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
-	displayBW();
+	$.post( "calc.cgi", { command:'view', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
 };
 
 // 成分計算表の再計算ボタンを押してL2にリストを表示
@@ -358,8 +409,10 @@ var recalcView = function( code ){
 	var frct_mode = document.getElementById( "frct_mode" ).value;
 	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
 	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
-	$.post( "calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#L2" ).html( data );});
-	displayVIDEO( 'Recalc' );
+	$.post( "calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){
+		$( "#L2" ).html( data );
+		displayVIDEO( 'Recalc' );
+	});
 };
 
 
@@ -368,9 +421,14 @@ var recalcView = function( code ){
 
 // まな板の原価計算表ボタンを押してL2にリストを表示
 var priceView = function( code ){
-	$.post( "price.cgi", { command:'view', code:code }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
-	displayBW();
+	$.post( "price.cgi", { command:'view', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
 };
 
 // 原価計算表の購入量変更でL2に原価表を更新
@@ -387,22 +445,26 @@ var changeFP = function( code, fpid, food_no ){
 
 // 原価計算表のマスター価格を適用してL2に原価表を更新
 var pricemAdpt = function( code ){
-	$.post( "price.cgi", { command:'adpt_master', code:code }, function( data ){ $( "#L2" ).html( data );});
-	displayVIDEO( 'マスター価格を適用' );
+	$.post( "price.cgi", { command:'adpt_master', code:code }, function( data ){
+		$( "#L2" ).html( data );
+		displayVIDEO( 'マスター価格を適用' );
+	});
 };
 
 // 原価計算表のマスター価格登録（でL2に原価表を更新）
 var pricemReg = function( code ){
 //	$.post( "price.cgi", { command:'reg_master', code:code }, function( data ){ $( "#L2" ).html( data );});
-	$.post( "price.cgi", { command:'reg_master', code:code }, function( data ){});
-	displayVIDEO( 'マスター価格に登録' );
+	$.post( "price.cgi", { command:'reg_master', code:code }, function( data ){
+		displayVIDEO( 'マスター価格に登録' );
+	});
 };
 
 // 原価計算表の価格を元にレシピの価格区分を変更
 var recipeRef = function( code ){
 //	$.post( "price.cgi", { command:'ref_recipe', code:code }, function( data ){ $( "#L2" ).html( data );});
-	$.post( "price.cgi", { command:'ref_recipe', code:code }, function( data ){});
-	displayVIDEO( '価格区分へ反映' );
+	$.post( "price.cgi", { command:'ref_recipe', code:code }, function( data ){
+		displayVIDEO( '価格区分へ反映' );
+	});
 };
 
 // 原価計算表の初期化ボタンでL2に原価表を更新
@@ -419,22 +481,31 @@ var clearCT = function( code ){
 
 // Lucky☆入力ボタンを押してL2に入力画面を表示、そしてL1を非表示にする
 var luckyInput = function(){
-	$.post( "lucky.cgi", { command:'form' }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
-	displayBW();
+	$.post( "lucky.cgi", { command:'form' }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
 };
 
 // Lucky☆転送ボタンを押してL2に確認画面を表示
 var luckyAnalyze = function(){
 	var lucky_data = document.getElementById( 'lucky_data' ).value;
-	$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){ $( "#L2" ).html( data );});
-
-	var fx = function(){
+	$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){
+		$( "#L2" ).html( data );
 		$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-		refreshCB();
-	};
-	setTimeout( fx , 1000 );
-	displayVIDEO( 'Lucky?' );
+		refreshCBN();
+		displayVIDEO( 'Lucky?' );
+	});
+
+//	var fx = function(){
+//		$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
+//		refreshCBN();
+//	};
+//	setTimeout( fx , 1000 );
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -442,9 +513,14 @@ var luckyAnalyze = function(){
 
 // 成分計算表の食品化ボタンを押してL3に擬似食品フォームを表示
 var Pseudo_R2F = function( code ){
-	$.post( "pseudo_r2f.cgi", { command:'form', code:code }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
-	displayBW();
+	$.post( "pseudo_r2f.cgi", { command:'form', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
 };
 
 // 食品化フォームの保存ボタンを押して保存してL3を消す。
@@ -466,9 +542,10 @@ var savePseudo_R2F = function( code ){
 			command:'save', code:code,
 			food_name:food_name, food_group:food_group, class1:class1, class2:class2, class3:class3, tag1:tag1,
 			tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5
-		}, function( data ){});
+		}, function( data ){
+			displayVIDEO( 'Foodized' );
+		});
 //		}, function( data ){$( "#L2" ).html( data );});
-		displayVIDEO( 'Foodized' );
 	}else{
 		displayVIDEO( 'Food name! (>_<)' );
 	}
@@ -494,18 +571,8 @@ var print_templateReturen = function(){
 var openPrint = function( uname, code, template, dish ){
 	var palette = document.getElementById( "palette" ).value;
 	var frct_mode = document.getElementById( "frct_mode" ).value;
-
-	if(  document.getElementById( "frct_accu" ).checked ){
-		var frct_accu = 1;
-	}else{
-		var frct_accu = 0;
-	}
-
-	if( document.getElementById( "ew_mode" ).checked ){
-		var ew_mode = 1;
-	}else{
-		var ew_mode = 0;
-	}
+	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
+	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
 
 	if( document.getElementById( "csc" ).checked ){
 		var csc = document.getElementById( "csc" ).value;
@@ -514,7 +581,7 @@ var openPrint = function( uname, code, template, dish ){
 		var url = 'printv.cgi?&c=' + code + '&t=' + template + '&d=' + dish + '&p=' + palette + '&fa=' + frct_accu + '&ew=' + ew_mode + '&fm=' + frct_mode;
 	}
 	window.open( url, 'print' );
-	displayVIDEO( 'Printing page' );
+	displayVIDEO( 'Printing page was opend on the another tab' );
 };
 
 
@@ -523,35 +590,46 @@ var openPrint = function( uname, code, template, dish ){
 
 // 献立追加ボタンを押してmealにレシピを追加して、まな献立カウンタを増やす
 var addingMeal = function( recipe_code, recipe_name ){
-	$.post( "mealm.cgi", { recipe_code:recipe_code }, function( data ){ $( "#MBN" ).html( data );});
-	if( recipe_code != '' ){ displayVIDEO( '+' + recipe_name); }
+	$.post( "mealm.cgi", { recipe_code:recipe_code }, function( data ){
+		$( "#MBN" ).html( data );
+		if( recipe_code != '' ){ displayVIDEO( '+' + recipe_name); }
+	});
 };
 
 
 // 献立ボタンを押してL1にリストを表示
 var initMeal = function( com, code ){
-	$.post( "meal.cgi", { command:com, code:code }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dl1 = true;
-	displayBW();
+	$.post( "meal.cgi", { command:com, code:code }, function( data ){
+		$( "#L1" ).html( data );
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
 };
 
 // 献立クリアボタンを押してL1にリストを更新、そしてまな献立カウンターの更新
 var clear_meal = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'meal_all_check' ).checked ){
-			$.post( "meal.cgi", { command:'clear', order:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
-			displayVIDEO( 'Menu cleared' );
-			flashBW();
-			dl1 = true;
-			displayBW();
+			$.post( "meal.cgi", { command:'clear', order:'all', code:code }, function( data ){
+				$( "#L1" ).html( data );
+				addingMeal( '' );
+
+				displayVIDEO( 'Menu cleared' );
+				flashBW();
+				dl1 = true;
+				displayBW();
+			});
 		} else{
 			displayVIDEO( 'Check! (>_<)' );
 		}
 	} else{
-		$.post( "meal.cgi", { command:'clear', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "meal.cgi", { command:'clear', order:order, code:code }, function( data ){
+			$( "#L1" ).html( data );
+			addingMeal( '' );
+		});
 	}
-	setTimeout( addingMeal( '' ), 1000 );
+//	setTimeout( addingMeal( '' ), 1000 );
 };
 
 
@@ -571,11 +649,16 @@ var lower_meal = function( order, code ){
 
 // 献立編集のレシピボタンを押してL2にレシピを表示
 var menuEdit = function( com, code ){
-	$.post( "menu.cgi", { command:com, code:code }, function( data ){ $( "#L2" ).html( data );});
-	$.post( "photo.cgi", { command:'view_series', code:code, base:'menu' }, function( data ){ $( "#L3" ).html( data );});
-	dl2 = true;
-	dl3 = true;
-	displayBW();
+	$.post( "menu.cgi", { command:com, code:code }, function( data ){
+		$( "#L2" ).html( data );
+		dl2 = true;
+		displayBW();
+	});
+	$.post( "photo.cgi", { command:'view_series', code:code, base:'menu' }, function( data ){
+		$( "#L3" ).html( data )
+		dl3 = true;
+		displayBW();
+	});
 };
 
 
@@ -592,11 +675,14 @@ var menuSave = function( code ){
 		var new_label = document.getElementById( "new_label" ).value;
 		var memo = document.getElementById( "memo" ).value;
 
-		$.post( "menu.cgi", { command:'save', code:code, menu_name:menu_name, public:public, protect:protect, label:label, new_label:new_label, memo:memo }, function( data ){ $( "#L2" ).html( data );});
-		displayVIDEO( menu_name );
+		$.post( "menu.cgi", { command:'save', code:code, menu_name:menu_name, public:public, protect:protect, label:label, new_label:new_label, memo:memo }, function( data ){
+			$( "#L2" ).html( data );
+			$.post( "meal.cgi", { command:'init', code:code }, function( data ){$( '#L1' ).html( data );});
+			displayVIDEO( menu_name );
+		});
 
-		var fx = function(){ $.post( "meal.cgi", { command:'init', code:code }, function( data ){ $( '#L1' ).html( data );});};
-		setTimeout( fx , 1000 );
+//		var fx = function(){ $.post( "meal.cgi", { command:'init', code:code }, function( data ){$( '#L1' ).html( data );});};
+//		setTimeout( fx , 1000 );
 	}
 };
 
@@ -636,10 +722,13 @@ var switchLabelset = function( normal_label_c, school_label_c ){
 
 // まな板のレシピ読み込みボタンを押してL1に献立リストを表示
 var menuList = function( page ){
-	$.post( "menul.cgi", { command:'view', page:page }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dl1 = true;
-	displayBW();
+	$.post( "menul.cgi", { command:'view', page:page }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
 };
 
 
@@ -647,7 +736,6 @@ var menuList = function( page ){
 var menuList2 = function( page ){
 	var range = document.getElementById( "range" ).value;
 	var label = document.getElementById( "label_list" ).value;
-
 	$.post( "menul.cgi", { command:'view2', page:page, range:range, label:label }, function( data ){ $( "#L1" ).html( data );});
 };
 
@@ -655,8 +743,10 @@ var menuList2 = function( page ){
 // まな板の削除ボタンを押してレシピを削除し、L1にリストを再表示
 var menuDelete = function( code, menu_name ){
 	if( document.getElementById( code ).checked ){
-		$.post( "menul.cgi", { command:'delete', code:code }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( menu_name );
+		$.post( "menul.cgi", { command:'delete', code:code }, function( data ){
+			$( "#L1" ).html( data );
+			displayVIDEO( menu_name );
+		});
 	} else{
 		displayVIDEO( 'Check! (>_<)' );
 	}
@@ -665,8 +755,10 @@ var menuDelete = function( code, menu_name ){
 
 // まな板のインポートボタンを押してレシピをインポートし、L1にリストを再表示
 var menuImport = function( code ){
-	$.post( "menul.cgi", { command:'import', code:code }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( code );
+	$.post( "menul.cgi", { command:'import', code:code }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( code );
+	});
 };
 
 
@@ -699,9 +791,14 @@ var switchLabelsetl = function( normal_label_c, school_label_c ){
 
 // 献立の成分計算表ボタンを押してL2にリストを表示
 var menuCalcView = function( code ){
-	$.post( "menu-calc.cgi", { command:'view', code:code }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
-	displayBW();
+	$.post( "menu-calc.cgi", { command:'view', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
 };
 
 // 献立の成分計算表の再計算ボタンを押してL2にリストを表示
@@ -710,8 +807,10 @@ var menuRecalcView = function( code ){
 	var frct_mode = document.getElementById( "frct_mode" ).value;
 	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
 	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
-	$.post( "menu-calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#L2" ).html( data );});
-	displayVIDEO( 'Recalc' );
+	$.post( "menu-calc.cgi", { command:'view', code:code, palette:palette, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){
+		$( "#L2" ).html( data );
+		displayVIDEO( 'Recalc' );
+	});
 };
 
 
@@ -720,9 +819,14 @@ var menuRecalcView = function( code ){
 
 // Analysis of menu
 var menuAnalysis = function( code ){
-	$.post( "menu-analysis.cgi", { command:'', code:code }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
-	displayBW();
+	$.post( "menu-analysis.cgi", { command:'', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
 };
 
 // Reanalysis of menu
@@ -730,6 +834,8 @@ var menuReAnalysis = function( code ){
 	var frct_mode = document.getElementById( "frct_mode" ).value;
 	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
 	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
-	$.post( "menu-analysis.cgi", { command:'', code:code, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){ $( "#L2" ).html( data );});
-	displayVIDEO( 'Reanalysis' );
+	$.post( "menu-analysis.cgi", { command:'', code:code, frct_mode:frct_mode, frct_accu:frct_accu, ew_mode:ew_mode }, function( data ){
+		$( "#L2" ).html( data );
+		displayVIDEO( 'Reanalysis' );
+	});
 };

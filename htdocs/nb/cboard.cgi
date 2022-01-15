@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.04b
+#Nutrition browser 2020 cutting board 0.10b
 
 #==============================================================================
 #LIBRARY
@@ -37,8 +37,8 @@ def weight_calc( food_list, dish_num )
 		end
 	end
 
-	weight = ( weight / dish_num.to_i ).to_i
-	weight_checked = ( weight_checked / dish_num.to_i ).to_i
+	weight = ( weight / dish_num.to_i )
+	weight_checked = ( weight_checked / dish_num.to_i )
 
 	return weight, weight_checked, check_all
 end
@@ -60,16 +60,45 @@ def energy_calc( food_list, uname, dish_num )
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
 			r = mdb( q, false, @debug )
 			if r.first
-				t = convert_zero( r.first['ENERC_KCAL'] )
+				t = BigDecimal( convert_zero( r.first['ENERC_KCAL'] ))
 				energy += ( t * BigDecimal( e.weight.to_s ) / 100 )
 				energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
 			end
 		end
 	end
-	energy = ( energy / dish_num.to_i ).to_i
-	energy_checked = ( energy_checked / dish_num.to_i ).to_i
+	energy = ( energy / dish_num.to_i )
+	energy_checked = ( energy_checked / dish_num.to_i )
 
 	return energy, energy_checked, check_all
+end
+
+
+#### Easy salt calc
+def salt_calc( food_list, uname, dish_num )
+	salt = BigDecimal( '0' )
+	salt_checked = BigDecimal( '0' )
+
+	check_all = true
+	food_list.each do |e|
+		check_all = false if e.check == '1'
+	end
+
+	food_list.each do |e|
+		unless e.fn == '-' || e.fn == '+'
+			q = "SELECT NACL_EQ from #{$MYSQL_TB_FCT} WHERE FN='#{e.fn}';"
+			q = "SELECT NACL_EQ from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
+			r = mdb( q, false, @debug )
+			if r.first
+				t = BigDecimal( convert_zero( r.first['NACL_EQ'] ))
+				salt += ( t * BigDecimal( e.weight.to_s ) / 100 )
+				salt_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
+			end
+		end
+	end
+	salt = ( salt / dish_num.to_i )
+	salt_checked = ( salt_checked / dish_num.to_i )
+
+	return salt, salt_checked, check_all
 end
 
 
@@ -205,6 +234,7 @@ unit= @cgi['unit']
 code = @cgi['code']
 chomi_selected = @cgi['chomi_selected']
 chomi_code = @cgi['chomi_code']
+recipe_user = @cgi['recipe_user']
 if @debug
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"
@@ -218,13 +248,18 @@ if @debug
 	puts "unitv:#{unitv}<br>"
 	puts "chomi_selected:#{chomi_selected}<br>"
 	puts "chomi_code:#{chomi_code}<br>"
+	puts "recipe_user:#{recipe_user}<br>"
 	puts "<hr>"
 end
 
 
 puts "Loading Sum<br>" if @debug
-q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
-q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE code='#{code}';" if command == 'load'
+q = ''
+if command == 'load'
+	q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE user='#{recipe_user}' AND code='#{code}';"
+else
+	q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
+end
 r = mdb( q, false, @debug )
 code = r.first['code']
 recipe_name = r.first['name']
@@ -434,7 +469,6 @@ when 'gn_exchange'
 when 'chomis'
 	total_weight = BigDecimal( 0 )
 	target_weight = BigDecimal( 0 )
-
 	food_list.each do |e|
 		unless e.fn == '-' || e.fn == '+'
 			if e.check == '1'
@@ -463,7 +497,6 @@ when 'chomis'
 when 'wadj'
 	weight_adj = @cgi['weight_adj'].to_i
 	puts "weight_adj:#{weight_adj}<br>" if @debug
-
 	weight_ctrl, weight_checked, check_all = weight_calc( food_list, dish_num )
 	wadj_rate = BigDecimal( weight_adj - ( weight_ctrl - weight_checked )) / ( weight_checked )
 	food_list.size.times do |c|
@@ -476,11 +509,9 @@ when 'wadj'
 	update = '*'
 
 when 'eadj'
-	puts "Adjusting tootal food energy" if @debug
-
+	puts "Adjusting tootal food energy<br>" if @debug
 	energy_adj = @cgi['energy_adj'].to_i
 	puts "energy_adj:#{energy_adj}<br>" if @debug
-
 	energy_ctrl, energy_checked, check_all = energy_calc( food_list, user.name, dish_num )
 	eadj_rate = BigDecimal( energy_adj - ( energy_ctrl - energy_checked )) / ( energy_checked )
 	food_list.size.times do |c|
@@ -492,8 +523,24 @@ when 'eadj'
 	end
 	update = '*'
 
+when 'sadj'
+	puts "Adjusting tootal food salt<br>" if @debug
+	salt_adj = @cgi['salt_adj'].to_f
+	puts "salt_adj:#{salt_adj}<br>" if @debug
+	salt_ctrl, salt_checked, check_all = salt_calc( food_list, user.name, dish_num )
+	sadj_rate = BigDecimal( salt_adj - ( salt_ctrl - salt_checked )) / ( salt_checked )
+	food_list.size.times do |c|
+		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
+			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * sadj_rate )
+			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * sadj_rate )
+			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * sadj_rate )
+		end
+	end
+
+	update = '*'
+
 when 'ladj'
-	puts "Adjusting feeding rate by food loss" if @debug
+	puts "Adjusting feeding rate by food loss<br>" if @debug
 
 	loss_adj = @cgi['loss_adj'].to_i
 	puts "loss_adj:#{loss_adj}<br>" if @debug
@@ -518,11 +565,13 @@ update = '' if recipe_name == ''
 puts "update:#{update}<br><hr>" if @debug
 
 
-puts "Getting food weight & food energy<br>" if @debug
+puts "Getting food weight & food energy & food salt<br>" if @debug
 weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
 energy_ctrl, energy_checked = energy_calc( food_list, user.name, dish_num )
+salt_ctrl, salt_checked = salt_calc( food_list, user.name, dish_num )
 weitht_adj = weight_ctrl if weitht_adj == 0
 energy_adj = energy_ctrl if energy_adj == 0
+salt_adj = salt_ctrl if salt_adj == 0
 
 
 puts "Loading CB tag<br>" if @debug
@@ -557,18 +606,20 @@ html_sasshi = "<button class='btn btn-outline-light btn-sm' type='button' onclic
 
 
 puts 'HTML upper part<br>' if @debug
-html = <<-"HTML"
+html = <<-"UPPER_MENU"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-9'><h5>#{lp[1]}: #{update}#{recipe_name}</h5></div>
-		<div class='col-1' align="right">#{lp[34]}</div>
-		<div class='col-2' align='right'>
-			<input type='checkbox' id='all_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clearCB( 'all', '#{code}' )\">#{lp[8]}</button>
-		</div>
+		<div class='col-10'><h5>#{lp[1]}: #{update}#{recipe_name}</h5></div>
 	</div>
 
 	<div class='row'>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<label class="input-group-text" for="dish_num">#{lp[2]}</label>
+  				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB( '#{code}' )\">
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"dishCB( '#{code}' )\">#{lp[3]}</button>
+			</div>
+		</div>
 		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="food_add">#{lp[4]}</label>
@@ -586,23 +637,23 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text" for="dish_num">#{lp[2]}</label>
-  				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB( '#{code}' )\">
-	        	<button class='btn btn-outline-primary' type='button' onclick=\"dishCB( '#{code}' )\">#{lp[3]}</button>
-			</div>
-		</div>
-		<div class='col-2'>
-			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="weight_ctrl">#{lp[25]}</label>
-  				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl}">
+  				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl.round}">
 	        	<span onclick=\"weightAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="energy_ctrl">#{lp[26]}</label>
-  				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl}">
+  				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl.round}">
 	        	<span onclick=\"energyAdj( '#{code}' )\">#{lp[27]}</span>
+			</div>
+		</div>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<label class="input-group-text" for="salt_ctrl">#{lp[35]}</label>
+  				<input type="number" min='1' step="0.1" class="form-control" id="salt_adj" value="#{salt_ctrl.round( 1 ).to_f}">
+	        	<span onclick=\"saltAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
 		<div class='col-2'>
@@ -612,15 +663,20 @@ html = <<-"HTML"
 	        	<span onclick=\"lossAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-1'></div>
-		<div class='col-1' align='right'>#{html_sasshi}</div>
 		<div class='col-2' align='right'>
 			<input type='checkbox' id='gn_check'>&nbsp;
 			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange( '#{code}' )\">#{lp[22]}</button>
 		</div>
+		<div class='col-2' align='right'>
+			<input type='checkbox' id='all_check'>&nbsp;
+			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clearCB( 'all', '#{code}' )\">#{lp[8]}</button>
+		</div>
 	</div>
 	<hr>
+UPPER_MENU
+puts html
 
+html = <<-"ITEM_NAME"
 <div class='row cb_header'>
 	<div class='col-2'>#{lp[9]}&nbsp;&nbsp;&nbsp;<input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{lp[10]}</div>
 	<div class='col-3'>#{lp[11]}</div>
@@ -640,7 +696,8 @@ html = <<-"HTML"
 	</div>
 </div>
 <br>
-HTML
+ITEM_NAME
+puts html
 
 puts 'HTML food list part<br>' if @debug
 c = 0
@@ -678,8 +735,7 @@ food_list.each do |e|
 		food_key = "#{r.first['FG']}:#{r.first['class1']}:#{r.first['class2']}:#{r.first['class3']}:#{r.first['name']}" if r.first
 	end
 
-	puts 'HTML<br>' if @debug
-	html << "<div class='row'>"
+	html = "<div class='row'>"
  	html << "	<div class='col-2'>"
  	html << "		<span onclick=\"upperCB( '#{c}', '#{code}' )\">#{lp[31]}</span>"
  	html << "		<span onclick=\"lowerCB( '#{c}', '#{code}' )\">#{lp[32]}</span>"
@@ -720,39 +776,52 @@ food_list.each do |e|
 		html << "	</div>"
 	end
 	html << "</div>"
+
+	puts html
 	c += 1
 end
 
 
 puts 'HTML lower menu part<br>' if @debug
-html << "	<br>"
-html << "<div class='row'>"
-html << "	<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"recipeEdit( 'view', '#{code}' )\">#{lp[18]}</button></div>"
-html << "	<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"calcView( '#{code}' )\">#{lp[19]}</button></div>"
-
+price_html = ''
 if recipe_name != '' && update == ''
-	html << "	<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"priceView( '#{code}' )\">#{lp[20]}</button></div>" if recipe_name != '' && update == ''
+	price_html = "<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"priceView( '#{code}' )\">#{lp[20]}</button></div>" if recipe_name != '' && update == ''
 else
-	html << "	<div class='col-2'><button type='button' class='btn btn-secondary btn-sm'\">#{lp[20]}</button></div>"
+	price_html = "<div class='col-2'><button type='button' class='btn btn-secondary btn-sm'\">#{lp[20]}</button></div>"
 end
-
-html << "	<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"luckyInput()\">#{lp[21]}</button></div>"
-
-html << "<div class='col-2'>"
-html <<	"		<button class='btn btn-primary btn-sm' onclick='Pseudo_R2F(\"#{code}\")'>#{lp[24]}</button>"
-html << "</div>"
 
 #### Quick Save
-if recipe_name == '' || protect == 1
-	html << "	<div class='col-2'></div>"
+qsave_html =''
+if recipe_name == '' || protect == 1 || user.name != recipe_user
+	qsave_html = "<div class='col-1'></div>"
 else
-	html << "	<div class='col-2'><button type='button' class='btn btn-outline-danger btn-sm' onclick=\"quickSave( '#{code}' )\">#{lp[23]}</button></div>"
+	qsave_html = "<div class='col-1'><span onclick=\"quickSave( '#{code}' )\">#{lp[23]}</span></div>"
 end
 
-html << "</div>"
-html << "<div class='code'>#{code}</div>"
-html << "</div>"
-puts html
+#### Quick Print
+qprint_html = ''
+if recipe_name == '' || user.name != recipe_user
+	qprint_html = "<div class='col-1'></div>"
+else
+	qprint_html = "<div class='col-1'><span onclick=\"print_templateSelect( '#{code}' )\">#{lp[34]}</span></div>"
+end
+
+foot_html = <<-"LOWER_MENU"
+<br>
+	<div class='row'>
+		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick="recipeEdit( 'view', '#{code}' )">#{lp[18]}</button></div>
+		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick="calcView( '#{code}' )">#{lp[19]}</button></div>
+		#{price_html}
+		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick="luckyInput()">#{lp[21]}</button></div>
+		<div class='col-2'><button class='btn btn-primary btn-sm' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</button></div>
+		#{qsave_html}
+		#{qprint_html}
+	</div>
+	<div class='code'>#{code}</div>
+</div>
+LOWER_MENU
+
+puts foot_html
 
 puts 'Updating cboard sum<br>' if @debug
 sum_new = ''

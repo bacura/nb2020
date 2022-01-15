@@ -1,4 +1,4 @@
-#Nutrition browser 2020 recipe list 0.03b
+#Nutrition browser 2020 recipe list 0.04b
 
 #==============================================================================
 # OVERVIEW
@@ -59,3 +59,4 @@ guild.js/addKoyomi_BWF( code ) -> koyomi-add.cgi{ command:"init", code:code }
 20211106	0.02b	更新：probeへの対応。
 20211224	0.03b	問題：レシピ検索後絞り込みを行うと、リストが表示されない。
 					解決：ページ設定が検索後のリストを反映していなかったので、ページがリスト外だと1に戻す処理を追加した。
+20220114	0.04b	更新：新インポート形式への対応。

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.03b
+#Nutrition browser 2020 recipe list 0.04b
 
 
 #==============================================================================
@@ -213,13 +213,14 @@ user = User.new( @cgi )
 #user.debug if @debug
 lp = user.load_lp( script )
 
-r = mdb( "SELECT icache, recipel_max FROM cfg WHERE user='#{user.name}';", false, @debug )
+r = mdb( "SELECT icache, recipe FROM cfg WHERE user='#{user.name}';", false, @debug )
 if r.first['icache'].to_i == '1'
 	html_init_cache( nil )
 else
 	html_init( nil )
 end
-page_limit = r.first['recipel_max'].to_i unless r.first['recipel_max'].to_i == 0
+recipe_cfg = Hash.new
+recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
 
 
 #### POST
@@ -246,24 +247,20 @@ recipe_code_list = []
 
 case command
 when 'init'
-	r = mdb( "SELECT recipel FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-	if r.first
-		a = r.first['recipel'].split( ':' )
-		page = a[0].to_i
-		page = 1 if page == 0
-		range = a[1].to_i
-		type = a[2].to_i
-		role = a[3].to_i
-		tech = a[4].to_i
-		time = a[5].to_i
-		cost = a[6].to_i
-	end
+	page = recipe_cfg['page'].to_i
+	page = 1 if page == 0
+	range = recipe_cfg['range'].to_i
+	type = recipe_cfg['type'].to_i
+	role = recipe_cfg['role'].to_i
+	tech = recipe_cfg['tech'].to_i
+	time = recipe_cfg['time'].to_i
+	cost = recipe_cfg['cost'].to_i
 when 'reset'
 	words = ''
 
 when 'refer'
 	recipe_code_list = referencing( words, user.name ) if words != '' && words != nil
-	words = lp[1] if recipe_code_list.size == 0
+	words = "#{lp[39]}#{words}<br>#{lp[1]}" if recipe_code_list.size == 0
 	page = 1
 
 when 'delete'
@@ -285,7 +282,7 @@ when 'delete'
 	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 	mdb( "UPDATE #{$MYSQL_TB_SUM} SET code='', name='', dish=1 WHERE user='#{user.name}';", false, @debug ) if r.first['code'] == code
 
-when 'import', 'subspecies'
+when 'subspecies'
 	# Loading original recipe
 	recipe = Recipe.new( user.name )
 	recipe.load_db( code, true )
@@ -322,11 +319,8 @@ else
 	time = @cgi['time'].to_i
 	cost = @cgi['cost'].to_i
 
-	r = mdb( "SELECT reciperr FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-	if r.first['reciperr'] != '' && r.first['reciperr'] != nil
-		recipe_code_list = referencing( r.first['reciperr'], user.name )
-		words = r.first['reciperr']
-	end
+	recipe_code_list = referencing( recipe_cfg['words'], user.name )
+	words = recipe_cfg['words']
 end
 if @debug
 	puts "page: #{page}<br>"
@@ -447,11 +441,11 @@ recipes.each do |e|
 
 		tags = ''
 		e.tag.each do |ee| tags << "&nbsp;<span class='list_tag'>#{ee}</span>" end
-		if e.user == user.name
-			recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}' )\">#{e.name}#{tags}</td>"
-		else
-			recipe_html << "<td>#{e.name}#{tags}</td>"
-		end
+#		if e.user == user.name
+			recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}#{tags}</td>"
+#		else
+#			recipe_html << "<td>#{e.name}#{tags}</td>"
+#		end
 
 		recipe_html << "<td>"
 		if e.public == 1
@@ -491,7 +485,7 @@ recipes.each do |e|
 				recipe_html << "<td></td>"
 			end
 		else
-			recipe_html << "<td><span onclick=\"recipeImport( 'import', '#{e.code}', '#{page}' )\">#{lp[11]}</span></td>"
+#			recipe_html << "<td><span onclick=\"recipeImport( 'import', '#{e.code}', '#{page}' )\">#{lp[11]}</span></td>"
 		end
 		recipe_html << '</tr>'
 	end
@@ -517,7 +511,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-2'></div>
 		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList2( '#{page}' )">#{lp[13]}</button></div>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
 		<div class='col-2'><button class="btn btn-primary btn-sm" type="button" onclick="">#{lp[38]}</button></div>
 	</div>
 	<br>
@@ -546,7 +540,10 @@ HTML
 puts html
 
 #### 検索設定の保存
-recipel = "#{page}:#{range}:#{type}:#{role}:#{tech}:#{time}:#{cost}"
-reciperr = ''
-reciperr = "#{words}" if recipe_code_list.size > 0
-mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{user.name}';", false, @debug )
+#recipel = "#{page}:#{range}:#{type}:#{role}:#{tech}:#{time}:#{cost}"
+#reciperr = ''
+#reciperr = "#{words}" if recipe_code_list.size > 0
+#mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{user.name}';", false, @debug )
+
+recipe_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "words" => words } )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )

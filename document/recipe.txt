@@ -65,3 +65,4 @@ recipe.js/photoDel = function( slot, code )	->	photo.cgi{ command:'delete', code
 20210629	0.02b	問題；写真があると名前変更による複製に失敗する。
 					解決：ファイルコピーのためにrequire 'fileutils'を追加。
 20211106	0.03b	更新：probeへの対応。
+20220115	0.04b	更新：json形式のcfgへの対応。

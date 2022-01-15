@@ -51,7 +51,6 @@ $MYSQL_TB_MENU = 'menu'
 $MYSQL_TB_MEMORY = 'memory'
 $MYSQL_TB_KOYOMI = 'koyomi'
 $MYSQL_TB_KOYOMIEX = 'koyomiex'
-$MYSQL_TB_FCS = 'fcs'
 $MYSQL_TB_FCZ = 'fcz'
 $MYSQL_TB_METS = 'mets'
 $MYSQL_TB_METST = 'metst'
@@ -224,17 +223,14 @@ def generate_code( uname, c )
   require 'securerandom'
   skip = false
   code = uname[0, 2]
-  code = "x" + uname[0, 1] if code == nil
   10.times do
-    code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}-#{SecureRandom.hex( 2 )}"
+    code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}"
     query = ''
     case c
     when 'r'
       query = "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';"
     when 'm'
       query = "SELECT * FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';"
-    when 'f'
-      query = "SELECT * FROM #{$MYSQL_TB_FCS} WHERE code='#{code}';"
     when 'z'
       query = "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}';"
     when 'p', 'png', 'pdf'
@@ -264,6 +260,17 @@ def bind_tags( res_tag )
     tags = "<span class='tagc'>#{sub_class}</span> #{tags['name']} <span class='tag1'>#{tags['tag1']}</span> <span class='tag2'>#{tags['tag2']}</span> <span class='tag3'>#{tags['tag3']}</span> <span class='tag4'>#{tags['tag4']}</span> <span class='tag5'>#{tags['tag5']}</span>"
 
     return tags
+end
+
+
+#### Text washing
+def wash( txt )
+  txt.gsub!( ';', '' )
+  txt.gsub!( "\t", '' )
+  txt.gsub!( '<', '&lt;' )
+  txt.gsub!( '>', '&gt;' )
+
+  return txt
 end
 
 
@@ -365,22 +372,6 @@ class User
     puts "mid:#{@mid}<br>"
     puts "language:#{@language}<br>"
     puts "<hr>"
-  end
-end
-
-
-class FCT
-  attr_accessor :n
-
-  def initialize()
-    @n = Hash.new
-    @fct_item.each do |e| @n[e] = '' end
-  end
-
-  def load( code, user )
-  end
-
-  def debug()
   end
 end
 

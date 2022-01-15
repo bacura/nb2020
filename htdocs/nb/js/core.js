@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.04b 20211130
+// Nutorition Browser 2020 core.js 0.05b 20220115
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -54,18 +54,12 @@ window.onload = function(){
 // This feature will be discontinued in the future.
 closeBroseWindows = function( num ){
 	switch( Number( num )){
-	case 0:
-		document.getElementById( "L1" ).style.display = 'none';
-	case 1:
-		document.getElementById( "L2" ).style.display = 'none';
-	case 2:
-		document.getElementById( "L3" ).style.display = 'none';
-	case 3:
-		document.getElementById( "L4" ).style.display = 'none';
-	case 4:
-		document.getElementById( "L5" ).style.display = 'none';
-	case 5:
-		document.getElementById( "LF" ).style.display = 'none';
+	case 0: document.getElementById( "L1" ).style.display = 'none';
+	case 1: document.getElementById( "L2" ).style.display = 'none';
+	case 2: document.getElementById( "L3" ).style.display = 'none';
+	case 3: document.getElementById( "L4" ).style.display = 'none';
+	case 4: document.getElementById( "L5" ).style.display = 'none';
+	case 5: document.getElementById( "LF" ).style.display = 'none';
  	}
 };
 
@@ -150,21 +144,13 @@ changeMenu = function( user_status ){
 		case 0:
 			document.getElementById( "guild_menu" ).style.display = 'inline';
 			displayVIDEO( 'Guild menu' );
-			if( user_status >= 5 && user_status != 6 ){
-				menu_status = 1;
-			}else{
-				menu_status = 3;
-			}
+			if( user_status >= 5 && user_status != 6 ){ menu_status = 1; }else{ menu_status = 3; }
 			break;
 		case 1:
 			document.getElementById( "guild_menu" ).style.display = 'none';
 			document.getElementById( "gs_menu" ).style.display = 'inline';
 			displayVIDEO( 'Guild Shun menu' );
-			if( user_status >= 8 ){
-				menu_status = 2;
-			}else{
-				menu_status = 3;
-			}
+			if( user_status >= 8 ){ menu_status = 2; }else{ menu_status = 3; }
 			break;
 		case 2:
 			document.getElementById( "gs_menu" ).style.display = 'none';
@@ -197,45 +183,55 @@ chageAccountM = function(){
 
 // Display foods on BWL1
 var summonL1 = function( num ){
-	$.get( "square.cgi", { channel:"fctb", category:num }, function( data ){ $( "#L1" ).html( data );});
-	flashBW();
-	dl1 = true;
-	displayBW();
+	$.get( "square.cgi", { channel:"fctb", category:num }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
 };
 
 
 // Display foods on BWL2
 var summonL2 = function( key ){
-	$.get( "square.cgi", { channel:"fctb_l2", food_key:key }, function( data ){ $( "#L2" ).html( data );});
-	dl2 = true;
-	dl3 = false;
-	dl4 = false;
-	dl5 = false;
-	dlf = false;
-	displayBW();
+	$.get( "square.cgi", { channel:"fctb_l2", food_key:key }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
 };
 
 
 // Display foods on BWL3
 var summonL3 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
-	$.get( "square.cgi", { channel:"fctb_l3", food_key:key }, function( data ){ $( "#L3" ).html( data );});
-	dl3 = true;
-	dl4 = false;
-	dl5 = false;
-	dlf = false;
-	displayBW();
+	$.get( "square.cgi", { channel:"fctb_l3", food_key:key }, function( data ){
+		$( "#L3" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		dl3 = true;
+		displayBW();
+	});
 };
 
 
 // Display foods on BWL4
 var summonL4 = function( key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
-	$.get( "square.cgi", { channel:"fctb_l4", food_key:key }, function( data ){ $( "#L4" ).html( data );});
-	dl4 = true;
-	dl5 = false;
-	dlf = false;
-	displayBW();
+	$.get( "square.cgi", { channel:"fctb_l4", food_key:key }, function( data ){
+		$( "#L4" ).html( data );
+
+		dl4 = true;
+		dl5 = false;
+		dlf = false;
+		displayBW();
+	});
 };
 
 
@@ -264,21 +260,27 @@ var changeWeight = function( key, fn ){
 var detailView = function( fn ){
 	var fraction_mode = document.getElementById( "fraction" ).value;
 	var weight = document.getElementById( "weight" ).value;
-	$.get( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#LF" ).html( data );});
-	pushBW();
-	dl5 = false;
-	dlf = true;
-	displayBW();
+	$.get( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:weight }, function( data ){
+		$( "#LF" ).html( data );
+
+		pushBW();
+		dl5 = false;
+		dlf = true;
+		displayBW();
+	});
 };
 
 // Display ditail information on LF (history)
 var detailView_his = function( fn ){
-	$.get( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100 }, function( data ){ $( "#LF" ).html( data );});
-	pushBW();
-	dline = false;
-	dl1 = false;
-	dlf = true;
-	displayBW();
+	$.get( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100 }, function( data ){
+		$( "#LF" ).html( data );
+
+		pushBW();
+		dline = false;
+		dl1 = false;
+		dlf = true;
+		displayBW();
+	});
 };
 
 // Changing weight of food (ditail)
@@ -312,33 +314,45 @@ var search = function(){
 	var words = document.getElementById( "words" ).value;
 	var qcate = document.getElementById( "qcate" ).value;
 	if( words != '' ){
+		flashBW();
 		switch( qcate ){
 		case '0':
-			$.post( "search-food.cgi", { words:words }, function( data ){ $( "#L1" ).html( data );});
+			$.post( "search-food.cgi", { words:words }, function( data ){
+				$( "#L1" ).html( data );
+		 		dl1 = true;
+		 		displayBW();
+			});
 			break;
 		case '1':
-			$.post( "recipel.cgi", { command:'refer', words:words }, function( data ){ $( "#L1" ).html( data );});
+			$.post( "recipel.cgi", { command:'refer', words:words }, function( data ){
+				$( "#L1" ).html( data );
+		 		dl1 = true;
+		 		displayBW();
+			});
 			break;
 		case '2':
-			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){ $( "#L1" ).html( data );});
+			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){
+				$( "#L1" ).html( data );
+		 		dl1 = true;
+		 		displayBW();
+			});
 			break;
  		}
-
- 		flashBW();
- 		dl1 = true;
- 		displayBW();
 	}
 };
 
 // Direct recipe search
 var searchDR = function( words ){
-	$.post( "recipel.cgi", { command:'refer', words:words }, function( data ){ $( "#L1" ).html( data );});
-	words = document.getElementById( "words" ).value = words;
-	qcate = document.getElementById( "qcate" ).value = 1;
+	$.post( "recipel.cgi", { command:'refer', words:words }, function( data ){
+		$( "#L1" ).html( data );
 
- 	flashBW();
- 	dl1 = true;
- 	displayBW();
+		words = document.getElementById( "words" ).value = words;
+		qcate = document.getElementById( "qcate" ).value = 1;
+
+	 	flashBW();
+	 	dl1 = true;
+	 	displayBW();
+	});
 };
 
 // Sending alias request
@@ -346,8 +360,9 @@ var aliasRequest = function( food_no ){
 	document.getElementById( "LF" ).style.display = 'block';
 	var alias = document.getElementById( "alias" ).value;
 	if( alias != '' && alias != general_ ){
-		$.post( "alias-req.cgi", { food_no:food_no, alias:alias }, function( data ){});
-		displayVIDEO( 'Request sent' );
+		$.post( "alias-req.cgi", { food_no:food_no, alias:alias }, function( data ){
+			displayVIDEO( 'Request sent' );
+		});
 	}else if( alias == general_ ){
 		displayVIDEO( 'Request sent' );
 	}else{
@@ -361,14 +376,20 @@ var aliasRequest = function( food_no ){
 
 // Display history
 var historyInit = function(){
-	$.post( "history.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
-	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){ $( "#L1" ).html( data );});
-
 	flashBW();
-	dline = true;
-	dl1 = true;
+	$.post( "history.cgi", { command:'menu' }, function( data ){
+		$( "#LINE" ).html( data );
+		dline = true;
+		displayBW();
+	});
+	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){
+		$( "#L1" ).html( data );
+		dl1 = true;
+		displayBW();
+	});
 	pushBW();
-	displayBW();
+
+
 };
 
 var historySub = function( sub_fg ){
@@ -381,9 +402,12 @@ var historySub = function( sub_fg ){
 
 // カテゴリーボタンを押したときに非同期通信でL1閲覧ウインドウの内容を書き換える
 var pseudoAdd = function( com, food_key, code ){
-	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){ $( "#LF" ).html( data );});
-	dlf = true;
-	displayBW();
+	$.post( "pseudo.cgi", { command:com, food_key:food_key, code:code }, function( data ){
+		$( "#LF" ).html( data );
+
+		dlf = true;
+		displayBW();
+	});
 };
 
 
@@ -474,8 +498,10 @@ var pseudoSave = function( code ){
 			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
 			ALC:ALC, NACL_EQ:NACL_EQ,
 			Notice:Notice
-		}, function( data ){ $( "#LF" ).html( data );});
-		displayVIDEO( food_name + ' saved' );
+		}, function( data ){
+			$( "#LF" ).html( data );
+			displayVIDEO( food_name + ' saved' );
+		});
 	} else{
 		displayVIDEO( 'Food name! (>_<)' );
 	}
@@ -483,11 +509,13 @@ var pseudoSave = function( code ){
 
 // 削除ボタンを押したときに非同期通信でLFの内容を書き換える
 var pseudoDelete = function( code ){
-	$.post( "pseudo.cgi", { command:'delete', code:code }, function( data ){ $( "#LF" ).html( data );});
+	$.post( "pseudo.cgi", { command:'delete', code:code }, function( data ){
+		$( "#LF" ).html( data );
 
-	dlf = false;
-	displayBW();
-	displayVIDEO( code + ' deleted' );
+		dlf = false;
+		displayBW();
+		displayVIDEO( code + ' deleted' );
+	});
 };
 
 
@@ -510,35 +538,48 @@ var bookOpen = function( url, depth ){
 
 // Memory init
 var initMemory_ = function(){
-	closeBroseWindows( 1 );
-	$.post( "memory.cgi", { command:'init' }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "memory.cgi", { command:'init' }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl2 = true;
+		displayBW();
+	});
 };
 
 
 // List each pointer
 var listPointer = function( category ){
-	$.post( "memory.cgi", { command:'list_pointer', category:category }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "memory.cgi", { command:'list_pointer', category:category }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
 };
 
 
 // Open memory link
 var memoryOpenLink = function( pointer, depth ){
-	$.post( "memory.cgi", { command:'refer', pointer:pointer, depth:depth }, function( data ){ $( "#L" + depth ).html( data );});
-	if( depth == '1' ){ closeBroseWindows( 1 );	}
-	document.getElementById( "L" + depth ).style.display = 'block';
+	$.post( "memory.cgi", { command:'refer', pointer:pointer, depth:depth }, function( data ){
+		$( "#L" + depth ).html( data );
+		if( depth == '1' ){ closeBroseWindows( 1 ); }
+		document.getElementById( "L" + depth ).style.display = 'block';
 
-	words = document.getElementById( "words" ).value = pointer;
-	qcate = document.getElementById( "qcate" ).value = 2;
+		words = document.getElementById( "words" ).value = pointer;
+		qcate = document.getElementById( "qcate" ).value = 2;
+	});
 };
 
 
 // New pointer form
 var newPMemory = function( category, pointer, post_process ){
-	$.post( "memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){ $( "#LF" ).html( data );});
-	if( post_process == 'front'){ document.getElementById( "L2" ).style.display = 'none'; }
-	document.getElementById( "LF" ).style.display = 'block';
+	$.post( "memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
+		$( "#LF" ).html( data );
+
+		if( post_process == 'front'){ document.getElementById( "L2" ).style.display = 'none'; }
+		document.getElementById( "LF" ).style.display = 'block';
+	});
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -546,11 +587,13 @@ var newPMemory = function( category, pointer, post_process ){
 
 // Display meta data
 var metaDisplay = function( com ){
-	$.post( "meta.cgi", { command:com }, function( data ){ $( "#L3" ).html( data );});
+	$.post( "meta.cgi", { command:com }, function( data ){
+		$( "#L3" ).html( data );
 
-	flashBW();
-	dl3 = true;
-	displayBW();
+		flashBW();
+		dl3 = true;
+		displayBW();
+	});
 };
 
 
@@ -559,19 +602,28 @@ var metaDisplay = function( com ){
 
 // Display config menu
 var configInit = function(){
-	$.post( "config.cgi", { mod:'' }, function( data ){ $( "#LINE" ).html( data );});
-	$.post( "config.cgi", { mod:'account' }, function( data ){ $( "#L1" ).html( data );});
-
 	flashBW();
-	dline = true;
-	dl1 = true;
-	displayBW();
+	$.post( "config.cgi", { mod:'' }, function( data ){
+		$( "#LINE" ).html( data );
+		dline = true;
+		displayBW();
+	});
+	$.post( "config.cgi", { mod:'account' }, function( data ){
+		$( "#L1" ).html( data );
+		dl1 = true;
+		displayBW();
+	});
 };
 
 // Display config form
 var configForm = function( mod ){
-	$.post( "config.cgi", { mod:mod }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	$.post( "config.cgi", { mod:mod }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
 };
 
 

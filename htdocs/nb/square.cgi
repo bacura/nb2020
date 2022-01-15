@@ -81,7 +81,7 @@ get_data = get_data()
 channel = get_data['channel']
 category = get_data['category'].to_i
 food_key = CGI.unescape( get_data['food_key'] ) if get_data['food_key'] != '' && get_data['food_key'] != nil
-frct_mode = get_data['frct_mode']
+frct_mode = get_data['frct_mode'].to_i
 food_weight = CGI.unescape( get_data['food_weight'] ) if get_data['food_weight'] != '' && get_data['food_weight'] != nil
 food_no = get_data['food_no']
 base = get_data['base']
@@ -385,10 +385,10 @@ HTML
 #### L5 final page
 when 'fctb_l5'
 	puts 'L5 final page<br>' if @debug
-
 	require './brain'
+
 	food_weight = BigDecimal( food_weight_check( food_weight ).first )
-	frct_mode, frct_select = frct_check( frct_mode )
+	frct_select = selected( 0, 2, frct_mode )
 
 	query = ''
 	food_no_list = []
@@ -407,6 +407,7 @@ when 'fctb_l5'
 		class_add = ''
 	end
 
+
 	# 正規食品
 	if class_no.to_i == 0
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false, @debug )
@@ -424,6 +425,7 @@ when 'fctb_l5'
 			tag5_list << e['tag5']
 		end
 	end
+
 
 	# 擬似食品
 	if class_no.to_i == 0
@@ -444,6 +446,7 @@ when 'fctb_l5'
 			tag5_list << e['tag5']
 		end
 	end
+
 
  	# 簡易表示の項目
  	fc_items = []

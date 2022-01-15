@@ -1,4 +1,4 @@
-検索条件にあるレシピは見つかりませんでした
+検索条件のレシピは見つかりませんでした
 <img src='bootstrap-dist/icons/globe.svg' style='height:1.2em; width:1.2em;'>
 <img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.2em; width:1.2em;'>
 <img src='bootstrap-dist/icons/cone-striped.svg' style='height:1.2em; width:1.2em;'>
@@ -36,3 +36,4 @@
 前項
 次項
 3D栄養検索
+検索語：
