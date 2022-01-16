@@ -125,11 +125,13 @@ def extract_foods( recipe, dish, template, ew_mode )
 			# 人数分調整
 			z, fuv = food_weight_check( fuv ) if /\// =~ fuv
 			fuv = BigDecimal( fuv ) / dish_recipe * dish
-			fuv_v = fuv.to_f
-			fuv_v = fuv.to_i if fuv_v >= 10
+			fuv_v = unit_value( fuv )
+#			fuv_v = fuv.to_f
+#			fuv_v = fuv.to_i if fuv_v >= 10
 			few = BigDecimal( few ) / dish_recipe * dish
-			few_v = few.to_f
-			few_v = few.to_i if few_v >= 10
+			few_v = unit_value( few )
+#			few_v = few.to_f
+#			few_v = few.to_i if few_v >= 10
 
 			query = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{fn}';"
 			res = db.query( query )
@@ -252,7 +254,12 @@ code = get_data['c']
 template = get_data['t'].to_i
 dish = get_data['d'].to_i
 palette_ = CGI.unescape( get_data['p'] )
-frct_accu = get_data['fa'].to_i
+frct_accu = get_data['fa']
+if frct_accu == '' || frct_accu == nil
+	frct_accu = 1
+else
+	frct_accu = frct_accu.to_i
+end
 ew_mode = get_data['ew'].to_i
 frct_mode = get_data['fm'].to_i
 csc = get_data['cs'].to_s

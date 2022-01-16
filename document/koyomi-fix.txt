@@ -43,3 +43,4 @@ guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy_mm:yyyy_
 20210312	0.00b	βスタート
 20210903	0.01b	更新；戻るUIを追加
 20211106	0.02b	更新：probeへの対応。
+20220115	0.03b	更新：brainへの対応。

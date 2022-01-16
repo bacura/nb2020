@@ -1,12 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition assessment tools 0.01b
+#Nutrition browser 2020 nutrition assessment tools 0.02b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './probe'
+require './brain'
 
 
 #==============================================================================

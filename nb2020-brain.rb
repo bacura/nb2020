@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.14b
+#Nutrition browser 2020 brain 0.15b
 
 #==============================================================================
 # LIBRARY
@@ -66,14 +66,11 @@ def num_opt( num, weight, mode, limit )
       #weight_f = 1 if weight_f < 0
 
       case mode
-      # 四捨五入
-      when '1'
+      when '1'  # 四捨五入
         ans = ( BigDecimal( num ) * weight ).round( limit )
-      # 切り上げ
-      when '2'
+      when '2'  # 切り上げ
         ans = ( BigDecimal( num ) * weight ).ceil( limit )
-      # 切り捨て
-      when '3'
+      when '3'  # 切り捨て
         ans = ( BigDecimal( num ) * weight ).floor( limit )
       else
         ans = ( BigDecimal( num ) * weight ).round( limit )
@@ -91,8 +88,8 @@ def num_opt( num, weight, mode, limit )
       end
       ans = t[0] + '.' + t[1]
     end
-
     ans = "(#{ans})" if kakko
+
   rescue
     puts "<span class='error'>[num_opt]ERROR!!<br>"
     puts "num:#{num}<br>"
@@ -163,28 +160,49 @@ end
 #ew_modeは0->通常重量、1->予想重量
 def extract_sum( sum, dish, ew_mode )
   foods = sum.split( "\t" )
-  food_no = []
-  food_weight = []
-  total_weight = 0
+  fns = []
+  fws = []
+  tw = 0
   foods.each do |e|
     t = e.split( ':' )
-    food_no << t[0]
+    fns << t[0]
     if t[0] == '-'
-      food_weight << '-'
+      fws << '-'
     elsif t[0] == '+'
-      food_weight << '+'
+      fws << '+'
     elsif ew_mode == 1 && t[7] != nil && t[7] != ''
-      food_weight << ( BigDecimal( t[7] ) / dish ).floor( 2 )
-      total_weight += ( BigDecimal( t[7] ) / dish ).floor( 2 )
+      fws << ( BigDecimal( t[7] ) / dish.to_i ).floor( 2 )
+      tw += ( BigDecimal( t[7] ) / dish.to_i ).floor( 2 )
     else
-      food_weight << ( BigDecimal( t[1] ) / dish ).floor( 2 )
-      total_weight += ( BigDecimal( t[1] ) / dish ).floor( 2 )
+      fws << ( BigDecimal( t[1] ) / dish.to_i ).floor( 2 )
+      tw += ( BigDecimal( t[1] ) / dish.to_i ).floor( 2 )
     end
   end
 
-  return food_no, food_weight, total_weight
+  return fns, fws, tw
 end
 
+def menu2rc( uname, code )
+  codes = []
+  r = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, false )
+  a = r.first['meal'].split( "\t" )
+  a.each do |e| codes << e end
+
+  return codes
+end
+
+def recipe2fns( uname, code, rate, unit )
+  r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, false )
+  fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], 1 )
+
+  if unit == '%'
+    fws.map! do |x| x * rate / 100 end
+  else
+    fws.map! do |x| x * rate / tw end
+  end
+
+  return fns, fws, tw
+end
 
 #### 合計値の桁合わせ
 #### 将来的に廃止
@@ -219,14 +237,34 @@ end
 
 #### 特殊数値変換
 def convert_zero( t )
-      t = 0 if t == nil
-      t.to_s.sub!( '(', '' )
-      t.to_s.sub!( ')', '' )
-      t = 0 if t == '-'
-      t = 0 if t == 'Tr'
-      t = 0 if t == '*'
+  t = 0 if t == nil
+  t.to_s.sub!( '(', '' )
+  t.to_s.sub!( ')', '' )
+  t = 0 if t == '-'
+  t = 0 if t == 'Tr'
+  t = 0 if t == '*'
 
   return t
+end
+
+
+#### 特殊単位数変換
+def unit_value( iv )
+  ov = 0
+  if iv >= 10
+    ov = iv.to_i
+  elsif iv >= 1
+    tf = ( iv.to_i - iv ).to_f
+    if tf == 0
+      ov = iv.to_i
+    else
+      ov = iv.to_f
+    end
+  else
+    ov = iv.to_f
+  end
+
+  return ov
 end
 
 
@@ -264,9 +302,7 @@ class Palette
     @bit = []
     if uname
       r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, false )
-      r.each do |e|
-        @sets[e['name']] = e['palette']
-      end
+      r.each do |e| @sets[e['name']] = e['palette'] end
     else
       $PALETTE_DEFAULT_NAME[$DEFAULT_LP].size.times do |c|
         @sets[$PALETTE_DEFAULT_NAME[$DEFAULT_LP][c]] = $PALETTE_DEFAULT[$DEFAULT_LP][c]
@@ -275,6 +311,7 @@ class Palette
   end
 
   def set_bit( palette )
+    palette = $PALETTE_DEFAULT_NAME[$DEFAULT_LP][1] if palette == '' || palette == nil
     @bit = @sets[palette].split( '' )
     @bit.map! do |x| x.to_i end
   end
@@ -354,112 +391,8 @@ class Calendar
 end
 
 
-####
-class Nutrition_calc
-  attr_reader :results, :fn_set, :weight_set, :unit_set
-
-  def initialize( uname, fn_set, weight_set, unit_set, fct_item, fct_name, fct_frct )
-    @uname = uname
-    @fn_set = fn_set
-    @weight_set = weight_set
-    @unit_set = unit_set
-    @results = Hash.new
-    @results.default = BigDecimal( 0 )
-    @fct_item = fct_item
-    @fct_name = fct_name
-    @fct_frct = fct_frct
-  end
-
-  def load_palette( palette )
-    @fct_item = fct_item
-    @fct_name = fct_name
-    @fct_frct = fct_frct
-  end
-
-  def load_freeze( fzcode, tdiv,fct_start, fct_end )
-    r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@uname}' AND code='#{fzcode}' AND base='freeze';", false, false )
-    if r.first
-      fct_start.upto( fct_end ) do |c|
-        @results[@fct_item[c]] = BigDecimal( r.first[@fct_item[c]] )
-      end
-      return true
-    end
-
-    return false
-  end
-
-  def load_fix( fzcode, fct_start, fct_end )
-    r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@uname}' AND code='#{fzcode}' AND base='fix';", false, false )
-    if r.first
-      fct_start.upto( fct_end ) do |c|
-        @results[@fct_item[c]] += BigDecimal( num_opt( r.first[@fct_item[c]], 100, 1, @fct_frct[@fct_item[c]] + 3 )) unless r.first[@fct_item[c]] == '-'
-      end
-    end
-  end
-
-  def expand_menu( code )
-    code_set = []
-    r = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{@uname}' AND code='#{code}';", false, false )
-    a = r.first['meal'].split( "\t" )
-    a.each do |e| code_set << e end
-
-    return code_set
-  end
-
-  def expand_recipe( code, rate, unit )
-    weight_set_ = []
-    recipe_total_weight = BigDecimal( 0 )
-
-    r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@uname}' AND code='#{code}';", false, false )
-    if r.first
-      a = r.first['sum'].split( "\t" )
-      a.each do |e|
-        ( sum_no, sum_weight, z, z, z, z, z, sum_ew ) = e.split( ':' )
-
-        if sum_no != '+' && sum_no != '-'
-          @fn_set << sum_no
-          @unit_set << unit
-          sum_ew = sum_weight if sum_ew == nil
-          weight_set_ << ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
-          recipe_total_weight += ( BigDecimal( sum_ew ) / r.first['dish'].to_i )
-        end
-      end
-    end
-
-    if unit == '%'
-      weight_set_.map! do |x| x * rate / 100 end
-    else
-      weight_set_.map! do |x| x * rate / recipe_total_weight end
-    end
-    @weight_set.concat( weight_set_ )
-  end
-
-  def calculate( fct_start, fct_end, fct_frct, fct_item )
-    @fn_set.size.times do |c|
-      query = ''
-      if /^P/ =~ @fn_set[c]
-        query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{@fn_set[c]}';"
-      elsif /^U/ =~ fn_set[c]
-        query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{@fn_set[c]}' AND user='#{@uname}';"
-      else
-        query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{@fn_set[c]}';"
-      end
-
-      r = mdb( query, false, false )
-      if r.first
-        @weight_set[c] = unit_weight( @weight_set[c], @unit_set[c], @fn_set[c] ) if @unit_set[c] != 'g' && @unit_set[c] != '%'
-        fct_start.upto( fct_end ) do |cc|
-          t = convert_zero( r.first[@fct_item[cc]] )
-          @results[@fct_item[cc]] += BigDecimal( num_opt( t, @weight_set[c], 1, fct_frct[fct_item[cc]] + 3 ))
-        end
-      end
-    end
-  end
-end
-
-
 class FCT
-  attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights
+  attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights, :total_weight
 
   def initialize( item_, name_, unit_, frct_ )
     @item = item_
@@ -475,6 +408,7 @@ class FCT
     @weights = []
     @solid = []
     @total = []
+    @total_weight = 0.0
   end
 
   def load_palette( palette )
@@ -490,36 +424,40 @@ class FCT
         @frcts << @frct[@item[c]]
       end
     end
-    @total = []
-    @items.size.times do |c| @total << BigDecimal( 0 ) end
   end
 
-  def set_food( user, food_no, food_weight, non_food )
+  def set_food( uname, food_no, food_weight, non_food )
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     c = 0
     food_no.each do |e|
-      if e == '-' && non_food
-        @fns << '-'
-        @solid << '-'
-        @foods << '-'
-        @weights << '-'
-      elsif e == '+' && non_food
-        @fns << '+'
-        @solid << '+'
-        @foods << '+'
-        @weights << '+'
-      elsif e == '00000' && non_food
-        @fns << '-'
-        @solid << '0'
-        @foods << '0'
-        @weights << '0'
+      if e == '-'
+        if non_food
+          @fns << '-'
+          @solid << '-'
+          @foods << '-'
+          @weights << '-'
+        end
+      elsif e == '+'
+        if non_food
+          @fns << '+'
+          @solid << '+'
+          @foods << '+'
+          @weights << '+'
+        end
+      elsif e == '00000'
+        if non_food
+          @fns << '0'
+          @solid << '0'
+          @foods << '0'
+          @weights << '0'
+        end
       else
         @fns << e
         q = ''
         qq = ''
         if /P|U/ =~ e
-          q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{user}' OR user='#{$GM}' );"
-          qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}' AND ( user='#{user.name}' OR user='#{$GM}' );"
+          q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
+          qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
         else
           q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
           qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
@@ -538,20 +476,26 @@ class FCT
   end
 
   def calc( frct_accu, frct_mode )
+    @total = []
+    @items.size.times do |c| @total << BigDecimal( 0 ) end
+    @total_weight = 0.0
     @foods.size.times do |f|
       @items.size.times do |i|
-        t = convert_zero( @solid[f][i] )
-        @solid[f][i] = num_opt( t, @weights[f], frct_mode, @frcts[i] )
-        if frct_accu == 0   # 通常計算
-          @total[i] += BigDecimal( @solid[f][i] )
-        else  # 精密計算
-          @total[i] += BigDecimal( num_opt( t, @weights[f], frct_mode, @frcts[i] + 3 ))
+        t =  BigDecimal( convert_zero( @solid[f][i] ).to_s )
+        if @weights[f] == 0
+          @solid[f][i] = t
+          @total[i] += t
+        else
+          @solid[f][i] = BigDecimal( num_opt( t, @weights[f], frct_mode, @frcts[i] ))
+          if frct_accu == 0   # 通常計算
+            @total[i] += t
+          else  # 精密計算
+            @total[i] += BigDecimal( num_opt( t, @weights[f], frct_mode, @frcts[i] + 3 ))
+          end
         end
       end
+      @total_weight += @weights[f]
     end
-  end
-
-  def volume( vol, unit )
   end
 
   def digit( frct_mode )
@@ -576,32 +520,62 @@ class FCT
     end
   end
 
+  def calc_pfc()
+    ei = @items.index( 'ENERC_KCAL' )
+    pi = @items.index( 'PROT' )
+    fi = @items.index( 'FAT' )
+    pfc = []
+    if ei != nil && pi != nil && fi != nil
+      pfc[0] = ( @total[pi] * 4 / @total[ei] * 100 ).round( 1 )
+      pfc[1] = ( @total[fi] * 4 / @total[ei] * 100 ).round( 1 )
+      pfc[2] = 100 - pfc[0] - pfc[1]
+      pfc[2] = 0 if pfc[2] == 100
+    end
+
+    return pfc
+  end
 
   def into_solid( fct )
+    @fns << nil
+    @foods << nil
+    @weights << 0
     @solid << Marshal.load( Marshal.dump( fct ))
-    @items.size.times do |i| @total[i] += fct[i] end
   end
 
-  def load_fcz( code )
-    @solid << Marshal.load( Marshal.dump( fct ))
-    @items.size.times do |i| @total[i] += fct[i] end
-  end
-
-  def save_fcz( user, zname, base, origin )
-    fct_ = ''
-    @items.size.times do |i| fct_ << "#{@items[i]}='#{@total[i]}'," end
-    fct_.chop!
-    r = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{origin}';", false, false )
-    if r.first
-      mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{fct_} WHERE user='#{user.name}' AND origin='#{origin}';", )
-    else
-      code_ = generate_code( user.name, 'z' )
-      mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET code='#{code_}', base='#{base}', name='#{zname}', user='#{user.name}', origin='#{origin}', #{fct_};", false, false )
+  def load_fcz( uname, fzcode, base )
+    begin
+      r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}' AND base='#{base}';", false, false )
+      a = []
+      @items.each do |e|
+        t = r.first[e]
+        t = 0 unless t
+        a << BigDecimal( t )
+      end
+      @solid << Marshal.load( Marshal.dump( a ))
+      @fns << fzcode
+      @foods << base
+      @weights << 0
+    rescue
+      pust "ERROR load_fcz[#{fzcode}]"
     end
   end
 
+  def save_fcz( uname, zname, base, origin )
+    fct_ = ''
+    @items.size.times do |i| fct_ << "#{@items[i]}='#{@total[i]}'," end
+    fct_.chop!
 
-  def pfc()
+    code = ''
+    r = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND origin='#{origin}' AND base='#{base}';", false, false )
+    if r.first
+      mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{fct_} WHERE user='#{uname}' AND origin='#{origin}' AND base='#{base}';", false, false )
+      code = r.first['code']
+    else
+      code = generate_code( uname, 'z' )
+      mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET code='#{code}', base='#{base}', name='#{zname}', user='#{uname}', origin='#{origin}', #{fct_};", false, false )
+    end
+
+    return code
   end
 
   def debug()

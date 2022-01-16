@@ -1,11 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.10b
+#Nutrition browser koyomi fix fct editer 0.03b
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
 require './probe'
+require './brain'
 
 
 #==============================================================================
@@ -19,6 +20,20 @@ script = 'koyomi-fix'
 # DEFINITION
 #==============================================================================
 
+def block_maker(  fix_opt, palette_bit, s, e )
+	html  = '<table class="table-sm table-striped" width="100%">'
+	s.upto( e ) do |i|
+		t = $FCT['I'][i]
+		if palette_bit[i] == 1
+			html << "<tr><td>#{$FCT['N'][t]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{t}' value=\"#{fix_opt[t].to_f}\"></td><td>#{$FCT['U'][t]}</td></tr>"
+		else
+			html << "<input type='hidden' value='#{fix_opt[t].to_f}' id='#{t}'>"
+		end
+	end
+	html << '</table>'
+
+	return html
+end
 
 #==============================================================================
 # Main
@@ -43,7 +58,7 @@ tdiv = @cgi['tdiv'].to_i
 hh_mm = @cgi['hh_mm']
 meal_time = @cgi['meal_time'].to_i
 order = @cgi['order'].to_i
-palette = @cgi['palette'].to_i
+palette_ = @cgi['palette']
 modifyf = @cgi['modifyf'].to_i
 food_name = @cgi['food_name']
 food_number = @cgi['food_number'].to_i
@@ -62,25 +77,25 @@ if @debug
 	puts "dd: #{dd}<br>\n"
 	puts "tdiv: #{tdiv}<br>\n"
 	puts "order: #{order}<br>\n"
-	puts "palette: #{palette}<br>\n"
+	puts "palette_: #{palette_}<br>\n"
 	puts "modifyf: #{modifyf}<br>\n"
 	puts "<hr>\n"
 end
 
 
 puts 'Getting standard meal start & time<br>' if @debug
-start_time_set= []
-meal_tiems_set = []
+start_times = []
+meal_tiems = []
 r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 if r.first
 	if r.first['bio'] != nil && r.first['bio'] != ''
 		bio = JSON.parse( r.first['bio'] )
-		start_times_set = [bio['bst'], bio['lst'], bio['dst']]
-		meal_tiems_set = [bio['bti'].to_i, bio['lti'].to_i, bio['dti'].to_i]
+		start_times = [bio['bst'], bio['lst'], bio['dst']]
+		meal_tiems = [bio['bti'].to_i, bio['lti'].to_i, bio['dti'].to_i]
 	end
 end
-hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
-meal_time = meal_tiems_set[tdiv] if meal_time == 0
+hh_mm = start_times[tdiv] if hh_mm == '' || hh_mm == nil
+meal_time = meal_tiems[tdiv] if meal_time == 0
 
 
 puts 'Loading FCT items<br>' if @debug
@@ -168,92 +183,26 @@ end
 
 
 puts 'Setting palette<br>' if @debug
-palette_ps = []
-palette_name = []
-r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
-r.each do |e|
-	a = e['palette'].split( '' )
-	a.map! do |x| x.to_i end
-	palette_ps << a
-	palette_name << e['name']
-end
-palette_set = palette_ps[palette]
-
+palette = Palette.new( user.name )
+palette.set_bit( palette_ )
 palette_html = ''
 palette_html << "<div class='input-group input-group-sm'>"
 palette_html << "<label class='input-group-text'>#{lp[6]}</label>"
 palette_html << "<select class='form-select form-select-sm' id='palette' onChange=\"paletteKoyomi( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', #{modifyf} )\">"
-palette_ps.size.times do |c|
-	if palette == c
-		palette_html << "<option value='#{c}' SELECTED>#{palette_name[c]}</option>"
-	else
-		palette_html << "<option value='#{c}'>#{palette_name[c]}</option>"
-	end
+palette.sets.each_key do |k|
+	s = ''
+	s = 'SELECTED' if palette_ == k
+	palette_html << "<option value='#{k}' #{s}>#{k}</option>"
 end
 palette_html << "</select>"
 palette_html << "</div>"
 
 
 puts 'HTML FCT block<br>' if @debug
-html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
-5.upto( 7 ) do |i|
-	if palette_set[i] == 1
-		html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fix_opt[@fct_item[i]].to_f}\"></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>"
-	else
-		html_fct_block1 << "<input type='hidden' value='#{fix_opt[@fct_item[i]].to_f}' id='#{@fct_item[i]}'>"
-	end
-end
-html_fct_block1 << '</table>'
-
-html_fct_block2 = '<table class="table-sm table-striped" width="100%">'
-8.upto( 19 ) do |i|
-	if palette_set[i] == 1
-		html_fct_block2 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fix_opt[@fct_item[i]].to_f}\"></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>"
-	else
-		html_fct_block2 << "<input type='hidden' value='#{fix_opt[@fct_item[i]].to_f}' id='#{@fct_item[i]}'>"
-	end
-end
-html_fct_block2 << '</table>'
-
-html_fct_block3 = '<table class="table-sm table-striped" width="100%">'
-20.upto( 33 ) do |i|
-	if palette_set[i] == 1
-		html_fct_block3 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fix_opt[@fct_item[i]].to_f}\"></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>"
-	else
-		html_fct_block3 << "<input type='hidden' value='#{fix_opt[@fct_item[i]].to_f}' id='#{@fct_item[i]}'>"
-	end
-end
-html_fct_block3 << '</table>'
-
-html_fct_block4 = '<table class="table-sm table-striped" width="100%">'
-34.upto( 45 ) do |i|
-	if palette_set[i] == 1
-		html_fct_block4 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fix_opt[@fct_item[i]].to_f}\"></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>"
-	else
-		html_fct_block4 << "<input type='hidden' value='#{fix_opt[@fct_item[i]].to_f}' id='#{@fct_item[i]}'>"
-	end
-end
-html_fct_block4 << '</table>'
-
-html_fct_block5 = '<table class="table-sm table-striped" width="100%">'
-46.upto( 55 ) do |i|
-	if palette_set[i] == 1
-		html_fct_block5 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fix_opt[@fct_item[i]].to_f}\"></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>"
-	else
-		html_fct_block5 << "<input type='hidden' value='#{fix_opt[@fct_item[i]].to_f}' id='#{@fct_item[i]}'>"
-	end
-end
-html_fct_block5 << '</table>'
-
-html_fct_block6 = '<table class="table-sm table-striped" width="100%">'
-56.upto( 57 ) do |i|
-	if palette_set[i] == 1
-		html_fct_block6 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fix_opt[@fct_item[i]].to_f}\"></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>"
-	else
-		html_fct_block5 << "<input type='hidden' value='#{fix_opt[@fct_item[i]].to_f}' id='#{@fct_item[i]}'>"
-	end
-end
-html_fct_block6 << '</table>'
+html_fct_blocks = []
+fct_start = [ 5, 8, 20, 34, 46, 56 ]
+fct_end = [ 7, 19, 33, 45, 55, 57 ]
+6.times do |i| html_fct_blocks[i] = block_maker( fix_opt, palette.bit, fct_start[i], fct_end[i] ) end
 
 
 puts 'SELECT HH block<br>' if @debug
@@ -263,11 +212,9 @@ eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 
 eat_time_html << "<input type='time' step='60' id='hh_mm_fix' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
 eat_time_html << "<select id='meal_time_fix' class='form-select form-select-sm'>"
 meal_time_set.each do |e|
-	if meal_time == e
-		eat_time_html << "	<option value='#{e}' SELECTED>#{e}</option>"
-	else
-		eat_time_html << "	<option value='#{e}'>#{e}</option>"
-	end
+	s = ''
+	s = 'SELECTED' if meal_time == e
+	eat_time_html << "	<option value='#{e}' #{s}>#{e}</option>"
 end
 eat_time_html << "</select>"
 eat_time_html << "<label class='input-group-text'>#{lp[9]}</label>"
@@ -285,20 +232,16 @@ html = <<-"HTML"
 		<div class="col-4">
 			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">
 		</div>
-		<div class="col-3">
-		#{eat_time_html}
-		</div>
-		<div class="col-3">
-		</div>
+		<div class="col-3">#{eat_time_html}</div>
+		<div class="col-3"></div>
 		<div class="col-2" align="right">
 			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{lp[1]}</button>
 		</div>
 	</div>
 	<br>
+
 	<div class="row">
-		<div class="col-3">
-			#{palette_html}
-		</div>
+		<div class="col-3">#{palette_html}</div>
 		<div class="col-1"></div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
@@ -308,7 +251,7 @@ html = <<-"HTML"
   				</div>
   				&nbsp;&nbsp;&nbsp;
 				<label class="input-group-text">#{lp[5]}</label>
-				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}" disabled>&nbsp;g
+				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}" disabled>
 			</div>
 		</div>
 		<div class="col-2">
@@ -321,40 +264,19 @@ html = <<-"HTML"
 	<br>
 
 	<div class="row">
-		<div class="col-4">
-			#{html_fct_block1}
-		</div>
-
-		<div class="col-4">
-			#{html_fct_block2}
-		</div>
-
-		<div class="col-4">
-			#{html_fct_block3}
-		</div>
+		<div class="col-4">#{html_fct_blocks[0]}</div>
+		<div class="col-4">#{html_fct_blocks[1]}</div>
+		<div class="col-4">#{html_fct_blocks[2]}</div>
 	</div>
-
 	<hr>
-
 	<div class="row">
-		<div class="col-4">
-			#{html_fct_block4}
-		</div>
-
-		<div class="col-4">
-			#{html_fct_block5}
-		</div>
-
-		<div class="col-4">
-			#{html_fct_block6}
-		</div>
+		<div class="col-4">#{html_fct_blocks[3]}</div>
+		<div class="col-4">#{html_fct_blocks[4]}</div>
+		<div class="col-4">#{html_fct_blocks[5]}</div>
 	</div>
 
 	<hr>
 </div>
-
 HTML
 
-
 puts html
-

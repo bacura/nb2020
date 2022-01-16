@@ -590,7 +590,6 @@ var metaDisplay = function( com ){
 	$.post( "meta.cgi", { command:com }, function( data ){
 		$( "#L3" ).html( data );
 
-		flashBW();
 		dl3 = true;
 		displayBW();
 	});
@@ -617,13 +616,7 @@ var configInit = function(){
 
 // Display config form
 var configForm = function( mod ){
-	$.post( "config.cgi", { mod:mod }, function( data ){
-		$( "#L1" ).html( data );
-
-		flashBW();
-		dl1 = true;
-		displayBW();
-	});
+	$.post( "config.cgi", { mod:mod }, function( data ){ $( "#L1" ).html( data );});
 };
 
 

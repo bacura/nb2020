@@ -308,5 +308,5 @@ if command == 'save'
 	fct.calc( 1, 0 )
 	fct.digit( 0 )
 
-	fct.save_fcz( user, nil, 'reipe', recipe.code )
+	fct.save_fcz( user.name, nil, 'reipe', recipe.code )
 end

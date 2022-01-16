@@ -51,4 +51,5 @@ guild.js/editKoyomi( 'init', dd ) -> koyomi-edit.cgi{ command:com, yyyy_mm:yyyy_
 20211106	0.06b	更新：probeへの対応。
 20211121	0.07b	更新：JSON型config対応。
 20211220	0.08b	更新：JSON型unit対応。
+20220115	0.09b	更新：brainへの対応。
 

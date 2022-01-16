@@ -1,18 +1,19 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.06b
+#Nutrition browser 2020 koyomi adding panel 0.07b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './probe'
+require './brain'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
 script = 'koyomi-add'
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -41,7 +42,6 @@ def unit_select_html( code, selectu )
 	end
 
 	unit_set.size.times do |c|
-		p unit_set[c]
 		unit_select_html << "<option value='#{unit_set[c]}' #{unit_select[c]}>#{unit_set[c]}</option>"
 	end
 

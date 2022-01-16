@@ -65,3 +65,4 @@ guild/editKoyomiR( yyyy, mm ) -> koyomi.cgi{ command:"init", yyyy:yyyy, mm:mm }
 20211106	0.06b	更新：probeへの対応。
 20211121	0.10b	更新：JSON型config対応。食事開始＆食事時間に対応。
 20211220	0.11b	更新：JSON型unit対応。
+20220115	0.12b	更新：brain対応。
