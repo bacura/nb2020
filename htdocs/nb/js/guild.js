@@ -1,4 +1,4 @@
-//guild.js ver 0.04b 20220115
+//guild.js ver 0.05b 20220119
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -180,68 +180,68 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 
 	if( food_name != '' ){
 		if(document.getElementById( "g100_check" ).checked){
-			var food_weight = document.getElementById( "food_weight" ).value;
+			var food_weight = document.getElementById( "kffood_weight" ).value;
 		}else{
 			var food_weight = 100;
 		}
-		var ENERC = document.getElementById( "ENERC" ).value;
-		var ENERC_KCAL = document.getElementById( "ENERC_KCAL" ).value;
-		var WATER = document.getElementById( "WATER" ).value;
+		var ENERC = document.getElementById( "kfENERC" ).value;
+		var ENERC_KCAL = document.getElementById( "kfENERC_KCAL" ).value;
+		var WATER = document.getElementById( "kfWATER" ).value;
 
-		var PROTCAA = document.getElementById( "PROTCAA" ).value;
-		var PROT = document.getElementById( "PROT" ).value;
-		var FATNLEA = document.getElementById( "FATNLEA" ).value;
-		var CHOLE = document.getElementById( "CHOLE" ).value;
-		var FAT = document.getElementById( "FAT" ).value;
-		var CHOAVLM = document.getElementById( "CHOAVLM" ).value;
-		var CHOAVL = document.getElementById( "CHOAVL" ).value;
-		var CHOAVLMF = document.getElementById( "CHOAVLMF" ).value;
-		var FIB = document.getElementById( "FIB" ).value;
-		var POLYL = document.getElementById( "POLYL" ).value;
-		var CHOCDF = document.getElementById( "CHOCDF" ).value;
-		var OA = document.getElementById( "OA" ).value;
+		var PROTCAA = document.getElementById( "kfPROTCAA" ).value;
+		var PROT = document.getElementById( "kfPROT" ).value;
+		var FATNLEA = document.getElementById( "kfFATNLEA" ).value;
+		var CHOLE = document.getElementById( "kfCHOLE" ).value;
+		var FAT = document.getElementById( "kfFAT" ).value;
+		var CHOAVLM = document.getElementById( "kfCHOAVLM" ).value;
+		var CHOAVL = document.getElementById( "kfCHOAVL" ).value;
+		var CHOAVLMF = document.getElementById( "kfCHOAVLMF" ).value;
+		var FIB = document.getElementById( "kfFIB" ).value;
+		var POLYL = document.getElementById( "kfPOLYL" ).value;
+		var CHOCDF = document.getElementById( "kfCHOCDF" ).value;
+		var OA = document.getElementById( "kfOA" ).value;
 
-		var ASH = document.getElementById( "ASH" ).value;
-		var NA = document.getElementById( "NA" ).value;
-		var K = document.getElementById( "K" ).value;
-		var CA = document.getElementById( "CA" ).value;
-		var MG = document.getElementById( "MG" ).value;
-		var P = document.getElementById( "P" ).value;
-		var FE = document.getElementById( "FE" ).value;
-		var ZN = document.getElementById( "ZN" ).value;
-		var CU = document.getElementById( "CU" ).value;
-		var MN = document.getElementById( "MN" ).value;
-		var ID = document.getElementById( "ID" ).value;
-		var SE = document.getElementById( "SE" ).value;
-		var CR = document.getElementById( "CR" ).value;
-		var MO = document.getElementById( "MO" ).value;
+		var ASH = document.getElementById( "kfASH" ).value;
+		var NA = document.getElementById( "kfNA" ).value;
+		var K = document.getElementById( "kfK" ).value;
+		var CA = document.getElementById( "kfCA" ).value;
+		var MG = document.getElementById( "kfMG" ).value;
+		var P = document.getElementById( "kfP" ).value;
+		var FE = document.getElementById( "kfFE" ).value;
+		var ZN = document.getElementById( "kfZN" ).value;
+		var CU = document.getElementById( "kfCU" ).value;
+		var MN = document.getElementById( "kfMN" ).value;
+		var ID = document.getElementById( "kfID" ).value;
+		var SE = document.getElementById( "kfSE" ).value;
+		var CR = document.getElementById( "kfCR" ).value;
+		var MO = document.getElementById( "kfMO" ).value;
 
-		var RETOL = document.getElementById( "RETOL" ).value;
-		var CARTA = document.getElementById( "CARTA" ).value;
-		var CARTB = document.getElementById( "CARTB" ).value;
-		var CRYPXB = document.getElementById( "CRYPXB" ).value;
-		var CARTBEQ = document.getElementById( "CARTBEQ" ).value;
-		var VITA_RAE = document.getElementById( "VITA_RAE" ).value;
-		var VITD = document.getElementById( "VITD" ).value;
-		var TOCPHA = document.getElementById( "TOCPHA" ).value;
-		var TOCPHB = document.getElementById( "TOCPHB" ).value;
-		var TOCPHG = document.getElementById( "TOCPHG" ).value;
-		var TOCPHD = document.getElementById( "TOCPHD" ).value;
-		var VITK = document.getElementById( "VITK" ).value;
+		var RETOL = document.getElementById( "kfRETOL" ).value;
+		var CARTA = document.getElementById( "kfCARTA" ).value;
+		var CARTB = document.getElementById( "kfCARTB" ).value;
+		var CRYPXB = document.getElementById( "kfCRYPXB" ).value;
+		var CARTBEQ = document.getElementById( "kfCARTBEQ" ).value;
+		var VITA_RAE = document.getElementById( "kfVITA_RAE" ).value;
+		var VITD = document.getElementById( "kfVITD" ).value;
+		var TOCPHA = document.getElementById( "kfTOCPHA" ).value;
+		var TOCPHB = document.getElementById( "kfTOCPHB" ).value;
+		var TOCPHG = document.getElementById( "kfTOCPHG" ).value;
+		var TOCPHD = document.getElementById( "kfTOCPHD" ).value;
+		var VITK = document.getElementById( "kfVITK" ).value;
 
-		var THIA = document.getElementById( "THIA" ).value;
-		var RIBF = document.getElementById( "RIBF" ).value;
-		var NIA = document.getElementById( "NIA" ).value;
-		var NE = document.getElementById( "NE" ).value;
-		var VITB6A = document.getElementById( "VITB6A" ).value;
-		var VITB12 = document.getElementById( "VITB12" ).value;
-		var FOL = document.getElementById( "FOL" ).value;
-		var PANTAC = document.getElementById( "PANTAC" ).value;
-		var BIOT = document.getElementById( "BIOT" ).value;
-		var VITC = document.getElementById( "VITC" ).value;
+		var THIA = document.getElementById( "fkTHIA" ).value;
+		var RIBF = document.getElementById( "kfRIBF" ).value;
+		var NIA = document.getElementById( "kfNIA" ).value;
+		var NE = document.getElementById( "kfNE" ).value;
+		var VITB6A = document.getElementById( "kfVITB6A" ).value;
+		var VITB12 = document.getElementById( "kfVITB12" ).value;
+		var FOL = document.getElementById( "kfFOL" ).value;
+		var PANTAC = document.getElementById( "kfPANTAC" ).value;
+		var BIOT = document.getElementById( "kfBIOT" ).value;
+		var VITC = document.getElementById( "kfVITC" ).value;
 
-		var ALC = document.getElementById( "ALC" ).value;
-		var NACL_EQ = document.getElementById( "NACL_EQ" ).value;
+		var ALC = document.getElementById( "kfALC" ).value;
+		var NACL_EQ = document.getElementById( "kfNACL_EQ" ).value;
 
 		$.post( "koyomi-fix.cgi", {
 			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,

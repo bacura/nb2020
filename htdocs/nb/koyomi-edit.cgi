@@ -259,18 +259,12 @@ mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=0 AND
 puts 'Setting palette<br>' if @debug
 freeze_flag = 0
 koyomi_html = []
-fc_items = []
-r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
-if r.first
-	palette = r.first['palette']
-	palette.size.times do |c|
-		fc_items << @fct_item[c] if palette[c] == '1'
-	end
-else
- 	fc_items = ['ENERC_KCAL', 'PROT', 'FAT', 'CHO', 'NACL_EQ']
-end
 
-puts 'Checking freeze<br>' if @debug
+palette = Palette.new( user.name )
+palette.set_bit( nil )
+
+
+puts 'Updaing freeze<br>' if @debug
 r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}';", false, @debug )
 freeze_flag = r.first['freeze'].to_i if r.first
 r.each do |e|
@@ -278,18 +272,78 @@ r.each do |e|
 		koyomi_html[e['tdiv']] = e['koyomi']
 	else
 		koyomi_html[e['tdiv']] = meals( e, lp, user, freeze_flag )
-		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='freeze' AND code='#{e['fzcode']}';", false, @debug )
-		if rr.first
-			total_html = ''
-			fc_items.each do |ee|
-				if ee == 'ENERC_KCAL'
-					total_html << "#{@fct_name[ee]}[#{rr.first[ee].to_i}]&nbsp;&nbsp;&nbsp;&nbsp;"
+		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+		fct.load_palette( palette.bit )
+		if freeze_flag == 1
+			fct.load_fcz( user.name, e['fzcode'], 'freeze' )
+			fct.calc( 1, 0 )
+		else
+			code_set = []
+			rate_set = []
+			unit_set = []
+
+			puts 'Row<br>' if @debug
+			a = []
+			a = e['koyomi'].split( "\t" ) if e['koyomi']
+			a.each do |ee|
+				( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( '~' )
+				code_set << koyomi_code
+				rate_set << koyomi_rate
+				unit_set << koyomi_unit
+			end
+
+			code_set.size.times do |cc|
+				code = code_set[cc]
+				z, rate = food_weight_check( rate_set[cc] )
+				unit = unit_set[cc]
+
+				if /\?/ =~ code
+				elsif /\-z\-/ =~ code
+					puts 'FIX<br>' if @debug
+					fct.load_fcz( user.name, code, 'fix' )
 				else
-					total_html << "#{@fct_name[ee]}[#{rr.first[ee].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;"
+					puts 'Recipe<br>' if @debug
+					recipe_codes = []
+					if /\-m\-/ =~ code
+						recipe_codes = menu2rc( user.name, code )
+					else
+						recipe_codes << code
+					end
+
+					food_nos = []
+					food_weights = []
+					recipe_codes.each do |e|
+						if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
+							fns, fws, z = recipe2fns( user.name, e, rate, unit )
+							food_nos.concat( fns )
+							food_weights.concat( fws )
+						else
+							food_nos << code
+							food_weights << rate
+						end
+					end
+
+					puts 'Foods<br>' if @debug
+					fct.set_food( user.name, food_nos, food_weights, false )
 				end
 			end
-			koyomi_html[e['tdiv']] << total_html
+
+			puts 'Start calculation<br>' if @debug
+			fct.calc( 1, 0 )
+			fct.digit( 0 )
+
+			if fct.foods.size != 0
+				puts "freeze process<br>" if @debug
+				fzcode = fct.save_fcz( user.name, nil, 'freeze', "#{yyyy}-#{mm}-#{dd}-#{e['tdiv']}" )
+				mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{e['tdiv']}';", false, @debug )
+			else
+				mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{yyyy}-#{mm}-#{dd}-#{e['tdiv']}';", false, @debug )
+			end
 		end
+
+		total_html = ''
+		fct.total.size.times do |i| total_html << "#{fct.names[i]}[#{fct.total[i]}]&nbsp;&nbsp;&nbsp;&nbsp;" end
+		koyomi_html[e['tdiv']] << total_html
 	end
 end
 

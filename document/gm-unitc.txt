@@ -1,4 +1,4 @@
-#Nutrition browser 2020 GM unit convertor 0.01b
+#Nutrition browser 2020 GM unit convertor 0.11b
 
 #==============================================================================
 # OVERVIEW
@@ -57,3 +57,5 @@ master.js/updateUintc() -> gm-unit.cgi{ command:'update', code:code, unitc2:uc2,
 20210129	0.00b	βスタート
 20211106	0.01b	更新：probeへの対応。
 20211219	0.02b	更新：データのJSON化
+20220117	0.03b	問題：単位の名前が値になって保存される。ハッシュのキーが値の変数vになっていた。
+					解決：単位ハッシュのキーをちゃんとキーの変数kに修正。

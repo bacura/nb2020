@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM unit editor 0.10b
+#Nutrition browser GM unit editor 0.03b
 
 #==============================================================================
 #LIBRARY
@@ -57,9 +57,9 @@ when 'update'
 	0.upto( 6 ) do |c|
 		if @cgi["uk#{c}"] != '' && @cgi["uk#{c}"] != nil
 			if @cgi["uv#{c}"] != '' && @cgi["uv#{c}"] != nil
-				unith[@cgi["uv#{c}"]] = @cgi["uv#{c}"].to_f
+				unith[@cgi["uk#{c}"]] = @cgi["uv#{c}"].to_f
 			else
-				unith[@cgi["uv#{c}"]] = 0.0
+				unith[@cgi["uk#{c}"]] = 0.0
 			end
 		end
 	end

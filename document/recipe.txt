@@ -1,4 +1,4 @@
-#Nutrition browser 2020 recipe editor 0.03b
+#Nutrition browser 2020 recipe editor 0.05b
 
 #==============================================================================
 # OVERVIEW
@@ -66,3 +66,5 @@ recipe.js/photoDel = function( slot, code )	->	photo.cgi{ command:'delete', code
 					解決：ファイルコピーのためにrequire 'fileutils'を追加。
 20211106	0.03b	更新：probeへの対応。
 20220115	0.04b	更新：json形式のcfgへの対応。
+20220117	0.05b	問題：新規レシピを編集するときにエラー。原因は空のcodeでload_dbを叩いているから。
+					解決：空のcodeではload_dbを叩かないようにした。

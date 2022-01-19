@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.03b
+#Nutrition browser koyomi fix fct editer 0.04b
 
 #==============================================================================
 # LIBRARY
@@ -27,7 +27,7 @@ def block_maker(  fix_opt, palette_bit, s, e )
 		if palette_bit[i] == 1
 			html << "<tr><td>#{$FCT['N'][t]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{t}' value=\"#{fix_opt[t].to_f}\"></td><td>#{$FCT['U'][t]}</td></tr>"
 		else
-			html << "<input type='hidden' value='#{fix_opt[t].to_f}' id='#{t}'>"
+			html << "<input type='hidden' value='#{fix_opt[t].to_f}' id='k#{t}'>"
 		end
 	end
 	html << '</table>'
@@ -251,7 +251,7 @@ html = <<-"HTML"
   				</div>
   				&nbsp;&nbsp;&nbsp;
 				<label class="input-group-text">#{lp[5]}</label>
-				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}" disabled>
+				<input type="text" class="form-control form-control-sm" id="kffood_weight" placeholder="100" value="#{food_weight.to_f}" disabled>
 			</div>
 		</div>
 		<div class="col-2">

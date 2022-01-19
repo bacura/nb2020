@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.07b
+#Nutrition browser 2020 pseudo food editer 0.08b
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 
@@ -48,7 +48,7 @@ tag3 = @cgi['tag3']
 tag4 = @cgi['tag4']
 tag5 = @cgi['tag5']
 
-
+puts food_name
 food_weight_zero = false
 food_weight_zero = true if food_weight == '0'
 food_weight = 100 if food_weight == nil || food_weight == ''|| food_weight == '0'
@@ -64,6 +64,7 @@ class1 = class1_key unless class1_key == nil
 class2 = class2_key unless class2_key == nil
 class3 = class3_key unless class3_key == nil
 food_name = food_name_key unless food_name_key == nil
+puts food_name
 
 if @debug
 	puts "command: #{command}<br>\n"
@@ -302,27 +303,27 @@ disabled_option = 'disabled' if tag_user != user.name && tag_user != nil
 
 #### html_fct_block
 html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
-4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block1 << '</table>'
 
 html_fct_block2 = '<table class="table-sm table-striped" width="100%">'
-8.upto( 19 ) do |i| html_fct_block2 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+8.upto( 19 ) do |i| html_fct_block2 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block2 << '</table>'
 
 html_fct_block3 = '<table class="table-sm table-striped" width="100%">'
-20.upto( 33 ) do |i| html_fct_block3 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+20.upto( 33 ) do |i| html_fct_block3 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block3 << '</table>'
 
 html_fct_block4 = '<table class="table-sm table-striped" width="100%">'
-34.upto( 45 ) do |i| html_fct_block4 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+34.upto( 45 ) do |i| html_fct_block4 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block4 << '</table>'
 
 html_fct_block5 = '<table class="table-sm table-striped" width="100%">'
-46.upto( 55 ) do |i| html_fct_block5 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+46.upto( 55 ) do |i| html_fct_block5 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block5 << '</table>'
 
 html_fct_block6 = '<table class="table-sm table-striped" width="100%">'
-56.upto( 57 ) do |i| html_fct_block6 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+56.upto( 57 ) do |i| html_fct_block6 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block6 << '</table>'
 
 
@@ -346,12 +347,12 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col-4">
-			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">
+			<input type="text" class="form-control form-control-sm" id="pfood_name" placeholder="#{lp[3]}" value="#{food_name}">
 		</div>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="food_group">#{lp[4]}</label>
-				<select class="form-select" id="food_group" #{fg_disabled}>
+				<select class="form-select" id="pfood_group" #{fg_disabled}>
 					#{food_group_option}
 				</select>
 			</div>
@@ -359,7 +360,7 @@ html = <<-"HTML"
 		<div class="col-2">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="food_weight">#{lp[5]}</label>
-				<input type="text" class="form-control form-control-sm" id="food_weight" placeholder="100" value="#{food_weight.to_f}">&nbsp;g
+				<input type="text" class="form-control form-control-sm" id="pfood_weight" placeholder="100" value="#{food_weight.to_f}">&nbsp;g
 			</div>
 
 		</div>
@@ -373,17 +374,17 @@ html = <<-"HTML"
 
 	<br>
 	<div class="row">
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="class1" placeholder="class1" value="#{class1}"></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="class2" placeholder="class2" value="#{class2}"></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="class3" placeholder="class3" value="#{class3}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="pclass1" placeholder="class1" value="#{class1}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="pclass2" placeholder="class2" value="#{class2}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="pclass3" placeholder="class3" value="#{class3}"></div>
 	</div>
 	<br>
 	<div class="row">
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag1" placeholder="tag1" value="#{tag1}"></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag2" placeholder="tag2" value="#{tag2}"></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag3" placeholder="tag3" value="#{tag3}"></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag4" placeholder="tag4" value="#{tag4}"></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag5" placeholder="tag5" value="#{tag5}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="ptag1" placeholder="tag1" value="#{tag1}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="ptag2" placeholder="tag2" value="#{tag2}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="ptag3" placeholder="tag3" value="#{tag3}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="ptag4" placeholder="tag4" value="#{tag4}"></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="ptag5" placeholder="tag5" value="#{tag5}"></div>
 		<div class="col-1"></div>
 		<div class="col-1">#{delete_button}</div>
 	</div>
@@ -394,7 +395,7 @@ html = <<-"HTML"
 
 			<div style='border: solid gray 1px; margin: 0.5em; padding: 0.5em;'>
 				備考：<br>
-				<textarea rows="6" cols="32" id="Notice" #{disabled_option}>#{fct_opt['Notice']}</textarea>
+				<textarea rows="6" cols="32" id="pNotice" #{disabled_option}>#{fct_opt['Notice']}</textarea>
 			</div>
 		</div>
 

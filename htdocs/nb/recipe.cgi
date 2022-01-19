@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.04b
+#Nutrition browser 2020 recipe editor 0.05b
 
 #==============================================================================
 #LIBRARY
@@ -51,7 +51,7 @@ recipe.debug if @debug
 case command
 when 'view'
 	# Loading recipe from DB
-	recipe.load_db( code, true )
+	recipe.load_db( code, true ) if code != ''
 
 when 'save'
 	recipe.load_cgi( @cgi )

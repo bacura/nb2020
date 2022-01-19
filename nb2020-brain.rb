@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.15b
+#Nutrition browser 2020 brain 0.16b
 
 #==============================================================================
 # LIBRARY
@@ -196,9 +196,13 @@ def recipe2fns( uname, code, rate, unit )
   fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], 1 )
 
   if unit == '%'
-    fws.map! do |x| x * rate / 100 end
+    fws.map! do |x|
+      x * rate / 100 if x != '-' && x != '+'
+    end
   else
-    fws.map! do |x| x * rate / tw end
+    fws.map! do |x|
+      x * rate / tw if x != '-' && x != '+'
+    end
   end
 
   return fns, fws, tw
@@ -528,7 +532,7 @@ class FCT
     if ei != nil && pi != nil && fi != nil
       pfc[0] = ( @total[pi] * 4 / @total[ei] * 100 ).round( 1 )
       pfc[1] = ( @total[fi] * 4 / @total[ei] * 100 ).round( 1 )
-      pfc[2] = 100 - pfc[0] - pfc[1]
+      pfc[2] = ( 100 - pfc[0] - pfc[1] ).round( 1 )
       pfc[2] = 0 if pfc[2] == 100
     end
 

@@ -525,18 +525,18 @@ var Pseudo_R2F = function( code ){
 
 // 食品化フォームの保存ボタンを押して保存してL3を消す。
 var savePseudo_R2F = function( code ){
-	var food_name = document.getElementById( "food_name" ).value;
+	var food_name = document.getElementById( "r2ffood_name" ).value;
 	if( food_name != '' ){
 
-		var food_group = document.getElementById( "food_group" ).value;
-		var class1 = document.getElementById( "class1" ).value;
-		var class2 = document.getElementById( "class2" ).value;
-		var class3 = document.getElementById( "class3" ).value;
-		var tag1 = document.getElementById( "tag1" ).value;
-		var tag2 = document.getElementById( "tag2" ).value;
-		var tag3 = document.getElementById( "tag3" ).value;
-		var tag4 = document.getElementById( "tag4" ).value;
-		var tag5 = document.getElementById( "tag5" ).value;
+		var food_group = document.getElementById( "r2ffood_group" ).value;
+		var class1 = document.getElementById( "r2fclass1" ).value;
+		var class2 = document.getElementById( "r2fclass2" ).value;
+		var class3 = document.getElementById( "r2fclass3" ).value;
+		var tag1 = document.getElementById( "r2ftag1" ).value;
+		var tag2 = document.getElementById( "r2ftag2" ).value;
+		var tag3 = document.getElementById( "r2ftag3" ).value;
+		var tag4 = document.getElementById( "r2ftag4" ).value;
+		var tag5 = document.getElementById( "r2ftag5" ).value;
 
 		$.post( "pseudo_r2f.cgi", {
 			command:'save', code:code,

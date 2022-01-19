@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.05b
+#Nutrition browser recipe to pseudo food 0.06b
 
 #==============================================================================
 # LIBRARY
@@ -82,13 +82,13 @@ if command == 'form'
 		<div class="col-4">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="food_name">#{lp[1]}</label>
-				<input type="text" class="form-control form-control-sm" id="food_name" value="#{food_name}">
+				<input type="text" class="form-control form-control-sm" id="r2ffood_name" value="#{food_name}">
 			</div>
 		</div>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="food_group">#{lp[2]}</label>
-				<select class="form-select form-select-sm" id="food_group">
+				<select class="form-select form-select-sm" id="r2ffood_group">
 					#{food_group_option}
 				</select>
 			</div>
@@ -101,17 +101,17 @@ if command == 'form'
 
 	<br>
 	<div class="row">
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="class1" placeholder="class1" value=""></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="class2" placeholder="class2" value=""></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="class3" placeholder="class3" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2fclass1" placeholder="class1" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2fclass2" placeholder="class2" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2fclass3" placeholder="class3" value=""></div>
 	</div>
 	<br>
 	<div class="row">
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag1" placeholder="tag1" value=""></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag2" placeholder="tag2" value=""></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag3" placeholder="tag3" value=""></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag4" placeholder="tag4" value=""></div>
-		<div class="col-2"><input type="text" class="form-control form-control-sm" id="tag5" placeholder="tag5" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2ftag1" placeholder="tag1" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2ftag2" placeholder="tag2" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2ftag3" placeholder="tag3" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2ftag4" placeholder="tag4" value=""></div>
+		<div class="col-2"><input type="text" class="form-control form-control-sm" id="r2ftag5" placeholder="tag5" value=""></div>
 		<div class="col-1"></div>
 	</div>
 </div>
