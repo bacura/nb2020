@@ -25,7 +25,7 @@ def block_maker(  fix_opt, palette_bit, s, e )
 	s.upto( e ) do |i|
 		t = $FCT['I'][i]
 		if palette_bit[i] == 1
-			html << "<tr><td>#{$FCT['N'][t]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='#{t}' value=\"#{fix_opt[t].to_f}\"></td><td>#{$FCT['U'][t]}</td></tr>"
+			html << "<tr><td>#{$FCT['N'][t]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='kf#{t}' value=\"#{fix_opt[t].to_f}\"></td><td>#{$FCT['U'][t]}</td></tr>"
 		else
 			html << "<input type='hidden' value='#{fix_opt[t].to_f}' id='kf#{t}'>"
 		end

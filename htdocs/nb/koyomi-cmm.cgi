@@ -94,7 +94,9 @@ end
 hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
 meal_time = meal_tiems_set[tdiv] if meal_time == 0
 
-
+yyyy_ = nil
+mm_ = nil
+dd_ = nil
 puts 'Save food<br>' if @debug
 if command == 'save'
 	( yyyy_, mm_, dd_, tdiv_ ) = origin.split( ':' )
@@ -215,13 +217,22 @@ eat_time_html << "<label class='input-group-text'>#{lp[19]}</label>"
 eat_time_html << "</div>"
 
 
+return_button = ''
+if yyyy_ == nil
+	return_button << "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[17]}</div>"
+else
+	return_button << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy_}', '#{mm_}', '#{dd_}' )\">#{lp[21]}</div>"
+	return_button << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[17]}</div>"
+end
+
+
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-3'><h5>#{yyyy} / #{mm} / #{dd} (#{tdiv_set[tdiv]})</h5></div>
-		<div align='center' class='col-3 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[11]}</div>
+		<div align='center' class='col-2 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[11]}</div>
 		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi();">#{lp[20]}</div>
-		<div align='center' class='col-3 joystic_koyomi' onclick="koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[17]}</div>
+		#{return_button}
 	</div>
 	<br>
 	<div class='row'>

@@ -229,7 +229,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 		var TOCPHD = document.getElementById( "kfTOCPHD" ).value;
 		var VITK = document.getElementById( "kfVITK" ).value;
 
-		var THIA = document.getElementById( "fkTHIA" ).value;
+		var THIA = document.getElementById( "kfTHIA" ).value;
 		var RIBF = document.getElementById( "kfRIBF" ).value;
 		var NIA = document.getElementById( "kfNIA" ).value;
 		var NE = document.getElementById( "kfNE" ).value;
