@@ -467,12 +467,16 @@ class FCT
           qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
         end
         res = db.query( q )
-         a = []
-        @items.each do |ee| a << res.first[ee] end
-        @solid << Marshal.load( Marshal.dump( a ))
-        res2 = db.query( qq )
-        @foods << bind_tags( res2 )
-        @weights << food_weight[c]
+        if res.first
+          a = []
+          @items.each do |ee| a << res.first[ee] end
+          @solid << Marshal.load( Marshal.dump( a ))
+          res2 = db.query( qq )
+          @foods << bind_tags( res2 )
+          @weights << food_weight[c]
+        else
+          c -= 1
+        end
       end
       c += 1
     end
