@@ -116,21 +116,23 @@ puts "Done.\n"
 
 #### ========================================================================
 puts "Calculating recipe FCZ.\n"
+palette = Palette.new( nil )
+palette.set_bit( @palette_default_name[3] )
+
 res = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE};" )
 res.each do |e|
 	print "#{e['code']}\r"
 	food_no, food_weight, total_weight = extract_sum( e['sum'], e['dish'], 0 )
+		unless food_no == '-' || food_no == '+' || food_weight == '-' || food_weight == '+'
 
-	palette = Palette.new( nil )
-	palette.set_bit( @palette_default_name[3] )
+		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+		fct.load_palette( palette.bit )
+		fct.set_food( nil, food_no, food_weight, false )
+		fct.calc( 1, 0 )
+		fct.digit( 0 )
 
-	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
-	fct.load_palette( palette.bit )
-	fct.set_food( nil, food_no, food_weight, false )
-	fct.calc( 1, 0 )
-	fct.digit( 0 )
-
-	fct.save_fcz( e['user'], e['name'], 'reipe', e['code'] )
+		fct.save_fcz( e['user'], e['name'], 'reipe', e['code'] )
+	end
 end
 
 
