@@ -123,8 +123,7 @@ res = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE};" )
 res.each do |e|
 	print "#{e['code']}\r"
 	food_no, food_weight, total_weight = extract_sum( e['sum'], e['dish'], 0 )
-		unless food_no == '-' || food_no == '+' || food_weight == '-' || food_weight == '+'
-
+	begin
 		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
 		fct.load_palette( palette.bit )
 		fct.set_food( nil, food_no, food_weight, false )
@@ -132,6 +131,8 @@ res.each do |e|
 		fct.digit( 0 )
 
 		fct.save_fcz( e['user'], e['name'], 'reipe', e['code'] )
+	rescue
+		puts "\nERROR skip"
 	end
 end
 
