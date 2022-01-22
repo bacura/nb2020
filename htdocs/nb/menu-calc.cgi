@@ -181,7 +181,7 @@ recipe_code.each do |e|
 		fct_html[rc] << "	<td align='right' class='fct_sum'>#{total_weight.to_f}</td>"
 		fct_num.times do |cc|
 			fct_no = ( c * fct_num ) + cc
-			fct_html[rc] << "      <td align='right' class='fct_sum'>#{fct.total[fct_no]}</td>" unless fct.total[fct_no] == nil
+			fct_html[rc] << "      <td align='right' class='fct_sum'>#{fct.total[fct_no].to_f}</td>" unless fct.total[fct_no] == nil
 		end
 		fct_html[rc] << '    </tr>'
 

@@ -141,7 +141,7 @@ fct_txt << "\n"
 #### 各成分値
 fct.foods.size.times do |c|
 	fct_txt << "#{fct.fns[c]}\t#{fct.names[c]}\t#{fct.weights[c].to_f}\t"
-	fct.items.size.times do |cc| fct_txt << "#{fct.solid[c][cc]}\t" end
+	fct.items.size.times do |cc| fct_txt << "#{fct.solid[c][cc].to_f}\t" end
 	fct_txt.chop!
 	fct_txt << "\n"
 end

@@ -574,7 +574,8 @@ class Recipe
       a = @protocol.split( "\n" )
       a[0].sub!( '#', '' )
       a[0].gsub!( '　', "\s" )
-      tags = a[0].split( "\t" )
+      tags = a[0].split( "\s" )
+      tags.uniq!
     end
 
     return tags

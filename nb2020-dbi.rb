@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.25b
+#nb2020-dbi.rb 0.26b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -659,7 +659,7 @@ def recipei_init()
 	if res.first
 		puts 'recipei table already exists.'
 	else
-		query = 'CREATE TABLE recipei (user VARCHAR(32), word VARCHAR(64), code VARCHAR(32), public TINYINT(1), count SMALLINT UNSIGNED, f TINYINT(1));'
+		query = 'CREATE TABLE recipei (user VARCHAR(32), word VARCHAR(64), code VARCHAR(32), public TINYINT(1), count SMALLINT UNSIGNED;'
 		$DB.query( query )
 		puts 'recipei table has been created.'
 	end

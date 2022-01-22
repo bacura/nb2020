@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.04b
+#Nutrition browser 2020 recipe list 0.05b
 
 
 #==============================================================================
@@ -184,6 +184,7 @@ def referencing( words, uname )
 			true_query << e
 		end
 	end
+	true_query.uniq!
 	if @debug
 		puts "query_word:#{query_word}<br>"
 		puts "true_query:#{true_query}<br>"
@@ -439,13 +440,9 @@ recipes.each do |e|
 			recipe_html << "<td>-</td>"
 		end
 
-		tags = ''
-		e.tag.each do |ee| tags << "&nbsp;<span class='list_tag'>#{ee}</span>" end
-#		if e.user == user.name
-			recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}#{tags}</td>"
-#		else
-#			recipe_html << "<td>#{e.name}#{tags}</td>"
-#		end
+		tags =''
+		e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bg-info text-dark' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
+		recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
 
 		recipe_html << "<td>"
 		if e.public == 1
@@ -520,7 +517,8 @@ html = <<-"HTML"
 	<thead>
 		<tr>
 			<td>#{lp[15]}</td>
-			<td width="50%">#{lp[16]}</td>
+			<td>#{lp[16]}</td>
+			<td></td>
 			<td>#{lp[17]}</td>
 			<td>#{lp[18]}</td>
 			<td></td>
@@ -540,10 +538,5 @@ HTML
 puts html
 
 #### 検索設定の保存
-#recipel = "#{page}:#{range}:#{type}:#{role}:#{tech}:#{time}:#{cost}"
-#reciperr = ''
-#reciperr = "#{words}" if recipe_code_list.size > 0
-#mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipel='#{recipel}', reciperr='#{reciperr}' WHERE user='#{user.name}';", false, @debug )
-
 recipe_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "words" => words } )
 mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )

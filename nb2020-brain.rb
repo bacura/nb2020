@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.16b
+#Nutrition browser 2020 brain 0.17b
 
 #==============================================================================
 # LIBRARY
@@ -459,7 +459,7 @@ class FCT
         @fns << e
         q = ''
         qq = ''
-        if /P|U/ =~ e
+        if /P|U/ =~ e && uname != nil
           q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
           qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
         else

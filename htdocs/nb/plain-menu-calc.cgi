@@ -167,7 +167,7 @@ recipe_code.each do |e|
 	fct.foods.size.times do |c|
 			fct_txt[rc] << "\t#{fct.fns[c]}\t#{fct.names[c]}\t#{fct.weights[c].to_f}"
 			fct.items.size.times do |cc|
-				fct_txt[rc] << "\t#{fct.solid[c][cc]}"
+				fct_txt[rc] << "\t#{fct.solid[c][cc]}.to_f"
 			end
 			fct_txt[rc] << "\n"
 	end

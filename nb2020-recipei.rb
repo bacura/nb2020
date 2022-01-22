@@ -1,27 +1,19 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe search index builder 0.02b
+#Nutrition browser 2020 recipe search index & fcz builder & 0.10b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require 'mysql2'
+require './nb2020-soul'
+require './nb2020-brain'
 require 'natto'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-$MYSQL_HOST = 'localhost'
-$MYSQL_USER = 'user'
-$MYSQL_PW = 'password'
-$MYSQL_DB = 'nb2020'
-$MYSQL_TB_TAG = 'tag'
-$MYSQL_TB_DIC = 'dic'
-$MYSQL_TB_RECIPE = 'recipe'
-$MYSQL_TB_RECIPEI = 'recipei'
-
 @debug = false
 #$UDIC = '/usr/local/share/mecab/dic/ipadic/sys.dic'
 
@@ -36,10 +28,7 @@ $MYSQL_TB_RECIPEI = 'recipei'
 #==============================================================================
 
 mecab = Natto::MeCab.new()
-words = Hash.new
-
 db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-db.query( "update #{$MYSQL_TB_RECIPEI} SET f=0;" )
 
 
 #### Makeing alias dictionary
@@ -59,20 +48,27 @@ res.each do |e|
 	#recipe name
 	target << e['name']
 	res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e['name']}' AND user='#{e['user']}';" )
-	db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', f=1, user='#{e['user']}', code='#{e['code']}', word='#{e['name']}';" ) unless res2.first
+	db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', user='#{e['user']}', code='#{e['code']}', word='#{e['name']}';" ) unless res2.first
 
 	a = e['protocol'].split( "\n" )
 	#tag line
 	if a[0] != nil && /^\#.+/ =~ a[0]
-		a[0].gsub( '#', '' )
+		a[0].gsub!( '#', '' )
 		if a[0] != ''
-			a[0].gsub( "　", "\s" )
+			a[0].gsub!( "　", "\s" )
+			a[0].gsub!( '・', "\t" )
+			a[0].gsub!( '／', "\t" )
+			a[0].gsub!( '(', "\t" )
+			a[0].gsub!( ')', "\t" )
+			a[0].gsub!( '（', "\t" )
+			a[0].gsub!( '）', "\t" )
+			a[0].gsub!( /\t+/, "\s" )
 			tags = a[0].split( "\s" )
 			tags.each do |ee|
 				if ee != ''
 					target << ee
 					res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{ee}' AND user='#{e['user']}';" )
-					db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', f=1, user='#{e['user']}', code='#{e['code']}', word='#{ee}';" ) unless res2.first
+					db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', user='#{e['user']}', code='#{e['code']}', word='#{ee}';" ) unless res2.first
 				end
 			end
 		end
@@ -80,29 +76,18 @@ res.each do |e|
 
 	#comment line
 	if a[1] != nil && /^\#.+/ =~ a[1]
-		a[1].gsub( '#', '' )
+		a[1].gsub!( '#', '' )
 		target << a[1] if a[1] != ''
 	end
 
 	target.each do |ee|
-		mecab.parse( ee ) do |n|
+		true_word = ee
+		true_word = dic[ee] if dic[ee] != nil
+		mecab.parse( true_word ) do |n|
 			a = n.feature.force_encoding( 'utf-8' ).split( ',' )
-		 	if a[0] == '名詞' && ( a[1] == '一般' || a[1] == '固有名詞' )
+		 	if a[0] == '名詞' && ( a[1] == '一般' || a[1] == '固有名詞' || a[1] == '普通名詞'  || a[1] == '人名' )
 				res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{e['user']}' AND code='#{e['code']}' AND word='#{n.surface}';" )
-				if res2.first
-					db.query( "UPDATE #{$MYSQL_TB_RECIPEI} SET public='#{e['public']}', f=1 WHERE user='#{e['user']}' AND code='#{e['code']}' AND word='#{n.surface}';" )
-				else
-					db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', f=1, user='#{e['user']}', code='#{e['code']}', word='#{n.surface}';" )
-				end
-
-		 		if dic[n.surface]
-					res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{e['user']}' AND code='#{e['code']}' AND word='#{dic[n.surface]}';" )
-					if res2.first
-						db.query( "UPDATE #{$MYSQL_TB_RECIPEI} SET public='#{e['public']}', f=1 WHERE user='#{e['user']}' AND code='#{e['code']}' AND word='#{dic[n.surface]}';" )
-					else
-						db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', f=1, user='#{e['user']}', code='#{e['code']}', word='#{dic[n.surface]}';" )
-					end
-				end
+				db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', user='#{e['user']}', code='#{e['code']}', word='#{n.surface}';" ) unless res2.first
 		 	end
 		end
 	end
@@ -119,17 +104,37 @@ res.each do |e|
 
 	target_food.each do |ee|
 		res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{e['user']}' AND code='#{e['code']}' AND word='#{ee}';" )
-		if res2.first
-			db.query( "UPDATE #{$MYSQL_TB_RECIPEI} SET public='#{e['public']}', f=1 WHERE user='#{e['user']}' AND code='#{e['code']}' AND word='#{ee}';" )
-		else
-			db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', f=1, user='#{e['user']}', code='#{e['code']}', word='#{ee}';" )
-		end
+		db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', user='#{e['user']}', code='#{e['code']}', word='#{ee}';" ) unless res2.first
 	end
 end
 
 
-#### Deleting non-existent recipe
-puts "\nDeleting non-existent recipe."
-db.query( "DELETE FROM #{$MYSQL_TB_RECIPEI} WHERE f=0;" )
+#### Deleting non-existent recipe index
+puts "\nDeleting non-existent recipe index."
+db.query( "DELETE #{$MYSQL_TB_RECIPEI} FROM #{$MYSQL_TB_RECIPEI} LEFT OUTER JOIN #{$MYSQL_TB_RECIPE} ON #{$MYSQL_TB_RECIPE}.code=#{$MYSQL_TB_RECIPEI}.code WHERE #{$MYSQL_TB_RECIPE}.code IS NULL;" )
+puts "Done.\n"
 
+#### ========================================================================
+puts "Calculating recipe FCZ.\n"
+res = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE};" )
+res.each do |e|
+	print "#{e['code']}\r"
+	food_no, food_weight, total_weight = extract_sum( e['sum'], e['dish'], 0 )
+
+	palette = Palette.new( nil )
+	palette.set_bit( @palette_default_name[3] )
+
+	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+	fct.load_palette( palette.bit )
+	fct.set_food( nil, food_no, food_weight, false )
+	fct.calc( 1, 0 )
+	fct.digit( 0 )
+
+	fct.save_fcz( e['user'], e['name'], 'reipe', e['code'] )
+end
+
+
+#### Deleting non-existent recipe FCZ
+puts "\nDeleting non-existent recipe FCZ."
+db.query( "DELETE #{$MYSQL_TB_FCZ} FROM #{$MYSQL_TB_FCZ} LEFT OUTER JOIN #{$MYSQL_TB_RECIPE} ON #{$MYSQL_TB_RECIPE}.code=#{$MYSQL_TB_FCZ}.origin WHERE #{$MYSQL_TB_RECIPE}.code IS NULL;" )
 puts "Done."

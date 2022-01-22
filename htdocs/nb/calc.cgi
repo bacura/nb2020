@@ -146,7 +146,7 @@ table_num.times do |c|
 		fct_html << "	<td align='right'>#{fct.weights[cc].to_f}</td>"
 		fct_num.times do |ccc|
 			fct_no = ( c * fct_num ) + ccc
-			fct_html << "	<td align='right'>#{fct.solid[cc][fct_no]}</td>" unless fct.solid[cc][fct_no] == nil
+			fct_html << "	<td align='right'>#{fct.solid[cc][fct_no].to_f}</td>" unless fct.solid[cc][fct_no] == nil
 		end
 		fct_html << '</tr>'
 	end
