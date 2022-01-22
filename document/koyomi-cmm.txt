@@ -49,3 +49,4 @@ guild.js/cmmSaveKoyomi_direct( cm_mode, yyyy, mm, dd, tdiv, origin ) -> koyomi-c
 					解決：fzcodeはコピーしないようしする。
 20211106	0.04b	更新：probeへの対応。
 20220115	0.05b	更新：brainへの対応。
+20220122	0.06b	更新：戻るをコピー元とコピー先を選べるようにした。

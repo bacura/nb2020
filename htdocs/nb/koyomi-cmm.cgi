@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.05b
+#Nutrition browser 2020 koyomi menu copy / move 0.06b
 
 
 #==============================================================================

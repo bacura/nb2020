@@ -413,7 +413,7 @@ if freeze_flag == 0
 		<textarea class='form-control' id='memo' rows='2'>#{koyomi_html[4]}</textarea>
 	</div>
 	<div class='col-1'><br>
-		<button class='btn btn-sm btn-outline-primary' onclick="memoKoyomi( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</button>
+		<span onclick="memoKoyomi( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</span>
 	</div>
 MEMO1
 else

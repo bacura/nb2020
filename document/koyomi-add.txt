@@ -1,4 +1,4 @@
-#Nutrition browser 2020 koyomi adding panel 0.10b
+#Nutrition browser 2020 koyomi adding panel 0.08b
 
 #==============================================================================
 # OVERVIEW
@@ -54,3 +54,4 @@ guild.js/koyomiReturn2KE( yyyy, mm, dd ) -> koyomi-edit.cgi{ command:'init', yyy
 20211121	0.05b	更新：JSON型config対応。食事開始＆食事時間に対応。
 20211220	0.06b	更新：JSON型unit対応。
 20220115	0.07b	更新：brain対応。
+20220122	0.08b	更新：戻るをコピー元とコピー先を選べるようにした。

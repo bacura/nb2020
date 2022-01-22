@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.07b
+#Nutrition browser 2020 koyomi adding panel 0.08b
 
 #==============================================================================
 #LIBRARY
@@ -82,6 +82,7 @@ copy = @cgi['copy'].to_i
 origin = @cgi['origin']
 dd = 1 if dd == 0
 ev = 100 if ev == 0 || ev == '' || ev == nil
+origin_date = origin.split( ':' )
 origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{order}" if command == 'modify' && origin == ''
 if @debug
 	puts "command:#{command}<br>\n"
@@ -133,9 +134,9 @@ hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
 meal_time = meal_tiems_set[tdiv] if meal_time == 0
 
 
-puts 'Move food (deleting origin )<br>' if @debug
 new_solid = ''
 if command == 'move' && copy != 1
+	puts 'Move food (deleting origin )<br>' if @debug
 	a = origin.split( ':' )
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug  )
 	if r.first['koyomi']
@@ -150,8 +151,8 @@ if command == 'move' && copy != 1
 end
 
 
-puts 'Save food<br>' if @debug
 if command == 'save' || command == 'move'
+	puts 'Save food<br>' if @debug
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
 		koyomi = r.first['koyomi']
@@ -219,30 +220,34 @@ week_count = calendar.wf
 weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 1.upto( calendar.ddl ) do |c|
 	date_html << "<tr id='day#{c}'>"
-	if week_count == 0
-		date_html << "<td style='color:red;'>#{c} (#{weeks[week_count]})</td>"
-	else
-		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
-	end
+	style = ''
+	style = 'color:red;' if week_count == 0
+	date_html << "<td style='#{style}'>#{c} (#{weeks[week_count]})</td>"
 
 	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND freeze='1';", false, @debug )
 	unless r.first
 		0.upto( 3 ) do |cc|
 			koyomi_c = '-'
 			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, @debug )
-			onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			onclick = "onclick=\"modifysaveKoyomi_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\"" if command == 'modify' || command == 'move' || command == 'move_fix'
-
-			if rr.first
-				if rr.first['koyomi'] == ''
-					date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
-				else
-					koyomi_c = rr.first['koyomi'].split( "\t" ).size
-					date_html << "<td class='table-info' align='center' #{onclick}>#{koyomi_c}</td>"
-				end
+			onclick = ''
+			if command == 'modify' || command == 'move' || command == 'move_fix'
+				onclick = "onclick=\"modifysaveKoyomi_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			else
-				date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
+				onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			end
+
+			bs_class = 'table-light'
+			if rr.first
+				if rr.first['koyomi'] != ''
+					koyomi_c = rr.first['koyomi'].split( "\t" ).size
+					if dd == c and tdiv == cc
+						bs_class = 'table-warning'
+					else
+						bs_class = 'table-info'
+					end
+				end
+			end
+			date_html << "<td class='#{bs_class}' align='center' #{onclick}>#{koyomi_c}</td>"
 		end
 	else
 		4.times do date_html << "<td class='table-secondary'></td>" end
@@ -256,16 +261,10 @@ end
 
 #### Select HTML
 tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
-
 tdiv_html = ''
 tdiv_html << "<select id='tdiv' class='form-select form-select-sm'>"
-0.upto( 3 ) do |c|
-	if tdiv == c
-		tdiv_html << "<option value='#{c}' SELECTED>#{tdiv_set[c]}</option>"
-	else
-		tdiv_html << "<option value='#{c}'>#{tdiv_set[c]}</option>"
-	end
-end
+s = selected( 0, 3, tdiv )
+0.upto( 3 ) do |c| tdiv_html << "<option value='#{c}' #{s[c]}>#{tdiv_set[c]}</option>" end
 tdiv_html << "</select>"
 
 
@@ -292,7 +291,6 @@ rate_selected = ''
 rate_html = ''
 if command != 'move_fix' && /\-f\-/ !~ code
 	rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
-	rate_html = ''
 	rate_html << "<div class='input-group input-group-sm'>"
 	rate_html << "	<label class='input-group-text'>#{lp[22]}</label>"
 	rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
@@ -305,15 +303,16 @@ if command != 'move_fix' && /\-f\-/ !~ code
 	end
 	rate_html << "	</select>"
 	rate_html << "</div>"
-else
-#	rate_html = '<input type="hidden" id="ev" value="100">'
-#	rate_html = '<input type="hidden" id="eu" value="0">'
 end
 
+
 #### Return button
-return_joystic = "<div align='center' class='col-3 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
+return_joystic = ''
 if command == 'modify' || command == 'move'
-	return_joystic = "<div align='center' class='col-3 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
+	return_joystic = "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{origin_date[0]}', '#{origin_date[1]}', '#{origin_date[2]}' )\">#{lp[28]}</div>"
+	return_joystic << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
+else
+	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
 end
 
 
@@ -325,7 +324,7 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-3'><h5>#{food_name}</h5></div>
-		<div align='center' class='col-3 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</div>
+		<div align='center' class='col-2 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</div>
 		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi()">#{lp[27]}</div>
 		#{return_joystic}
 	</div>
@@ -334,21 +333,11 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' #{onchange}>
 		</div>
-		<div class='col-2 form-inline'>
-			#{tdiv_html}
-		</div>
-		<div class='col-3 form-inline'>
-			#{eat_time_html}
-		</div>
-		<div class='col-3 form-inline'>
-			#{rate_html}
-		</div>
-		<div class='col-1 form-inline'>
-			#{save_button}
-		</div>
-		<div class='col-1 form-inline'>
-			#{copy_html}
-		</div>
+		<div class='col-2 form-inline'>#{tdiv_html}</div>
+		<div class='col-3 form-inline'>#{eat_time_html}</div>
+		<div class='col-3 form-inline'>#{rate_html}</div>
+		<div class='col-1 form-inline'>#{save_button}</div>
+		<div class='col-1 form-inline'>#{copy_html}</div>
 	</div>
 	<br>
 
