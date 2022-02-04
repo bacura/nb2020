@@ -301,11 +301,11 @@ if command == 'save'
 	palette = Palette.new( user.name )
 	palette.set_bit( @palette_default_name[3] )
 
-	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 	fct.load_palette( palette.bit )
 	fct.set_food( user.name, food_no, food_weight, false )
-	fct.calc( 1, 0 )
-	fct.digit( 0 )
+	fct.calc
+	fct.digit
 
 	fct.save_fcz( user.name, nil, 'reipe', recipe.code )
 end
@@ -322,7 +322,7 @@ if command == 'save'
 	target = []
 
 	puts "Marking recipe name<br>" if @debug
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{recipe.name}' AND user='#{user.name}';", false, @debug )
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{recipe.code}' AND word='#{recipe.name}' AND user='#{user.name}';", false, @debug )
 	mdb( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{recipe.name}';", false, @debug ) unless r.first
 	recipe.name.gsub!( '　', "\t" )
 	recipe.name.gsub!( '・', "\t" )
@@ -345,7 +345,7 @@ if command == 'save'
 			tags.each do |e|
 				if e != ''
 					target << e
-					r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e}' AND user='#{user.name}';", false, @debug )
+					r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{recipe.code}' AND word='#{e}' AND user='#{user.name}';", false, @debug )
 					mdb( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{e}';", false, @debug ) unless r.first
 				end
 			end

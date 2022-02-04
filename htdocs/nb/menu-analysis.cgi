@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menul food composition analysis 0.01b
+#Nutrition browser 2020 menul food composition analysis 0.02b
 
 #==============================================================================
 #LIBRARY
@@ -31,7 +31,7 @@ user.debug if @debug
 lp = user.load_lp( script )
 
 
-#### Getting POST data
+puts 'Getting POST <br>' if @debug
 command = @cgi['command']
 code = @cgi['code']
 ew_mode = @cgi['ew_mode']
@@ -42,7 +42,7 @@ frct_mode = 0 if frct_mode == nil
 frct_mode = frct_mode.to_i
 frct_accu = @cgi['frct_accu']
 frct_accu = 0 if frct_accu == nil
-frct_accu = frct_accu.to_s
+frct_accu = frct_accu.to_i
 
 if @debug
 	puts "command: #{command}<br>"
@@ -54,12 +54,14 @@ if @debug
 end
 
 
-#### セレクト＆チェック設定
+puts 'Checking SELECT & CHECK <br>' if @debug
 frct_select = selected( 1, 3, frct_mode )
 
 
-# 成分項目の抽出
-fct_item = ['ENERC_KCAL', 'PROT', 'FAT', 'NACL_EQ']
+puts 'Setting palette <br>' if @debug
+palette = Palette.new( user.name )
+palette_ = @palette_default_name[1] if palette_ == nil || palette_ == '' || palette_ == '0'
+palette.set_bit( palette_ )
 
 
 #### mealからデータを抽出
@@ -72,156 +74,36 @@ meal.each do |e| recipe_code << e end
 
 
 #### 大合計の初期化
-total_sum = []
-fct_item.size.times do |c| total_sum[c] = 0 end
-rc = 0
-recipe_name = []
-total_total_weight = 0
-food_no_list = []
-food_weight_list = []
-animal_protein = BigDecimal( 0 )
-grain_energy = BigDecimal( 0 )
+fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, frct_accu, frct_mode )
+fct.load_palette( palette.bit )
+
 recipe_code.each do |e|
 	# RECIPEからデータを抽出
 	r = mdb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false, @debug )
-	recipe_name[rc] = r.first['name']
 	dish_num = r.first['dish'].to_i
 	dish_num = 1 if dish_num == 0
 	food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, ew_mode )
-	total_total_weight += total_weight
 
 	# 食品番号から食品成分と名前を抽出
-	fct = []
-	fct_name = []
-	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-
-	# 食品成分データの抽出と名前の書き換え
-	food_no.each do |ee|
-		fct_tmp = []
-		if ee == '-'
-			fct << '-'
-		elsif ee == '+'
-			fct << '+'
-		elsif ee == '00000'
-			fct << '0'
-		else
-			if /P|U/ =~ ee
-				q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{ee}' AND ( user='#{user.name}' OR user='#{$GM}' );"
-			else
-				q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{ee}';"
-			end
-			r = db.query( q )
-			fct_name << r.first['Tagnames']
-			food_no_list << ee
-			fct_item.each do |eee| fct_tmp << r.first[eee] end
-			fct << Marshal.load( Marshal.dump( fct_tmp ))
-		end
-	end
-
-	#### 食品重量計算
-	fct_sum = []
-	protein = BigDecimal( 0 )
-	energy = BigDecimal( 0 )
-	fct_item.size.times do |c| fct_sum << BigDecimal( 0 ) end
-	food_no.size.times do |fn|
-		unless food_no[fn] == '-' || food_no[fn] == '+'
-			fct_item.size.times do |fi|
-				t = convert_zero( fct[fn][fi] )
-				# 通常計算
-				fct[fn][fi] = num_opt( t, food_weight[fn], frct_mode, @fct_frct[fct_item[fi]] )
-				if frct_accu == 0
-					# 通常計算
-					fct_sum[fi] += BigDecimal( fct[fn][fi] )
-
-					#動物性たんぱく質カウント用
-					protein = BigDecimal( fct[fn][fi] ) if fi == 1
-
-					# 穀類エネルギーカウント用
-					energy = BigDecimal( fct[fn][fi] ) if fi == 0
-				else
-					# 精密計算
-					fct_sum[fi] += BigDecimal( num_opt( t, food_weight[fn], frct_mode, @fct_frct[fct_item[fi]] + 3 ))
-
-					#動物性たんぱく質カウント用
-					protein = BigDecimal( num_opt( t, food_weight[fn], frct_mode, @fct_frct[fct_item[fi]] + 3 )) if fi == 1
-
-					# 穀類エネルギーカウント用
-					energy = BigDecimal( num_opt( t, food_weight[fn], frct_mode, @fct_frct[fct_item[fi]] + 3 )) if fi == 0
-				end
-			end
-			# 食品構成用重量カウント
-			food_weight_list << food_weight[fn]
-
-			# 動物性たんぱく質カウント
-			tt = food_no[fn]
-			tt.slice!( 0 ) if /P|U/ =~ tt
-			food_group = tt.slice( 0, 2 )
-			animal_protein += protein if food_group.to_i >= 10 && food_group.to_i <= 13
-
-			# 穀類エネルギーカウント
-			tt = food_no[fn]
-			tt.slice!( 0 ) if /P|U/ =~ tt
-			food_group = tt.slice( 0, 2 )
-			grain_energy += energy if food_group == '01'
-		end
-	end
-
-
-	#### 合計値の桁合わせ
-	fct_item.size.times do |fi|
-    	limit = @fct_frct[fct_item[fi]]
-    	if limit != nil
-			case frct_mode
-			# 四捨五入
-			when 1
-				fct_sum[fi] = fct_sum[fi].round( limit )
-			# 切り上げ
-			when 2
-				fct_sum[fi] = fct_sum[fi].ceil( limit )
-			# 切り捨て
-			when 3
-				fct_sum[fi] = fct_sum[fi].floor( limit )
-			else
-				fct_sum[fi] = fct_sum[fi].round( limit )
-			end
-        	if limit == 0
-            	fct_sum[fi] = fct_sum[fi].to_i
-        	else
-            	fct_sum[fi] = fct_sum[fi].to_f
-        	end
-			total_sum[fi] = total_sum[fi] + ( fct_sum[fi] * 1000 ).to_i
-		end
-	end
+	fct.set_food( user.name, food_no, food_weight, false )
 end
+fct.calc
+fct.digit
 
 
-#### 大合計値の桁処理
-total_sum.map! do |a| a.to_f / 1000 end
-total_sum.size.times do |fi|
-	total_sum[fi] = total_sum[fi].round( @fct_frct[fct_item[fi]] ) if @fct_frct[fct_item[fi]] != nil
+animal_protein = BigDecimal( 0 )
+grain_energy = BigDecimal( 0 )
+fct.fns.size.times do |c|
+	fg = fct.fns[c].sub( /P|U/, '' ).slice( 0, 2 ).to_i
+	# 動物性たんぱく質カウント
+	animal_protein += fct.solid[c][1] if fg >= 10 && fg <= 13
+	# 穀類エネルギーカウント
+	grain_energy += fct.solid[c][0] if fg == 1
 end
 
 
 #### 食品構成のカウント
-g1 = 0
-g2 = 0
-g3 = 0
-g4 = 0
-g5 = 0
-g6 = 0
-g7 = 0
-g8 = 0
-g9 = 0
-g10 = 0
-g11 = 0
-g12 = 0
-g13 = 0
-g14 = 0
-g15 = 0
-g16 = 0
-g17 = 0
-g18 = 0
-g_total = 0
+fch = {'01'=>0, '02'=>0, '03'=>0, '04'=>0, '05'=>0, '06'=>0, '07'=>0, '08'=>0, '09'=>0, '10'=>0, '11'=>0, '12'=>0, '13'=>0, '14'=>0, '15'=>0, '16'=>0, '17'=>0, '18'=>0 }
 wcv = 0
 gycv = 0
 milk_liquid = 0
@@ -231,116 +113,58 @@ miso = 0
 shoyu = 0
 seasoning = 0
 
-food_no_list.size.times do |c|
-	pseudo_id = ''
-	pseudo_id = food_no_list[c].slice!( 0 ) if /P|U/ =~ food_no_list[c]
-	food_group = food_no_list[c].slice( 0, 2 )
-
+fct.fns.size.times do |c|
+	food_group = fct.fns[c].sub( /P|U/, '' ).slice( 0, 2 )
+	fch[food_group] += fct.weights[c]
 	case food_group
-	when '01'
-		g1 += food_weight_list[c]
-	when '02'
-		g2 += food_weight_list[c]
-	when '03'
-		g3 += food_weight_list[c]
-	when '04'
-		g4 += food_weight_list[c]
-	when '05'
-		g5 += food_weight_list[c]
 	when '06'
-		g6 += food_weight_list[c]
-
 		# 緑黄色野菜の判定
-		r = mdb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{pseudo_id}#{food_no_list[c]}';", false, @debug )
+		r = mdb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{pseudo_id}#{fct.fns[c]}';", false, @debug )
 		if r.first['gycv'] == 1
-			gycv += food_weight_list[c]
+			gycv += fct.weights[c]
 		else
-			wcv += food_weight_list[c]
+			wcv += fct.weights[c]
 		end
-	when '07'
-		g7 += food_weight_list[c]
-	when '08'
-		g8 += food_weight_list[c]
-	when '09'
-		g9 += food_weight_list[c]
-	when '10'
-		g10 += food_weight_list[c]
-	when '11'
-		g11 += food_weight_list[c]
-	when '12'
-		g12 += food_weight_list[c]
 	when '13'
-		g13 += food_weight_list[c]
-
 		# 牛乳と乳製品の判定
-		if food_no_list[c].to_i >= 13001 && food_no_list[c].to_i <= 13006
-			milk_liquid += food_weight_list[c]
+		if fct.fns[c].to_i >= 13001 && fct.fns[c].to_i <= 13006
+			milk_liquid += fct.weights[c]
 		else
-			milk_product += food_weight_list[c]
+			milk_product += fct.weights[c]
 		end
-	when '14'
-		g14 += food_weight_list[c]
-	when '15'
-		g15 += food_weight_list[c]
-	when '16'
-		g16 += food_weight_list[c]
 	when '17'
 		# 液体だしの乾燥重量化
-		if food_no_list[c].to_i >= 17019 && food_no_list[c].to_i <= 17025
-			food_weight_list[c] = food_weight_list[c] / 100 * 1.0
-		elsif food_no_list[c].to_i == 17026
-			food_weight_list[c] = food_weight_list[c] / 100 * 2.5
+		if fct.fns[c].to_i >= 17019 && fct.fns[c].to_i <= 17025
+			fct.weights[c] = fct.weights[c] / 100 * 1.0
+		elsif fct.fns[c].to_i == 17026
+			fct.weights[c] = fct.weights[c] / 100 * 2.5
 		end
-		g17 += food_weight_list[c]
-
 		# 塩の判定
-		if ( food_no_list[c].to_i >= 17012 && food_no_list[c].to_i <= 17014 ) || food_no_list[c].to_i == 17089
-			salt += food_weight_list[c]
+		if ( fct.fns[c].to_i >= 17012 && fct.fns[c].to_i <= 17014 ) || fct.fns[c].to_i == 17089
+			salt += fct.weights[c]
 		# 味噌の判定
-		elsif ( food_no_list[c].to_i >= 17044 && food_no_list[c].to_i <= 17050 ) || food_no_list[c].to_i == 17119 || food_no_list[c].to_i == 17120
-			miso += food_weight_list[c]
+		elsif ( fct.fns[c].to_i >= 17044 && fct.fns[c].to_i <= 17050 ) || fct.fns[c].to_i == 17119 || fct.fns[c].to_i == 17120
+			miso += fct.weights[c]
 		# 醤油の判定
-		elsif ( food_no_list[c].to_i >= 17007 && food_no_list[c].to_i <= 17011 ) || ( food_no_list[c].to_i >= 17086 && food_no_list[c].to_i <= 17088 )
-			shoyu += food_weight_list[c]
+		elsif ( fct.fns[c].to_i >= 17007 && fct.fns[c].to_i <= 17011 ) || ( fct.fns[c].to_i >= 17086 && fct.fns[c].to_i <= 17088 )
+			shoyu += fct.weights[c]
 		else
-			seasoning += food_weight_list[c]
+			seasoning += fct.weights[c]
 		end
-	when '18'
-		g18 += food_weight_list[c]
 	end
 end
-g_total = g1 + g2 + g3 + g4 + g5 + g6 + g7 + g8 + g9 + g10 + g11 + g12 + g13 + g14 + g15 + g16 + g17 + g18
 
 
-#### PFC比
-pfc_p = ( total_sum[1] * 4 / total_sum[0] * 100 )
-pfc_f = ( total_sum[2] * 9 / total_sum[0] * 100 )
-case frct_mode
-# 四捨五入
-when 1
-	pfc_p = pfc_p.round( 1 )
-	pfc_f = pfc_f.round( 1 )
-# 切り上げ
-when 2
-	pfc_p = pfc_p.ceil( 1 )
-	pfc_f = pfc_f.ceil( 1 )
-# 切り捨て
-when 3
-	pfc_p = pfc_p.floor( 1 )
-	pfc_f = pfc_f.floor( 1 )
-else
-	pfc_p = pfc_p.round( 1 )
-	pfc_f = pfc_f.round( 1 )
-end
-pfc_c = ( 100 - pfc_p - pfc_f ).round( 1 )
+puts 'Getting PFC rate<br>' if @debug
+pfc = fct.calc_pfc
 
 
-#### 動物性たんぱく質比
-animal_protein_rate = ( animal_protein / total_sum[1] * 100 ).round( 1 )
+puts 'Animal protein rate<br>' if @debug
+animal_protein_rate = ( animal_protein / fct.total[1] * 100 ).round( 1 )
 
 
-#### 穀物総エネルギー比
-grain_energy_rate = ( grain_energy / total_sum[0] * 100 ).round( 1 )
+puts 'Grain energy rate<br>' if @debug
+grain_energy_rate = ( grain_energy / fct.total[0] * 100 ).round( 1 )
 
 
 #### ダウンロード名設定
@@ -353,7 +177,7 @@ else
 end
 
 
-#### 食品番号から食品成分を抽出
+puts 'HTML <br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
@@ -381,7 +205,7 @@ html = <<-"HTML"
 
 		<div class='col-4'></div>
 		<div class='col-1'>
-			<a href='plain-menu-analysis.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[8]}</a>
+			<a href='plain-menu-analysis.cgi?uname=#{user.name}&code=#{code}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[8]}</a>
 		</div>
     </div>
 </div>
@@ -389,33 +213,33 @@ html = <<-"HTML"
 <div class='table-responsive-sm'>
 	<table class="table table-bordered table-sm">
 		<tbody>
-		<tr><th width="20%" rowspan='24'>#{lp[9]}</th><th width="25%">#{lp[10]}</th><td width="15%">#{g1.to_f}</td></tr>
-		<tr><th>#{lp[11]}</th><td>#{g2.to_f}</td></tr>
-		<tr><th>#{lp[12]}</th><td>#{g3.to_f}</td></tr>
-		<tr><th>#{lp[13]}</th><td>#{g4.to_f}</td></tr>
-		<tr><th>#{lp[14]}</th><td>#{g5.to_f}</td></tr>
-		<tr><th rowspan="2">#{lp[15]}</th><td rowspan="2">#{g6.to_f}</td><th width="25%">#{lp[16]}</th><td>#{gycv.to_f}</td></tr>
+		<tr><th width="20%" rowspan='24'>#{lp[9]}</th><th width="25%">#{lp[10]}</th><td width="15%">#{fch['01'].to_f}</td></tr>
+		<tr><th>#{lp[11]}</th><td>#{fch['02'].to_f}</td></tr>
+		<tr><th>#{lp[12]}</th><td>#{fch['03'].to_f}</td></tr>
+		<tr><th>#{lp[13]}</th><td>#{fch['04'].to_f}</td></tr>
+		<tr><th>#{lp[14]}</th><td>#{fch['05'].to_f}</td></tr>
+		<tr><th rowspan="2">#{lp[15]}</th><td rowspan="2">#{fch['06'].to_f}</td><th width="25%">#{lp[16]}</th><td>#{gycv.to_f}</td></tr>
 				<tr><th>#{lp[17]}</th><td>#{wcv.to_f}</td></tr>
-		<tr><th>#{lp[18]}</th><td>#{g7.to_f}</td></tr>
-		<tr><th>#{lp[19]}</th><td>#{g8.to_f}</td></tr>
-		<tr><th>#{lp[20]}</th><td>#{g9.to_f}</td></tr>
-		<tr><th>#{lp[21]}</th><td>#{g10.to_f}</td></tr>
-		<tr><th>#{lp[22]}</th><td>#{g11.to_f}</td></tr>
-		<tr><th>#{lp[23]}</th><td>#{g12.to_f}</td></tr>
-		<tr><th rowspan="2">#{lp[24]}</th><td rowspan="2">#{g13.to_f}</td><th>#{lp[25]}</th><td>#{milk_liquid.to_f}</td></tr>
+		<tr><th>#{lp[18]}</th><td>#{fch['07'].to_f}</td></tr>
+		<tr><th>#{lp[19]}</th><td>#{fch['08'].to_f}</td></tr>
+		<tr><th>#{lp[20]}</th><td>#{fch['09'].to_f}</td></tr>
+		<tr><th>#{lp[21]}</th><td>#{fch['10'].to_f}</td></tr>
+		<tr><th>#{lp[22]}</th><td>#{fch['11'].to_f}</td></tr>
+		<tr><th>#{lp[23]}</th><td>#{fch['12'].to_f}</td></tr>
+		<tr><th rowspan="2">#{lp[24]}</th><td rowspan="2">#{fch['13'].to_f}</td><th>#{lp[25]}</th><td>#{milk_liquid.to_f}</td></tr>
 				<tr><th>#{lp[26]}</th><td>#{milk_product.to_f}</td></tr>
-		<tr><th>#{lp[27]}</th><td>#{g14.to_f}</td></tr>
-		<tr><th>#{lp[28]}</th><td>#{g15.to_f}</td></tr>
-		<tr><th>#{lp[29]}</th><td>#{g16.to_f}</td></tr>
-		<tr><th rowspan="4">#{lp[30]}</th><td rowspan="4">#{g17.to_f}</td><th>#{lp[31]}</th><td>#{miso.to_f}</td></tr>
+		<tr><th>#{lp[27]}</th><td>#{fch['14'].to_f}</td></tr>
+		<tr><th>#{lp[28]}</th><td>#{fch['15'].to_f}</td></tr>
+		<tr><th>#{lp[29]}</th><td>#{fch['16'].to_f}</td></tr>
+		<tr><th rowspan="4">#{lp[30]}</th><td rowspan="4">#{fch['17'].to_f}</td><th>#{lp[31]}</th><td>#{miso.to_f}</td></tr>
 			<tr><th>#{lp[32]}</th><td>#{shoyu.to_f}</td></tr>
 			<tr><th>#{lp[33]}</th><td>#{salt.to_f}</td></tr>
 			<tr><th>#{lp[34]}</th><td>#{seasoning.to_f}</td></tr>
-		<tr><th>#{lp[35]}</th><td>#{g18.to_f}</td></tr>
-		<tr><th>#{lp[36]}</th><td>#{g_total.to_f}</td></tr>
-		<tr><th rowspan='3'>#{lp[37]}</th><th>#{lp[38]}</th><td>#{pfc_p.to_f}</td></tr>
-			<th>#{lp[39]}</th><td>#{pfc_f.to_f}</td></tr>
-			<th>#{lp[40]}</th><td>#{pfc_c.to_f}</td></tr>
+		<tr><th>#{lp[35]}</th><td>#{fch['18'].to_f}</td></tr>
+		<tr><th>#{lp[36]}</th><td>#{fct.total_weight.to_f}</td></tr>
+		<tr><th rowspan='3'>#{lp[37]}</th><th>#{lp[38]}</th><td>#{pfc[0].to_f}</td></tr>
+			<th>#{lp[39]}</th><td>#{pfc[1].to_f}</td></tr>
+			<th>#{lp[40]}</th><td>#{pfc[2].to_f}</td></tr>
 		<tr><th rowspan='2'>#{lp[41]}</th><th>#{lp[42]}</th><td>#{grain_energy_rate.to_f}</td></tr>
 			<th>#{lp[43]}</th><td>#{animal_protein_rate.to_f}</td></tr>
 		</tbody>

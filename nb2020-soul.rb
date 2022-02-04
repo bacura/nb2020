@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.14b
+#Nutrition browser 2020 soul 0.15b
 
 #==============================================================================
 # LIBRARY
@@ -29,6 +29,7 @@ $MYSQL_USER = 'user'
 $MYSQL_USERR = 'userr'
 $MYSQL_PW = 'password'
 $MYSQL_TB_FCT = 'fct'
+$MYSQL_TB_FCTS = 'fcts'
 $MYSQL_TB_FCTP = 'fctp'
 $MYSQL_TB_CFG = 'cfg'
 $MYSQL_TB_TAG = 'tag'
@@ -260,6 +261,83 @@ def bind_tags( res_tag )
     tags = "<span class='tagc'>#{sub_class}</span> #{tags['name']} <span class='tag1'>#{tags['tag1']}</span> <span class='tag2'>#{tags['tag2']}</span> <span class='tag3'>#{tags['tag3']}</span> <span class='tag4'>#{tags['tag4']}</span> <span class='tag5'>#{tags['tag5']}</span>"
 
     return tags
+end
+
+
+#### 特殊数値変換
+def convert_zero( t )
+  t = 0 if t == nil
+  t.to_s.sub!( '(', '' )
+  t.to_s.sub!( ')', '' )
+  t = 0 if t == '-'
+  t = 0 if t == 'Tr'
+  t = 0 if t == '*'
+
+  return t
+end
+
+
+#### 食品成分値の処理
+def num_opt( num, weight, mode, limit )
+  # リミットがない→数値ではない場合はそのまま返す
+  return num if limit == nil
+
+    kakko = false
+    if /^\(/ =~ num.to_s
+      num.sub!( '(', '' )
+      num.sub!( ')', '' )
+      kakko = true
+    end
+    ans = BigDecimal( 0 )
+
+  begin
+    if num == '-'
+      return '-'
+    elsif num == 'Tr'
+      return 'Tr'
+    elsif num == '*'
+      return '*'
+    elsif num == ''
+      return ''
+    else
+      weight = weight / 100
+      #weight_f = 1 if weight_f < 0
+
+      case mode
+      when '1'  # 四捨五入
+        ans = ( BigDecimal( num ) * weight ).round( limit )
+      when '2'  # 切り上げ
+        ans = ( BigDecimal( num ) * weight ).ceil( limit )
+      when '3'  # 切り捨て
+        ans = ( BigDecimal( num ) * weight ).floor( limit )
+      else
+        ans = ( BigDecimal( num ) * weight ).round( limit )
+      end
+    end
+
+    if limit == 0
+      ans = ans.to_i
+    else
+      t = ans.to_f.to_s.split( '.' )
+      l = t[1].size
+      if l != limit
+        d = limit - l
+        d.times do t[1] << '0' end
+      end
+      ans = t[0] + '.' + t[1]
+    end
+    ans = "(#{ans})" if kakko
+
+  rescue
+    puts "<span class='error'>[num_opt]ERROR!!<br>"
+    puts "num:#{num}<br>"
+    puts "weight:#{weight}<br>"
+    puts "mode:#{mode}<br>"
+    puts "limit:#{limit}</span><br>"
+    exit( 9 )
+  end
+
+  return ans
 end
 
 

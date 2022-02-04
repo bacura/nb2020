@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.14b
+#Nutrition browser 2020 print web page 0.16b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 require 'rqrcode'
 
@@ -227,12 +227,12 @@ def arrange_photo( recipe )
 	code = recipe.code
 	mcode = recipe.media
 	main_photo = ''
-	main_photo = "<img src='#{$PHOTO}/#{mcode[0]}.jpg' width='100%' height='100%' class='img-fluid rounded'>\n" if mcode.size > 0
+	main_photo = "<a href='#{$PHOTO}/#{mcode[0]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[0]}.jpg' width='100%' height='100%' class='img-fluid rounded'></a>\n" if mcode.size > 0
 
 	sub_photos = ''
 	if mcode.size > 1
 		1.upto( mcode.size - 1 ) do |c|
-			sub_photos << "<img src='#{$PHOTO}/#{mcode[c]}-tn.jpg' width='25%' height='25%' class='img-fluid rounded'>\n"
+			sub_photos << "<a href='#{$PHOTO}/#{mcode[0]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[c]}-tn.jpg' width='25%' height='25%' class='img-fluid rounded'></a>\n"
 		end
 	end
 
@@ -253,7 +253,12 @@ get_data = get_data()
 code = get_data['c']
 template = get_data['t'].to_i
 dish = get_data['d'].to_i
-palette_ = CGI.unescape( get_data['p'] )
+palette_ = ''
+if get_data['p'] == nil
+	palette_ = @palette_default_name[1]
+else
+	palette_ = CGI.unescape( get_data['p'] )
+end
 frct_accu = get_data['fa']
 if frct_accu == '' || frct_accu == nil
 	frct_accu = 1
@@ -338,12 +343,12 @@ end
 
 
 puts 'FCT Calc<br>' if @debug
-fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, frct_accu, frct_mode )
 fct.load_palette( palette.bit )
 food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, ew_mode )
 fct.set_food( user.name, food_no, food_weight, false )
-fct.calc( frct_accu, frct_mode )
-fct.digit( frct_mode )
+fct.calc()
+fct.digit()
 
 
 puts 'HTML食品成分表の生成 <br>' if @debug
@@ -351,6 +356,7 @@ fct_html = ''
 if template >= 2
 	table_num = fct.items.size / fct_num
 	table_num += 1 if ( fct.items.size % fct_num ) != 0
+	fct_width = ( 70 / fct_num ).to_f
 	table_num.times do |c|
 		fct_html << '<table class="table table-sm">'
 
@@ -363,7 +369,11 @@ if template >= 2
 		end
 		fct_num.times do |cc|
 			fct_no = ( c * fct_num ) + cc
-			fct_html << "<th width='5%' class='fct_item align_r'>#{fct.names[fct_no]}</th>" unless fct.names[fct_no] == nil
+			unless fct.names[fct_no] == nil
+				fct_html << "<th width='#{fct_width}%' class='fct_item align_r'>#{fct.names[fct_no]}</th>"
+			else
+				fct_html << "<th width='#{fct_width}%' class='fct_item align_r'></th>"
+			end
 		end
 		fct_html << '</tr>'
 
@@ -523,8 +533,8 @@ html = <<-"HTML"
 	</div>
 HTML
 
-#### 栄養レシピ / 完全レシピ
-when 2, 3
+#### 栄養レシピ
+when 2
 html = <<-"HTML"
 	<div class='row'>
 		<div class='col-8'>
@@ -532,6 +542,29 @@ html = <<-"HTML"
 			#{foods}
 		</div>
 		<div class='col-4'>
+			#{main_photo}
+		</div>
+	</div>
+	<hr>
+	<div class='row'>
+		<div class='col'>
+			<h5>作り方</h5>
+			#{protocol}
+		</div>
+	</div>
+	<h5>栄養成分</h5>
+	#{fct_html}
+HTML
+
+#### 完全レシピ
+when 3
+html = <<-"HTML"
+	<div class='row'>
+		<div class='col-9'>
+			<h5>材料</h5>
+			#{foods}
+		</div>
+		<div class='col-3'>
 			#{main_photo}
 		</div>
 	</div>

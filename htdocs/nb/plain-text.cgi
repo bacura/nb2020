@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#fct browser plain text 0.01b
+#fct browser plain text 0.02b
 
 #==============================================================================
 #LIBRARY
@@ -38,7 +38,7 @@ end
 #==============================================================================
 puts "Content-type: text/text\n\n"
 
-#### GETデータの取得
+puts "Getting GET\n" if @debug
 get_data = get_data()
 frct_mode = get_data['frct_mode'].to_i
 food_weight = BigDecimal( get_data['food_weight'] )
@@ -48,10 +48,7 @@ lg = $DEFAULT_LP if lg = '' || lg = nil
 lp = lp_init( script, lg )
 
 
-require "#{$SERVER_PATH}/nb2020-soul-#{lg}"
-
-
-#### 食品重量の決定
+puts "Food weight\n" if @debug
 food_weight = 100 if food_weight == nil || food_weight == ''
 food_weight = food_weight.to_i
 

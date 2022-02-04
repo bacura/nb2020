@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser magic calc 0.03b
+#Nutrition browser magic calc 0.05b
 
 #==============================================================================
 #LIBRARY
@@ -89,7 +89,7 @@ ew_check = checked( ew_mode )
 
 puts 'Setting palette <br>' if @debug
 palette = Palette.new( user.name )
-palette_ = @palette_default_name[1] if palette_ == nil || palette_ == ''
+palette_ = @palette_default_name[1] if palette_ == nil || palette_ == '' || palette_ == '0'
 palette.set_bit( palette_ )
 
 
@@ -103,17 +103,18 @@ end
 
 
 puts 'FCT Calc<br>' if @debug
-fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, frct_accu, frct_mode )
 fct.load_palette( palette.bit )
 fct.set_food( user.name, food_no, food_weight, false )
-fct.calc( frct_accu, frct_mode )
-fct.digit( frct_mode )
+fct.calc
+fct.digit
 
 
 puts 'HTML食品成分表の生成 <br>' if @debug
 fct_html = ''
 table_num = fct.items.size / fct_num
 table_num += 1 if ( fct.items.size % fct_num ) != 0
+fct_width = ( 70 / fct_num ).to_f
 table_num.times do |c|
 	fct_html << '<table class="table table-striped table-sm">'
 
@@ -124,7 +125,11 @@ table_num.times do |c|
 	fct_html << "	<th align='center' width='4%' class='fct_item'>#{lp[15]}</th>"
 	fct_num.times do |cc|
 		fct_no = ( c * fct_num ) + cc
-		fct_html << "	<th align='center' width='5%' class='fct_item'>#{fct.names[fct_no]}</th>" unless fct.names[fct_no] == nil
+		unless fct.names[fct_no] == nil
+			fct_html << "	<th align='center' width='#{fct_width}%' class='fct_item'>#{fct.names[fct_no]}</th>"
+		else
+			fct_html << "	<th align='center' width='#{fct_width}%' class='fct_item'></th>"
+		end
 	end
 	fct_html << '</tr>'
 
@@ -146,7 +151,7 @@ table_num.times do |c|
 		fct_html << "	<td align='right'>#{fct.weights[cc].to_f}</td>"
 		fct_num.times do |ccc|
 			fct_no = ( c * fct_num ) + ccc
-			fct_html << "	<td align='right'>#{fct.solid[cc][fct_no].to_f}</td>" unless fct.solid[cc][fct_no] == nil
+			fct_html << "	<td align='right'>#{fct.solid[cc][fct_no]}</td>" unless fct.solid[cc][fct_no] == nil
 		end
 		fct_html << '</tr>'
 	end
@@ -211,7 +216,7 @@ html = <<-"HTML"
 
 		<div class='col-2'></div>
 		<div class='col-1'>
-			<a href='plain-calc.cgi?uname=#{user.name}&code=#{code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette_}&ew_mode=#{ew_mode}&lg=' download='#{dl_name}.txt'>#{lp[11]}</a>
+			<a href='plain-calc.cgi?uname=#{user.name}&code=#{code}&palette=#{palette_}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[11]}</a>
 		</div>
     </div>
 </div>

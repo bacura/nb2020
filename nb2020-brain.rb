@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.17b
+#Nutrition browser 2020 brain 0.18b
 
 #==============================================================================
 # LIBRARY
@@ -38,68 +38,6 @@ def mdbr( query, html_opt, debug )
       puts "#{query_}</span><br>"
   end
   return res
-end
-
-
-#### 食品成分値の処理
-def num_opt( num, weight, mode, limit )
-  # リミットがない→数値ではない場合はそのまま返す
-  return num if limit == nil
-
-    kakko = false
-    if /^\(/ =~ num.to_s
-      num.sub!( '(', '' )
-      num.sub!( ')', '' )
-      kakko = true
-    end
-    ans = BigDecimal( 0 )
-
-  begin
-    if num == '-'
-      return '-'
-    elsif num == 'Tr'
-      return 'Tr'
-    elsif num == '*'
-      return '*'
-    else
-      weight = weight / 100
-      #weight_f = 1 if weight_f < 0
-
-      case mode
-      when '1'  # 四捨五入
-        ans = ( BigDecimal( num ) * weight ).round( limit )
-      when '2'  # 切り上げ
-        ans = ( BigDecimal( num ) * weight ).ceil( limit )
-      when '3'  # 切り捨て
-        ans = ( BigDecimal( num ) * weight ).floor( limit )
-      else
-        ans = ( BigDecimal( num ) * weight ).round( limit )
-      end
-    end
-
-    if limit == 0
-      ans = ans.to_i
-    else
-      t = ans.to_f.to_s.split( '.' )
-      l = t[1].size
-      if l != limit
-        d = limit - l
-        d.times do t[1] << '0' end
-      end
-      ans = t[0] + '.' + t[1]
-    end
-    ans = "(#{ans})" if kakko
-
-  rescue
-    puts "<span class='error'>[num_opt]ERROR!!<br>"
-    puts "num:#{num}<br>"
-    puts "weight:#{weight}<br>"
-    puts "mode:#{mode}<br>"
-    puts "limit:#{limit}</span><br>"
-    exit( 9 )
-  end
-
-  return ans
 end
 
 
@@ -166,10 +104,8 @@ def extract_sum( sum, dish, ew_mode )
   foods.each do |e|
     t = e.split( ':' )
     fns << t[0]
-    if t[0] == '-'
-      fws << '-'
-    elsif t[0] == '+'
-      fws << '+'
+    if t[0] == '-' || t[0] == '+'
+      fws << 0
     elsif ew_mode == 1 && t[7] != nil && t[7] != ''
       fws << ( BigDecimal( t[7] ) / dish.to_i ).floor( 2 )
       tw += ( BigDecimal( t[7] ) / dish.to_i ).floor( 2 )
@@ -236,19 +172,6 @@ def adjust_digit( fct_item, fct_sum, frct_mode )
   end
 
   return fct_sum
-end
-
-
-#### 特殊数値変換
-def convert_zero( t )
-  t = 0 if t == nil
-  t.to_s.sub!( '(', '' )
-  t.to_s.sub!( ')', '' )
-  t = 0 if t == '-'
-  t = 0 if t == 'Tr'
-  t = 0 if t == '*'
-
-  return t
 end
 
 
@@ -396,9 +319,9 @@ end
 
 
 class FCT
-  attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights, :total_weight
+  attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights, :refuses, :total_weight
 
-  def initialize( item_, name_, unit_, frct_ )
+  def initialize( item_, name_, unit_, frct_, frct_accu, frct_mode )
     @item = item_
     @name = name_
     @unit = unit_
@@ -410,9 +333,14 @@ class FCT
     @fns = []
     @foods = []
     @weights = []
+    @refuses = []
     @solid = []
     @total = []
     @total_weight = 0.0
+    @frct_accu = frct_accu
+    @frct_accu = 1 if @frct_accu == nil
+    @frct_mode = frct_mode
+    @frct_mode = 0 if @frct_mode == nil
   end
 
   def load_palette( palette )
@@ -421,7 +349,7 @@ class FCT
     @units = []
     @frcts = []
     @item.size.times do |c|
-      if palette[c] == 1
+      if palette[c] == 1 && @item[c] != 'REFUSE'
         @items << @item[c]
         @names << @name[@item[c]]
         @units << @unit[@item[c]]
@@ -440,6 +368,7 @@ class FCT
           @solid << '-'
           @foods << '-'
           @weights << '-'
+          @refuses << '-'
         end
       elsif e == '+'
         if non_food
@@ -447,6 +376,7 @@ class FCT
           @solid << '+'
           @foods << '+'
           @weights << '+'
+          @refuses << '+'
         end
       elsif e == '00000'
         if non_food
@@ -454,6 +384,7 @@ class FCT
           @solid << '0'
           @foods << '0'
           @weights << '0'
+          @refuses << '0'
         end
       else
         @fns << e
@@ -469,7 +400,13 @@ class FCT
         res = db.query( q )
         if res.first
           a = []
-          @items.each do |ee| a << res.first[ee] end
+          @items.each do |ee|
+            if ee != 'REFUSE'
+              a << res.first[ee]
+            else
+              @refuses << res.first[ee]
+            end
+          end
           @solid << Marshal.load( Marshal.dump( a ))
           res2 = db.query( qq )
           @foods << bind_tags( res2 )
@@ -483,47 +420,77 @@ class FCT
     db.close
   end
 
-  def calc( frct_accu, frct_mode )
+  def calc()
     @total = []
     @items.size.times do |c| @total << BigDecimal( 0 ) end
     @total_weight = 0.0
     @foods.size.times do |f|
       @items.size.times do |i|
-        t =  BigDecimal( convert_zero( @solid[f][i] ).to_s )
         if @weights[f] == 0
+          @solid[f][i] = 0
+        else
+          t = @solid[f][i]
+          t.to_s.sub!( '(', '' )
+          t.to_s.sub!( ')', '' )
+          t = 0 if t == 'Tr'
+          t = 0 if t == '-'
+          t = 0 if t == ''
+          t = ( BigDecimal( t.to_s ) * @weights[f] / 100 )
+
+          if @frct_accu == 0
+          case @frct_mode.to_i
+            when 0, 1  # 四捨五入
+              t = t.round( @frcts[i] )
+            when 2  # 切り上げ
+              t = t.ceil( @frcts[i] )
+            when 3  # 切り捨て
+              t = t.floor( @frcts[i] )
+            end
+          end
           @solid[f][i] = t
           @total[i] += t
-        else
-          @solid[f][i] = BigDecimal( num_opt( t, @weights[f], frct_mode, @frcts[i] ))
-          if frct_accu == 0   # 通常計算
-            @total[i] += t
-          else  # 精密計算
-            @total[i] += BigDecimal( num_opt( t, @weights[f], frct_mode, @frcts[i] + 3 ))
-          end
         end
       end
       @total_weight += @weights[f]
     end
   end
 
-  def digit( frct_mode )
-    @items.size.times do |i|
-      limit = @frcts[i]
-      if limit != nil
-        case frct_mode
-        when 2  # 切り上げ
-          @total[i] = @total[i].ceil( limit )
-        when 3  # 切り捨て
-          @total[i] = @total[i].floor( limit )
-        else
-          @total[i] = @total[i].round( limit )
+  def digit()
+    @foods.size.times do |f|
+      @items.size.times do |i|
+        if @frct_accu == 1
+          case @frct_mode.to_i
+          when 2  # 切り上げ
+            @solid[f][i] = @solid[f][i].ceil( @frcts[i] )
+          when 3  # 切り捨て
+            @solid[f][i] = @solid[f][i].floor( @frcts[i] )
+          else  # 四捨五入
+            @solid[f][i] = @solid[f][i].round( @frcts[i] )
+          end
         end
 
-        if limit == 0
-          @total[i] = @total[i].to_i
+        if @frcts[i] == 0
+          @solid[f][i] = @solid[f][i].to_i
         else
-          @total[i] = @total[i].to_f
+          @solid[f][i] = @solid[f][i].to_f
         end
+      end
+    end
+
+    @items.size.times do |i|
+      case @frct_mode.to_i
+      when 2  # 切り上げ
+        @total[i] = @total[i].ceil( @frcts[i] )
+      when 3  # 切り捨て
+        @total[i] = @total[i].floor( @frcts[i] )
+      else
+        @total[i] = @total[i].round( @frcts[i] )
+      end
+
+      if @frcts[i] == 0
+        @total[i] = @total[i].to_i
+      else
+        @total[i] = @total[i].to_f
       end
     end
   end
@@ -546,13 +513,13 @@ class FCT
   def into_solid( fct )
     @fns << nil
     @foods << nil
-    @weights << 0
+    @weights << 100
     @solid << Marshal.load( Marshal.dump( fct ))
   end
 
   def load_fcz( uname, fzcode, base )
-    begin
-      r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}' AND base='#{base}';", false, false )
+    r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}' AND base='#{base}';", false, false )
+    if r.first
       a = []
       @items.each do |e|
         t = r.first[e]
@@ -563,8 +530,10 @@ class FCT
       @fns << fzcode
       @foods << base
       @weights << 0
-    rescue
-      pust "ERROR load_fcz[#{fzcode}]"
+      return true
+    else
+      puts "<span class='error'>FCZ load ERROR[#{fzcode}]</span>"
+      return false
     end
   end
 

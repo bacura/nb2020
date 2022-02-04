@@ -272,11 +272,11 @@ r.each do |e|
 		koyomi_html[e['tdiv']] = e['koyomi']
 	else
 		koyomi_html[e['tdiv']] = meals( e, lp, user, freeze_flag )
-		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 		fct.load_palette( palette.bit )
 		if freeze_flag == 1
 			fct.load_fcz( user.name, e['fzcode'], 'freeze' )
-			fct.calc( 1, 0 )
+			fct.calc
 		else
 			code_set = []
 			rate_set = []
@@ -329,8 +329,8 @@ r.each do |e|
 			end
 
 			puts 'Start calculation<br>' if @debug
-			fct.calc( 1, 0 )
-			fct.digit( 0 )
+			fct.calc
+			fct.digit
 
 			if fct.foods.size != 0
 				puts "freeze process<br>" if @debug

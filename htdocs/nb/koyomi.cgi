@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.09b
+#Nutrition browser 2020 koyomi 0.10b
 
 
 #==============================================================================
@@ -190,7 +190,7 @@ fct_day_htmls = ['']
 1.upto( calendar.ddl ) do |c|
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 
-	fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+	fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 	fct_day.load_palette( palette.bit )
 
 	r.each do |e|
@@ -201,13 +201,15 @@ fct_day_htmls = ['']
 			rate_set = []
 			unit_set = []
 
-			fct_tdiv = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+			fct_tdiv = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 			fct_tdiv.load_palette( palette.bit )
 
 			if e['freeze'] == 1
-				puts 'Freeze<br>' if @debug
-				fct_tdiv.load_fcz( user.name, fzcode, 'freeze' )
-				fct_day.into_solid( fct_tdiv.solid[0] )
+				puts "Freeze:#{fzcode}<br>" if @debug
+
+				if fct_tdiv.load_fcz( user.name, fzcode, 'freeze' )
+					fct_day.into_solid( fct_tdiv.solid[0] )
+				end
 			else
 				puts 'Row<br>' if @debug
 				a = []
@@ -256,8 +258,8 @@ fct_day_htmls = ['']
 				end
 
 				puts 'Start calculation<br>' if @debug
-				fct_tdiv.calc( 1, 0 )
-				fct_tdiv.digit( 0 )
+				fct_tdiv.calc
+				fct_tdiv.digit
 				fct_day.into_solid( fct_tdiv.total )
 
 				if fct_tdiv.foods.size != 0
@@ -271,8 +273,8 @@ fct_day_htmls = ['']
 		end
 	end
 	puts "Summary#{c} html<br>" if @debug
-	fct_day.calc( 1, 0 )
-	fct_day.digit( 0 )
+	fct_day.calc
+	fct_day.digit
 
 	pfc = fct_day.calc_pfc
 

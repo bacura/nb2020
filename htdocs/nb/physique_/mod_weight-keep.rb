@@ -145,18 +145,18 @@ HTML
 		if delta_weight > 0
 			if delta_weight > 1
 				delta_energy = 7200 / 24
-				m_energy = ( m_energy / 100 ).floor * 100 - delta_energy
+				m_energy = (( m_energy - delta_energy ) / 100 ).floor * 100
 			else
 				delta_energy = delta_weight * 7200 / 24
-				m_energy = ( m_energy / 100 ).round * 100 - delta_energy
+				m_energy = (( m_energy - delta_energy ) / 100 ).round * 100
 			end
 		else
 			if delta_weight < -1
-				delta_energy = -7200 /24
-				m_energy = ( m_energy / 100 ).ceil * 100 - delta_energy
+				delta_energy = -7200 / 24
+				m_energy = (( m_energy - delta_energy ) / 100 ).ceil * 100
 			else
 				delta_energy = delta_weight * 7200 / 24
-				m_energy = ( m_energy / 100 ).round * 100 - delta_energy
+				m_energy = (( m_energy - delta_energy ) / 100 ).round * 100
 			end
 		end
 		m_energy -= 200 if pgene == 1

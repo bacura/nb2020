@@ -40,6 +40,7 @@ def sid_skip( sid, dir )
 	return food_no
 end
 
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -115,26 +116,32 @@ end
 
 energy_html = '<table class="table table-sm table-striped" width="100%">'
 for c in 4..7 do energy_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
+energy_html << "<tr><td></td><td align='right'></td></tr>"
+energy_html << "<tr><td>#{@fct_name[@fct_item[70]]}</td><td align='right'>#{fct_opt[@fct_item[70]]} #{@fct_unit[@fct_item[70]]}</td></tr>"
+energy_html << "<tr><td>#{@fct_name[@fct_item[68]]}</td><td align='right'>#{fct_opt[@fct_item[68]]} #{@fct_unit[@fct_item[68]]}</td></tr>"
+energy_html << "<tr><td>#{@fct_name[@fct_item[31]]}</td><td align='right'>#{fct_opt[@fct_item[31]]} #{@fct_unit[@fct_item[31]]}</td></tr>"
+energy_html << "<tr><td>#{@fct_name[@fct_item[69]]}</td><td align='right'>#{fct_opt[@fct_item[69]]} #{@fct_unit[@fct_item[69]]}</td></tr>"
+
 energy_html << '</table>'
 
 pfc_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 8..19 do pfc_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
+for c in 8..17 do pfc_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
 pfc_html << '</table>'
 
 mineral_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 20..33 do mineral_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
+for c in 17..30 do mineral_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
 mineral_html << '</table>'
 
 vitis_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 34..45 do vitis_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
+for c in 32..45 do vitis_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
 vitis_html << '</table>'
 
 vits_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 46..55 do vits_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
+for c in 46..57 do vits_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
 vits_html << '</table>'
 
 etc_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 56..57 do etc_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
+for c in 58..67 do etc_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
 etc_html << '</table>'
 
 
@@ -143,7 +150,7 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col-3" align='center'>
-			<span class='h6'>#{lp[5]}：#{food_no}<br>
+			<span class='h6'>#{lp[5]}：#{food_no}</span><br>
 			<span onclick="detailPage( 'rev', '#{sid}' )">#{lp[7]}</span>
 			#{lp[6]}：#{sid}</span>
 			<span onclick="detailPage( 'fwd', '#{sid}' )">#{lp[8]}</span>

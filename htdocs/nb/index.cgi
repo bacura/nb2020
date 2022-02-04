@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.01b
+#Nutrition browser 2020 index page 0.02b
 
 
 #==============================================================================
@@ -152,25 +152,25 @@ def html_nav( user, lp )
 
   # 履歴ボタンとまな板ボタンの設定
   if user.status >= 1
-    cb = "#{lp[1]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"CBN\">#{cb_num}</span>"
-    mb = "#{lp[2]} <span class=\"badge rounded-pill bg-dark text-light\" id=\"MBN\">#{meal_num}</span>"
-    special_button = "<button type=\"button\" class=\"btn btn-outline-dark btn-sm nav_button\" id=\"category0\" onclick=\"summonL1( 0 )\">#{@category[0]}</button>"
-    his_button = "<button type=\"button\" class=\"btn btn-primary btn-sm nav_button\" onclick=\"historyInit()\">#{lp[4]}</button>"
+    cb = "#{lp[1]} <span class='badge rounded-pill bg-dark text-light' id='CBN'>#{cb_num}</span>"
+    mb = "#{lp[2]} <span class='badge rounded-pill bg-dark text-light' id='MBN'>#{meal_num}</span>"
+    special_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' id='category0' onclick='summonL1( 0 )''>#{@category[0]}</button>"
+    his_button = "<button type='button' class='btn btn-primary btn-sm nav_button' onclick='historyInit()'>#{lp[4]}</button>"
     sum_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initCB( '' )\">#{cb}</button>"
     recipe_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{lp[5]}</button>"
     menu_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initMeal( '' )\">#{mb}</button>"
     set_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"menuList()\">#{lp[6]}</button>"
     config_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
   else
-    cb = "#{lp[1]} <span class=\"badge badge-pill badge-secondary\" id=\"CBN\">#{cb_num}</span>"
-    mb = "#{lp[2]} <span class=\"badge badge-pill badge-secondary\" id=\"MBN\">#{meal_num}</span>"
-    special_button = "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm nav_button\" onclick=\"displayVIDEO( '#{lp[8]}' )\">#{@category[0]}</button>"
-    his_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[4]}</button>"
-    sum_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{cb}</button>"
-    recipe_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[5]}</button>"
-    menu_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{mb}</button>"
-    set_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[6]}</button>"
-    config_button = "<button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary' onclick=\"displayVIDEO( '#{lp[8]}' )\">#{lp[7]}</button>"
+    cb = "#{lp[1]} <span class='badge badge-pill badge-secondary' id='CBN'>#{cb_num}</span>"
+    mb = "#{lp[2]} <span class='badge badge-pill badge-secondary' id='MBN'>#{meal_num}</span>"
+    special_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{@category[0]}</button></a>"
+    his_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[4]}</button></a>"
+    sum_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{cb}</button></a>"
+    recipe_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[5]}</button></a>"
+    menu_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{mb}</button></a>"
+    set_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[6]}</button></a>"
+    config_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[7]}</button></a>"
   end
 
   if user.status >= 3

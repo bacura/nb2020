@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe search index & fcz builder & 0.10b
+#Nutrition browser 2020 recipe search index & fcz builder & 0.11b
 
 
 #==============================================================================
@@ -47,7 +47,7 @@ res.each do |e|
 
 	#recipe name
 	target << e['name']
-	res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e['name']}' AND user='#{e['user']}';" )
+	res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{e['code']}' AND word='#{e['name']}' AND user='#{e['user']}';" )
 	db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', user='#{e['user']}', code='#{e['code']}', word='#{e['name']}';" ) unless res2.first
 
 	a = e['protocol'].split( "\n" )
@@ -67,7 +67,7 @@ res.each do |e|
 			tags.each do |ee|
 				if ee != ''
 					target << ee
-					res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{ee}' AND user='#{e['user']}';" )
+					res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{e['code']}' AND word='#{ee}' AND user='#{e['user']}';" )
 					db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', user='#{e['user']}', code='#{e['code']}', word='#{ee}';" ) unless res2.first
 				end
 			end
@@ -86,7 +86,7 @@ res.each do |e|
 		mecab.parse( true_word ) do |n|
 			a = n.feature.force_encoding( 'utf-8' ).split( ',' )
 		 	if a[0] == '名詞' && ( a[1] == '一般' || a[1] == '固有名詞' || a[1] == '普通名詞'  || a[1] == '人名' )
-				res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{e['user']}' AND code='#{e['code']}' AND word='#{n.surface}';" )
+				res2 = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{e['code']}' AND user='#{e['user']}' AND code='#{e['code']}' AND word='#{n.surface}';" )
 				db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{e['public']}', user='#{e['user']}', code='#{e['code']}', word='#{n.surface}';" ) unless res2.first
 		 	end
 		end
@@ -122,8 +122,8 @@ palette.set_bit( @palette_default_name[3] )
 res = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE};" )
 res.each do |e|
 	print "#{e['code']}\r"
-	food_no, food_weight, total_weight = extract_sum( e['sum'], e['dish'], 0 )
-	begin
+	unless e['dish'].to_i == 0
+		food_no, food_weight, total_weight = extract_sum( e['sum'], e['dish'], 0 )
 		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
 		fct.load_palette( palette.bit )
 		fct.set_food( nil, food_no, food_weight, false )
@@ -131,13 +131,11 @@ res.each do |e|
 		fct.digit( 0 )
 
 		fct.save_fcz( e['user'], e['name'], 'reipe', e['code'] )
-	rescue
-		puts "\nERROR skip"
 	end
 end
 
 
 #### Deleting non-existent recipe FCZ
 puts "\nDeleting non-existent recipe FCZ."
-db.query( "DELETE #{$MYSQL_TB_FCZ} FROM #{$MYSQL_TB_FCZ} LEFT OUTER JOIN #{$MYSQL_TB_RECIPE} ON #{$MYSQL_TB_RECIPE}.code=#{$MYSQL_TB_FCZ}.origin WHERE #{$MYSQL_TB_RECIPE}.code IS NULL;" )
+db.query( "DELETE #{$MYSQL_TB_FCZ} FROM #{$MYSQL_TB_FCZ} LEFT OUTER JOIN #{$MYSQL_TB_RECIPE} ON #{$MYSQL_TB_RECIPE}.code=#{$MYSQL_TB_FCZ}.origin WHERE #{$MYSQL_TB_RECIPE}.code IS NULL AND #{$MYSQL_TB_FCZ}.base='recipe';" )
 puts "Done."

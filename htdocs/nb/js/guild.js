@@ -693,3 +693,48 @@ var initPathology = function(){
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////
+// 3D recipe plott search //////////////////////////////////////////////////////////////
+
+// Dosplaying recipe by scatter plott
+var recipe3ds = function(){
+	flashBW();
+	$.post( "recipe3ds.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+		$.post( "recipe3ds.cgi", { command:'plott' }, function( data ){
+			$( "#L2" ).html( data );
+			dl1 = true;
+			dl2 = true;
+			dl3 = true;
+			displayBW();
+		});
+	});
+};
+
+// Dosplaying recipe by scatter plott
+var recipe3ds_plott = function(){
+	var range = document.getElementById( "range" ).value;
+	var type = document.getElementById( "type" ).value;
+	var role = document.getElementById( "role" ).value;
+	var tech = document.getElementById( "tech" ).value;
+	var time = document.getElementById( "time" ).value;
+	var cost = document.getElementById( "cost" ).value;
+
+	var xitem = document.getElementById( "xitem" ).value;
+	if( document.getElementById( 'xlog' ).checked ){ var xlog = 1; }else{ var xlog = 0; }
+
+	var yitem = document.getElementById( "yitem" ).value;
+	if( document.getElementById( 'ylog' ).checked ){ var ylog = 1; }else{ var ylog = 0; }
+
+	var zitem = document.getElementById( "zitem" ).value;
+	var zml = document.getElementById( "zml" ).value;
+	var zrange = document.getElementById( "zrange" ).value;
+
+
+
+	$.post( "recipe3ds.cgi", { command:'plott' }, function( plotto_data ){
+	});
+	$.post( "recipe3ds.cgi", { command:'plott' }, function( data ){
+		$( "#L3" ).html( data );
+	});
+};

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu calc 0.02b
+#Nutrition browser 2020 menu calc 0.03b
 
 
 #==============================================================================
@@ -65,7 +65,6 @@ end
 ew_mode = ew_mode.to_i
 frct_mode = frct_mode.to_i
 frct_accu = frct_accu.to_i
-
 if @debug
 	puts "command: #{command}<br>"
 	puts "menu_code: #{menu_code}<br>"
@@ -107,7 +106,7 @@ meal.each do |e| recipe_code << e end
 
 
 #### 大合計の初期化
-total_fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+total_fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, frct_accu, frct_mode )
 total_fct.load_palette( palette.bit )
 
 
@@ -116,6 +115,7 @@ rc = 0
 recipe_name = []
 fct_html = []
 total_total_weight = 0
+fct_width = ( 70 / fct_num ).to_f
 recipe_code.each do |e|
 	p e if @debug
 	r = mdb( "SELECT name, sum, dish from #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false, @debug )
@@ -125,11 +125,11 @@ recipe_code.each do |e|
 	food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, ew_mode )
 	total_total_weight += total_weight
 
-	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, frct_accu, frct_mode )
 	fct.load_palette( palette.bit )
 	fct.set_food( user.name, food_no, food_weight, false )
-	fct.calc( frct_accu, frct_mode )
-	fct.digit( frct_mode )
+	fct.calc
+	fct.digit
 
 	total_fct.into_solid( fct.total )
 
@@ -148,7 +148,11 @@ recipe_code.each do |e|
 		fct_html[rc] << "	<th align='center' width='4%' class='fct_item'>#{lp[3]}</th>"
 		fct_num.times do |cc|
 			fct_no = ( c * fct_num ) + cc
-			fct_html[rc] << "	<th align='center' width='5%' class='fct_item'>#{fct.names[fct_no]}</th>" unless fct.names[fct_no] == nil
+			unless fct.names[fct_no] == nil
+				fct_html[rc] << "	<th align='center' width='#{fct_width}%' class='fct_item'>#{fct.names[fct_no]}</th>"
+			else
+				fct_html[rc] << "	<th align='center' width='#{fct_width}%' class='fct_item'></th>"
+			end
 		end
 		fct_html[rc] << '    </tr>'
 
@@ -190,6 +194,8 @@ recipe_code.each do |e|
 	end
 	rc += 1
 end
+total_fct.calc
+total_fct.digit
 
 
 #### ダウンロード名設定
@@ -238,7 +244,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-2'></div>
 		<div class='col-1'>
-			<a href='plain-menu-calc.cgi?uname=#{user.name}&code=#{meal_code}&frct_mode=#{frct_mode}&frct_accu=#{frct_accu}&palette=#{palette}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[15]}</a>
+			<a href='plain-menu-calc.cgi?uname=#{user.name}&code=#{meal_code}&palette=#{palette_}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[15]}</a>
 		</div>
     </div>
 </div>
@@ -260,7 +266,11 @@ table_num.times do |c|
 	fct_html_sum << "	<th align='center' width='4%' class='fct_item'>#{lp[16]}</th>"
 	fct_num.times do |cc|
 		fct_no = ( c * fct_num ) + cc
-		fct_html_sum << "	<th align='center' width='5%' class='fct_item'>#{total_fct.names[fct_no]}</th>" unless total_fct.names[fct_no] == nil
+		unless total_fct.names[fct_no] == nil
+			fct_html_sum << "	<th align='center' width='#{fct_width}%' class='fct_item'>#{total_fct.names[fct_no]}</th>"
+		else
+			fct_html_sum << "	<th align='center' width='#{fct_width}%' class='fct_item'></th>"
+		end
 	end
 	fct_html_sum << '	</tr>'
 

@@ -1,21 +1,19 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.05b
+#Nutrition browser 2020 recipe 3D plotter 0.05b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
-require 'fileutils'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'recipel'
-page_limit = 50
-@debug = false
+script = 'recipe3ds'
+@debug = true
 
 
 #==============================================================================
@@ -130,35 +128,6 @@ def cost_html( cost, lp )
 end
 
 
-#### ページングパーツ
-def pageing_html( page, page_start, page_end, page_max, lp )
-	html = ''
-	html << '<ul class="pagination pagination-sm justify-content-end">'
-	if page == 1
-		html << "<li class='page-item disabled'><span class='page-link'>#{lp[36]}</span></li>"
-	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2( #{page - 1} )\">#{lp[36]}</span></li>"
-	end
-	html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2( '1' )\">1…</a></li>" unless page_start == 1
-
-	page_start.upto( page_end ) do |c|
-		active = ''
-		active = ' active' if page == c
-		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"recipeList2( #{c} )\">#{c}</a></li>"
-	end
-
-	html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2( '#{page_max}' )\">…#{page_max}</a></li>" unless page_end == page_max
-	if page == page_max
-		html << "<li class='page-item disabled'><span class='page-link'>#{lp[37]}</span></li>"
-	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2( #{page + 1} )\">#{lp[37]}</span></li>"
-	end
-	html << '  </ul>'
-
-	return html
-end
-
-
 def referencing( words, uname )
 	words.gsub!( /\s+/, "\t")
 	words.gsub!( /　+/, "\t")
@@ -229,7 +198,6 @@ recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.fi
 
 #### POST
 command = @cgi['command']
-code = @cgi['code']
 words = @cgi['words']
 if @debug
 	puts "command: #{command}<br>"
@@ -251,8 +219,6 @@ recipe_code_list = []
 
 case command
 when 'init'
-	page = recipe_cfg['page'].to_i
-	page = 1 if page == 0
 	range = recipe_cfg['range'].to_i
 	type = recipe_cfg['type'].to_i
 	role = recipe_cfg['role'].to_i
@@ -267,55 +233,25 @@ when 'refer'
 	words = "#{lp[39]}#{words}<br>#{lp[1]}" if recipe_code_list.size == 0
 	page = 1
 
-when 'delete'
-	puts "Deleting photos<br>" if @debug
-	r = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
-	r.each do |e|
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
-	end
-	mdb( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
+when 'plott'
+	range = @cgi['range'].to_i
+	type = @cgi['type'].to_i
+	role = @cgi['role'].to_i
+	tech = @cgi['tech'].to_i
+	time = @cgi['time'].to_i
+	cost = @cgi['cost'].to_i
 
-	puts "Deleting recipe from DB<br>" if @debug
-	recipe = Recipe.new( user.name )
-	recipe.code = code
-	recipe.delete_db
+	xitem = @cgi['xitem']
+	xlog = @cgi['xlog'].to_i
+	yitem = @cgi['yitem']
+	ylog = @cgi['ylog'].to_i
+	zitem = @cgi['zitem']
+	zml = @cgi['zml'].to_i
+	zrange = @cgi['zrange'].to_i
 
-	puts "Clearing Sum<br>" if @debug
-	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
-	mdb( "UPDATE #{$MYSQL_TB_SUM} SET code='', name='', dish=1 WHERE user='#{user.name}';", false, @debug ) if r.first['code'] == code
 
-when 'subspecies'
-	# Loading original recipe
-	recipe = Recipe.new( user.name )
-	recipe.load_db( code, true )
-
-	# Copying phots
-	new_media_code = generate_code( user.name, 'p' )
-	new_recipe_code = generate_code( user.name, 'r' )
-	r = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
-	if r.first
-		r.each do |e|
-			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-			mdb( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{new_recipe_code}', mcode='#{new_media_code}', origin='#{r.first['origin']}', date='#{@datetime}';", false, @debug )
-		end
-	end
-
-	# Insertinbg recipe into DB
-	recipe.code = new_recipe_code
-	recipe.public = 0
-	recipe.protect = 0
-	recipe.draft = 1
-	recipe.date = @datetime
-	recipe.root = code if command == 'subspecies'
-	recipe.insert_db
-
+	exit( 0 )
 else
-	page = @cgi['page'].to_i
-	page = 1 if page == 0
 	range = @cgi['range'].to_i
 	type = @cgi['type'].to_i
 	role = @cgi['role'].to_i
@@ -327,7 +263,6 @@ else
 	words = recipe_cfg['words']
 end
 if @debug
-	puts "page: #{page}<br>"
 	puts "range: #{range}<br>"
 	puts "type: #{type}<br>"
 	puts "role: #{role}<br>"
@@ -401,105 +336,16 @@ else
 		recipes << o
 	end
 end
-page = 1 if command == 'limit' && page > ( recipes.size / page_limit ) + 1
 
 
-puts "Paging parts<br>" if @debug
-recipe_num = recipes.size
-page_max = recipe_num / page_limit + 1
-page_start = 1
-page_end = page_max
-if page_end > 5
-	if page > 3
-		page_start = page - 3
-		page_start = page_max - 6 if page_max - page_start < 7
-	end
-	if page_end - page < 3
-		page_end = page_max
-	else
-		page_end = page + 3
-		page_end = 7 if page_end < 7
-	end
-else
-	page_end = page_max
-end
-html_paging = pageing_html( page, page_start, page_end, page_max, lp )
+if command == 'data'
 
-
-puts "Paging limit<br>" if @debug
-recipe_start = page_limit * ( page - 1 )
-recipe_end = recipe_start + page_limit - 1
-recipe_end = recipes.size if recipe_end >= recipes.size
-
-
-recipe_html = ''
-recipe_count = 0
-recipes.each do |e|
-	if recipe_count >= recipe_start && recipe_count <= recipe_end
-		recipe_html << '<tr style="font-size:medium;">'
-		if e.media[0] != nil
-			recipe_html << "<td><a href='#{$PHOTO}/#{e.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{e.media[0]}-tns.jpg'></a></td>"
-		else
-			recipe_html << "<td>-</td>"
-		end
-
-		tags =''
-		e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bg-info text-dark' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
-		recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
-
-		recipe_html << "<td>"
-		if e.public == 1
-			recipe_html << lp[2]
-		else
-			recipe_html << lp[7]
-		end
-		if e.protect == 1
-			recipe_html << lp[3]
-		else
-			recipe_html << lp[7]
-		end
-		if e.draft == 1
-			recipe_html << lp[4]
-		else
-			recipe_html << lp[7]
-		end
-
-		recipe_html << "</td>"
-		recipe_html << "<td>"
-		if user.status >= 2 && e.user == user.name
-			recipe_html << "	<span onclick=\"addingMeal( '#{e.code}', '#{e.name}' )\">#{lp[8]}</span>&nbsp;"
-		end
-		if user.status >= 2 && e.user == user.name
-			recipe_html << "&nbsp;<span onclick=\"addKoyomi( '#{e.code}' )\">#{lp[21]}</span>"
-		end
-		recipe_html << "	<span onclick=\"print_templateSelect( '#{e.code}' )\">#{lp[9]}</span>"
-		if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
-			recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{lp[20]}</span>&nbsp;"
-		end
-		recipe_html << "</td>"
-
-		if e.user == user.name
-			if e.protect == 0
-				recipe_html << "<td><input type='checkbox' id='#{e.code}'>&nbsp;<span onclick=\"recipeDelete( '#{e.code}', #{page} )\">#{lp[10]}</span></td>"
-			else
-				recipe_html << "<td></td>"
-			end
-		end
-		recipe_html << '</tr>'
-	end
-	recipe_count += 1
+	exit( 0 )
 end
 
-recipe3ds_button = ''
-recipe3ds_button = "<button class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick='recipe3ds()'>#{lp[38]}</button>" if user.status > 1
-
+puts "Control HTML<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
-	<div class='row'>
-		<div class='col-7'><h5>#{lp[12]} (#{recipe_num}) #{words}</h5></div>
-		<div class='col-5'>#{html_paging}</div>
-	</div>
-	<br>
 	<div class='row'>
 		<div class='col'>#{html_range}</div>
 		<div class='col'>#{html_type}</div>
@@ -507,33 +353,70 @@ html = <<-"HTML"
 		<div class='col'>#{html_tech}</div>
 		<div class='col'>#{html_time}</div>
 		<div class='col'>#{html_cost}</div>
-	</div><br>
-	<div class='row'>
-		<div class='col-2'></div>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList2( '#{page}' )">#{lp[13]}</button></div>
-		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
-		<div class='col-2'>#{recipe3ds_button}</div>
 	</div>
 	<br>
-
-	<table class="table table-sm table-hover">
-	<thead>
-		<tr>
-			<td>#{lp[15]}</td>
-			<td>#{lp[16]}</td>
-			<td></td>
-			<td>#{lp[17]}</td>
-			<td>#{lp[18]}</td>
-			<td></td>
-		</tr>
-	</thead>
-
-		#{recipe_html}
-	</table>
-
 	<div class='row'>
-		<div class='col-7'></div>
-		<div class='col-5'>#{html_paging}</div>
+		<div class='col-4'>
+			<div class="input-group mb-3">
+				<label class="input-group-text">X軸成分</label>
+				<select class="form-select" id="xitem">
+					<option selected>Choose...</option>
+					<option value="1">One</option>
+					<option value="2">Two</option>
+					<option value="3">Three</option>
+				</select>
+			</div>
+		</div>
+		<div class='col-2'>
+			<input class="form-check-input mt-0" type="checkbox" id="xlog">&nbsp;対数
+		</div>
+		<div class='col-4'>
+			<div class="input-group mb-3">
+				<label class="input-group-text">補助成分</label>
+				<select class="form-select" id="xitem">
+					<option selected>Choose...</option>
+					<option value="1">One</option>
+					<option value="2">Two</option>
+					<option value="3">Three</option>
+				</select>
+			</div>
+		</div>
+		<div class='col-2'>
+			<select class="form-select" id="zml">
+				<option value="0">以上</option>
+				<option value="1">以下</option>
+			</select>
+		</div>
+	</div>
+	<div class='row'>
+		<div class='col-4'>
+			<div class="input-group mb-3">
+				<label class="input-group-text">Y軸成分</label>
+				<select class="form-select" id="yitem">
+					<option selected>Choose...</option>
+					<option value="1">One</option>
+					<option value="2">Two</option>
+					<option value="3">Three</option>
+				</select>
+			</div>
+		</div>
+		<div class='col-2'>
+			<input class="form-check-input mt-0" type="checkbox" id="ylog">&nbsp;対数
+		</div>
+		<div class='col-4'>
+			<label class="form-label"></label>
+			<input type="range" class="form-range" min="0" max="100" step="5" id="zrange" value='0'>
+		</div>
+		<div class='col-2'>
+			<div class="input-group mb-3">
+				<input type="text" class="form-control" value='0' id='zrangev' disabled>
+				<span class="input-group-text">%</span>
+			</div>
+		</div>
+	</div>
+	<div class='row'>
+		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipe3ds()">#{lp[13]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="">#{lp[14]}</button></div>
 	</div>
 </div>
 HTML

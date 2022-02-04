@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 plain menu calc 0.02b
+#Nutrition browser 2020 plain menu calc 0.03b
 
 #==============================================================================
 #LIBRARY
@@ -31,31 +31,6 @@ def lp_init( script, language_set )
 end
 
 
-#### 端数処理の選択
-def frct_select( frct_mode, lp )
-	frct_select = ''
-	case frct_mode
-	when 3
-		frct_select = lp[1]
-	when 2
-		frct_select = lp[2]
-	else
-		frct_select = lp[3]
-	end
-
-	return frct_select
-end
-
-
-#### 合計精密チェック
-def accu_check( frct_accu, lp )
-  accu_check = lp[4]
-  accu_check = lp[5] if frct_accu == 1
-
-  return accu_check
-end
-
-
 #### 予想重量チェック
 def ew_check( ew_mode, lp )
   ew_check = lp[6]
@@ -76,45 +51,39 @@ get = get_data()
 uname = get['uname']
 code = get['code']
 ew_mode = get['ew_mode']
-frct_mode = get['frct_mode']
-frct_accu = get['frct_accu']
-palette_ = get['palette']
+ew_mode = 0 if ew_mode == nil
+ew_mode = ew_mode.to_i
+
+palette_ = ''
+if get['palette'] == nil
+	palette_ = @palette_default_name[1]
+else
+	palette_ = CGI.unescape( get['palette'] )
+end
+
 lg = get_data['lg']
 lg = $DEFAULT_LP if lg = '' || lg = nil
 lp = lp_init( script, lg )
 if @debug
-	puts "uname: #{uname}<br>"
-	puts "code: #{code}<br>"
-	puts "ew_mode: #{ew_mode}<br>"
-	puts "frct_mode: #{frct_mode}<br>"
-	puts "frct_accu: #{frct_accu}<br>"
-	puts "palette_: #{palette_}<br>"
+	puts "uname: #{uname}\n"
+	puts "code: #{code}\n"
+	puts "ew_mode: #{ew_mode}\n"
+	puts "palette_: #{palette_}\n"
 	puts "<hr>"
 end
 
-ew_mode = 0 if ew_mode == nil
-ew_mode = ew_mode.to_i
-frct_mode = 0 if frct_mode == nil
-frct_mode = frct_mode.to_i
-frct_accu = 0 if frct_accu == nil
-frct_accu = frct_accu.to_i
-palette = 0 if palette == nil
-palette = palette.to_i
 
-
-puts 'Checking SELECT & CHECK <br>' if @debug
-frct_select = frct_select( frct_mode, lp )
-accu_check = accu_check( frct_accu, lp )
+puts "Checking CHECK\n" if @debug
 ew_check = ew_check( ew_mode, lp )
 
 
-puts 'Setting palette <br>' if @debug
+puts "Setting palette\n" if @debug
 palette = Palette.new( uname )
 palette_ = @palette_default_name[1] if palette_ == nil || palette_ == ''
 palette.set_bit( palette_ )
 
 
-puts 'Extract recipe from Meal <br>' if @debug
+puts "Extract recipe from Meal\n" if @debug
 recipe_code = []
 r = mdb( "SELECT code, name, meal from #{$MYSQL_TB_MEAL} WHERE user='#{uname}';", false, @debug )
 meal_name = r.first['name']
@@ -124,7 +93,7 @@ meal.each do |e| recipe_code << e end
 
 
 #### 大合計の初期化
-total_fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+total_fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 total_fct.load_palette( palette.bit )
 
 
@@ -141,11 +110,11 @@ recipe_code.each do |e|
 	food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, ew_mode )
 	total_total_weight += total_weight
 
-	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 	fct.load_palette( palette.bit )
 	fct.set_food( uname, food_no, food_weight, false )
-	fct.calc( frct_accu, frct_mode )
-	fct.digit( frct_mode )
+	fct.calc
+	#fct.digit
 
 	total_fct.into_solid( fct.total )
 
@@ -167,18 +136,20 @@ recipe_code.each do |e|
 	fct.foods.size.times do |c|
 			fct_txt[rc] << "\t#{fct.fns[c]}\t#{fct.names[c]}\t#{fct.weights[c].to_f}"
 			fct.items.size.times do |cc|
-				fct_txt[rc] << "\t#{fct.solid[c][cc]}.to_f"
+				fct_txt[rc] << "\t#{fct.solid[c][cc].to_f}"
 			end
 			fct_txt[rc] << "\n"
 	end
 
 	# 合計値
 	fct_txt[rc] << "\t\t#{lp[9]}\t#{total_weight.to_f}"
-	fct.total.each do |e| fct_txt[rc] << "\t#{e}" end
+	fct.total.each do |e| fct_txt[rc] << "\t#{e.to_f}" end
 	fct_txt[rc] << "\n\n"
 
 	rc += 1
 end
+total_fct.calc
+#total_fct.digit
 
 
 #### HTML食品成分全合計
@@ -204,6 +175,6 @@ fct_txt_sum << "\n"
 
 
 #### 食品番号から食品成分を表示
-puts "#{lp[12]} #{meal_name}\t#{lp[13]} #{code}\t#{lp[14]} #{ew_check}\t#{lp[15]} #{frct_select} / #{accu_check}\n".encode( 'Shift_JIS' )
-fct_txt.each do |e| puts e.encode( 'Shift_JIS' ) end
-puts fct_txt_sum.encode( 'Shift_JIS' )
+puts "#{lp[12]} #{meal_name}\t#{lp[13]} #{code}\t#{lp[14]} #{ew_check}\n"
+fct_txt.each do |e| puts e end
+puts fct_txt_sum
