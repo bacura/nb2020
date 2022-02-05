@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.18b
+#Nutrition browser 2020 brain 0.19b
 
 #==============================================================================
 # LIBRARY
@@ -430,6 +430,7 @@ class FCT
           @solid[f][i] = 0
         else
           t = @solid[f][i]
+          t = 0 if t == nil
           t.to_s.sub!( '(', '' )
           t.to_s.sub!( ')', '' )
           t = 0 if t == 'Tr'
@@ -529,7 +530,7 @@ class FCT
       @solid << Marshal.load( Marshal.dump( a ))
       @fns << fzcode
       @foods << base
-      @weights << 0
+      @weights << 100
       return true
     else
       puts "<span class='error'>FCZ load ERROR[#{fzcode}]</span>"
@@ -558,4 +559,3 @@ class FCT
   def debug()
   end
 end
-

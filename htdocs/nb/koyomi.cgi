@@ -189,7 +189,6 @@ puts "Multi calc process<br>" if @debug
 fct_day_htmls = ['']
 1.upto( calendar.ddl ) do |c|
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-
 	fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 	fct_day.load_palette( palette.bit )
 
