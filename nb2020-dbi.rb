@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.30b
+#nb2020-dbi.rb 0.31b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -44,36 +44,8 @@ def db_create_rr()
 end
 
 
-#### Updating fct table.
-#def fct_update( source_file, source_AA_file, source_FA_file, source_FIB_file, source_OA_file )
-#	query = 'DELETE FROM fct;'
-#	$DB.query( query )
-
-#	f = open( source_file, 'r' )
-#	label = true
-#	f.each_line do |e|
-#		items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-
-#		query = "INSERT INTO #{$MYSQL_TB_FCT} SET"
-#		@fct_item.size.times do |c|
-#			query << " #{@fct_item[c]}='#{items[c]}',"
-#		end
-#		query.chop!
-#		query << ";"
-
-#		$DB.query( query ) unless label
-#		label = false
-#	end
-#	f.close
-#	puts 'fct table has been updated.'
-#end
-
-
 #### Making fct additional table.
 def fcts_init( base_file, sub_files )
-#	query = 'DROP TABLE fcta;'
-#	$DB.query( query )
-
 	query = "SHOW TABLES LIKE 'fcts';"
 	res = $DB.query( query )
 	if res.first
@@ -123,14 +95,10 @@ end
 
 #### Making fct table.
 def fct_init( source_file, plus_fct )
-#	query = 'DROP TABLE fct;'
-#	$DB.query( query )
-
 	query = "SHOW TABLES LIKE 'fct';"
 	res = $DB.query( query )
 	if res.first
 		puts 'fct table already exists.'
-#		fct_update( source_file )
 	else
 		query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5) NOT NULL PRIMARY KEY,SID SMALLINT UNSIGNED,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVL VARCHAR(8),CHOAVLDF VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIA VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
 		$DB.query( query )
@@ -627,6 +595,15 @@ def fct_pseudo_init( plus_fct )
 	res = $DB.query( query )
 	if res.first
 		puts 'fctp table already exists.'
+		plus_fct.each do |e|
+			query = "DESCRIBE #{$MYSQL_TB_FCTP} #{e};"
+			res = $DB.query( query )
+			unless res.first
+				query = "ALTER TABLE #{$MYSQL_TB_FCTP} add column #{e} VARCHAR(16);"
+				$DB.query( query )
+				puts "#{e} has added into fctp."
+			end
+		end
 	else
 		query = 'CREATE TABLE fctp (FG VARCHAR(2),FN VARCHAR(6),user VARCHAR(32) NOT NULL,Tagnames VARCHAR(256),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(16),PROTCAA VARCHAR(16),PROT VARCHAR(16),FATNLEA VARCHAR(16),CHOLE VARCHAR(16),FAT VARCHAR(16),CHOAVLM VARCHAR(16),CHOAVL VARCHAR(16),CHOAVLMF VARCHAR(16),FIB VARCHAR(16),POLYL VARCHAR(16),CHOCDF VARCHAR(16),OA VARCHAR(16),ASH VARCHAR(16),NA VARCHAR(16),K VARCHAR(16),CA VARCHAR(16),MG VARCHAR(16),P VARCHAR(16),FE VARCHAR(16),ZN VARCHAR(16),CU VARCHAR(16),MN VARCHAR(16),ID VARCHAR(16),SE VARCHAR(16),CR VARCHAR(16),MO VARCHAR(16),RETOL VARCHAR(16),CARTA VARCHAR(16),CARTB VARCHAR(16),CRYPXB VARCHAR(16),CARTBEQ VARCHAR(16),VITA_RAE VARCHAR(16),VITD VARCHAR(16),TOCPHA VARCHAR(16),TOCPHB VARCHAR(16),TOCPHG VARCHAR(16),TOCPHD VARCHAR(16),VITK VARCHAR(16),THIA VARCHAR(16),RIBF VARCHAR(16),NIA VARCHAR(16),NE VARCHAR(16),VITB6A VARCHAR(16),VITB12 VARCHAR(16),FOL VARCHAR(16),PANTAC VARCHAR(16),BIOT VARCHAR(16),VITC VARCHAR(16),ALC VARCHAR(16),NACL_EQ VARCHAR(16),Notice VARCHAR(128));'
 		$DB.query( query )
@@ -930,6 +907,15 @@ def fcz_init( plus_fct )
 	res = $DB.query( query )
 	if res.first
 		puts 'fcz already exists.'
+		plus_fct.each do |e|
+			query = "DESCRIBE #{$MYSQL_TB_FCZ} #{e};"
+			res = $DB.query( query )
+			unless res.first
+				query = "ALTER TABLE #{$MYSQL_TB_FCZ} add column #{e} VARCHAR(16);"
+				$DB.query( query )
+				puts "#{e} has added into fctp."
+			end
+		end
 	else
 		query = 'CREATE TABLE fcz ( code VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), base VARCHAR(16), name VARCHAR(64), user VARCHAR(32), ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(16),PROTCAA VARCHAR(16),PROT VARCHAR(16),FATNLEA VARCHAR(16),CHOLE VARCHAR(16),FAT VARCHAR(16),CHOAVLM VARCHAR(16),CHOAVL VARCHAR(16),CHOAVLDF VARCHAR(16),FIB VARCHAR(16),POLYL VARCHAR(16),CHOCDF VARCHAR(16),OA VARCHAR(16),ASH VARCHAR(16),NA VARCHAR(16),K VARCHAR(16),CA VARCHAR(16),MG VARCHAR(16),P VARCHAR(16),FE VARCHAR(16),ZN VARCHAR(16),CU VARCHAR(16),MN VARCHAR(16),ID VARCHAR(16),SE VARCHAR(16),CR VARCHAR(16),MO VARCHAR(16),RETOL VARCHAR(16),CARTA VARCHAR(16),CARTB VARCHAR(16),CRYPXB VARCHAR(16),CARTBEQ VARCHAR(16),VITA_RAE VARCHAR(16),VITD VARCHAR(16),TOCPHA VARCHAR(16),TOCPHB VARCHAR(16),TOCPHG VARCHAR(16),TOCPHD VARCHAR(16),VITK VARCHAR(16),THIA VARCHAR(16),RIBF VARCHAR(16),NIA VARCHAR(16),NE VARCHAR(16),VITB6A VARCHAR(16),VITB12 VARCHAR(16),FOL VARCHAR(16),PANTAC VARCHAR(16),BIOT VARCHAR(16),VITC VARCHAR(16),ALC VARCHAR(16),NACL_EQ VARCHAR(16));'
 		$DB.query( query )
@@ -1117,15 +1103,6 @@ def schoolc_init()
 		$DB.query( query )
 		puts 'schoolc table has been created.'
 	end
-end
-
-
-#### 生体情報
-def bio_init()
-	puts '栄養成分安定テーブルの作成'
-	# テーブル作成
-	query = 'CREATE TABLE bio (user VARCHAR(32), auto TINYINT(1), sex TINYINT(1), age TINYINT UNSIGNED, height TINYINT UNSIGNED, weight TINYINT UNSIGNED);'
-	$DB.query( query )
 end
 
 
