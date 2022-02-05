@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe search index & fcz builder & 0.11b
+#Nutrition browser 2020 recipe search index & fcz builder & 0.12b
 
 
 #==============================================================================
@@ -124,11 +124,11 @@ res.each do |e|
 	print "#{e['code']}\r"
 	unless e['dish'].to_i == 0
 		food_no, food_weight, total_weight = extract_sum( e['sum'], e['dish'], 0 )
-		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct )
+		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 		fct.load_palette( palette.bit )
 		fct.set_food( nil, food_no, food_weight, false )
-		fct.calc( 1, 0 )
-		fct.digit( 0 )
+		fct.calc
+		fct.digit
 
 		fct.save_fcz( e['user'], e['name'], 'reipe', e['code'] )
 	end
