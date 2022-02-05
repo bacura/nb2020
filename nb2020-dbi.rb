@@ -921,7 +921,7 @@ def fcz_init( plus_fct )
 		$DB.query( query )
 
 		query = 'ALTER TABLE fcz'
-		plus_fct.each do |e| query << " add column #{e} VARCHAR(8)," end
+		plus_fct.each do |e| query << " add column #{e} VARCHAR(16)," end
 		query.chop!
 		query << ";"
 		$DB.query( query )
