@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser history 0.01b
+#Nutritoin browser history 0.10b
 
 
 #==============================================================================
@@ -28,6 +28,12 @@ def get_histry( lp, user, sub_fg )
 	res = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';" )
 	t = res.first['his'].split( "\t" )
 
+	gycv = false
+	if sub_fg == '6_'
+		gycv = true
+		sub_fg = '6'
+	end
+
 	if sub_fg == 'all'
 		$ALL_LIMIT.times do |c|
 			break if c > t.size - 1
@@ -47,6 +53,15 @@ def get_histry( lp, user, sub_fg )
 	history.each do |e|
 		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
 		r_tag = db.query( q )
+		if sub_fg == '6'
+			res2 = db.query( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{e}';" )
+			if res2.first
+				next if res2.first['gycv'] == 1 && ( not gycv )
+				next if res2.first['gycv'] != 1 && gycv
+			end
+		end
+
+
 		food_name = r_tag.first['name']
 		tags = bind_tags( r_tag ) if r_tag.first
 
@@ -64,25 +79,26 @@ end
 #### Sub group HTML
 def sub_menu( lp )
 	html_sub = <<-"HTML_SUB"
-<span class="btn badge rounded-pill bg-info text-dark" id="category1" onclick="historySub( '1' )">#{lp[7]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" id="category2" onclick="historySub( '2' )">#{lp[8]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" id="category3" onclick="historySub( '3' )">#{lp[9]}</span>
-<span class="btn badge rounded-pill bg-danger" id="category4" onclick="historySub( '4' )">#{lp[10]}</span>
-<span class="btn badge rounded-pill bg-warning text-dark" id="category5" onclick="historySub( '5' )">#{lp[11]}</span>
-<span class="btn badge rounded-pill bg-success" id="category6" onclick="historySub( '6' )">#{lp[12]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" id="category7" onclick="historySub( '7' )">#{lp[13]}</span>
-<span class="btn badge rounded-pill bg-success" id="category8" onclick="historySub( '8' )">#{lp[14]}</span>
-<span class="btn badge rounded-pill bg-success" id="category9" onclick="historySub( '9' )">#{lp[15]}</span>
-<span class="btn badge rounded-pill bg-danger" id="category10" onclick="historySub( '10' )">#{lp[16]}</span>
-<span class="btn badge rounded-pill bg-danger" id="category11" onclick="historySub( '11' )">#{lp[17]}</span>
-<span class="btn badge rounded-pill bg-danger" id="category12" onclick="historySub( '12' )">#{lp[18]}</span>
-<span class="btn badge rounded-pill bg-light text-dark" id="category13" onclick="historySub( '13' )">#{lp[19]}</span>
-<span class="btn badge rounded-pill bg-warning text-dark" id="category14" onclick="historySub( '14' )">#{lp[20]}</span>
-<span class="btn badge rounded-pill bg-secondary" id="category15" onclick="historySub( '15' )">#{lp[21]}</span>
-<span class="btn badge rounded-pill bg-primary" id="category16" onclick="historySub( '16' )">#{lp[22]}</span>
-<span class="btn badge rounded-pill bg-light text-dark" id="category17" onclick="historySub( '17' )">#{lp[23]}</span>
-<span class="btn badge rounded-pill bg-secondary" id="category18" onclick="historySub( '18' )">#{lp[24]}</span>
-<span class="btn badge rounded-pill bg-light text-dark" id="category0" onclick="historySub( '00' )">#{lp[25]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" onclick="historySub( '1' )">#{lp[7]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" onclick="historySub( '2' )">#{lp[8]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" onclick="historySub( '3' )">#{lp[9]}</span>
+<span class="btn badge rounded-pill bg-danger" onclick="historySub( '4' )">#{lp[10]}</span>
+<span class="btn badge rounded-pill bg-warning text-dark" onclick="historySub( '5' )">#{lp[11]}</span>
+<span class="btn badge rounded-pill bg-light text-success" onclick="historySub( '6' )">#{lp[12]}</span>
+<span class="btn badge rounded-pill bg-success" onclick="historySub( '6_' )">#{lp[12]}</span>
+<span class="btn badge rounded-pill bg-info text-dark" onclick="historySub( '7' )">#{lp[13]}</span>
+<span class="btn badge rounded-pill bg-success" onclick="historySub( '8' )">#{lp[14]}</span>
+<span class="btn badge rounded-pill bg-success" onclick="historySub( '9' )">#{lp[15]}</span>
+<span class="btn badge rounded-pill bg-danger" onclick="historySub( '10' )">#{lp[16]}</span>
+<span class="btn badge rounded-pill bg-danger" onclick="historySub( '11' )">#{lp[17]}</span>
+<span class="btn badge rounded-pill bg-danger" onclick="historySub( '12' )">#{lp[18]}</span>
+<span class="btn badge rounded-pill bg-light text-dark" onclick="historySub( '13' )">#{lp[19]}</span>
+<span class="btn badge rounded-pill bg-warning text-dark" onclick="historySub( '14' )">#{lp[20]}</span>
+<span class="btn badge rounded-pill bg-secondary" onclick="historySub( '15' )">#{lp[21]}</span>
+<span class="btn badge rounded-pill bg-primary" onclick="historySub( '16' )">#{lp[22]}</span>
+<span class="btn badge rounded-pill bg-light text-dark" onclick="historySub( '17' )">#{lp[23]}</span>
+<span class="btn badge rounded-pill bg-secondary" onclick="historySub( '18' )">#{lp[24]}</span>
+<span class="btn badge rounded-pill bg-light text-dark" onclick="historySub( '00' )">#{lp[25]}</span>
 HTML_SUB
 	puts html_sub
 	exit
@@ -127,6 +143,10 @@ end
 sub_title = ''
 if sub_fg == '00'
 	sub_title = "#{lp[2]}"
+elsif sub_fg == '6'
+	sub_title = "#{lp[5]}"
+elsif sub_fg == '6_'
+	sub_title = "#{lp[6]}"
 else
 	sub_title = @category[sub_fg.to_i]
 end

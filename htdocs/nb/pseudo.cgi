@@ -304,26 +304,31 @@ disabled_option = 'disabled' if tag_user != user.name && tag_user != nil
 #### html_fct_block
 html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
 4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+html_fct_block1 << "<tr><td></td><td align='right' width='20%''></td><td></td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[70]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[70]}' value=\"#{fct_opt[@fct_item[70]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[70]]}</td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[68]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[68]}' value=\"#{fct_opt[@fct_item[68]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[68]]}</td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[31]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[31]}' value=\"#{fct_opt[@fct_item[31]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[31]]}</td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[69]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[69]}' value=\"#{fct_opt[@fct_item[69]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[69]]}</td></tr>"
 html_fct_block1 << '</table>'
 
 html_fct_block2 = '<table class="table-sm table-striped" width="100%">'
-8.upto( 19 ) do |i| html_fct_block2 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+8.upto( 17 ) do |i| html_fct_block2 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block2 << '</table>'
 
 html_fct_block3 = '<table class="table-sm table-striped" width="100%">'
-20.upto( 33 ) do |i| html_fct_block3 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+18.upto( 30 ) do |i| html_fct_block3 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block3 << '</table>'
 
 html_fct_block4 = '<table class="table-sm table-striped" width="100%">'
-34.upto( 45 ) do |i| html_fct_block4 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+32.upto( 45 ) do |i| html_fct_block4 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block4 << '</table>'
 
 html_fct_block5 = '<table class="table-sm table-striped" width="100%">'
-46.upto( 55 ) do |i| html_fct_block5 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+46.upto( 57 ) do |i| html_fct_block5 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block5 << '</table>'
 
 html_fct_block6 = '<table class="table-sm table-striped" width="100%">'
-56.upto( 57 ) do |i| html_fct_block6 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+58.upto( 67 ) do |i| html_fct_block6 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block6 << '</table>'
 
 

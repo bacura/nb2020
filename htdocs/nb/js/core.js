@@ -434,16 +434,16 @@ var pseudoSave = function( code ){
 
 		var PROTCAA = document.getElementById( "pPROTCAA" ).value;
 		var PROT = document.getElementById( "pPROT" ).value;
+		var FAT = document.getElementById( "pFAT" ).value;
 		var FATNLEA = document.getElementById( "pFATNLEA" ).value;
 		var CHOLE = document.getElementById( "pCHOLE" ).value;
-		var FAT = document.getElementById( "pFAT" ).value;
 		var CHOAVLM = document.getElementById( "pCHOAVLM" ).value;
 		var CHOAVL = document.getElementById( "pCHOAVL" ).value;
-		var CHOAVLMF = document.getElementById( "pCHOAVLMF" ).value;
+		var CHOAVLDF = document.getElementById( "pCHOAVLDF" ).value;
 		var FIB = document.getElementById( "pFIB" ).value;
-		var POLYL = document.getElementById( "pPOLYL" ).value;
 		var CHOCDF = document.getElementById( "pCHOCDF" ).value;
 		var OA = document.getElementById( "pOA" ).value;
+		var POLYL = document.getElementById( "pPOLYL" ).value;
 
 		var ASH = document.getElementById( "pASH" ).value;
 		var NA = document.getElementById( "pNA" ).value;
@@ -488,16 +488,32 @@ var pseudoSave = function( code ){
 		var NACL_EQ = document.getElementById( "pNACL_EQ" ).value;
 		var Notice = document.getElementById( "pNotice" ).value;
 
+		var FASAT = document.getElementById( "pFASAT" ).value;
+		var FAMS = document.getElementById( "pFAMS" ).value;
+		var FAPU = document.getElementById( "pFAPU" ).value;
+		var FAPUN3 = document.getElementById( "pFAPUN3" ).value;
+		var FAPUN6 = document.getElementById( "pFAPUN6" ).value;
+
+		var FIBTG = document.getElementById( "pFIBTG" ).value;
+		var FIBSOL = document.getElementById( "pFIBSOL" ).value;
+		var FIBINS = document.getElementById( "pFIBINS" ).value;
+		var FIBTDF = document.getElementById( "pFIBTDF" ).value;
+		var FIBSDFS = document.getElementById( "pFIBSDFS" ).value;
+		var FIBSDFP = document.getElementById( "pFIBSDFP" ).value;
+		var FIBIDF = document.getElementById( "pFIBIDF" ).value;
+		var STARES = document.getElementById( "pSTARES" ).value;
+
 		$.post( "pseudo.cgi", {
 			command:'save', code:code, food_name:food_name, food_group:food_group, food_weight:food_weight,
 			class1:class1, class2:class2, class3:class3, tag1:tag1, tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5,
 			REFUSE:REFUSE,  ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
-			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLMF:CHOAVLMF, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
+			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
 			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
-			ALC:ALC, NACL_EQ:NACL_EQ,
-			Notice:Notice
+			ALC:ALC, NACL_EQ:NACL_EQ, Notice:Notice,
+			FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, FAPUN3:FAPUN3, FAPUN6:FAPUN6,
+			FIBTG:FIBTG, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTDF:FIBTDF, FIBSDFS:FIBSDFS, FIBSDFP:FIBSDFP, FIBIDF:FIBIDF, STARES:STARES
 		}, function( data ){
 			$( "#LF" ).html( data );
 			displayVIDEO( food_name + ' saved' );

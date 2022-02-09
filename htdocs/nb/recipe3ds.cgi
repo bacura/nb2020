@@ -181,17 +181,14 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+html_init( nil )
 
 user = User.new( @cgi )
 #user.debug if @debug
 lp = user.load_lp( script )
 
-r = mdb( "SELECT icache, recipe FROM cfg WHERE user='#{user.name}';", false, @debug )
-if r.first['icache'].to_i == '1'
-	html_init_cache( nil )
-else
-	html_init( nil )
-end
+
+r = mdb( "SELECT recipe FROM cfg WHERE user='#{user.name}';", false, @debug )
 recipe_cfg = Hash.new
 recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
 
@@ -201,7 +198,6 @@ command = @cgi['command']
 words = @cgi['words']
 if @debug
 	puts "command: #{command}<br>"
-	puts "code: #{code}<br>"
 	puts "words: #{words}<br>"
 	puts "<hr>"
 end
@@ -215,6 +211,13 @@ role = 99
 tech = 99
 time = 99
 cost = 99
+xitem = 'ENERC'
+yitem = 'ENERC'
+zitem = 'ENERC'
+xlog = 0
+ylog = 0
+zml = 0
+zrange = 0
 recipe_code_list = []
 
 case command
@@ -225,6 +228,13 @@ when 'init'
 	tech = recipe_cfg['tech'].to_i
 	time = recipe_cfg['time'].to_i
 	cost = recipe_cfg['cost'].to_i
+	xitem = recipe_cfg['xitem']
+	yitem = recipe_cfg['yitem']
+	zitem = recipe_cfg['zitem']
+	xlog = recipe_cfg['xlog'].to_i
+	ylog = recipe_cfg['ylog'].to_i
+	zml =  recipe_cfg['zml'].to_i
+	zrange =  recipe_cfg['zrange'].to_i
 when 'reset'
 	words = ''
 
@@ -233,7 +243,13 @@ when 'refer'
 	words = "#{lp[39]}#{words}<br>#{lp[1]}" if recipe_code_list.size == 0
 	page = 1
 
-when 'plott'
+when 'plott_area'
+	puts '<div class="row">'
+	puts "<div class='col'><div id='recipe3ds_plott' align='center'></div>"
+	puts '</div>'
+
+	exit( 0 )
+when 'plott_data'
 	range = @cgi['range'].to_i
 	type = @cgi['type'].to_i
 	role = @cgi['role'].to_i
@@ -248,9 +264,6 @@ when 'plott'
 	zitem = @cgi['zitem']
 	zml = @cgi['zml'].to_i
 	zrange = @cgi['zrange'].to_i
-
-
-	exit( 0 )
 else
 	range = @cgi['range'].to_i
 	type = @cgi['type'].to_i
@@ -258,6 +271,14 @@ else
 	tech = @cgi['tech'].to_i
 	time = @cgi['time'].to_i
 	cost = @cgi['cost'].to_i
+
+	xitem = @cgi['xitem']
+	yitem = @cgi['yitem']
+	zitem = @cgi['zitem']
+	xlog = @cgi['xlog'].to_i
+	ylog = @cgi['ylog'].to_i
+	zml = @cgi['zml'].to_i
+	zrange = @cgi['zrange'].to_i
 
 	recipe_code_list = referencing( recipe_cfg['words'], user.name )
 	words = recipe_cfg['words']
@@ -269,6 +290,13 @@ if @debug
 	puts "tech: #{tech}<br>"
 	puts "time: #{time}<br>"
 	puts "cost: #{cost}<br>"
+	puts "xitem: #{xitem}<br>"
+	puts "yitem: #{yitem}<br>"
+	puts "zitem: #{zitem}<br>"
+	puts "xlog: #{xlog}<br>"
+	puts "ylog: #{ylog}<br>"
+	puts "zml: #{zml}<br>"
+	puts "zrange: #{zrange}<br>"
 	puts "recipe_code_list: #{recipe_code_list}<br>"
 	puts "<hr>"
 end
@@ -279,31 +307,48 @@ sql_where = 'WHERE '
 case range
 # 自分の全て
 when 0
-	sql_where << " user='#{user.name}' AND name!=''"
+	sql_where << "recipe.user='#{user.name}' AND recipe.name!=''"
 # 自分の下書き
 when 1
-	sql_where << "user='#{user.name}' AND name!='' AND draft='1'"
+	sql_where << "recipe.user='#{user.name}' AND recipe.name!='' AND recipe.draft='1'"
 # 自分の保護
 when 2
-	sql_where << "user='#{user.name}' AND protect='1' AND name!=''"
+	sql_where << "recipe.user='#{user.name}' AND recipe.protect='1' AND recipe.name!=''"
 # 自分の公開
 when 3
-	sql_where << "user='#{user.name}' AND public='1' AND name!=''"
+	sql_where << "recipe.user='#{user.name}' AND recipe.public='1' AND recipe.name!=''"
 # 自分の無印
 when 4
-	sql_where << "user='#{user.name}' AND public='0' AND draft='0' AND name!=''"
+	sql_where << "recipe.user='#{user.name}' AND recipe.public='0' AND recipe.draft='0' AND recipe.name!=''"
 # 他の公開
 when 5
-	sql_where << "public='1' AND user!='#{user.name}' AND name!=''"
+	sql_where << "recipe.public='1' AND recipe.user!='#{user.name}' AND recipe.name!=''"
 else
-	sql_where << " user='#{user.name}' AND name!=''"
+	sql_where << "recipe.user='#{user.name}' AND recipe.name!=''"
 end
 
-sql_where << " AND type='#{type}'" unless type == 99
-sql_where << " AND role='#{role}'" unless role == 99
-sql_where << " AND tech='#{tech}'" unless tech == 99
-sql_where << " AND time>0 AND time<=#{time}" unless time == 99
-sql_where << " AND cost>0 AND cost<=#{cost}" unless cost == 99
+sql_where << " AND recipe.type='#{type}'" unless type == 99
+sql_where << " AND recipe.role='#{role}'" unless role == 99
+sql_where << " AND recipe.tech='#{tech}'" unless tech == 99
+sql_where << " AND recipe.time>0 AND recipe.time<=#{time}" unless time == 99
+sql_where << " AND recipe.cost>0 AND recipe.cost<=#{cost}" unless cost == 99
+
+
+if command == 'plott_data'
+	tb1 = "#{$MYSQL_TB_FCZ}"
+	tb2 = "#{$MYSQL_TB_RECIPE}"
+
+	q = "SELECT #{tb1}.#{xitem}, #{tb1}.#{yitem}, #{tb1}.#{zitem} FROM #{tb1} INNER JOIN #{tb2} ON #{tb1}.origin=#{tb2}.code #{sql_where} ORDER BY #{tb1}.#{zitem};"
+puts q
+	r = mdb( q, false, @debug )
+	r.each do |e|
+		puts "#{e[zitem]}<br>"
+	end
+
+	exit( 0 )
+end
+
+
 
 
 #### 検索条件HTML
@@ -315,33 +360,51 @@ html_time = time_html( time, lp )
 html_cost = cost_html( cost, lp )
 
 
-puts "Recipe list<br>" if @debug
-recipes = []
-if recipe_code_list.size > 0
-	recipe_code_list.each do |e|
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, @debug )
-		if r.first
-			o = Recipe.new( user.name )
-			o.load_db( r.first, false )
-			o.load_media
-			recipes << o
-		end
+####
+xselect = '<select class="form-select" id="xitem">'
+@fct_item.each do |e|
+	unless e == 'FG' || e == 'FN' || e == 'SID' || e == 'Tagnames' || e == 'REFUSE' || e == 'Notice'
+		s = ''
+		s = 'SELECTED' if e == xitem
+		xselect << "<option value='#{e}' #{s}>#{@fct_name[e]}</option>"
 	end
+end
+xselect << '</select>'
+
+yselect = '<select class="form-select" id="yitem">'
+@fct_item.each do |e|
+	unless e == 'FG' || e == 'FN' || e == 'SID' || e == 'Tagnames' || e == 'REFUSE' || e == 'Notice'
+		s = ''
+		s = 'SELECTED' if e == yitem
+		yselect << "<option value='#{e}' #{s}>#{@fct_name[e]}</option>"
+	end
+end
+yselect << '</select>'
+
+zselect = '<select class="form-select" id="zitem">'
+@fct_item.each do |e|
+	unless e == 'FG' || e == 'FN' || e == 'SID' || e == 'Tagnames' || e == 'REFUSE' || e == 'Notice'
+		s = ''
+		s = 'SELECTED' if e == zitem
+		zselect << "<option value='#{e}' #{s}>#{@fct_name[e]}</option>"
+	end
+end
+zselect << '</select>'
+
+zml_select = '<select class="form-select" id="zml">'
+if zml == 1
+	zml_select << "<option value='1' SELECTED>以下</option>"
 else
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, @debug )
-	r.each do |e|
-		o = Recipe.new( user.name )
-		o.load_db( e, false )
-		o.load_media
-		recipes << o
-	end
+	zml_select << "<option value='0'>以上</option>"
 end
+zml_select << '</select>'
 
+xlog_check = ''
+ylog_check = 'CHECKED' if xlog == 1
 
-if command == 'data'
+xlog_check = ''
+ylog_check = 'CHECKED' if ylog == 1
 
-	exit( 0 )
-end
 
 puts "Control HTML<br>" if @debug
 html = <<-"HTML"
@@ -359,12 +422,7 @@ html = <<-"HTML"
 		<div class='col-4'>
 			<div class="input-group mb-3">
 				<label class="input-group-text">X軸成分</label>
-				<select class="form-select" id="xitem">
-					<option selected>Choose...</option>
-					<option value="1">One</option>
-					<option value="2">Two</option>
-					<option value="3">Three</option>
-				</select>
+				#{xselect}
 			</div>
 		</div>
 		<div class='col-2'>
@@ -373,31 +431,18 @@ html = <<-"HTML"
 		<div class='col-4'>
 			<div class="input-group mb-3">
 				<label class="input-group-text">補助成分</label>
-				<select class="form-select" id="xitem">
-					<option selected>Choose...</option>
-					<option value="1">One</option>
-					<option value="2">Two</option>
-					<option value="3">Three</option>
-				</select>
+				#{yselect}
 			</div>
 		</div>
 		<div class='col-2'>
-			<select class="form-select" id="zml">
-				<option value="0">以上</option>
-				<option value="1">以下</option>
-			</select>
+			#{zml_select}
 		</div>
 	</div>
 	<div class='row'>
 		<div class='col-4'>
 			<div class="input-group mb-3">
 				<label class="input-group-text">Y軸成分</label>
-				<select class="form-select" id="yitem">
-					<option selected>Choose...</option>
-					<option value="1">One</option>
-					<option value="2">Two</option>
-					<option value="3">Three</option>
-				</select>
+				#{zselect}
 			</div>
 		</div>
 		<div class='col-2'>
@@ -415,8 +460,8 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<div class='row'>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipe3ds()">#{lp[13]}</button></div>
-		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="">#{lp[14]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipe3ds_plott()">#{lp[13]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipe3dsReset()">#{lp[14]}</button></div>
 	</div>
 </div>
 HTML

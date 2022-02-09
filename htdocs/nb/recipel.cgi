@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.05b
+#Nutrition browser 2020 recipe list 0.06b
 
 
 #==============================================================================
@@ -380,20 +380,34 @@ html_time = time_html( time, lp )
 html_cost = cost_html( cost, lp )
 
 
+puts "Recipe size<br>" if @debug
+r = mdb( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} #{sql_where};", false, @debug )
+recipe_num = r.first['COUNT(*)']
+
+
 puts "Recipe list<br>" if @debug
 recipes = []
 if recipe_code_list.size > 0
+	recipe_num = recipe_code_list.size
+	c = 1
+	offset = ( page - 1 ) * page_limit + 1
+	limit = offset + page_limit
+
 	recipe_code_list.each do |e|
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, @debug )
-		if r.first
-			o = Recipe.new( user.name )
-			o.load_db( r.first, false )
-			o.load_media
-			recipes << o
+		if c >= offset && c < limit
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} AND code='#{e}';", false, @debug )
+			if r.first
+				o = Recipe.new( user.name )
+				o.load_db( r.first, false )
+				o.load_media
+				recipes << o
+			end
 		end
+		c += 1
 	end
 else
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name;", false, @debug )
+	offset = ( page - 1 ) * page_limit + 1
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name LIMIT #{offset}, #{page_limit};", false, @debug )
 	r.each do |e|
 		o = Recipe.new( user.name )
 		o.load_db( e, false )
@@ -401,11 +415,9 @@ else
 		recipes << o
 	end
 end
-page = 1 if command == 'limit' && page > ( recipes.size / page_limit ) + 1
 
 
 puts "Paging parts<br>" if @debug
-recipe_num = recipes.size
 page_max = recipe_num / page_limit + 1
 page_start = 1
 page_end = page_max
@@ -426,68 +438,58 @@ end
 html_paging = pageing_html( page, page_start, page_end, page_max, lp )
 
 
-puts "Paging limit<br>" if @debug
-recipe_start = page_limit * ( page - 1 )
-recipe_end = recipe_start + page_limit - 1
-recipe_end = recipes.size if recipe_end >= recipes.size
-
-
 recipe_html = ''
-recipe_count = 0
 recipes.each do |e|
-	if recipe_count >= recipe_start && recipe_count <= recipe_end
-		recipe_html << '<tr style="font-size:medium;">'
-		if e.media[0] != nil
-			recipe_html << "<td><a href='#{$PHOTO}/#{e.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{e.media[0]}-tns.jpg'></a></td>"
-		else
-			recipe_html << "<td>-</td>"
-		end
-
-		tags =''
-		e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bg-info text-dark' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
-		recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
-
-		recipe_html << "<td>"
-		if e.public == 1
-			recipe_html << lp[2]
-		else
-			recipe_html << lp[7]
-		end
-		if e.protect == 1
-			recipe_html << lp[3]
-		else
-			recipe_html << lp[7]
-		end
-		if e.draft == 1
-			recipe_html << lp[4]
-		else
-			recipe_html << lp[7]
-		end
-
-		recipe_html << "</td>"
-		recipe_html << "<td>"
-		if user.status >= 2 && e.user == user.name
-			recipe_html << "	<span onclick=\"addingMeal( '#{e.code}', '#{e.name}' )\">#{lp[8]}</span>&nbsp;"
-		end
-		if user.status >= 2 && e.user == user.name
-			recipe_html << "&nbsp;<span onclick=\"addKoyomi( '#{e.code}' )\">#{lp[21]}</span>"
-		end
-		recipe_html << "	<span onclick=\"print_templateSelect( '#{e.code}' )\">#{lp[9]}</span>"
-		if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
-			recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{lp[20]}</span>&nbsp;"
-		end
-		recipe_html << "</td>"
-
-		if e.user == user.name
-			if e.protect == 0
-				recipe_html << "<td><input type='checkbox' id='#{e.code}'>&nbsp;<span onclick=\"recipeDelete( '#{e.code}', #{page} )\">#{lp[10]}</span></td>"
-			else
-				recipe_html << "<td></td>"
-			end
-		end
-		recipe_html << '</tr>'
+	recipe_html << '<tr style="font-size:medium;">'
+	if e.media[0] != nil
+		recipe_html << "<td><a href='#{$PHOTO}/#{e.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{e.media[0]}-tns.jpg'></a></td>"
+	else
+		recipe_html << "<td>-</td>"
 	end
-	recipe_count += 1
+
+	tags =''
+	e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bg-info text-dark' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
+	recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
+
+	recipe_html << "<td>"
+	if e.public == 1
+		recipe_html << lp[2]
+	else
+		recipe_html << lp[7]
+	end
+	if e.protect == 1
+		recipe_html << lp[3]
+	else
+		recipe_html << lp[7]
+	end
+	if e.draft == 1
+		recipe_html << lp[4]
+	else
+		recipe_html << lp[7]
+	end
+
+	recipe_html << "</td>"
+	recipe_html << "<td>"
+	if user.status >= 2 && e.user == user.name
+		recipe_html << "	<span onclick=\"addingMeal( '#{e.code}', '#{e.name}' )\">#{lp[8]}</span>&nbsp;"
+	end
+	if user.status >= 2 && e.user == user.name
+		recipe_html << "&nbsp;<span onclick=\"addKoyomi( '#{e.code}' )\">#{lp[21]}</span>"
+	end
+	recipe_html << "	<span onclick=\"print_templateSelect( '#{e.code}' )\">#{lp[9]}</span>"
+	if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
+		recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{lp[20]}</span>&nbsp;"
+	end
+	recipe_html << "</td>"
+
+	if e.user == user.name
+		if e.protect == 0
+			recipe_html << "<td><input type='checkbox' id='#{e.code}'>&nbsp;<span onclick=\"recipeDelete( '#{e.code}', #{page} )\">#{lp[10]}</span></td>"
+		else
+			recipe_html << "<td></td>"
+		end
+	end
+	recipe_html << '</tr>'
 end
 
 recipe3ds_button = ''

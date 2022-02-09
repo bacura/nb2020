@@ -1,21 +1,17 @@
-//guild.js ver 0.06b 20220122
+//guild.js ver 0.08b 20220209
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
 
 // Koyomi
 var initKoyomi = function(){
+	$.post( "koyomi.cgi", { command:"menu" }, function( data ){ $( "#LINE" ).html( data );});
+	$.post( "koyomi.cgi", { command:"init" }, function( data ){ $( "#L1" ).html( data ); });
+
 	flashBW();
-	$.post( "koyomi.cgi", { command:"menu" }, function( data ){
-		$( "#LINE" ).html( data );
-		dl1 = true;
-		displayBW();
-	});
-	$.post( "koyomi.cgi", { command:"init" }, function( data ){
-		$( "#L1" ).html( data );
-		dline = true;
-		displayBW();
-	});
+	dl1 = true;
+	dline = true;
+	displayBW();
 };
 
 // Koyomi change
@@ -195,7 +191,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 		var FAT = document.getElementById( "kfFAT" ).value;
 		var CHOAVLM = document.getElementById( "kfCHOAVLM" ).value;
 		var CHOAVL = document.getElementById( "kfCHOAVL" ).value;
-		var CHOAVLMF = document.getElementById( "kfCHOAVLMF" ).value;
+		var CHOAVLDF = document.getElementById( "kfCHOAVLDF" ).value;
 		var FIB = document.getElementById( "kfFIB" ).value;
 		var POLYL = document.getElementById( "kfPOLYL" ).value;
 		var CHOCDF = document.getElementById( "kfCHOCDF" ).value;
@@ -243,15 +239,32 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 		var ALC = document.getElementById( "kfALC" ).value;
 		var NACL_EQ = document.getElementById( "kfNACL_EQ" ).value;
 
+		var FASAT = document.getElementById( "kfFASAT" ).value;
+		var FAMS = document.getElementById( "kfFAMS" ).value;
+		var FAPU = document.getElementById( "kfFAPU" ).value;
+		var FAPUN3 = document.getElementById( "kfFAPUN3" ).value;
+		var FAPUN6 = document.getElementById( "kfFAPUN6" ).value;
+
+		var FIBTG = document.getElementById( "kfFIBTG" ).value;
+		var FIBSOL = document.getElementById( "kfFIBSOL" ).value;
+		var FIBINS = document.getElementById( "kfFIBINS" ).value;
+		var FIBTDF = document.getElementById( "kfFIBTDF" ).value;
+		var FIBSDFS = document.getElementById( "kfFIBSDFS" ).value;
+		var FIBSDFP = document.getElementById( "kfFIBSDFP" ).value;
+		var FIBIDF = document.getElementById( "kfFIBIDF" ).value;
+		var STARES = document.getElementById( "kfSTARES" ).value;
+
 		$.post( "koyomi-fix.cgi", {
 			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
 			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, order:order,
 			ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
-			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLMF:CHOAVLMF, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
+			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
 			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
-			ALC:ALC, NACL_EQ:NACL_EQ
+			ALC:ALC, NACL_EQ:NACL_EQ,
+			FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, FAPUN3:FAPUN3, FAPUN6:FAPUN6,
+			FIBTG:FIBTG, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTDF:FIBTDF, FIBSDFS:FIBSDFS, FIBSDFP:FIBSDFP, FIBIDF:FIBIDF, STARES:STARES
 		}, function( data ){
 			$( "#L3" ).html( data );
 			$.post( "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){
@@ -701,8 +714,9 @@ var recipe3ds = function(){
 	flashBW();
 	$.post( "recipe3ds.cgi", { command:'init' }, function( data ){
 		$( "#L1" ).html( data );
-		$.post( "recipe3ds.cgi", { command:'plott' }, function( data ){
+		$.post( "recipe3ds.cgi", { command:'plott_area' }, function( data ){
 			$( "#L2" ).html( data );
+			recipe3ds_plottDraw();
 			dl1 = true;
 			dl2 = true;
 			dl3 = true;
@@ -712,7 +726,7 @@ var recipe3ds = function(){
 };
 
 // Dosplaying recipe by scatter plott
-var recipe3ds_plott = function(){
+var recipe3ds_plottDraw = function(){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
 	var role = document.getElementById( "role" ).value;
@@ -729,12 +743,69 @@ var recipe3ds_plott = function(){
 	var zitem = document.getElementById( "zitem" ).value;
 	var zml = document.getElementById( "zml" ).value;
 	var zrange = document.getElementById( "zrange" ).value;
-
-
-
-	$.post( "recipe3ds.cgi", { command:'plott' }, function( plotto_data ){
+	$.post( "recipe3ds.cgi", { command:'plott_data', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
+		xitem:xitem, yitem:yitem, zitem:zitem, xlog:xlog, ylog:ylog, zml:zml, zrange:zrange }, function( data ){
+//		$( "#L3" ).html( data );
 	});
-	$.post( "recipe3ds.cgi", { command:'plott' }, function( data ){
-		$( "#L3" ).html( data );
+
+	$.post( "recipe3ds.cgi", { command:'plott_data', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
+		xitem:xitem, yitem:yitem, zitem:zitem, xlog:xlog, ylog:ylog, zml:zml, zrange:zrange }, function( raw ){
+		var column = ( String( raw )).split( ':' );
+		var x_values = ( String( column[0] )).split(',');
+		var y_values = ( String( column[1] )).split(',');
+		var plott_size = document.documentElement.clientWidth * 0.9;
+
+		var chart = c3.generate({
+			bindto: '#recipe3ds_plott',
+			size:{ width: plott_size, height: plott_size },
+
+			data: {
+				columns: [
+					x_values,	// x軸
+					y_values	// y軸
+				],
+			    x:x_values[0],
+				type: 'scatter'
+			},
+			axis: {
+			    x: { type:'indexed',
+			    	label: x_values[0],
+			    	type:'linear',
+			    	min:0,
+					tick: { fit: true, count: 10 }
+				},
+			    y: { label: y_values[0],
+			    	type:'linear',
+			    	min:0
+			    }
+			},
+			labels: false,
+			grid: {
+     			x: { show: true },
+        		y: { show: true }
+            },
+			legend: { show: false }
+		});
+//displayVIDEO( raw );
 	});
+};
+
+// Dosplaying recipe by scatter plott
+var recipe3dsReset = function(){
+	document.getElementById( "range" ).value = 0;
+	document.getElementById( "type" ).value = 99;
+	document.getElementById( "role" ).value = 99;
+	document.getElementById( "tech" ).value = 99;
+	document.getElementById( "time" ).value = 99;
+	document.getElementById( "cost" ).value = 99;
+
+	document.getElementById( "xitem" ).value = 'ENERC';
+	document.getElementById( 'xlog' ).checked = false;
+
+	document.getElementById( "yitem" ).value = 'ENERC';
+	document.getElementById( 'ylog' ).checked = false;
+
+	document.getElementById( "zitem" ).value = 'ENERC';
+	document.getElementById( "zml" ).value = 0;
+	document.getElementById( "zrange" ).value = 0;
 };
