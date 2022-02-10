@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for NB display 0.01b
+# Nutorition browser 2020 Config module for NB display 0.02b
 #encoding: utf-8
 
 def config_module( cgi, user, lp )
@@ -8,25 +8,22 @@ def config_module( cgi, user, lp )
 
 	icache = 0
 	ifix = 0
-	ilist = 50
+	recipel_max = 50
 	icalc = 14
-	icalcp = 14
 	if step ==  'update'
 		icache = cgi['icache'].to_i
 		ifix = cgi['ifix'].to_i
-		ilist = cgi['ilist'].to_i
+		recipel_max = cgi['recipel_max'].to_i
 		icalc = cgi['icalc'].to_i
-		icalcp = cgi['icalcp'].to_i
 
 		# Updating bio information
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}', ifix='#{ifix}', ilist='#{ilist}', icalc='#{icalc}', icalcp='#{icalcp}' WHERE user='#{user.name}';", false, false )
+		mdb( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}', ifix='#{ifix}', recipel_max='#{recipel_max}', icalc='#{icalc}' WHERE user='#{user.name}';", false, false )
 	else
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 		icache = r.first['icache'].to_i
 		ifix = r.first['ifix'].to_i
-		ilist = r.first['ilist'].to_i
+		recipel_max = r.first['recipel_max'].to_i
 		icalc = r.first['icalc'].to_i
-		icalcp = r.first['icalcp'].to_i
 	end
 
 	icache_checked = ''
@@ -35,23 +32,12 @@ def config_module( cgi, user, lp )
 	ifix_checked = ''
 	ifix_checked = 'CHECKED' if ifix == 1
 
-	ilist_10_selected = ''
-	ilist_10_selected = 'SELECTED' if ilist == 10
-	ilist_25_selected = ''
-	ilist_25_selected = 'SELECTED' if ilist == 25
-	ilist_50_selected = ''
-	ilist_50_selected = 'SELECTED' if ilist == 50 ||  ilist == 0
-	ilist_75_selected = ''
-	ilist_75_selected = 'SELECTED' if ilist == 75
-	ilist_100_selected = ''
-	ilist_100_selected = 'SELECTED' if ilist == 100
-	ilist_150_selected = ''
-	ilist_150_selected = 'SELECTED' if ilist == 150
-	ilist_200_selected = ''
-	ilist_200_selected = 'SELECTED' if ilist == 200
+	list_selected = Hash.new
+	list_selected.default = ''
+	list_selected[recipel_max.to_s] = 'SELECTED'
+
 
 	icalc = 14 if icalc == 0
-	icalcp = 14 if icalcp == 0
 
 	html = <<-"HTML"
     <div class="container">
@@ -78,32 +64,26 @@ def config_module( cgi, user, lp )
     	<div class='row'>
 	    	<div class='col-3'>#{lp[68]}</div>
 			<div class='col-2'>
-				<select class="form-control" id='ilist' onchange="display_cfg()">
-					<option value='10' #{ilist_10_selected}>10</option>
-					<option value='25' #{ilist_25_selected}>25</option>
-					<option value='50' #{ilist_50_selected}>50</option>
-					<option value='75' #{ilist_75_selected}>75</option>
-					<option value='100' #{ilist_100_selected}>100</option>
-					<option value='150' #{ilist_150_selected}>150</option>
-					<option value='200' #{ilist_200_selected}>200</option>
+				<select class="form-select form-select-sm" id='recipel_max' onchange="display_cfg()">
+					<option value='10' #{list_selected['10']}>10</option>
+					<option value='25' #{list_selected['25']}>25</option>
+					<option value='50' #{list_selected['50']}>50</option>
+					<option value='75' #{list_selected['75']}>75</option>
+					<option value='100' #{list_selected['100']}>100</option>
+					<option value='150' #{list_selected['150']}>150</option>
+					<option value='200' #{list_selected['200']}>200</option>
 				</select>
 			</div>
 		</div>
 		<br>
     	<div class='row'>
 	    	<div class='col-3'>#{lp[69]}</div>
-			<div class='col-1'>
+			<div class='col-2'>
 				<input class="form-control form-control-sm" type="number" min='5' max='20' id='icalc' value='#{icalc}' onchange="display_cfg()">
 			</div>
 		</div>
 		<br>
-    	<div class='row'>
-	    	<div class='col-3'>#{lp[70]}</div>
-			<div class='col-1'>
-				<input class="form-control form-control-sm" type="number" min='5' max='20' id='icalcp' value='#{icalcp}' onchange="display_cfg()">
-			</div>
-		</div>
-	</div>
+ 	</div>
 HTML
 	return html
 end
@@ -119,14 +99,15 @@ var display_cfg = function(){
 	var ifix = 0
 	if( document.getElementById( "icache" ).checked ){ icache = 1; }else{ icache = 0; }
 	if( document.getElementById( "ifix" ).checked ){ ifix = 1; }else{ ifix = 0; }
-	var ilist = document.getElementById( "ilist" ).value;
+	var recipel_max = document.getElementById( "recipel_max" ).value;
 	var icalc = document.getElementById( "icalc" ).value;
-	var icalcp = document.getElementById( "icalcp" ).value;
-	closeBroseWindows( 1 );
 
-	$.post( "config.cgi", { mod:'display', step:'update', icache:icache, ifix:ifix, ilist:ilist, icalc:icalc, icalcp:icalcp }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
+	$.post( "config.cgi", { mod:'display', step:'update', icache:icache, ifix:ifix, recipel_max:recipel_max, icalc:icalc }, function( data ){ $( "#L1" ).html( data );});
+
+	flashBW();
+	dl1 = true;
+	dline = true;
+	displayBW();
 	displayVIDEO( 'Updated' );
 };
 

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.06b
+#Nutrition browser 2020 recipe list 0.07b
 
 
 #==============================================================================
@@ -217,12 +217,15 @@ user = User.new( @cgi )
 #user.debug if @debug
 lp = user.load_lp( script )
 
-r = mdb( "SELECT icache, recipe FROM cfg WHERE user='#{user.name}';", false, @debug )
+r = mdb( "SELECT icache, recipe, recipel_max FROM cfg WHERE user='#{user.name}';", false, @debug )
 if r.first['icache'].to_i == '1'
 	html_init_cache( nil )
 else
 	html_init( nil )
 end
+page_limit = r.first['recipel_max'].to_i if r.first['recipel_max'].to_i > 0
+p page_limit
+
 recipe_cfg = Hash.new
 recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
 
@@ -388,7 +391,6 @@ recipe_num = r.first['COUNT(*)']
 puts "Recipe list<br>" if @debug
 recipes = []
 if recipe_code_list.size > 0
-	recipe_num = recipe_code_list.size
 	c = 1
 	offset = ( page - 1 ) * page_limit + 1
 	limit = offset + page_limit
@@ -405,6 +407,8 @@ if recipe_code_list.size > 0
 		end
 		c += 1
 	end
+	recipe_num = recipes.size - 1
+
 else
 	offset = ( page - 1 ) * page_limit + 1
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name LIMIT #{offset}, #{page_limit};", false, @debug )
