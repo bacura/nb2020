@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.05b
+#Nutrition browser 2020 recipe editor 0.06b
 
 #==============================================================================
 #LIBRARY
@@ -21,10 +21,6 @@ script = 'recipe'
 #==============================================================================
 #DEFINITION
 #==============================================================================
-
-def index( recipe )
-	require 'natto'
-end
 
 
 #==============================================================================
@@ -298,16 +294,13 @@ if command == 'save'
 	puts "Save fcz<br>" if @debug
 	food_no, food_weight, total_weight = extract_sum( recipe.sum, recipe.dish, 0 )
 
-	palette = Palette.new( user.name )
-	palette.set_bit( @palette_default_name[3] )
-
 	fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
-	fct.load_palette( palette.bit )
+	fct.load_palette( @palette_bit_all )
 	fct.set_food( user.name, food_no, food_weight, false )
 	fct.calc
 	fct.digit
 
-	fct.save_fcz( user.name, nil, 'reipe', recipe.code )
+	fct.save_fcz( user.name, recipe.name, 'recipe', recipe.code )
 end
 
 if command == 'save'

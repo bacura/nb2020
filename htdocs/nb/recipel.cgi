@@ -224,7 +224,7 @@ else
 	html_init( nil )
 end
 page_limit = r.first['recipel_max'].to_i if r.first['recipel_max'].to_i > 0
-p page_limit
+
 
 recipe_cfg = Hash.new
 recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
