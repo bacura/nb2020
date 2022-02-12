@@ -436,6 +436,7 @@ class FCT
           t = 0 if t == 'Tr'
           t = 0 if t == '-'
           t = 0 if t == ''
+          t = 0 if t == '*'
           t = ( BigDecimal( t.to_s ) * @weights[f] / 100 )
 
           if @frct_accu == 0
