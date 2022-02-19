@@ -54,8 +54,8 @@ if ew_mode == nil || ew_mode == ''
 	else
 		palette_ = nil
 		ew_mode = 0
-		frct_mode = 0
-		frct_accu = 0
+		frct_mode = 1
+		frct_accu = 1
 	end
 end
 

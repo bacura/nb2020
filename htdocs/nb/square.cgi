@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.04b
+#Nutrition browser 2020 food square 0.05b
 
 
 #==============================================================================
@@ -31,7 +31,7 @@ def get_history_name( uname, fg )
 				unless e == ''
 					if ( /P|U/ =~ e && e[1..2].to_i == fg.to_i ) || e[0..1].to_i == fg.to_i
 						rr = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false, @debug )
-						name_his << rr.first['name']
+						name_his << rr.first['name'] if rr.first
 					end
 				end
 ########## 応急処置
@@ -113,7 +113,7 @@ name_his = get_history_name( user.name, @fg )
 #puts "name_his: #{name_his}<br>" if @debug
 
 
-#### 食品キーチェーン
+puts 'Key chain<br>' if @debug
 food_key = '' if food_key == nil
 fg_key, class1, class2, class3, food_name = food_key.split( ':' )
 
@@ -447,7 +447,6 @@ when 'fctb_l5'
 		end
 	end
 
-
  	# 簡易表示の項目
  	fc_items = []
 	fc_items_html = ''
@@ -481,6 +480,13 @@ when 'fctb_l5'
 		p query if @debug
 
 		res = db.query( query )
+		unless res.first
+			puts "<span class='error'>[FCTP load]ERROR!!<br>"
+			puts "code:#{od_no_list[c]}</span><br>"
+			db.query( "DELETE FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
+			db.query( "DELETE FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
+			exit()
+		end
 
 		sub_components = ''
 		fc_items.each do |e|

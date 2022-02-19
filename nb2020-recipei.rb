@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe search index & fcz builder & 0.12b
+#Nutrition browser 2020 recipe search index & fcz builder & 0.13b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './nb2020-soul'
+require './nb2020-soul_'
 require './nb2020-brain'
 require 'natto'
 
@@ -119,12 +119,11 @@ puts "Calculating recipe FCZ.\n"
 
 res = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE};" )
 res.each do |e|
-	print "#{e['code']}\r"
 	unless e['dish'].to_i == 0
 		food_no, food_weight, total_weight = extract_sum( e['sum'], e['dish'], 0 )
 		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 		fct.load_palette( @palette_bit_all )
-		fct.set_food( nil, food_no, food_weight, false )
+		fct.set_food( e['user'], food_no, food_weight, false )
 		fct.calc
 		fct.digit
 

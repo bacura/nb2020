@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.08b
+#Nutrition browser 2020 pseudo food editer 0.09b
 
 #==============================================================================
 # LIBRARY
@@ -30,7 +30,10 @@ user = User.new( @cgi )
 user.debug if @debug
 lp = user.load_lp( script )
 
-fct_opt = Hash.new
+
+fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+fct.load_palette( @palette_bit_all )
+
 
 #### POSTデータの取得
 command = @cgi['command']
@@ -47,8 +50,10 @@ tag2 = @cgi['tag2']
 tag3 = @cgi['tag3']
 tag4 = @cgi['tag4']
 tag5 = @cgi['tag5']
+refuse = @cgi['REFUSE'].to_i
+notice = @cgi['Notice']
 
-puts food_name
+
 food_weight_zero = false
 food_weight_zero = true if food_weight == '0'
 food_weight = 100 if food_weight == nil || food_weight == ''|| food_weight == '0'
@@ -64,8 +69,6 @@ class1 = class1_key unless class1_key == nil
 class2 = class2_key unless class2_key == nil
 class3 = class3_key unless class3_key == nil
 food_name = food_name_key unless food_name_key == nil
-puts food_name
-
 if @debug
 	puts "command: #{command}<br>\n"
 	puts "code: #{code}<br>\n"
@@ -85,16 +88,14 @@ if @debug
 end
 
 
-#### 成分読み込み
+puts "Loading fctp<br>" if @debug
 if command == 'init' && code != ''
-	r = mdb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{user.name}' OR user='#{$GM}' );", false, @debug )
-	if r.first
-		4.upto( 58 ) do |i| fct_opt[@fct_item[i]] = r.first[@fct_item[i]] end
-	end
+	refuse, notice = fct.load_fctp( user.name, code )
+	fct.calc
 end
 
 
-#### クラス・タグ読み込み
+puts "Loading tag<br>" if @debug
 tag_user = nil
 public_bit = 0
 if command == 'init' && code != ''
@@ -120,51 +121,22 @@ elsif command == 'delete' && code != ''
 end
 
 
-#### 保存部分
 if command == 'save'
-	# 廃棄率
-	if @cgi['REFUSE'] == '' || @cgi['REFUSE'] == nil
-		fct_opt['REFUSE'] = 0
-	else
-		fct_opt['REFUSE'] = @cgi['REFUSE'].to_i
-	end
+	puts "SAVE:" if @debug
+	fct.load_cgi( @cgi )
 
-	# エネルギー補完
 	if  @cgi['ENERC_KCAL'].to_f != 0 && @cgi['ENERC'].to_f == 0
-		fct_opt['ENERC_KCAL'] = @cgi['ENERC_KCAL']
-		fct_opt['ENERC'] = (( @cgi['ENERC_KCAL'].to_i * 4184 ) / 1000 ).to_i
-	elsif @cgi['ENERC_KCAL'].to_f == 0 && @cgi['ENERC'].to_f != 0
-		fct_opt['ENERC_KCAL'] = ( @cgi['ENERC'] / 4.184 ).to_i
-		fct_opt['ENERC'] = @cgi['ENERC']
-	elsif @cgi['ENERC_KCAL'].to_f == 0 && @cgi['ENERC'].to_f == 0
-		fct_opt['ENERC_KCAL'] = 0
-		fct_opt['ENERC'] = 0
-	else
-		fct_opt['ENERC_KCAL'] = @cgi['ENERC_KCAL']
-		fct_opt['ENERC'] = @cgi['ENERC']
+		puts "Energy>" if @debug
+		fct.put_solid( 'ENERC', 0, (( @cgi['ENERC_KCAL'].to_f * 4184 ) / 1000 ).to_i )
+	end
+	if  @cgi['NACL_EQ'].to_f != 0 && @cgi['NA'].to_f == 0
+		puts "Na>" if @debug
+		fct.put_solid( 'NA', 0, ( @cgi['NACL_EQ'].to_f / 2.54 ).round( 1 ))
 	end
 
-
-	# 重量影響成分
-	fct_opt['ENERC_KCAL'] = ( BigDecimal( fct_opt['ENERC_KCAL'].to_s ) / ( food_weight / 100 )).round( @fct_frct[@fct_item[5]] )
-	fct_opt['ENERC'] = ( BigDecimal( fct_opt['ENERC'].to_s ) / ( food_weight / 100 )).round( @fct_frct[@fct_item[6]] )
-	7.upto( 57 ) do |i|
-		if @cgi[@fct_item[i]] == '' || @cgi[@fct_item[i]] == nil || @cgi[@fct_item[i]] == '-'
-			fct_opt[@fct_item[i]] = '-'
-		else
-			fct_opt[@fct_item[i]] = ( BigDecimal( @cgi[@fct_item[i]] ) / ( food_weight / 100 )).round( @fct_frct[@fct_item[i]] )
-		end
-	end
-
-	# 重量変化率
-	if @cgi['WCR'] == '' || @cgi['WCR'] == nil
-		fct_opt['WCR'] = '-'
-	else
-		fct_opt['WCR'] = @cgi['WCR'].to_i
-	end
-
-	# 備考
-	fct_opt['Notice'] = @cgi['Notice']
+	fct.singlet
+	fct.gramt( 100 )
+	fct.digit
 
 	# ゼロ重量戻し
 	food_weight = 0 if food_weight_zero
@@ -187,69 +159,62 @@ if command == 'save'
 	tag5_new = "　#{tag5}" unless tag5 == ''
 	tagnames_new = "#{class1_new}#{class2_new}#{class3_new}#{food_name}#{tag1_new}#{tag2_new}#{tag3_new}#{tag4_new}#{tag5_new}"
 
+	puts 'Making fct_sql set<br>' if @debug
+	fct_set = "REFUSE='#{refuse}',"
+	fct_set << fct.sql
+	fct_set << ",Notice='#{notice}'"
 
-	puts '擬似食品成分表テーブルに追加<br>' if @debug
-	fct_set = ''
-	4.upto( 58 ) do |i| fct_set << "#{@fct_item[i]}='#{fct_opt[@fct_item[i]]}'," end
-	fct_set.chop!
-
-	puts '新規食品番号の合成<br>' if @debug
+	puts 'Generating new Food number:' if @debug
 	if user.status >= 8
-		puts '公開<br>' if @debug
+		puts 'Public>' if @debug
 		public_bit = 1
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
 		unless r.first
 			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
 			if rr.first
 				code = rr.first['FN']
-				puts "リサイクル:#{code}<br>" if @debug
+				puts "Recycle:#{code}>" if @debug
 			else
+				code = "P#{food_group}001"
 				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
 				if rrr.first
-					puts "検出:#{rrr.first['FN']}<br>" if @debug
+					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
 					code = "P#{food_group}%#03d" % ( last_code + 1 )
-				else
-					code = "P#{food_group}001"
 				end
-				puts "新規:#{code}<br>" if @debug
+				puts "New:#{code}>" if @debug
 			end
-		else
-			puts "上書き:#{code}<br>" if @debug
 		end
 	else
-		puts 'プライベート<br>' if @debug
+		puts 'Private>' if @debug
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0;", false, @debug )
 		unless r.first
 			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
 			if rr.first
 				code = rr.first['FN']
-				puts "リサイクル:#{code}<br>" if @debug
+				puts "Recycle:#{code}>" if @debug
 			else
+				code = "U#{food_group}001"
 				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
 				if rrr.first
-					puts "検出:#{rrr.first['FN']}<br>" if @debug
+					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
 					code = "U#{food_group}%#03d" % ( last_code + 1 )
-				else
-					code = "U#{food_group}001"
 				end
-				puts "新規:#{code}<br>" if @debug
+				puts "New:#{code}>" if @debug
 			end
-		else
-			puts "上書き:#{code}<br>" if @debug
 		end
 	end
 
 	puts 'Generating units<br>' if @debug
 	unith = Hash.new
 	unith['g'] = 1
-	unith['kcal'] = fct_opt['ENERC_KCAL'].to_f / 100 if fct_opt['ENERC_KCAL'] != 0
-	unith['g処理前'] = ( 100 - fct_opt['REFUSE'].to_f ) / 100 if fct_opt['REFUSE'] != 0
+	unith['kcal'] = ( fct.pickt( 'ENERC_KCAL' ) / 100 ).to_i if fct.pickt( 'ENERC_KCAL' ) != 0
+	unith['g処理前'] = (( 100 - refuse ) / 100 ).to_i if refuse != 0
 	unith_ = unith.sort.to_h
 	unit = JSON.generate( unith_ )
 
-	puts '食品番号のチェック<br>' if @debug
+	puts 'Checking Food number<br>' if @debug
 	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	if r.first
 		# 擬似食品テーブルの更新
@@ -267,19 +232,12 @@ if command == 'save'
 end
 
 
-#### 削除部分
 if command == 'delete'
+	puts "DELETE<br>" if @debug
 	public_bit = 2 if public_bit == 0
 	public_bit = 3 if public_bit == 1
 	mdb( "UPDATE #{$MYSQL_TB_TAG} SET public='#{public_bit}' WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	code = ''
-end
-
-
-#### debug
-if @debug
-	puts "fct_opt: #{fct_opt}<br>\n"
-	puts "<hr>\n"
 end
 
 
@@ -298,37 +256,37 @@ end
 
 #### disable option
 disabled_option = ''
-disabled_option = 'disabled' if tag_user != user.name && tag_user != nil
-
+disabled_option = 'disabled' if tag_user != user.name && tag_user != nil && user.status != 9
 
 #### html_fct_block
 html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
-4.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[4]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[4]}' value=\"#{refuse}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[4]]}</td></tr>"
+5.upto( 7 ) do |i| html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block1 << "<tr><td></td><td align='right' width='20%''></td><td></td></tr>"
-html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[70]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[70]}' value=\"#{fct_opt[@fct_item[70]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[70]]}</td></tr>"
-html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[68]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[68]}' value=\"#{fct_opt[@fct_item[68]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[68]]}</td></tr>"
-html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[31]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[31]}' value=\"#{fct_opt[@fct_item[31]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[31]]}</td></tr>"
-html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[69]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[69]}' value=\"#{fct_opt[@fct_item[69]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[69]]}</td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[70]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[70]}' value=\"#{fct.total[70].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[70]]}</td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[68]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[68]}' value=\"#{fct.total[68].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[68]]}</td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[31]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[31]}' value=\"#{fct.total[31].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[31]]}</td></tr>"
+html_fct_block1 << "<tr><td>#{@fct_name[@fct_item[69]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[69]}' value=\"#{fct.total[69].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[69]]}</td></tr>"
 html_fct_block1 << '</table>'
 
 html_fct_block2 = '<table class="table-sm table-striped" width="100%">'
-8.upto( 17 ) do |i| html_fct_block2 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+8.upto( 17 ) do |i| html_fct_block2 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block2 << '</table>'
 
 html_fct_block3 = '<table class="table-sm table-striped" width="100%">'
-18.upto( 30 ) do |i| html_fct_block3 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+18.upto( 30 ) do |i| html_fct_block3 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block3 << '</table>'
 
 html_fct_block4 = '<table class="table-sm table-striped" width="100%">'
-32.upto( 45 ) do |i| html_fct_block4 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+32.upto( 45 ) do |i| html_fct_block4 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block4 << '</table>'
 
 html_fct_block5 = '<table class="table-sm table-striped" width="100%">'
-46.upto( 57 ) do |i| html_fct_block5 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+46.upto( 57 ) do |i| html_fct_block5 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block5 << '</table>'
 
 html_fct_block6 = '<table class="table-sm table-striped" width="100%">'
-58.upto( 67 ) do |i| html_fct_block6 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct_opt[@fct_item[i]].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
+58.upto( 67 ) do |i| html_fct_block6 << "<tr><td>#{@fct_name[@fct_item[i]]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{@fct_item[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{@fct_unit[@fct_item[i]]}</td></tr>\n" end
 html_fct_block6 << '</table>'
 
 
@@ -400,7 +358,7 @@ html = <<-"HTML"
 
 			<div style='border: solid gray 1px; margin: 0.5em; padding: 0.5em;'>
 				備考：<br>
-				<textarea rows="6" cols="32" id="pNotice" #{disabled_option}>#{fct_opt['Notice']}</textarea>
+				<textarea rows="6" cols="32" id="pNotice" #{disabled_option}>#{notice}</textarea>
 			</div>
 		</div>
 

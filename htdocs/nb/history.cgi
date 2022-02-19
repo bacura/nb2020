@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser history 0.10b
+#Nutritoin browser history 0.11b
 
 
 #==============================================================================
@@ -53,23 +53,25 @@ def get_histry( lp, user, sub_fg )
 	history.each do |e|
 		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
 		r_tag = db.query( q )
-		if sub_fg == '6'
-			res2 = db.query( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{e}';" )
-			if res2.first
-				next if res2.first['gycv'] == 1 && ( not gycv )
-				next if res2.first['gycv'] != 1 && gycv
+		if r_tag.first
+			if sub_fg == '6'
+				res2 = db.query( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{e}';" )
+				if res2.first
+					next if res2.first['gycv'] == 1 && ( not gycv )
+					next if res2.first['gycv'] != 1 && gycv
+				end
 			end
+
+
+			food_name = r_tag.first['name']
+			tags = bind_tags( r_tag ) if r_tag.first
+
+			# buttons
+			add_button = "<span onclick=\"addingCB( '#{e}', '', '#{food_name}' )\">#{lp[3]}</span>" if user.name
+			koyomi_button = "<span onclick=\"addKoyomi( '#{e}', 1 )\">#{lp[35]}</span>" if user.status >= 2
+
+			html << "<tr class='fct_value'><td class='link_cursor' onclick=\"detailView_his( '#{e}' )\">#{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}</td></tr>\n"
 		end
-
-
-		food_name = r_tag.first['name']
-		tags = bind_tags( r_tag ) if r_tag.first
-
-		# buttons
-		add_button = "<span onclick=\"addingCB( '#{e}', '', '#{food_name}' )\">#{lp[3]}</span>" if user.name
-		koyomi_button = "<span onclick=\"addKoyomi( '#{e}', 1 )\">#{lp[35]}</span>" if user.status >= 2
-
-		html << "<tr class='fct_value'><td class='link_cursor' onclick=\"detailView_his( '#{e}' )\">#{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}</td></tr>\n"
 	end
 	db.close
 

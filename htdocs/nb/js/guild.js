@@ -1,4 +1,4 @@
-//guild.js ver 0.08b 20220209
+//guild.js ver 0.09b 20220212
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -755,7 +755,11 @@ var recipe3dsPlottDraw = function(){
 		var names = ( String( column[2] )).split(',');
 		var codes = ( String( column[3] )).split(',');
 		var x_tickv = ( String( column[4] )).split(',');
-		var plott_size = document.documentElement.clientWidth * 0.8;
+		var plott_size = document.documentElement.clientWidth * 0.6;
+		if ( chart != null ){
+			chart.destroy();
+			displayVIDEO( 'Flush!' );
+		}
 
 		var chart = c3.generate({
 			bindto: '#recipe3ds_plott',
@@ -766,32 +770,34 @@ var recipe3dsPlottDraw = function(){
 					x_values,	// x軸
 					y_values,	// y軸
 				],
-			    x:x_values[0],
-				type: 'scatter',
-				color: '#ff44FF'
+			    x: x_values[0],
+				type: 'scatter'
+//				colors:{ x_values[0]: '#ff44FF' }
 			},
 			axis: {
 			    x: {
-			    	type:'indexed',
+			    	type: 'indexed',
 			    	label: x_values[0],
 			    	min:0,
 					tick: {
 						fit: true,
 						count: 10,
-						format: d3.format( "01d" )
-//						values: x_tickv
+						format: d3.format( "01d" ),
+						values: x_tickv
 					},
 					padding: { left: 0, right: 10 }
 				},
 			    y: {
 			    	label: y_values[0],
-			    	type:'linear',
-			    	min:0,
+			    	type: 'linear',
+			    	min: 0,
 			  		padding: { top: 10, bottom: 0 }
 			    }
 			},
-			point: { r: 8 },
-			labels: false,
+			point: {
+				r: 8,
+				focus: { expand: { r: 10 }}
+			 },
 			grid: {
      			x: { show: true },
         		y: { show: true }
@@ -799,21 +805,24 @@ var recipe3dsPlottDraw = function(){
 			legend: { show: false },
 			tooltip: {
 				grouped: false,
-				format: {
-					title: function ( x, index ) { return "[" + index + "]" + names[index]; },
-					name: function ( name, ratio, id, index ) { return x_values[0] + ' : ' + y_values[0]; },
-					value: function ( value, ratio, id, index ) { return x_values[index + 1] + ' : ' + y_values[index + 1];  }
-				}
-//				contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
-//					var ix = d[0].index;
-//					var tooltip_html = '<table style="background-color:#ffffff; font-size:1.5em;">';
-//					tooltip_html += '<tr><td colspan="2"  style="background-color:mistyrose;">' + names[ix] + '</td></tr>'
-//					tooltip_html += '<tr><td>' + x_values[0] + '</td><td>: ' + x_values[ix + 1] + '</td></tr>'
-//					tooltip_html += '<tr><td>' + y_values[0] + '</td><td>: ' + y_values[ix + 1] + '</td></tr>'
-//					tooltip_html += '</table>'
-//
-//					return tooltip_html;
+//				format: {
+//					title: function ( x, index ) { return "[" + index + "]" + names[index]; },
+//					name: function ( name, ratio, id, index ) { return x_values[0] + ' : ' + y_values[0]; },
+//					value: function ( value, ratio, id, index ) { return x_values[index + 1] + ' : ' + y_values[index + 1];  }
 //				}
+				contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
+					var ix = d[0].index;
+					var tooltip_html = '<table style="background-color:#ffffff; font-size:1.5em;">';
+					tooltip_html += '<tr><td colspan="2"  style="background-color:mistyrose;">' + names[ix] + '</td></tr>'
+					tooltip_html += '<tr><td>' + x_values[0] + '</td><td>: ' + x_values[ix + 1] + '</td></tr>'
+					tooltip_html += '<tr><td>' + y_values[0] + '</td><td>: ' + y_values[ix + 1] + '</td></tr>'
+					tooltip_html += '</table>'
+
+					return tooltip_html;
+				}
+			},
+			onclick: function ( d, element ){
+				console.log( "onclick", d, i );
 			}
 		});
 	});

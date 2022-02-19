@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe 3D plotter 0.05b
+#Nutrition browser 2020 recipe 3D plotter 0.06b
 
 
 #==============================================================================
@@ -13,7 +13,7 @@ require './soul'
 #STATIC
 #==============================================================================
 script = 'recipe3ds'
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -65,7 +65,7 @@ end
 def role_html( role, lp )
 	html = lp[30]
 	html << '<select class="form-select form-select-sm" id="role">'
-	html << "<option value='99'>#{lp[23]}</option>"
+	html << "<option value='99'>#{lp[23]}（調味系除く）</option>"
 	@recipe_role.size.times do |c|
 		s = ''
 		s = 'SELECTED' if role == c
@@ -127,57 +127,6 @@ def cost_html( cost, lp )
 	return html
 end
 
-
-def referencing( words, uname )
-	words.gsub!( /\s+/, "\t")
-	words.gsub!( /　+/, "\t")
-	words.gsub!( /,+/, "\t")
-	words.gsub!( /、+/, "\t")
-	words.gsub!( /\t{2,}/, "\t")
-	query_word = words.split( "\t" )
-	query_word.uniq!
-
-	# Recoding query & converting by DIC
-	true_query = []
-	query_word.each do |e|
-		mdb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{@datetime}';", false, @debug )
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false, @debug )
-		if r.first
-			rr = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class1='#{r.first['org_name']}' OR class2='#{r.first['org_name']}' OR class3='#{r.first['org_name']}';", false, @debug )
-			if rr.first
-				rr.each do |ee| true_query << ee['name'] end
-			else
-				true_query << r.first['org_name']
-			end
-		else
-			true_query << e
-		end
-	end
-	true_query.uniq!
-
-	if @debug
-		puts "query_word:#{query_word}<br>"
-		puts "true_query:#{true_query}<br>"
-		puts "<hr>"
-	end
-
-	# Referencing recipe code
-	recipe_code_list = []
-	true_query.each do |e|
-		if e =~ /\-r\-/
-			recipe_code_list << e
-		else
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE word='#{e}' AND ( user='#{uname}' OR public='1' );", false, @debug )
-			r.each do |ee|
-				recipe_code_list << ee['code']
-			end
-		end
-	end
-	recipe_code_list.uniq!
-
-	return recipe_code_list
-end
-
 #==============================================================================
 # Main
 #==============================================================================
@@ -188,17 +137,15 @@ user = User.new( @cgi )
 lp = user.load_lp( script )
 
 
-r = mdb( "SELECT recipe FROM cfg WHERE user='#{user.name}';", false, @debug )
-recipe_cfg = Hash.new
-recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
+r = mdb( "SELECT recipe3ds FROM cfg WHERE user='#{user.name}';", false, @debug )
+recipe3ds_cfg = Hash.new
+recipe3ds_cfg = JSON.parse( r.first['recipe3ds'] ) if r.first['recipe3ds'] != nil && r.first['recipe3ds'] != ''
 
 
 #### POST
 command = @cgi['command']
-words = @cgi['words']
 if @debug
 	puts "command: #{command}<br>"
-	puts "words: #{words}<br>"
 	puts "<hr>"
 end
 
@@ -214,42 +161,19 @@ cost = 99
 xitem = 'ENERC'
 yitem = 'ENERC'
 zitem = 'ENERC'
-xlog = 0
-ylog = 0
 zml = 0
 zrange = 0
-recipe_code_list = []
+
 
 case command
-when 'init'
-	range = recipe_cfg['range'].to_i
-	type = recipe_cfg['type'].to_i
-	role = recipe_cfg['role'].to_i
-	tech = recipe_cfg['tech'].to_i
-	time = recipe_cfg['time'].to_i
-	cost = recipe_cfg['cost'].to_i
-	xitem = recipe_cfg['xitem']
-	yitem = recipe_cfg['yitem']
-	zitem = recipe_cfg['zitem']
-	xlog = recipe_cfg['xlog'].to_i
-	ylog = recipe_cfg['ylog'].to_i
-	zml =  recipe_cfg['zml'].to_i
-	zrange =  recipe_cfg['zrange'].to_i
-when 'reset'
-	words = ''
-
-when 'refer'
-	recipe_code_list = referencing( words, user.name ) if words != '' && words != nil
-	words = "#{lp[39]}#{words}<br>#{lp[1]}" if recipe_code_list.size == 0
-	page = 1
-
 when 'plott_area'
 	puts '<div class="row">'
+	puts "<div class='col-1'></div>"
 	puts "<div class='col'><div id='recipe3ds_plott' align='center'></div>"
 	puts '</div>'
 
 	exit( 0 )
-when 'plott_data'
+when 'plott_data', 'monitor'
 	range = @cgi['range'].to_i
 	type = @cgi['type'].to_i
 	role = @cgi['role'].to_i
@@ -258,30 +182,22 @@ when 'plott_data'
 	cost = @cgi['cost'].to_i
 
 	xitem = @cgi['xitem']
-	xlog = @cgi['xlog'].to_i
 	yitem = @cgi['yitem']
-	ylog = @cgi['ylog'].to_i
 	zitem = @cgi['zitem']
 	zml = @cgi['zml'].to_i
 	zrange = @cgi['zrange'].to_i
 else
-	range = @cgi['range'].to_i
-	type = @cgi['type'].to_i
-	role = @cgi['role'].to_i
-	tech = @cgi['tech'].to_i
-	time = @cgi['time'].to_i
-	cost = @cgi['cost'].to_i
-
-	xitem = @cgi['xitem']
-	yitem = @cgi['yitem']
-	zitem = @cgi['zitem']
-	xlog = @cgi['xlog'].to_i
-	ylog = @cgi['ylog'].to_i
-	zml = @cgi['zml'].to_i
-	zrange = @cgi['zrange'].to_i
-
-	recipe_code_list = referencing( recipe_cfg['words'], user.name )
-	words = recipe_cfg['words']
+	range = recipe3ds_cfg['range'].to_i
+	type = recipe3ds_cfg['type'].to_i
+	role = recipe3ds_cfg['role'].to_i
+	tech = recipe3ds_cfg['tech'].to_i
+	time = recipe3ds_cfg['time'].to_i
+	cost = recipe3ds_cfg['cost'].to_i
+	xitem = recipe3ds_cfg['xitem']
+	yitem = recipe3ds_cfg['yitem']
+	zitem = recipe3ds_cfg['zitem']
+	zml =  recipe3ds_cfg['zml'].to_i
+	zrange =  recipe3ds_cfg['zrange'].to_i
 end
 if @debug
 	puts "range: #{range}<br>"
@@ -293,11 +209,8 @@ if @debug
 	puts "xitem: #{xitem}<br>"
 	puts "yitem: #{yitem}<br>"
 	puts "zitem: #{zitem}<br>"
-	puts "xlog: #{xlog}<br>"
-	puts "ylog: #{ylog}<br>"
 	puts "zml: #{zml}<br>"
 	puts "zrange: #{zrange}<br>"
-	puts "recipe_code_list: #{recipe_code_list}<br>"
 	puts "<hr>"
 end
 
@@ -328,27 +241,80 @@ else
 end
 
 sql_where << " AND recipe.type='#{type}'" unless type == 99
-sql_where << " AND recipe.role='#{role}'" unless role == 99
+
+if role == 99
+	sql_where << " AND recipe.role!='100' AND recipe.role!='7'"
+else
+	sql_where << " AND recipe.role='#{role}'"
+end
+
 sql_where << " AND recipe.tech='#{tech}'" unless tech == 99
 sql_where << " AND recipe.time>0 AND recipe.time<=#{time}" unless time == 99
 sql_where << " AND recipe.cost>0 AND recipe.cost<=#{cost}" unless cost == 99
 
 
-if command == 'plott_data'
+if command == 'plott_data' || command == 'monitor'
 	tb1 = "#{$MYSQL_TB_FCZ}"
 	tb2 = "#{$MYSQL_TB_RECIPE}"
+	xitems = []
+	yitems = []
+	zitems = []
+	names = []
+	codes = []
 
-	q = "SELECT #{tb1}.#{xitem}, #{tb1}.#{yitem}, #{tb1}.#{zitem} FROM #{tb1} INNER JOIN #{tb2} ON #{tb1}.origin=#{tb2}.code #{sql_where} ORDER BY #{tb1}.#{zitem};"
-puts q
+	q = "SELECT #{tb1}.#{xitem}, #{tb1}.#{yitem}, #{tb1}.#{zitem}, #{tb2}.name, #{tb2}.code FROM #{tb1} INNER JOIN #{tb2} ON #{tb1}.origin=#{tb2}.code #{sql_where} ORDER BY #{tb1}.#{zitem};"
 	r = mdb( q, false, @debug )
 	r.each do |e|
-		puts "#{e[zitem]}<br>"
+		xt = e[xitem]
+		yt = e[yitem]
+		zt = e[zitem]
+		xt = 0 if xt == nil
+		yt = 0 if yt == nil
+		zt = 0 if zt == nil
+		xitems << xt.to_f
+		yitems << yt.to_f
+		zitems << zt.to_f
+		nt = e['name']
+		nt.gsub!( '(', '（')
+		nt.gsub!( ')', '）')
+		nt.gsub!( ':', '：')
+		names << nt
+		codes << e['code']
 	end
+
+	xmax = xitems.max
+	x_tickv = []
+	x_tickv = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] if xmax < 1
+	x_tickv = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] if xmax >= 1
+	x_tickv = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] if xmax >= 10
+	x_tickv = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] if xmax >= 100
+	x_tickv = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000] if xmax >= 1000
+	x_tickv = [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000] if xmax >= 10000
+
+	if command == 'plott_data'
+		raw = []
+		raw[0] = xitems.unshift( @fct_name[xitem] ).join( ',' )
+		raw[1] = yitems.unshift( @fct_name[yitem] ).join( ',' )
+		raw[2] = names.join( ',' )
+		raw[3] = codes.join( ',' )
+		raw[4] = x_tickv.join( ',' )
+		puts raw.join( ':' )
+
+		exit( 0 )
+	end
+
+	puts "#{@fct_name[xitem]}： #{xitems.min} ～ #{xitems.max}<br>"
+	puts "#{@fct_name[yitem]}： #{yitems.min} ～ #{yitems.max}<br>"
+	puts "#{@fct_name[zitem]}： #{zitems.min} ～ #{zitems.max}<br>"
+	puts "[#{xitems.size}][#{names.size}][#{codes.size}]<br>"
+
+
+	#### 検索設定の保存
+	recipe_ = JSON.generate( { "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "xitem" => xitem, "yitem" => yitem, "zitem" => zitem, "zml" => zml, "zrange" => zrange } )
+	mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe3ds='#{recipe_}' WHERE user='#{user.name}';", false, true )
 
 	exit( 0 )
 end
-
-
 
 
 #### 検索条件HTML
@@ -399,12 +365,6 @@ else
 end
 zml_select << '</select>'
 
-xlog_check = ''
-ylog_check = 'CHECKED' if xlog == 1
-
-xlog_check = ''
-ylog_check = 'CHECKED' if ylog == 1
-
 
 puts "Control HTML<br>" if @debug
 html = <<-"HTML"
@@ -426,12 +386,11 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col-2'>
-			<input class="form-check-input mt-0" type="checkbox" id="xlog">&nbsp;対数
 		</div>
 		<div class='col-4'>
 			<div class="input-group mb-3">
 				<label class="input-group-text">補助成分</label>
-				#{yselect}
+				#{zselect}
 			</div>
 		</div>
 		<div class='col-2'>
@@ -442,11 +401,10 @@ html = <<-"HTML"
 		<div class='col-4'>
 			<div class="input-group mb-3">
 				<label class="input-group-text">Y軸成分</label>
-				#{zselect}
+				#{yselect}
 			</div>
 		</div>
 		<div class='col-2'>
-			<input class="form-check-input mt-0" type="checkbox" id="ylog">&nbsp;対数
 		</div>
 		<div class='col-4'>
 			<label class="form-label"></label>
@@ -460,14 +418,10 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<div class='row'>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipe3ds_plott()">#{lp[13]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipe3dsPlottDraw()">#{lp[13]}</button></div>
 		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipe3dsReset()">#{lp[14]}</button></div>
 	</div>
 </div>
 HTML
 
 puts html
-
-#### 検索設定の保存
-recipe_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "words" => words } )
-mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )

@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.19b
+#Nutrition browser 2020 brain 0.20b
 
 #==============================================================================
 # LIBRARY
@@ -336,7 +336,7 @@ class FCT
     @refuses = []
     @solid = []
     @total = []
-    @total_weight = 0.0
+    @total_weight = BigDecimal( '0' )
     @frct_accu = frct_accu
     @frct_accu = 1 if @frct_accu == nil
     @frct_mode = frct_mode
@@ -497,6 +497,27 @@ class FCT
     end
   end
 
+  def singlet()
+    @total = []
+    @total_weight = @weights[0]
+    @items.size.times do |i| @total[i] = BigDecimal( @solid[0][i].to_s ) end
+  end
+
+  def gramt( g )
+    @items.size.times do |i|
+      @total[i] = @total[i] / @total_weight * g
+    end
+  end
+
+  def pickt( item )
+    item_index = @items.index( item )
+    if item_index
+      return @total[item_index]
+    else
+      return nil
+    end
+  end
+
   def calc_pfc()
     ei = @items.index( 'ENERC_KCAL' )
     pi = @items.index( 'PROT' )
@@ -519,6 +540,17 @@ class FCT
     @solid << Marshal.load( Marshal.dump( fct ))
   end
 
+  def put_solid( item, solid_no, value )
+    item_index = @items.index( item )
+    if item_index
+      @solid[solid_no][item_index] = value
+
+      return true
+    else
+      return false
+    end
+  end
+
   def load_fcz( uname, fzcode, base )
     r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}' AND base='#{base}';", false, false )
     if r.first
@@ -532,11 +564,47 @@ class FCT
       @fns << fzcode
       @foods << base
       @weights << 100
-      return true
+      return r.first['Notice']
     else
       puts "<span class='error'>FCZ load ERROR[#{fzcode}]</span>"
       return false
     end
+  end
+
+  def load_fctp( uname, code )
+    r = mdb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false, @debug )
+    if r.first
+      a = []
+      @items.each do |e|
+        t = r.first[e]
+        t = 0 unless t
+        a << BigDecimal( t )
+      end
+      @solid << Marshal.load( Marshal.dump( a ))
+      @fns << code
+      @foods << 'fctp'
+      @weights << 100
+
+      return r.first['REFUSE'], r.first['Notice']
+    else
+      puts "<span class='error'>fctp load ERROR[#{code}]</span>"
+      return nil, nil
+    end
+  end
+
+  def load_cgi( cgi )
+    a = []
+    @items.each do |e|
+      t = cgi[e]
+      t = 0 if t == '' || t == nil || /[^0-9\-\.]/ =~ t
+      a << BigDecimal( t )
+    end
+    @solid << Marshal.load( Marshal.dump( a ))
+    @fns << cgi['food_code']
+    @foods << cgi['food_name']
+    t = cgi['food_weight']
+    t = '100' if t == '' || t == nil || /[^0-9\-\.]/ =~ t
+    @weights << BigDecimal( t )
   end
 
   def save_fcz( uname, zname, base, origin )
@@ -556,6 +624,15 @@ class FCT
 
     return code
   end
+
+  def sql()
+    sql = ''
+      @items.size.times do |i| sql << "#{@items[i]}='#{@total[i]}'," end
+      sql.chop!
+
+      return sql
+  end
+
 
   def debug()
   end

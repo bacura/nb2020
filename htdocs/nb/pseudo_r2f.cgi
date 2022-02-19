@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.06b
+#Nutrition browser recipe to pseudo food 0.08b
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 
@@ -13,7 +13,7 @@ require './brain'
 # STATIC
 #==============================================================================
 script = 'pseudo_r2f'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -61,11 +61,17 @@ if @debug
 end
 
 
-puts 'SUMからデータを抽出<br>' if @debug
+fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+fct.load_palette( @palette_bit_all )
+
+
+puts 'Extracting SUM<br>' if @debug
 r = mdb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
+food_name = r.first['name']
 code = r.first['code']
 dish_num = r.first['dish'].to_i
 food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, 0 )
+
 
 if command == 'form'
 	# 食品群オプション html
@@ -121,54 +127,11 @@ end
 
 
 if command == 'save'
-	fct_opt = Hash.new
-
-	puts '食品番号から食品成分と名前を抽出<br>' if @debug
-	fct = []
-	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-	food_no.each do |e|
-		fct_tmp = []
-		if e == '-'
-			fct << '-'
-		elsif e == '+'
-			fct << '+'
-		elsif e == '00000'
-			fct << '0'
-		else
-			if /P|U/ =~ e
-				query = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{user.name}' OR user='#{$GM}' );"
-			else
-				query = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
-			end
-			res = db.query( query )
-			@fct_item.each do |e| fct_tmp << res.first[e] end
-			fct << Marshal.load( Marshal.dump( fct_tmp ))
-		end
-	end
-	db.close
-
-	puts 'データ計算<br>' if @debug
-	fct_sum = []
-	@fct_item.each do fct_sum << BigDecimal( 0 ) end
-	food_no.size.times do |fn|
-		unless food_no[fn] == '-' || food_no[fn] == '+'
-			@fct_start.upto( @fct_end ) do |fi|
-				t = convert_zero( fct[fn][fi] )
-				fct[fn][fi] = num_opt( t, food_weight[fn], 0, @fct_frct[@fct_item[fi]] )
-				fct_sum[fi] += BigDecimal( num_opt( t, food_weight[fn], 0, @fct_frct[@fct_item[fi]] + 3 ))
-			end
-		end
-	end
-
-	puts '100 g当たりに換算と合計値の桁合わせ<br>' if @debug
-	@fct_start.upto( @fct_end ) do |i| fct_sum[i] = fct_sum[i] / ( total_weight / 100 ) end
-	fct_sum = adjust_digit( @fct_item, fct_sum, 0 )
-	@fct_start.upto( @fct_end ) do |i|	fct_opt[@fct_item[i]] = fct_sum[i] end
-
-	#計算除外値
-	fct_opt['REFUSE'] = 0
-	fct_opt['Notice'] = code
-
+	puts 'FCT Calc<br>' if @debug
+	fct.set_food( user.name, food_no, food_weight, false )
+	fct.calc
+	fct.gramt( 100 )
+	fct.digit
 
 	class1_new = ''
 	class2_new = ''
@@ -188,44 +151,49 @@ if command == 'save'
 	tag5_new = "　#{tag5}" unless tag5 == ''
 	tagnames_new = "#{class1_new}#{class2_new}#{class3_new}#{food_name}#{tag1_new}#{tag2_new}#{tag3_new}#{tag4_new}#{tag5_new}"
 
-	puts '擬似食品成分表テーブルに追加<br>' if @debug
-	fct_set = ''
-	( @fct_start - 1 ).upto( @fct_end + 1 ) do |i| fct_set << "#{@fct_item[i]}='#{fct_opt[@fct_item[i]]}'," end
-	fct_set.chop!
+	puts 'Making fct_sql set<br>' if @debug
+	fct_set = "REFUSE='0',"
+	fct_set << fct.sql
+	fct_set << ",Notice='#{code}'"
 
-	puts '新規食品番号の合成<br>' if @debug
-	code = ''
+	puts 'Generating new Food number:' if @debug
 	if user.status >= 8
-		puts '公開<br>' if @debug
+		puts 'Public>' if @debug
 		public_bit = 1
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
-
-		if r.first
-			code = r.first['FN']
-			puts "リサイクル:#{code}<br>" if @debug
-		else
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
+		unless r.first
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
 			if rr.first
-				puts "検出:#{rr.first['FN']}<br>" if @debug
-				last_code = rr.first['FN'][-3,3].to_i
-				code = "P#{food_group}%#03d" % ( last_code + 1 )
+				code = rr.first['FN']
+				puts "Recycle:#{code}>" if @debug
 			else
 				code = "P#{food_group}001"
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
+				if rrr.first
+					puts "Detect:#{rrr.first['FN']}>" if @debug
+					last_code = rrr.first['FN'][-3,3].to_i
+					code = "P#{food_group}%#03d" % ( last_code + 1 )
+				end
+				puts "New:#{code}>" if @debug
 			end
-			puts "新規:#{code}<br>" if @debug
 		end
 	else
-		puts 'プライベート<br>' if @debug
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
-		if r.first
-			code = r.first['FN']
-		else
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
+		puts 'Private>' if @debug
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0;", false, @debug )
+		unless r.first
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
 			if rr.first
-				last_code = rr.first['FN'][-3,3].to_i
-				code = "U#{food_group}%#03d" % ( last_code + 1 )
+				code = rr.first['FN']
+				puts "Recycle:#{code}>" if @debug
 			else
 				code = "U#{food_group}001"
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
+				if rrr.first
+					puts "Detect:#{rrr.first['FN']}>" if @debug
+					last_code = rrr.first['FN'][-3,3].to_i
+					code = "U#{food_group}%#03d" % ( last_code + 1 )
+				end
+				puts "New:#{code}>" if @debug
 			end
 		end
 	end
@@ -233,14 +201,13 @@ if command == 'save'
 	puts 'Generating units<br>' if @debug
 	unith = Hash.new
 	unith['g'] = 1
-	unith['kcal'] = fct_opt['ENERC_KCAL'].to_f / 100 if fct_opt['ENERC_KCAL'] != 0
+	unith['kcal'] = fct.pickt( 'ENERC_KCAL' ).to_f / 100 if fct.pickt( 'ENERC_KCAL' ) != 0
 	unith_ = unith.sort.to_h
 	unit = JSON.generate( unith_ )
 
-	puts '食品番号のチェック<br>' if @debug
+	puts 'Checking Food number<br>' if @debug
 	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
 	if r.first
-		# 擬似食品テーブルの更新
 		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
 		mdb( "UPDATE #{$MYSQL_TB_EXT} SET user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0', unit='#{unit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.02b
+#Nutrition browser 2020 index page 0.03b
 
 
 #==============================================================================
@@ -216,6 +216,7 @@ def html_nav( user, lp )
       </nav>
       <nav class='container-fluid' id='guild_menu' style='display:none;'>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initKoyomi()">#{lp[37]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="recipe3ds()">#{lp[11]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initPhysique()">#{lp[41]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initMomChai()">#{lp[42]}</button>
