@@ -735,27 +735,31 @@ var recipe3dsPlottDraw = function(){
 	var cost = document.getElementById( "cost" ).value;
 
 	var xitem = document.getElementById( "xitem" ).value;
-
 	var yitem = document.getElementById( "yitem" ).value;
-	if( document.getElementById( 'ylog' ).checked ){ var ylog = 1; }else{ var ylog = 0; }
-
 	var zitem = document.getElementById( "zitem" ).value;
 	var zml = document.getElementById( "zml" ).value;
 	var zrange = document.getElementById( "zrange" ).value;
 	$.post( "recipe3ds.cgi", { command:'monitor', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
-		xitem:xitem, yitem:yitem, zitem:zitem, ylog:ylog, zml:zml, zrange:zrange }, function( data ){
+		xitem:xitem, yitem:yitem, zitem:zitem, zml:zml, zrange:zrange }, function( data ){
 		$( "#L3" ).html( data );
 	});
 
 	$.post( "recipe3ds.cgi", { command:'plott_data', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
-		xitem:xitem, yitem:yitem, zitem:zitem, ylog:ylog, zml:zml, zrange:zrange }, function( raw ){
+		xitem:xitem, yitem:yitem, zitem:zitem, zml:zml, zrange:zrange }, function( raw ){
 		var column = ( String( raw )).split( ':' );
 		var x_values = ( String( column[0] )).split(',');
 		var y_values = ( String( column[1] )).split(',');
 		var names = ( String( column[2] )).split(',');
 		var codes = ( String( column[3] )).split(',');
 		var x_tickv = ( String( column[4] )).split(',');
-		var plott_size = document.documentElement.clientWidth * 0.6;
+
+		var plott_size = document.documentElement.clientWidth
+		if ( plott_size > 800 ){ var plott_size = plott_size * 0.9; }
+		if ( plott_size > 1000 ){ var plott_size = plott_size * 0.9; }
+		if ( plott_size > 1200 ){ var plott_size = plott_size * 0.9; }
+		if ( plott_size > 1600 ){ var plott_size = plott_size * 0.9; }
+
+
 		if ( chart != null ){
 			chart.destroy();
 			displayVIDEO( 'Flush!' );
@@ -839,7 +843,6 @@ var recipe3dsReset = function(){
 
 	document.getElementById( "xitem" ).value = 'ENERC';
 	document.getElementById( "yitem" ).value = 'ENERC';
-	document.getElementById( 'ylog' ).checked = false;
 
 	document.getElementById( "zitem" ).value = 'ENERC';
 	document.getElementById( "zml" ).value = 0;
