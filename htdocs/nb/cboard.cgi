@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.10b
+#Nutrition browser 2020 cutting board 0.12b
 
 #==============================================================================
 #LIBRARY
@@ -211,6 +211,7 @@ def chomi_cell( user, lp, code, chomi_selected, chomi_code )
 	return chomi_html
 end
 
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -256,13 +257,14 @@ end
 puts "Loading Sum<br>" if @debug
 q = ''
 if command == 'load'
-	q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_RECIPE} WHERE user='#{recipe_user}' AND code='#{code}';"
+	q = "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{recipe_user}' AND code='#{code}';"
 else
-	q = "SELECT code, name, sum, dish, protect from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
+	q = "SELECT * from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
 end
 r = mdb( q, false, @debug )
 code = r.first['code']
 recipe_name = r.first['name']
+recipe_user = r.first['user']
 dish_num = r.first['dish'].to_i if dish_num == '' || dish_num == nil
 dish_num = 1 if dish_num == 0
 protect = r.first['protect'].to_i
@@ -327,6 +329,38 @@ when 'lower'
 		t = food_list.delete_at( order.to_i )
 		food_list.insert( order.to_i + 1, t )
 	end
+	update = '*'
+
+when 'sort'
+	puts "Sorting list by food weight<br>" if @debug
+	bs_set = []
+	so_set = []
+	as_set = []
+	check_flag = false
+	food_list.each do |e|
+		check_flag = true if e.check == '1'
+		if check_flag
+			if e.check == '1'
+			#sorting
+				so_set << e
+			else
+			#after sorting
+				as_set << e
+			end
+		else
+		#Before sorting
+			bs_set << e
+		end
+	end
+
+	unless check_flag
+		so_set = Marshal.load( Marshal.dump( bs_set ))
+		bs_set = []
+	end
+	so_set = so_set.sort do |a, b| a.weight.to_f <=> b.weight.to_f end
+	so_set.reverse!
+	food_list = [] + bs_set + so_set + as_set
+
 	update = '*'
 
 #### 食品の重量の変更
@@ -683,7 +717,7 @@ html = <<-"ITEM_NAME"
 	<div class='col-3'>
   		<div class='row'>
 			<div class='col-6'>#{lp[12]}</div>
-			<div class='col-3'>#{lp[13]}</div>
+			<div class='col-3'>#{lp[13]}&nbsp;<span onclick=\"sortCB( '#{code}' )\">#{lp[36]}</span></div>
 			<div class='col-3'>#{lp[14]}</div>
 		</div>
 	</div>

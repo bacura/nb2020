@@ -10,14 +10,8 @@ var addingCB = function( fn, weight_id, food_name ){
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){
 		$( "#CBN" ).html( data );
 		refreshCBN();
-//		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#CBN" ).html( data );}
 		if( fn != '' ){ displayVIDEO( '+' + food_name ); }
 	});
-
-//	var fxRI = function(){
-//		$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#CBN" ).html( data );});
-//	};
-//	setTimeout( fxRI, 1000 );
 };
 
 
@@ -46,8 +40,6 @@ var changingCB = function( fn, base_fn ){
 				displayBW();
 			});
 		});
-//		if( fn != '' ){ displayVIDEO( fn + 'has modified' ); }
-//		$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){ $( "#L1" ).html( data );});
 	}
 };
 
@@ -62,7 +54,6 @@ var initCB = function( com, code, recipe_user ){
 		dl1 = true;
 		displayBW();
 	});
-//	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -86,7 +77,6 @@ var clearCB = function( order, code ){
 			refreshCBN();
 		});
 	}
-//	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -113,7 +103,7 @@ var dishCB = function( code ){
 var weightAdj = function( code ){
 	var weight_adj = document.getElementById( "weight_adj" ).value;
 	$.post( "cboard.cgi", { command:'wadj', code:code, weight_adj:weight_adj }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( 'Adjusted by weight' );
+	displayVIDEO( 'Adjusted' );
 };
 
 
@@ -121,23 +111,36 @@ var weightAdj = function( code ){
 var energyAdj = function( code ){
 	var energy_adj = document.getElementById( "energy_adj" ).value;
 	$.post( "cboard.cgi", { command:'eadj', code:code, energy_adj:energy_adj }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( 'Adjusted by energy' );
+		displayVIDEO( 'Adjusted' );
 };
 
 
 // Adjusting total food salt
 var saltAdj = function( code ){
 	var salt_adj = document.getElementById( "salt_adj" ).value;
-	$.post( "cboard.cgi", { command:'sadj', code:code, salt_adj:salt_adj }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( 'Adjusted by salt' );
+	$.post( "cboard.cgi", { command:'sadj', code:code, salt_adj:salt_adj }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( 'Adjusted' );
+	});
 };
 
 
 // Adjusting feeding rate by food loss
 var lossAdj = function( code ){
 	var loss_adj = document.getElementById( "loss_adj" ).value;
-	$.post( "cboard.cgi", { command:'ladj', code:code, loss_adj:loss_adj }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( 'Adjusted by loss' );
+	$.post( "cboard.cgi", { command:'ladj', code:code, loss_adj:loss_adj }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( 'Adjusted' );
+	});
+};
+
+
+// Sorting sum list by food weight
+var sortCB = function( code ){
+	$.post( "cboard.cgi", { command:'sort', code:code }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( 'Sorted' );
+	});
 };
 
 
@@ -148,7 +151,6 @@ var recipeAdd = function( code ){
 		$( "#L1" ).html( data );
 		refreshCBN();
 	});
-//	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -159,7 +161,6 @@ var seasoningAdd = function( code ){
 		$( "#L1" ).html( data );
 		refreshCBN();
 	});
-//	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -312,8 +313,10 @@ var recipeSave = function( code ){
 
 		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );
-			$.post( "cboard.cgi", { command:'init', code:code }, function( data ){ $( '#L1' ).html( data );});
-			displayVIDEO( recipe_name );
+			$.post( "cboard.cgi", { command:'init', code:code }, function( data ){
+				$( '#L1' ).html( data );
+				displayVIDEO( recipe_name );
+			});
 		});
 	}
 };
@@ -453,16 +456,16 @@ var pricemAdpt = function( code ){
 
 // 原価計算表のマスター価格登録（でL2に原価表を更新）
 var pricemReg = function( code ){
-//	$.post( "price.cgi", { command:'reg_master', code:code }, function( data ){ $( "#L2" ).html( data );});
 	$.post( "price.cgi", { command:'reg_master', code:code }, function( data ){
+//		$( "#L2" ).html( data );
 		displayVIDEO( 'マスター価格に登録' );
 	});
 };
 
 // 原価計算表の価格を元にレシピの価格区分を変更
 var recipeRef = function( code ){
-//	$.post( "price.cgi", { command:'ref_recipe', code:code }, function( data ){ $( "#L2" ).html( data );});
 	$.post( "price.cgi", { command:'ref_recipe', code:code }, function( data ){
+//		$( "#L2" ).html( data );
 		displayVIDEO( '価格区分へ反映' );
 	});
 };
@@ -500,12 +503,6 @@ var luckyAnalyze = function(){
 		refreshCBN();
 		displayVIDEO( 'Lucky?' );
 	});
-
-//	var fx = function(){
-//		$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-//		refreshCBN();
-//	};
-//	setTimeout( fx , 1000 );
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -629,7 +626,6 @@ var clear_meal = function( order, code ){
 			addingMeal( '' );
 		});
 	}
-//	setTimeout( addingMeal( '' ), 1000 );
 };
 
 
@@ -680,9 +676,6 @@ var menuSave = function( code ){
 			$.post( "meal.cgi", { command:'init', code:code }, function( data ){$( '#L1' ).html( data );});
 			displayVIDEO( menu_name );
 		});
-
-//		var fx = function(){ $.post( "meal.cgi", { command:'init', code:code }, function( data ){$( '#L1' ).html( data );});};
-//		setTimeout( fx , 1000 );
 	}
 };
 
