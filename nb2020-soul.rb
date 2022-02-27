@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.15b
+#Nutrition browser 2020 soul 0.16b
 
 #==============================================================================
 # LIBRARY
@@ -166,18 +166,16 @@ def get_data()
 end
 
 
-#### データベース処理
+#### DB process
 def mdb( query, html_opt, debug )
+  puts "<span class='dbq'>[mdb]#{query}</span><br>" if debug
   begin
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     t = query.chop
-    query_ = ''
-    query_ = query if debug
-    if /\;/ =~ t
-        puts "<span class='error'>[mdb]ERROR!! #{query_}</span><br>"
+    if /[\;\#\$\@]/ =~ t
+        puts "<span class='error'>[mdb]ERROR!!</span><br>"
         exit( 9 )
     end
-
     res = db.query( query )
     db.close
   rescue
@@ -186,7 +184,6 @@ def mdb( query, html_opt, debug )
       html_head( nil )
     end
       puts "<span class='error'>[mdb]ERROR!!<br>"
-      puts "#{query_}</span><br>"
   end
   return res
 end
@@ -831,12 +828,13 @@ class Menu
 end
 
 class Media
-  attr_accessor :user, :code, :mcode, :series, :origin, :type, :date
+  attr_accessor :user, :code, :mcode, :muser, :series, :origin, :type, :date
 
   def initialize( user )
     @code = nil
     @user = user.name
     @mcode = nil
+    @muser = nil
     @origin = nil
     @type = nil
     @date = nil
@@ -845,15 +843,16 @@ class Media
 
   def load_db( mcode )
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' AND mcode='#{mcode}';" )
+    res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE mcode='#{mcode}';" )
     db.close
 
     if res.first
-      @mcode = res['mcode'].to_s
-      @code = res['code'].to_s
-      @origin = res['origin'].to_s
-      @type = res['type'].to_s
-      @date = res['date']
+      @mcode = res.first['mcode'].to_s
+      @muser = res.first['user'].to_s
+      @code = res.first['code'].to_s
+      @origin = res.first['origin'].to_s
+      @type = res.first['type'].to_s
+      @date = res.first['date']
     else
       puts "<span class='error'>[Media load]ERROR!!<br>"
       puts "mcode:#{@mcode}</span><br>"
@@ -876,8 +875,9 @@ class Media
   def load_series()
     unless @code == '' || @code == nil
       db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-      res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' AND code='#{@code}';" )
+      res = db.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE code='#{@code}';" )
       db.close
+      @muser = res.first['user'] if res.first
       res.each do |e| @series << e['mcode'] end
     end
 

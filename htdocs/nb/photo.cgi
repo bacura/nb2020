@@ -5,7 +5,7 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require 'fileutils'
 
 
@@ -24,12 +24,11 @@ def view_series( user, code, del_icon, size )
 	media = Media.new( user )
 	media.code = code
 	media.load_series()
-
 	if media.series.size > 0
 		puts "<div class='row'>"
 		media.series.each do |e|
 			puts "<div class='col'>"
-			puts "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{del_icon}</span><br>"
+			puts "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{del_icon}</span><br>" if media.muser == user.name
 			puts "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a>"
 			puts "</div>"
 		end

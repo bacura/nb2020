@@ -98,6 +98,11 @@ nav {
   font-weight: bold;
 }
 
+.dbq{
+  background: palegreen;
+  color: black;
+}
+
 .notice{
   border: solid gray 1px;
   margin: 0.5em;

@@ -313,10 +313,9 @@ var recipeSave = function( code ){
 
 		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );
-			$.post( "cboard.cgi", { command:'init', code:code }, function( data ){
-				$( '#L1' ).html( data );
-				displayVIDEO( recipe_name );
-			});
+			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
+			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#L3" ).html( data );});
+			displayVIDEO( recipe_name );
 		});
 	}
 };

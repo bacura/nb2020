@@ -167,11 +167,33 @@ zrange = 0
 
 case command
 when 'plott_area'
-	puts '<div class="row">'
-	puts "<div class='col-1'></div>"
-	puts "<div class='col'><div id='recipe3ds_plott' align='center'></div>"
-	puts '</div>'
 
+	html = <<-"HTML"
+<div class="row">
+	<div class='col-1'>
+		プロットサイズ<br>
+		<select class="form-select form-select-sm" id="frame_size">
+			<option value='0.5'>50%</option>
+			<option value='0.7'>70%</option>
+			<option value='0.9'>90%</option>
+		</select>
+		<br>
+		<div class="form-check form-switch">
+			<label class="form-check-label">Y軸Log</label>
+			<input class="form-check-input" type="checkbox" id="y_log">
+		</div>
+		<br>
+		<div class="form-check form-switch">
+			<label class="form-check-label">ラベル表示</label>
+			<input class="form-check-input" type="checkbox" id="label_on">
+		</div>
+	</div>
+	<div class='col'><div id='recipe3ds_plott' align='center'></div>
+</div>
+
+HTML
+
+	puts html
 	exit( 0 )
 when 'plott_data', 'monitor'
 	range = @cgi['range'].to_i

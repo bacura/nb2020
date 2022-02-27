@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.20b
+#Nutrition browser 2020 brain 0.21b
 
 #==============================================================================
 # LIBRARY
@@ -577,7 +577,7 @@ class FCT
       a = []
       @items.each do |e|
         t = r.first[e]
-        t = 0 unless t
+        t = 0 if t == nil || t == '' || t == '-'
         a << BigDecimal( t )
       end
       @solid << Marshal.load( Marshal.dump( a ))

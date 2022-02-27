@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.06b
+#Nutrition browser 2020 recipe editor 0.07b
 
 #==============================================================================
 #LIBRARY
@@ -116,7 +116,7 @@ when 'save'
 			end
 		end
 
-		if copy_flag == true
+		if copy_flag
 			puts "Copying recipe<br>" if @debug
 			recipe.code = generate_code( user.name, 'r' )
 
@@ -130,17 +130,17 @@ when 'save'
 			end
 
 			puts "checking media<br>" if @debug
-			new_media_code = generate_code( user.name, 'p' )
-
 			rr = ''
-			if original_user
-				rr = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+			if original_user == nil
+				rr = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
 			else
-				rr = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{original_user}' and code='#{code}';", false, @debug )
+				rr = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{original_user}' and code='#{code}';", false, @debug )
 			end
 			if rr.first
 				puts "Copying photo<br>" if @debug
-				r.each do |e|
+				rr.each do |e|
+					new_media_code = generate_code( user.name, 'p' )
+
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
@@ -162,10 +162,12 @@ puts "HTML SELECT Recipe attribute<br>" if @debug
 check_public = checked( recipe.public )
 check_protect = checked( recipe.protect )
 check_draft =  checked( recipe.draft )
+file_disabled = false
 if user.name != recipe.user
 	check_public = 'DISABLED'
 	check_protect = 'DISABLED'
 	check_draft = 'CHECKED DISABLED'
+	file_disabled = true
 end
 
 
@@ -219,7 +221,7 @@ form_photo = ''
 form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
 form_photo << '<div class="input-group input-group-sm">'
 form_photo << "<label class='input-group-text'>#{lp[13]}</label>"
-if recipe.code == nil
+if recipe.code == nil || file_disabled
 	form_photo << "<input type='file' class='form-control' DISABLED>"
 else
 	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{recipe.code}', '#photo_form', 'recipe' )\">"

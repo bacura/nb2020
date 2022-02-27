@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.07b
+#Nutrition browser 2020 recipe list 0.08b
 
 
 #==============================================================================
@@ -15,7 +15,7 @@ require 'fileutils'
 #==============================================================================
 script = 'recipel'
 page_limit = 50
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -217,7 +217,7 @@ user = User.new( @cgi )
 #user.debug if @debug
 lp = user.load_lp( script )
 
-r = mdb( "SELECT icache, recipe, recipel_max FROM cfg WHERE user='#{user.name}';", false, @debug )
+r = mdb( "SELECT icache, recipe, recipel_max FROM cfg WHERE user='#{user.name}';", false, false )
 if r.first['icache'].to_i == '1'
 	html_init_cache( nil )
 else
@@ -254,14 +254,6 @@ recipe_code_list = []
 
 case command
 when 'init'
-	page = recipe_cfg['page'].to_i
-	page = 1 if page == 0
-	range = recipe_cfg['range'].to_i
-	type = recipe_cfg['type'].to_i
-	role = recipe_cfg['role'].to_i
-	tech = recipe_cfg['tech'].to_i
-	time = recipe_cfg['time'].to_i
-	cost = recipe_cfg['cost'].to_i
 when 'reset'
 	words = ''
 
@@ -316,7 +308,7 @@ when 'subspecies'
 	recipe.root = code if command == 'subspecies'
 	recipe.insert_db
 
-else
+when 'limit'
 	page = @cgi['page'].to_i
 	page = 1 if page == 0
 	range = @cgi['range'].to_i
@@ -325,9 +317,18 @@ else
 	tech = @cgi['tech'].to_i
 	time = @cgi['time'].to_i
 	cost = @cgi['cost'].to_i
-
-	recipe_code_list = referencing( recipe_cfg['words'], user.name )
+	recipe_code_list = referencing( words, user.name ) if words != '' && words != nil
+else
+	page = recipe_cfg['page'].to_i
+	page = 1 if page == 0
+	range = recipe_cfg['range'].to_i
+	type = recipe_cfg['type'].to_i
+	role = recipe_cfg['role'].to_i
+	tech = recipe_cfg['tech'].to_i
+	time = recipe_cfg['time'].to_i
+	cost = recipe_cfg['cost'].to_i
 	words = recipe_cfg['words']
+	recipe_code_list = referencing( words, user.name ) if words != '' && words != nil
 end
 if @debug
 	puts "page: #{page}<br>"
@@ -391,8 +392,8 @@ recipe_num = r.first['COUNT(*)']
 puts "Recipe list<br>" if @debug
 recipes = []
 if recipe_code_list.size > 0
-	c = 1
-	offset = ( page - 1 ) * page_limit + 1
+	c = 0
+	offset = ( page - 1 ) * page_limit
 	limit = offset + page_limit
 
 	recipe_code_list.each do |e|
@@ -410,7 +411,7 @@ if recipe_code_list.size > 0
 	recipe_num = recipes.size - 1
 
 else
-	offset = ( page - 1 ) * page_limit + 1
+	offset = ( page - 1 ) * page_limit
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name LIMIT #{offset}, #{page_limit};", false, @debug )
 	r.each do |e|
 		o = Recipe.new( user.name )
@@ -516,7 +517,7 @@ html = <<-"HTML"
 	</div><br>
 	<div class='row'>
 		<div class='col-2'></div>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList2( '#{page}' )">#{lp[13]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{lp[13]}</button></div>
 		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
 		<div class='col-2'>#{recipe3ds_button}</div>
 	</div>
