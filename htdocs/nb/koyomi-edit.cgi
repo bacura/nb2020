@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.12b
+#Nutrition browser 2020 koyomi editor 0.13b
 
 
 #==============================================================================
@@ -319,7 +319,7 @@ r.each do |e|
 							food_weights.concat( fws )
 						else
 							food_nos << code
-							food_weights << rate
+							food_weights << unit_weight( rate, unit, code )
 						end
 					end
 

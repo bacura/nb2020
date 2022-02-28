@@ -191,6 +191,7 @@ fct_day_htmls = ['']
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 	fct_day.load_palette( palette.bit )
+	freeze_flag = false
 
 	r.each do |e|
 		if e['tdiv'].to_i < 4 && e['koyomi'] != nil && e['koyomi'] != ''
@@ -205,9 +206,9 @@ fct_day_htmls = ['']
 
 			if e['freeze'] == 1
 				puts "Freeze:#{fzcode}<br>" if @debug
-
 				if fct_tdiv.load_fcz( user.name, fzcode, 'freeze' )
 					fct_day.into_solid( fct_tdiv.solid[0] )
+					freeze_flag = true
 				end
 			else
 				puts 'Row<br>' if @debug
@@ -247,7 +248,7 @@ fct_day_htmls = ['']
 								food_weights.concat( fws )
 							else
 								food_nos << code
-								food_weights << rate
+								food_weights << unit_weight( rate, unit, code )
 							end
 						end
 
@@ -276,8 +277,8 @@ fct_day_htmls = ['']
 	fct_day.digit
 
 	pfc = fct_day.calc_pfc
-
-	if fct_day.foods.size == 0
+p freeze_flag
+	if fct_day.foods.size == 0 && freeze_flag == false
 		fct_day_htmls << ''
 	else
 		t = ''

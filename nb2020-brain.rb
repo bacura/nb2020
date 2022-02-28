@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.21b
+#Nutrition browser 2020 brain 0.22b
 
 #==============================================================================
 # LIBRARY
@@ -89,6 +89,28 @@ def food_weight_check( food_weight )
   end
 
   return fw, uv
+end
+
+
+#### from unit volume to weight
+def unit_weight( vol, uc, fn )
+  w = 0.0
+  r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
+  if r.first
+    if r.first['unit'] != nil && r.first['unit'] != ''
+      unith = JSON.parse( r.first['unit'] )
+      begin
+        w = ( BigDecimal( unith[uc].to_s ) * vol ).round( 1 )
+      rescue
+        puts "<span class='error'>[unit_weight]ERROR!!<br>"
+        puts "vol:#{vol}<br>"
+        puts "uc:#{uc}<br>"
+        puts "fn:#{fn}</span><br>"
+      end
+    end
+  end
+
+  return w
 end
 
 
@@ -195,26 +217,6 @@ def unit_value( iv )
 end
 
 
-#### from unit volume to weight
-def unit_weight( vol, uc, fn )
-  w = 0.0
-  r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
-  if r.first
-    if r.first['unit'] != nil && r.first['unit'] != ''
-      unith = JSON.parse( r.first['unit'] )
-      begin
-        w = ( BigDecimal( unith[uc].to_s ) * vol ).round( 1 )
-      rescue
-        puts "<span class='error'>[unit_weight]ERROR!!<br>"
-        puts "vol:#{vol}<br>"
-        puts "uc:#{uc}<br>"
-        puts "fn:#{fn}</span><br>"
-      end
-    end
-  end
-
-  return w
-end
 
 
 #==============================================================================
@@ -564,7 +566,7 @@ class FCT
       @fns << fzcode
       @foods << base
       @weights << 100
-      return r.first['Notice']
+      return true
     else
       puts "<span class='error'>FCZ load ERROR[#{fzcode}]</span>"
       return false
