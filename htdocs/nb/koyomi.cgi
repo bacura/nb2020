@@ -277,7 +277,7 @@ fct_day_htmls = ['']
 	fct_day.digit
 
 	pfc = fct_day.calc_pfc
-p freeze_flag
+
 	if fct_day.foods.size == 0 && freeze_flag == false
 		fct_day_htmls << ''
 	else

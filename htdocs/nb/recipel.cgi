@@ -15,7 +15,7 @@ require 'fileutils'
 #==============================================================================
 script = 'recipel'
 page_limit = 50
-@debug = true
+@debug = false
 
 
 #==============================================================================
@@ -228,7 +228,7 @@ page_limit = r.first['recipel_max'].to_i if r.first['recipel_max'].to_i > 0
 
 recipe_cfg = Hash.new
 recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
-
+puts recipe_cfg if @debug
 
 #### POST
 command = @cgi['command']
@@ -253,7 +253,6 @@ cost = 99
 recipe_code_list = []
 
 case command
-when 'init'
 when 'reset'
 	words = ''
 

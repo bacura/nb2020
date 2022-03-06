@@ -48,7 +48,12 @@ case command
 when 'view'
 	# Loading recipe from DB
 	recipe.load_db( code, true ) if code != ''
-
+when 'protocol'
+	recipe.load_db( code, true ) if code != ''
+	recipe.protocol = @cgi['protocol']
+	recipe.date = @datetime
+	recipe.update_db
+	exit
 when 'save'
 	recipe.load_cgi( @cgi )
 
@@ -275,7 +280,7 @@ html = <<-"HTML"
 		<div class="col form-group">
 			<div class="col">
     			<label for="exampleFormControlTextarea1">#{lp[12]}</label>
-				<textarea class="form-control" id="protocol" rows="10">#{recipe.protocol}</textarea>
+				<textarea class="form-control" id="protocol" rows="10" onchange="recipeProtocol( '#{recipe.code}' )">#{recipe.protocol}</textarea>
 			</div>
   		</div>
 	</div>

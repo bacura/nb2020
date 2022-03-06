@@ -1,4 +1,4 @@
-// Recipe java script for nb2020 0.02b
+// Recipe java script for nb2020 0.03b
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -321,6 +321,18 @@ var recipeSave = function( code ){
 };
 
 
+// レシピ編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
+var recipeProtocol = function( code ){
+	if( document.getElementById( "protect" ).checked ){ var protect = 1; }
+	if( code != '' && protect != 1 ){
+		var protocol = document.getElementById( "protocol" ).value;
+		$.post( "recipe.cgi", { command:'protocol', code:code, protocol:protocol }, function( data ){
+			$( '#L2' ).html( data );
+			displayVIDEO( '●' );
+		});
+	}
+};
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Recipe list ////////////////////////////////////////////////////////////////////////
 
@@ -343,7 +355,7 @@ var fxRLR = function( command, range, type, role, tech, time, cost, page ){
 
 
 // Dosplaying recipe list with narrow down
-var recipeList2 = function( page ){
+var recipeListP = function( page ){
 	var range = document.getElementById( "range" ).value;
 	var type = document.getElementById( "type" ).value;
 	var role = document.getElementById( "role" ).value;
