@@ -137,21 +137,21 @@ def pageing_html( page, page_start, page_end, page_max, lp )
 	if page == 1
 		html << "<li class='page-item disabled'><span class='page-link'>#{lp[36]}</span></li>"
 	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2( #{page - 1} )\">#{lp[36]}</span></li>"
+		html << "<li class='page-item'><span class='page-link' onclick=\"recipeListP( #{page - 1} )\">#{lp[36]}</span></li>"
 	end
-	html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2( '1' )\">1…</a></li>" unless page_start == 1
+	html << "<li class='page-item'><a class='page-link' onclick=\"recipeListP( '1' )\">1…</a></li>" unless page_start == 1
 
 	page_start.upto( page_end ) do |c|
 		active = ''
 		active = ' active' if page == c
-		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"recipeList2( #{c} )\">#{c}</a></li>"
+		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"recipeListP( #{c} )\">#{c}</a></li>"
 	end
 
-	html << "<li class='page-item'><a class='page-link' onclick=\"recipeList2( '#{page_max}' )\">…#{page_max}</a></li>" unless page_end == page_max
+	html << "<li class='page-item'><a class='page-link' onclick=\"recipeListP( '#{page_max}' )\">…#{page_max}</a></li>" unless page_end == page_max
 	if page == page_max
 		html << "<li class='page-item disabled'><span class='page-link'>#{lp[37]}</span></li>"
 	else
-		html << "<li class='page-item'><span class='page-link' onclick=\"recipeList2( #{page + 1} )\">#{lp[37]}</span></li>"
+		html << "<li class='page-item'><span class='page-link' onclick=\"recipeListP( #{page + 1} )\">#{lp[37]}</span></li>"
 	end
 	html << '  </ul>'
 
