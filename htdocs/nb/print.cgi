@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser print page selector 0.04b
+#Nutrition browser print page selector 0.05b
 
 #==============================================================================
 #LIBRARY
@@ -57,7 +57,7 @@ palette_sets = []
 palette_name = []
 r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
 r.each do |e| palette_name << e['name'] end
-palette_name.size.times do |c| palette_html << "<option value='#{c}'>#{palette_name[c]}</option>" end
+palette_name.size.times do |c| palette_html << "<option value='#{palette_name[c]}'>#{palette_name[c]}</option>" end
 
 
 puts 'Cooking school HTML<br>' if @debug

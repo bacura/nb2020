@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.03b
+#Nutrition browser 2020 detail viewer 0.10b
 
 #==============================================================================
 # LIBRARY
@@ -51,37 +51,56 @@ user.debug if @debug
 lp = user.load_lp( script )
 
 
-#### GETデータの取得
-get_data = get_data()
-frct_mode = get_data['frct_mode']
-food_weight = CGI.unescape( get_data['food_weight'] ) if get_data['food_weight'] != '' && get_data['food_weight'] != nil
-food_no = get_data['food_no']
-dir = get_data['dir']
-sid = get_data['sid']
+puts 'POST<br>' if @debug
+frct_mode = @cgi['frct_mode']
+food_weight = @cgi['food_weight']
+food_no = @cgi['food_no']
+dir = @cgi['dir']
+sid = @cgi['sid']
 sid_flag = true if sid
+selectu = @cgi['selectu'].to_s
 if @debug
 	puts "frct_mode: #{frct_mode}<br>"
 	puts "food_weight: #{food_weight}<br>"
 	puts "food_no: #{food_no}<br>"
 	puts "dir: #{dir}<br>"
 	puts "sid: #{sid}<br>"
+	puts "selectu: #{selectu}<br>"
 	puts "<hr>"
 end
 
 
-#### 食品重量の決定
-food_weight = BigDecimal( food_weight_check( food_weight ).first )
+puts 'Unit process<br>' if @debug
+unit_set = []
+unit_select = []
+selectu = 'g' if selectu == ''
+uk = BigDecimal( '1' )
+r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false, @debug )
+if r.first
+	unith = JSON.parse( r.first['unit'] )
+	unith.each do |k, v|
+		unit_set << k
+		if k == selectu
+			unit_select << 'SELECTED'
+			uk = BigDecimal( v.to_s )
+		else
+			unit_select << ''
+		end
+	end
+end
 
 
-#### 端数処理の設定
+puts 'Weight process<br>' if @debug
+food_volume = BigDecimal( food_weight_check( food_weight ).first )
+food_weight = food_volume * uk
 frct_select = selected( 0, 3, frct_mode )
 
 
-#### 検索インデックスの処理
-food_no = sid_skip( sid, dir ) if sid
+puts 'Search index<br>' if @debug
+food_no = sid_skip( sid, dir ) if sid != ''
 
 
-#### 全ての栄養素を取得
+puts 'Load FCT<br>' if @debug
 fct_opt = Hash.new
 r = mdb( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false, @debug )
 sid = r.first['SID']
@@ -89,7 +108,7 @@ food_no = r.first['FN']
 @fct_item.each do |e| fct_opt[e] = num_opt( r.first[e], food_weight, frct_mode, @fct_frct[e] ) end
 
 
-#### 検索キーの生成
+puts 'Aliase process<br>' if @debug
 search_key = ''
 r = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no}';", false, @debug )
 food_name = r.first['name']
@@ -98,13 +117,6 @@ r = mdb( "SELECT alias FROM #{$MYSQL_TB_DIC} WHERE org_name='#{food_name}';", fa
 r.each do |e| search_key << "#{e['alias']}," end
 search_key.chop!
 
-
-#### 追加ボタンの生成
-add_button = ''
-add_button = "<spqn onclick=\"addingCB( '#{food_no}', 'detail_weight', '#{food_name}' )\">#{lp[1]}</span>" if user.name
-
-
-#### 別名リクエストボタンの生成
 alias_button = ''
 if user.status > 0
 	alias_button << '<div class="input-group input-group-sm">'
@@ -114,123 +126,138 @@ if user.status > 0
 	alias_button << '</div>'
 end
 
-energy_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 4..7 do energy_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
-energy_html << "<tr><td></td><td align='right'></td></tr>"
-energy_html << "<tr><td>#{@fct_name[@fct_item[70]]}</td><td align='right'>#{fct_opt[@fct_item[70]]} #{@fct_unit[@fct_item[70]]}</td></tr>"
-energy_html << "<tr><td>#{@fct_name[@fct_item[68]]}</td><td align='right'>#{fct_opt[@fct_item[68]]} #{@fct_unit[@fct_item[68]]}</td></tr>"
-energy_html << "<tr><td>#{@fct_name[@fct_item[31]]}</td><td align='right'>#{fct_opt[@fct_item[31]]} #{@fct_unit[@fct_item[31]]}</td></tr>"
-energy_html << "<tr><td>#{@fct_name[@fct_item[69]]}</td><td align='right'>#{fct_opt[@fct_item[69]]} #{@fct_unit[@fct_item[69]]}</td></tr>"
 
+puts 'Add button<br>' if @debug
+add_button = ''
+add_button = "<spqn onclick=\"addingCB( '#{food_no}', 'detail_weight', '#{food_name}' )\">#{lp[1]}</span>" if user.name
+
+
+puts 'FCT table HTML<br>' if @debug
+energy_html = '<table class="table table-sm table-striped" width="100%">'
+energy_html << "<tr>"
+@fct_rew.each do |e| energy_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 energy_html << '</table>'
 
-pfc_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 8..17 do pfc_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
-pfc_html << '</table>'
+pf_html = '<table class="table table-sm table-striped" width="100%">'
+@fct_pf.each do |e| pf_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
+pf_html << '</table>'
+
+cho_html = '<table class="table table-sm table-striped" width="100%">'
+@fct_cho.each do |e| cho_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
+cho_html << '</table>'
 
 mineral_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 17..30 do mineral_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
+@fct_m.each do |e| mineral_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 mineral_html << '</table>'
 
-vitis_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 32..45 do vitis_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
-vitis_html << '</table>'
+fsv_html = '<table class="table table-sm table-striped" width="100%">'
+@fct_fsv.each do |e| fsv_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
+fsv_html << '</table>'
 
-vits_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 46..57 do vits_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
-vits_html << '</table>'
-
-etc_html = '<table class="table table-sm table-striped" width="100%">'
-for c in 58..67 do etc_html << "<tr><td>#{@fct_name[@fct_item[c]]}</td><td align='right'>#{fct_opt[@fct_item[c]]} #{@fct_unit[@fct_item[c]]}</td></tr>" end
-etc_html << '</table>'
+wsv_html = '<table class="table table-sm table-striped" width="100%">'
+@fct_wsv.each do |e| wsv_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
+wsv_html << "<tr><td></td><td></td></tr>"
+@fct_as.each do |e| wsv_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
+wsv_html << '</table>'
 
 
-#### html部分
+puts 'Volume input HTML<br>' if @debug
+volume_html = ''
+volume_html << "<div class='input-group input-group-sm'>"
+volume_html << "	<label class='input-group-text'>#{lp[13]}</label>"
+volume_html << "	<input type='text' id='detail_volume' value='#{food_volume.to_f}' class='form-control' onchange=\"detailWeight( '#{food_no}' )\">"
+volume_html << "	<select id='detail_unit' class='form-select form-select-sm' onchange=\"detailWeight( '#{food_no}' )\">"
+unit_set.size.times do |c| volume_html << "<option value='#{unit_set[c]}' #{unit_select[c]}>#{unit_set[c]}</option>" end
+volume_html << "	</select>"
+volume_html << "</div>"
+
+
+puts 'Fract input HTML<br>' if @debug
+fract_html = ''
+fract_html << '<div class="input-group input-group-sm">'
+fract_html << "	<label class='input-group-text'>#{lp[9]}</label>"
+fract_html << "	<select class='form-select form-select-sm' id='detail_fraction' onchange=\"detailWeight( '#{food_no}' )\">"
+fract_html << "		<option value='1' #{frct_select[1]}>#{lp[10]}</option>"
+fract_html << "		<option value='2' #{frct_select[2]}>#{lp[11]}</option>"
+fract_html << "		<option value='3' #{frct_select[3]}>#{lp[12]}</option>"
+fract_html << '	</select>'
+fract_html << '</div>'
+
+
+puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
-		<div class="col-3" align='center'>
+		<div class="col-2">
 			<span class='h6'>#{lp[5]}：#{food_no}</span><br>
 			<span onclick="detailPage( 'rev', '#{sid}' )">#{lp[7]}</span>
 			#{lp[6]}：#{sid}</span>
 			<span onclick="detailPage( 'fwd', '#{sid}' )">#{lp[8]}</span>
 		</div>
-	  	<div class="col-2"><h5>#{food_weight.to_f} g</h5></div>
-		<div class="col-2">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="detail_fraction">#{lp[9]}</label>
-				<select class="form-select form-select-sm" id="detail_fraction" onchange="detailWeight( '#{food_no}' )">
-					<option value="1"#{frct_select[1]}>#{lp[10]}</option>
-					<option value="2"#{frct_select[2]}>#{lp[11]}</option>
-					<option value="3"#{frct_select[3]}>#{lp[12]}</option>
-				</select>
-			</div>
+		<div class="col"><h5>#{fct_opt['Tagnames']}</h5></div>
+	  	<div class="col"><h5>#{food_volume.to_f} #{selectu}&nbsp;(#{food_weight.to_f} g)</h5></div>
+		<div align='center' class='col joystic_koyomi' onclick="detailReturn()">#{lp[15]}</div>
+
+	  </div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col">
+			#{volume_html}
 		</div>
-		<div class="col-2">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="weight">#{lp[13]}</label>
-				<input type="number" min='0' class="form-control" id="detail_weight" value="#{food_weight.to_f}" onchange="detailWeight( '#{food_no}' )">
-				<button class="btn btn-outline-primary" type="button" onclick="detailWeight( '#{food_no}' )">g</button>
-			</div>
+		<div class="col">
+			#{fract_html}
 		</div>
-		<div class="col-1">
+		<div class="col" align="right">
 			#{add_button}
 		</div>
-		<div class="col-1">
+		<div class="col" align="right">
 			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}&lg=#{user.language}' download='detail_#{fct_opt['FN']}.txt'><span>#{lp[14]}</span></a>
 		</div>
-		<div align='center' class='col-1 joystic_koyomi' onclick="detailReturn()">#{lp[15]}</div>
 	</div>
 </div>
 <br>
 
 <div class='container-fluid'>
 	<div class="row">
-		<div class="col"><h5 onclick='detailReturn()'>#{fct_opt['Tagnames']}</h5></div>
-	</div>
-	<br>
-
-	<div class="container-fluid">
-		<div class="row">
-			<div class="col">
-			#{energy_html}
-			<div class='notice'>
-				#{lp[17]}<br>
-				#{fct_opt['Notice']}
-			</div>
-			</div>
-
-			<div class="col">
-				#{pfc_html}
-			</div>
-
-			<div class="col">
-				#{mineral_html}
-			</div>
+		<div class="col">
+		#{energy_html}
+		<div class='notice'>
+			#{lp[17]}<br>
+			#{fct_opt['Notice']}
+		</div>
 		</div>
 
-		<div class="row">
-			<div class="col">
-				#{vitis_html}
-			</div>
+		<div class="col">
+			#{pf_html}
+		</div>
 
-			<div class="col">
-				#{vits_html}
-			</div>
-
-			<div class="col-4">
-				#{etc_html}
-			</div>
+		<div class="col">
+			#{cho_html}
 		</div>
 	</div>
 
 	<div class="row">
-		<div class="col-8">
-			#{lp[16]}：#{search_key}
+		<div class="col">
+			#{mineral_html}
 		</div>
+
+		<div class="col">
+			#{fsv_html}
+		</div>
+
 		<div class="col-4">
-			#{alias_button}
+			#{wsv_html}
 		</div>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-8">
+		#{lp[16]}：#{search_key}
+	</div>
+	<div class="col-4">
+		#{alias_button}
 	</div>
 </div>
 HTML

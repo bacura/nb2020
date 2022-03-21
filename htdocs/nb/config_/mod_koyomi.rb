@@ -11,8 +11,8 @@ def config_module( cgi, user, lp )
 	puts "step: #{step}<br>" if @debug
 
 	kex_select = Hash.new
-	kex_item = Hash.new
-	kex_unit = Hash.new
+	kex_oname = Hash.new
+	kex_ounit = Hash.new
 
 	case step
 	when 'update'
@@ -20,16 +20,26 @@ def config_module( cgi, user, lp )
 		puts "start: #{start}<br>" if @debug
 
 		0.upto( 9 ) do |c|
-			kex_select[c.to_s] = cgi["kex_select#{c}"].to_i
-			kex_item[c.to_s] = cgi["item#{c}"]
-			kex_unit[c.to_s] = cgi["unit#{c}"]
-			unless kex_select[c.to_s] == 0 || kex_select[c.to_s] == 1
-				kex_item[c.to_s] = ''
-				kex_unit[c.to_s] = ''
+ 			kex_select[c.to_s] = cgi["kex_select#{c}"]
+			if kex_select[c.to_s] == 'ND'
+ 				kex_oname[c.to_s] = ''
+				kex_ounit[c.to_s] = ''
+			elsif kex_select[c.to_s] == 'original'
+				kex_oname[c.to_s] = cgi["oname#{c}"]
+				kex_ounit[c.to_s] = cgi["ounit#{c}"]
+			else
+				kex_oname[c.to_s] = @kex_item[kex_select[c.to_s]]
+				kex_ounit[c.to_s] = @kex_unit[kex_select[c.to_s]]
 			end
 		end
-		koyomi_ = JSON.generate( { "start" => start,  "kex_select" => kex_select, "kex_item" => kex_item, "kex_unit" => kex_unit } )
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, false )
+
+		koyomi_ = JSON.generate( { "start" => start,  "kex_select" => kex_select, "kex_oname" => kex_oname, "kex_ounit" => kex_ounit } )
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		if r.first
+			mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
+		else
+			mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}', user='#{user.name}';", false, @debug )
+		end
 
 	when 'delete'
 		del_no = cgi['del_no'].to_i
@@ -43,16 +53,16 @@ def config_module( cgi, user, lp )
 				koyomi = JSON.parse( r.first['koyomi'] )
 				start = koyomi['start'].to_i
 				kex_select = koyomi['kex_select']
-				kex_item = koyomi['kex_item']
-				kex_unit = koyomi['kex_unit']
+				kex_oname = koyomi['kex_oname']
+				kex_ounit = koyomi['kex_ounit']
 				p koyomi if @debug
 			end
 		end
-		kex_select[del_no.to_s] = 0
-		kex_item[del_no.to_s] = ''
-		kex_unit[del_no.to_s] = ''
+		kex_select[del_no.to_s] = 'ND'
+		kex_oname[del_no.to_s] = ''
+		kex_ounit[del_no.to_s] = ''
 
-		koyomi_ = JSON.generate( { "start" => start, "kex_select" => kex_select, "kex_item" => kex_item, "kex_unit" => kex_unit } )
+		koyomi_ = JSON.generate( { "start" => start, "kex_select" => kex_select, "kex_oname" => kex_oname, "kex_ounit" => kex_ounit } )
 		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, false )
 	end
 
@@ -65,10 +75,15 @@ def config_module( cgi, user, lp )
 			koyomi = JSON.parse( r.first['koyomi'] )
 			start = koyomi['start'].to_i
 			kex_select = koyomi['kex_select']
-			kex_item = koyomi['kex_item']
-			kex_unit = koyomi['kex_unit']
+			kex_oname = koyomi['kex_oname']
+			kex_ounit = koyomi['kex_ounit']
 			p koyomi if @debug
+		else
+			kex_select = { "0"=>"ND", "1"=>"ND", "2"=>"ND", "3"=>"ND", "4"=>"ND", "5"=>"ND", "6"=>"ND", "7"=>"ND", "8"=>"ND", "9"=>"ND" }
+			kex_oname = { "0"=>"", "1"=>"", "2"=>"", "3"=>"", "4"=>"", "5"=>"", "6"=>"", "7"=>"", "8"=>"", "9"=>"" }
+			kex_ounit = { "0"=>"", "1"=>"", "2"=>"", "3"=>"", "4"=>"", "5"=>"", "6"=>"", "7"=>"", "8"=>"", "9"=>"" }
 		end
+
 	end
 
 	puts 'Setting koyomi start year<br>' if @debug
@@ -85,7 +100,7 @@ def config_module( cgi, user, lp )
 	html = <<-"HTML"
 	<div class="container">
 		<div class='row'>
-			<div class='col-3'>
+			<div class='col-4'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>#{l['start']}</span>
 					#{start_select}
@@ -105,10 +120,10 @@ HTML
     	html << "			<label class='input-group-text'>#{l['item']}#{c}</label>"
   		html << "			<select class='form-select' id='kex_select#{c}' onChange=\"kexChangeselect( '#{c}' )\">"
 
-		@kex_item.size.times do |cc|
+		@kex_item.each do |k, v|
 			selected = ''
-			selected = 'SELECTED' if cc == kex_select[c.to_s]
-    		html << "<option value='#{cc}' #{selected}>#{@kex_item[cc]}</option>"
+			selected = 'SELECTED' if kex_select[c.to_s] == k
+    		html << "<option value='#{k}' #{selected}>#{v}</option>"
     	end
 
   		html << "			</select>"
@@ -119,9 +134,9 @@ HTML
 		html << "			<span class='input-group-text'>#{l['org_name']}</span>"
 
 		disabled = 'DISABLED'
-		disabled = '' if kex_select[c.to_s] == 1
-		html << "<input type='text' maxlength='32' id='item#{c}' class='form-control form-control-sm' value='#{kex_item[c.to_s]}' #{disabled}>"
+		disabled = '' if kex_select[c.to_s] == 'original'
 
+		html << "<input type='text' maxlength='32' id='oname#{c}' class='form-control form-control-sm' value='#{kex_oname[c.to_s]}' #{disabled}>"
 		html << "		</div>"
 		html << "	</div>"
 		html << "	<div class='col-2'>"
@@ -129,8 +144,8 @@ HTML
 		html << "				<span class='input-group-text'>#{l['unit']}</span>"
 
 		disabled = 'DISABLED'
-		disabled = '' if kex_select[c.to_s] == 1
-		html << "<input type='text' maxlength='32' id='unit#{c}' class='form-control form-control-sm' value='#{kex_unit[c.to_s]}' #{disabled}>"
+		disabled = '' if kex_select[c.to_s] == 'original'
+		html << "<input type='text' maxlength='32' id='ounit#{c}' class='form-control form-control-sm' value='#{kex_ounit[c.to_s]}' #{disabled}>"
 
 		html << "		</div>"
 		html << "	</div>"
@@ -169,39 +184,43 @@ var koyomiex_cfg = function( step, del_id, del_no ){
 		var kex_select8 = document.getElementById( "kex_select8" ).value;
 		var kex_select9 = document.getElementById( "kex_select9" ).value;
 
-		var item0 = document.getElementById( "item0" ).value;
-		var item1 = document.getElementById( "item1" ).value;
-		var item2 = document.getElementById( "item2" ).value;
-		var item3 = document.getElementById( "item3" ).value;
-		var item4 = document.getElementById( "item4" ).value;
-		var item5 = document.getElementById( "item5" ).value;
-		var item6 = document.getElementById( "item6" ).value;
-		var item7 = document.getElementById( "item7" ).value;
-		var item8 = document.getElementById( "item8" ).value;
-		var item9 = document.getElementById( "item9" ).value;
+		var oname0 = document.getElementById( "oname0" ).value;
+		var oname1 = document.getElementById( "oname1" ).value;
+		var oname2 = document.getElementById( "oname2" ).value;
+		var oname3 = document.getElementById( "oname3" ).value;
+		var oname4 = document.getElementById( "oname4" ).value;
+		var oname5 = document.getElementById( "oname5" ).value;
+		var oname6 = document.getElementById( "oname6" ).value;
+		var oname7 = document.getElementById( "oname7" ).value;
+		var oname8 = document.getElementById( "oname8" ).value;
+		var oname9 = document.getElementById( "oname9" ).value;
 
-		var unit0 = document.getElementById( "unit0" ).value;
-		var unit1 = document.getElementById( "unit1" ).value;
-		var unit2 = document.getElementById( "unit2" ).value;
-		var unit3 = document.getElementById( "unit3" ).value;
-		var unit4 = document.getElementById( "unit4" ).value;
-		var unit5 = document.getElementById( "unit5" ).value;
-		var unit6 = document.getElementById( "unit6" ).value;
-		var unit7 = document.getElementById( "unit7" ).value;
-		var unit8 = document.getElementById( "unit8" ).value;
-		var unit9 = document.getElementById( "unit9" ).value;
+		var ounit0 = document.getElementById( "ounit0" ).value;
+		var ounit1 = document.getElementById( "ounit1" ).value;
+		var ounit2 = document.getElementById( "ounit2" ).value;
+		var ounit3 = document.getElementById( "ounit3" ).value;
+		var ounit4 = document.getElementById( "ounit4" ).value;
+		var ounit5 = document.getElementById( "ounit5" ).value;
+		var ounit6 = document.getElementById( "ounit6" ).value;
+		var ounit7 = document.getElementById( "ounit7" ).value;
+		var ounit8 = document.getElementById( "ounit8" ).value;
+		var ounit9 = document.getElementById( "ounit9" ).value;
 
 		$.post( "config.cgi", {
 			mod:'koyomi', step:step, start:start,
 			kex_select0:kex_select0, kex_select1:kex_select1, kex_select2:kex_select2, kex_select3:kex_select3, kex_select4:kex_select4, kex_select5:kex_select5, kex_select6:kex_select6, kex_select7:kex_select7, kex_select8:kex_select8, kex_select9:kex_select9,
-			item0:item0, item1:item1, item2:item2, item3:item3, item4:item4, item5:item5, item6:item6, item7:item7, item8:item8, item9:item9,
-			unit0:unit0, unit1:unit1, unit2:unit2, unit3:unit3, unit4:unit4, unit5:unit5, unit6:unit6, unit7:unit7, unit8:unit8, unit9:unit9,
-		}, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( 'Saved' );
+			oname0:oname0, oname1:oname1, oname2:oname2, oname3:oname3, oname4:oname4, oname5:oname5, oname6:oname6, oname7:oname7, oname8:oname8, oname9:oname9,
+			ounit0:ounit0, ounit1:ounit1, ounit2:ounit2, ounit3:ounit3, ounit4:ounit4, ounit5:ounit5, ounit6:ounit6, ounit7:ounit7, ounit8:ounit8, ounit9:ounit9,
+		}, function( data ){
+			$( "#L1" ).html( data );
+			displayVIDEO( 'Saved' );
+		});
 	}else if( step == 'delete' ){
 		if( document.getElementById( del_id ).checked ){
-			$.post( "config.cgi", { mod:'koyomi', step:step, del_no:del_no }, function( data ){ $( "#L1" ).html( data );});
-			displayVIDEO( 'Deleted' );
+			$.post( "config.cgi", { mod:'koyomi', step:step, del_no:del_no }, function( data ){
+				$( "#L1" ).html( data );
+				displayVIDEO( 'Deleted' );
+			});
 		}else{
 			displayVIDEO( 'Check!(>_<)' );
 		}
@@ -219,13 +238,12 @@ var kexChangeselect = function( no ){
 	var select_id = 'kex_select' + no;
 	displayVIDEO( document.getElementById( select_id ).value );
 
-	if( document.getElementById( select_id ).value == 1 ){
-
-		document.getElementById('item' + no ).disabled = false;
-		document.getElementById('unit' + no ).disabled = false;
+	if( document.getElementById( select_id ).value == 'original' ){
+		document.getElementById('oname' + no ).disabled = false;
+		document.getElementById('ounit' + no ).disabled = false;
 	}else{
-		document.getElementById('item' + no ).disabled = true;
-		document.getElementById('unit' + no ).disabled = true;
+		document.getElementById('oname' + no ).disabled = true;
+		document.getElementById('ounit' + no ).disabled = true;
 	}
 };
 

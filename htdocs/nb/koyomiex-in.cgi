@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 file into koyomi extra 0.10b
+#Nutrition browser 2020 file into koyomi extra 0.11b
 
 
 #==============================================================================

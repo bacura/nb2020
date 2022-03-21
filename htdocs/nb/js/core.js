@@ -259,8 +259,8 @@ var changeWeight = function( key, fn ){
 // Display ditail information on LF
 var detailView = function( fn ){
 	var fraction_mode = document.getElementById( "fraction" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	$.get( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:weight }, function( data ){
+	var food_weight = document.getElementById( "weight" ).value;
+	$.post( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:food_weight, selectu:'g' }, function( data ){
 		$( "#LF" ).html( data );
 
 		pushBW();
@@ -272,7 +272,7 @@ var detailView = function( fn ){
 
 // Display ditail information on LF (history)
 var detailView_his = function( fn ){
-	$.get( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100 }, function( data ){
+	$.post( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100, selectu:'g' }, function( data ){
 		$( "#LF" ).html( data );
 
 		pushBW();
@@ -286,18 +286,18 @@ var detailView_his = function( fn ){
 // Changing weight of food (ditail)
 var detailWeight = function( fn ){
 	var fraction_mode = document.getElementById( "detail_fraction" ).value;
-	var weight = document.getElementById( "detail_weight" ).value;
-	$.get( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#LF" ).html( data );});
+	var food_weight = document.getElementById( "detail_volume" ).value;
+	var selectu = document.getElementById( "detail_unit" ).value;
+	$.post( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:food_weight, selectu:selectu }, function( data ){ $( "#LF" ).html( data );});
 };
-
 
 // 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
 var detailPage = function( dir, sid ){
 	var fraction_mode = document.getElementById( "detail_fraction" ).value;
-	var weight = document.getElementById( "detail_weight" ).value;
-	$.get( "detail.cgi", { dir:dir, sid:sid, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#LF" ).html( data );});
+	var food_weight = document.getElementById( "detail_volume" ).value;
+	var selectu = document.getElementById( "detail_unit" ).value;
+	$.post( "detail.cgi", { dir:dir, sid:sid, frct_mode:fraction_mode, food_weight:food_weight, selectu:selectu }, function( data ){ $( "#LF" ).html( data );});
 };
-
 
 // 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
 var detailReturn = function(){
@@ -434,12 +434,15 @@ var pseudoSave = function( code ){
 
 		var PROTCAA = document.getElementById( "pPROTCAA" ).value;
 		var PROT = document.getElementById( "pPROT" ).value;
+		var PROTV = document.getElementById( "pPROTV" ).value;
 		var FAT = document.getElementById( "pFAT" ).value;
+		var FATV = document.getElementById( "pFATV" ).value;
 		var FATNLEA = document.getElementById( "pFATNLEA" ).value;
 		var CHOLE = document.getElementById( "pCHOLE" ).value;
 		var CHOAVLM = document.getElementById( "pCHOAVLM" ).value;
 		var CHOAVL = document.getElementById( "pCHOAVL" ).value;
 		var CHOAVLDF = document.getElementById( "pCHOAVLDF" ).value;
+		var CHOV = document.getElementById( "pCHOV" ).value;
 		var FIB = document.getElementById( "pFIB" ).value;
 		var CHOCDF = document.getElementById( "pCHOCDF" ).value;
 		var OA = document.getElementById( "pOA" ).value;
@@ -507,7 +510,7 @@ var pseudoSave = function( code ){
 			command:'save', code:code, food_name:food_name, food_group:food_group, food_weight:food_weight,
 			class1:class1, class2:class2, class3:class3, tag1:tag1, tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5,
 			REFUSE:REFUSE,  ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
-			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
+			PROTCAA:PROTCAA, PROT:PROT, PROTV:PROTV, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, FATV:FATV, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, CHOV:CHOV, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
 			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,

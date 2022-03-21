@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi extra 0.11b
+#Nutrition browser 2020 koyomi extra 0.12b
 
 
 #==============================================================================
@@ -95,8 +95,8 @@ if r.first
 		koyomi = JSON.parse( r.first['koyomi'] )
 		start = koyomi['start'].to_i
 		kex_select = koyomi['kex_select']
-		kex_item = koyomi['kex_item']
-		kex_unit = koyomi['kex_unit']
+		kex_oname = koyomi['kex_oname']
+		kex_ounit = koyomi['kex_ounit']
 		p koyomi if @debug
 	end
 end
@@ -117,11 +117,9 @@ puts "Header html<br>" if @debug
 th_html = '<thead><tr>'
 th_html << "<th align='center'></th>"
 0.upto( item_max ) do |c|
-	if kex_select[c.to_s] == 1
-		th_html << "<th align='center'>#{kex_item[c.to_s]} (#{kex_unit[c.to_s]})</th>"
-	elsif kex_select[c.to_s] != 0
-		th_html << "<th align='center'>#{@kex_item[kex_select[c.to_s]]} (#{@kex_unit[kex_select[c.to_s]]})</th>"
-	end
+	unit= ''
+	unit = "(#{kex_ounit[c.to_s]})" if kex_ounit[c.to_s] != ''
+	th_html << "<th align='center'>#{kex_oname[c.to_s]} #{unit}</th>" if kex_select[c.to_s] != 'ND'
 end
 th_html << '</tr></thead>'
 
@@ -146,12 +144,12 @@ puts "Cell data html<br>" if @debug
 
 	if koyomir[c] == nil
 		0.upto( item_max ) do |cc|
-			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 0
+			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 'ND'
 		end
 	else
 		0.upto( item_max ) do |cc|
 			t = koyomir[c]["item#{cc}"]
-			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 0
+			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 'ND'
 		end
 	end
 

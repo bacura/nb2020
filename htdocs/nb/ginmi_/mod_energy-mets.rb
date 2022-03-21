@@ -15,10 +15,8 @@ def ginmi_module( cgi, user )
 	history = cgi['history']
 	hh = cgi['hh'].to_i
 	mm = cgi['mm'].to_i
-	exmets = cgi['exmets'].to_s
-	exmets_no = cgi['exmets_no'].to_i
-	exdelta = cgi['exdelta'].to_s
-	exdelta_no = cgi['exdelta_no'].to_i
+	mets = cgi['mets'].to_s
+	denergy = cgi['denergy'].to_s
 	yyyy_mm_dd = cgi['yyyy_mm_dd']
 	active = history if history != '0' &&  history != ''
 
@@ -168,27 +166,18 @@ RESULT_HTML
 		puts result_html
 		puts mets_table_html
 
-		####
-		exmets_no = -1
-		exdelta_no = -1
-		config = Config.new( user.name )
-		a = config.koyomiex.split( ":" )
-		a.size.times do |c|
-			aa = a[c].split( "\t" )
-			exmets_no = c if aa[0].to_i == 8
-			exdelta_no = c if aa[0].to_i == 9
-		end
+		calendar = Calendar.new( user.name, 0, 0, 0 )
+		puts "<div class='row'>"
+		puts "	<div class='col-8'></div>"
+		puts "	<div class='col-4' align='right'>"
+		puts "		<div class='input-group'>"
+		puts "			<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dd}'>"
+		puts "			<button class='btn btn-sm btn-outline-success' onclick=\"ginmiKEXout( '#{total_mets.to_f.round( 3 )}', '#{total_d_energy.to_i}' )\">＋拡張こよみ</button>"
+		puts "		</div>"
+		puts "	</div>"
+		puts "</div>"
 
-		if exmets_no >= 0 || exdelta_flag >= 0
-			calendar = Calendar.new( user.name, 0, 0, 0 )
-			puts "<div class='row'>"
-			puts "<div class='col-3'>"
-			puts "<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dd}'>"
-			puts "</div>"
-			puts "<div class='col-3'><button class='btn btn-sm btn-outline-primary' onclick=\"ginmiEnergyMETexMets( '#{total_mets.to_f.round( 3 )}', '#{exmets_no}' )\">METs 拡張こよみ登録</button></div>" if exmets_no >= 0
-			puts "<div class='col-3'><button class='btn btn-sm btn-outline-primary' onclick=\"ginmiEnergyMETexDelta( '#{total_d_energy.to_i}', '#{exdelta_no}' )\">Δ消費エネルギー  拡張こよみ登録</button></div></div>" if exdelta_no >= 0
-			puts "</div>"
-		end
+
 
 		if command == 'result'
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{user.name}' AND name='history';", false, false)
@@ -209,22 +198,28 @@ RESULT_HTML
 		end
 		exit( 0 )
 	when 'reset'
-			mdb( "delete from #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
-			exit( 0 )
-	when 'exmets'
-		r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
-		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{exmets_no}='#{exmets}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
-		else
-			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', item#{exmets_no}='#{exmets}', date='#{yyyy_mm_dd}';", false, false )
-		end
+		mdb( "delete from #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
 		exit( 0 )
-	when 'exdelta'
+	when 'kexout'
+		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		if r.first
+			if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+				koyomi = JSON.parse( r.first['koyomi'] )
+				kex_select = koyomi['kex_select']
+			end
+		end
+		a = kex_select.values
+		mets_no = a.index( 'METs' )
+		denergy_no = a.index( 'dENERGY' )
+
 		r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
 		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{exdelta_no}='#{exdelta}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
-		else
-			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', item#{exdelta_no}='#{exdelta}', date='#{yyyy_mm_dd}';", false, false )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{mets_no}='#{mets}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if mets_no != nil
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{denergy_no}='#{denergy}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if denergy_no != nil
+		elsif r.first == nil && ( mets_no != nil || denergy_no != nil )
+			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', date='#{yyyy_mm_dd}';", false, false )
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{mets_no}='#{mets}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if mets_no != nil
+			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{denergy_no}='#{denergy}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if denergy_no != nil
 		end
 		exit( 0 )
 	end
@@ -281,6 +276,16 @@ RESULT_HTML
 	end
 
 
+	r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	if r.first
+		if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+			koyomi = JSON.parse( r.first['koyomi'] )
+			start = koyomi['start'].to_i
+			kex_select = koyomi['kex_select']
+		end
+	end
+
+
 	html = <<-"HTML"
 	<div class='row'>
 	<h5>METs 計算フォーム</h5>
@@ -306,7 +311,17 @@ RESULT_HTML
 				</select>
 			</div>
 		</div>
+		<div class='col-6'>
+			<div class="input-group input-group-sm">
+				<label class="input-group-text" for="inputGroupSelect01">履　　歴</label>
+				<select class="form-select form-select-sm" id="history">
+					#{history_select}
+				</select>
+			</div>
+		</div>
 	</div>
+	<br>
+
 	<div class='row'>
 		<div class='col-6'>
 			<div class="input-group input-group-sm">
@@ -316,7 +331,27 @@ RESULT_HTML
 				</select>
 			</div>
 		</div>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<input type='number' class='form-control' value="#{mets_value}" DISABLED>
+				<span class='input-group-text'>METs</span>
+			</div>
+		</div>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<input type='number' min='0' max='24' class='form-control' id='hh' maxlength='2' value='0'>
+				<span class='input-group-text'>時間</span>
+			</div>
+		</div>
+		<div class='col-2'>
+			<div class='input-group input-group-sm'>
+				<input type='number' min='0' max='59' step='5' class='form-control' id='mm' maxlength='2' value='0'>
+				<span class='input-group-text'>分間</span>
+			</div>
+		</div>
 	</div>
+	<br>
+
 	<div class='row'>
 		<div class='col-6'>
 			<div class="input-group input-group-sm">
@@ -326,43 +361,11 @@ RESULT_HTML
 				</select>
 			</div>
 		</div>
-	</div>
-	<br>
-
-	<div class='row'>
-		<div class='col-6'>
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="inputGroupSelect01">履　　歴</label>
-				<select class="form-select form-select-sm" id="history">
-				#{history_select}
-			</select>
-		</div>
-	<div>
-	<br>
-
-	<div class='row'>
-		<div class='col-3'>
-			<div class='input-group input-group-sm'>
-				<input type='number' class='form-control' value="#{mets_value}" DISABLED>
-				<span class='input-group-text'>METs</span>
-			</div>
-		</div>
-		<div class='col-3'>
-			<div class='input-group input-group-sm'>
-				<input type='number' min='0' max='24' class='form-control' id='hh' maxlength='2' value='0'>
-				<span class='input-group-text'>時間</span>
-			</div>
-		</div>
-		<div class='col-3'>
-			<div class='input-group input-group-sm'>
-				<input type='number' min='0' max='59' step='5' class='form-control' id='mm' maxlength='2' value='0'>
-				<span class='input-group-text'>分間</span>
-			</div>
-		</div>
-		<div class='col-3'>
-			<button class='btn btn-sm btn-outline-primary' onclick="ginmiEnergyMETsres()">追加</button>
+		<div class='col-2'>
+			<button class='btn btn-sm btn-outline-primary' onclick="ginmiEnergyMETsres()">追加 / 表示</button>
 		</div>
 	</div>
+	<br>
 HTML
 
 	return html
@@ -428,16 +431,11 @@ var ginmiEnergyMETsreset = function(){
 	displayBW();
 };
 
-var ginmiEnergyMETexMets = function( exmets, exmets_no ){
+var ginmiKEXout = function( mets, denergy ){
 	var yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exmets', exmets:exmets, yyyy_mm_dd:yyyy_mm_dd, exmets_no:exmets_no }, function( data ){});
-	displayVIDEO( 'METs recorded' );
-};
-
-var ginmiEnergyMETexDelta = function( exdelta, exdelta_no ){
-	var yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'exdelta', exdelta:exdelta, yyyy_mm_dd:yyyy_mm_dd, exdelta_no:exdelta_no }, function( data ){});
-	displayVIDEO( 'Δenergy recorded' );
+	$.post( "ginmi.cgi", { mod:"energy-mets", command:'kexout', mets:mets, denergy:denergy, yyyy_mm_dd:yyyy_mm_dd}, function( data ){
+		displayVIDEO( 'KoyomiEX' );
+	});
 };
 
 </script>

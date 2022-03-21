@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.16b
+#Nutrition browser 2020 print web page 0.17b
 
 #==============================================================================
 #LIBRARY
@@ -187,7 +187,7 @@ def extract_foods( recipe, dish, template, ew_mode )
 				comp = ( 2 - df[1].size )
 				comp.times do |c| df[1] = df[1] << '0' end
 				ordering_weight = df[0] + '.' + df[1]
-				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v}</td><td align='right'>#{fu}</td><td align='right'>#{few_v}</td><td align='right'>#{res.first['REFUSE']}</td><td align='right'>#{ordering_weight}</td></tr>\n" if res.first
+				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td><td align='right'>#{few_v.ceil( 1 )}</td><td align='right'>#{res.first['REFUSE']}</td><td align='right'>#{ordering_weight}</td></tr>\n" if res.first
 			end
 		end
 	end
@@ -227,12 +227,14 @@ def arrange_photo( recipe )
 	code = recipe.code
 	mcode = recipe.media
 	main_photo = ''
-	main_photo = "<a href='#{$PHOTO}/#{mcode[0]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[0]}.jpg' width='100%' height='100%' class='img-fluid rounded'></a>\n" if mcode.size > 0
+	main_photo = "<a href='#{$PHOTO}/#{mcode[0]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[0]}.jpg' width='100%' height='100%' class='img-thumbnail'></a>\n" if mcode.size > 0
 
 	sub_photos = ''
 	if mcode.size > 1
+		spw = ( 100 / ( mcode.size - 1 )).to_i
+		spw = 25 if spw < 25
 		1.upto( mcode.size - 1 ) do |c|
-			sub_photos << "<a href='#{$PHOTO}/#{mcode[0]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[c]}-tn.jpg' width='25%' height='25%' class='img-fluid rounded'></a>\n"
+			sub_photos << "<a href='#{$PHOTO}/#{mcode[c]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[c]}-tn.jpg' width='#{spw}%' height='#{spw}%' class='img-thumbnail'></a>\n"
 		end
 	end
 
@@ -518,6 +520,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col'>
 			#{main_photo}
+			#{sub_photos}
 		</div>
 		<div class='col'>
 			<h5>材料</h5>
@@ -543,6 +546,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-4'>
 			#{main_photo}
+			#{sub_photos}
 		</div>
 	</div>
 	<hr>
@@ -566,6 +570,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-3'>
 			#{main_photo}
+			#{sub_photos}
 		</div>
 	</div>
 	<hr>

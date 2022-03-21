@@ -1,4 +1,4 @@
-//guild.js ver 0.10b 20220301
+//guild.js ver 0.11b 20220320
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -186,12 +186,15 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 
 		var PROTCAA = document.getElementById( "kfPROTCAA" ).value;
 		var PROT = document.getElementById( "kfPROT" ).value;
+		var PROTV = document.getElementById( "kfPROTV" ).value;
 		var FATNLEA = document.getElementById( "kfFATNLEA" ).value;
 		var CHOLE = document.getElementById( "kfCHOLE" ).value;
 		var FAT = document.getElementById( "kfFAT" ).value;
+		var FATV = document.getElementById( "kfFATV" ).value;
 		var CHOAVLM = document.getElementById( "kfCHOAVLM" ).value;
 		var CHOAVL = document.getElementById( "kfCHOAVL" ).value;
 		var CHOAVLDF = document.getElementById( "kfCHOAVLDF" ).value;
+		var CHOV = document.getElementById( "kfCHOV" ).value;
 		var FIB = document.getElementById( "kfFIB" ).value;
 		var POLYL = document.getElementById( "kfPOLYL" ).value;
 		var CHOCDF = document.getElementById( "kfCHOCDF" ).value;
@@ -258,7 +261,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
 			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, order:order,
 			ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
-			PROTCAA:PROTCAA, PROT:PROT, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
+			PROTCAA:PROTCAA, PROT:PROT, PROTV:PROTV, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, FATV:FATV, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, CHOV:CHOV, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
 			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
 			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,

@@ -1,4 +1,4 @@
-// Recipe java script for nb2020 0.03b
+// Recipe java script for nb2020 0.04b
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -327,7 +327,6 @@ var recipeProtocol = function( code ){
 	if( code != '' && protect != 1 ){
 		var protocol = document.getElementById( "protocol" ).value;
 		$.post( "recipe.cgi", { command:'protocol', code:code, protocol:protocol }, function( data ){
-			$( '#L2' ).html( data );
 			displayVIDEO( '●' );
 		});
 	}

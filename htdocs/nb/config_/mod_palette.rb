@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for Palette 0.10b
+# Nutorition browser 2020 Config module for Palette 0.20b
 #encoding: utf-8
 
 #### mod debug mode
@@ -57,35 +57,25 @@ def config_module( cgi, user, lp )
 	case step
 	when ''
 		html = listing( user.name, l )
-
 	when 'new_palette', 'edit_palette'
-		checked = []
+		checked = Hash.new
 		if step == 'edit_palette'
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='#{cgi['palette_name']}';", false, @debug )
 			palette = r.first['palette']
 			palette.size.times do |c|
-				if palette[c] == '1'
-					checked << 'checked'
-				else
-					checked << ''
-				end
+				checked[@fct_item[c]] = 'checked' if palette[c] == '1'
 			end
 		end
 
 		fc_table = ['', '', '', '', '', '', '']
-		4.upto( 7 ) do |i| fc_table[0] << "<tr><td><input type='checkbox' id='#{@fct_item[i]}' #{checked[i]}>&nbsp;#{@fct_name[@fct_item[i]]}</td></tr>" end
-
-		fc_table[0] << "<tr><td><hr></td></tr>"
-		fc_table[0] << "<tr><td><input type='checkbox' id='#{@fct_item[70]}' #{checked[70]}>&nbsp;#{@fct_name[@fct_item[70]]}</td></tr>"
-		fc_table[0] << "<tr><td><input type='checkbox' id='#{@fct_item[68]}' #{checked[68]}>&nbsp;#{@fct_name[@fct_item[68]]}</td></tr>"
-		fc_table[0] << "<tr><td><input type='checkbox' id='#{@fct_item[31]}' #{checked[31]}>&nbsp;#{@fct_name[@fct_item[31]]}</td></tr>"
-		fc_table[0] << "<tr><td><input type='checkbox' id='#{@fct_item[69]}' #{checked[69]}>&nbsp;#{@fct_name[@fct_item[69]]}</td></tr>"
-
-		8.upto( 17 ) do |i| fc_table[1] << "<tr><td><input type='checkbox' id='#{@fct_item[i]}' #{checked[i]}>&nbsp;#{@fct_name[@fct_item[i]]}</td></tr>" end
-		18.upto( 30 ) do |i| fc_table[2] << "<tr><td><input type='checkbox' id='#{@fct_item[i]}' #{checked[i]}>&nbsp;#{@fct_name[@fct_item[i]]}</td></tr>" end
-		32.upto( 45 ) do |i| fc_table[3] << "<tr><td><input type='checkbox' id='#{@fct_item[i]}' #{checked[i]}>&nbsp;#{@fct_name[@fct_item[i]]}</td></tr>" end
-		46.upto( 57 ) do |i| fc_table[4] << "<tr><td><input type='checkbox' id='#{@fct_item[i]}' #{checked[i]}>&nbsp;#{@fct_name[@fct_item[i]]}</td></tr>" end
-		58.upto( 67 ) do |i| fc_table[5] << "<tr><td><input type='checkbox' id='#{@fct_item[i]}' #{checked[i]}>&nbsp;#{@fct_name[@fct_item[i]]}</td></tr>" end
+		@fct_rew.each do |e| fc_table[0] << "<tr><td><input type='checkbox' id='#{e}' #{checked[e]}>&nbsp;#{@fct_name[e]}</td></tr>" end
+		@fct_pf.each do |e| fc_table[1] << "<tr><td><input type='checkbox' id='#{e}' #{checked[e]}>&nbsp;#{@fct_name[e]}</td></tr>" end
+		@fct_cho.each do |e| fc_table[2] << "<tr><td><input type='checkbox' id='#{e}' #{checked[e]}>&nbsp;#{@fct_name[e]}</td></tr>" end
+		@fct_m.each do |e| fc_table[3] << "<tr><td><input type='checkbox' id='#{e}' #{checked[e]}>&nbsp;#{@fct_name[e]}</td></tr>" end
+		@fct_fsv.each do |e| fc_table[4] << "<tr><td><input type='checkbox' id='#{e}' #{checked[e]}>&nbsp;#{@fct_name[e]}</td></tr>" end
+		@fct_wsv.each do |e| fc_table[5] << "<tr><td><input type='checkbox' id='#{e}' #{checked[e]}>&nbsp;#{@fct_name[e]}</td></tr>" end
+		fc_table[5] << "<tr><td><hr></td></tr>"
+		@fct_as.each do |e| fc_table[5] << "<tr><td><input type='checkbox' id='#{e}' #{checked[e]}>&nbsp;#{@fct_name[e]}</td></tr>" end
 
 		html = <<-"HTML"
 	<div class="container-fluid">
@@ -118,7 +108,7 @@ HTML
 		fct_bits = '0000'
 		palette_name = cgi['palette_name']
 
-		( @fct_start - 1 ).upto( @fct_end ) do |i| fct_bits << cgi[@fct_item[i]].to_i.to_s end
+		@fct_min.each do |e| fct_bits << cgi[e].to_i.to_s end
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
 		if r.first
 			mdb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}' WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
@@ -147,10 +137,12 @@ end
 
 def module_js()
 	js_fc_set = ''
-	( @fct_start - 1 ).upto( @fct_end ) do |i| js_fc_set << "if( document.getElementById( '#{@fct_item[i]}' ).checked ){ var #{@fct_item[i]} = 1 }" end
-
 	post_fc_set = ''
-	( @fct_start - 1 ).upto( @fct_end ) do |i| post_fc_set << "#{@fct_item[i]}:#{@fct_item[i]}," end
+
+	@fct_min.each do |e|
+		js_fc_set << "if( document.getElementById( '#{e}' ).checked ){ var #{e} = 1 }"
+		post_fc_set << "#{e}:#{e},"
+	end
 	post_fc_set.chop!
 
 	js = <<-"JS"
