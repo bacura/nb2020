@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.12b
+#Nutrition browser 2020 cutting board 0.11b
 
 #==============================================================================
 #LIBRARY
@@ -736,7 +736,7 @@ puts html
 puts 'HTML food list part<br>' if @debug
 c = 0
 food_list.each do |e|
-	p e.fn if @debug
+	puts e.unit if user.status >= 8 && e.unit != 'g'
 
 	# フードチェック
 	check = ''
@@ -750,11 +750,13 @@ food_list.each do |e|
 		if r.first
 			unith = JSON.parse( r.first['unit'] )
 			unith.each do |k, v|
-				unit_set << k
-				if k == e.unit
-					unit_select << 'SELECTED'
-				else
-					unit_select << ''
+				unless k == 'note'
+					unit_set << k
+					if k == e.unit
+						unit_select << 'SELECTED'
+					else
+						unit_select << ''
+					end
 				end
 			end
 		end

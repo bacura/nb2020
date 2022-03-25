@@ -30,7 +30,7 @@ def unit_select_html( code, selectu )
 	if r.first
 		unith = JSON.parse( r.first['unit'] )
 		unith.each do |k, v|
-			if k != 'note'
+			unless k == 'note'
 				unit_set << k
 				if k == selectu
 					unit_select << 'SELECTED'

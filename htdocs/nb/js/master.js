@@ -1,4 +1,4 @@
-// master.js 0.00b 20210503
+// master.js 0.01b 20220323
 /////////////////////////////////////////////////////////////////////////////////
 // Unit exchange ////////////////////////////////////////////////////////////////////////
 
@@ -19,33 +19,6 @@ var initUnitc = function( com ){
 var directUnitc = function( code ){
 	$.post( "gm-unitc.cgi", { command:'init', code:code }, function( data ){ $( "#LF" ).html( data );});
 	document.getElementById( "LF" ).style.display = 'block';
-};
-
-// Update unit exchange button
-var updateUintc = function(){
-	var code = document.getElementById( "food_no" ).value;
-
-	if( code != '' ){
-		var uc2 = document.getElementById( "unitc2" ).value;
-		var uc3 = document.getElementById( "unitc3" ).value;
-		var uc4 = document.getElementById( "unitc4" ).value;
-		var uc5 = document.getElementById( "unitc5" ).value;
-		var uc6 = document.getElementById( "unitc6" ).value;
-		var uc7 = document.getElementById( "unitc7" ).value;
-		var uc8 = document.getElementById( "unitc8" ).value;
-		var uc9 = document.getElementById( "unitc9" ).value;
-		var uc10 = document.getElementById( "unitc10" ).value;
-		var uc11 = document.getElementById( "unitc11" ).value;
-		var uc12 = document.getElementById( "unitc12" ).value;
-		var uc13 = document.getElementById( "unitc13" ).value;
-		var uc14 = document.getElementById( "unitc14" ).value;
-		var uc16 = document.getElementById( "unitc16" ).value;
-		var uc17 = document.getElementById( "unitc17" ).value;
-		var notice = document.getElementById( "notice" ).value;
-
-		$.post( "gm-unitc.cgi", { command:'update', code:code, unitc2:uc2, unitc3:uc3, unitc4:uc4, unitc5:uc5, unitc6:uc6, unitc7:uc7, unitc8:uc8, unitc9:uc9, unitc10:uc10, unitc11:uc11, unitc12:uc12, unitc13:uc13, unitc14:uc14, unitc16:uc16, unitc17:uc17, notice:notice}, function( data ){ $( "#LF" ).html( data );});
-		displayVIDEO( code + ' saved' );
-	}
 };
 
 
@@ -85,6 +58,9 @@ var updateUint = function(){
 		var uk4 = document.getElementById( "uk4" ).value;
 		var uk5 = document.getElementById( "uk5" ).value;
 		var uk6 = document.getElementById( "uk6" ).value;
+		var uk7 = document.getElementById( "uk7" ).value;
+		var uk8 = document.getElementById( "uk8" ).value;
+		var uk9 = document.getElementById( "uk9" ).value;
 
 		var uv0 = document.getElementById( "uv0" ).value;
 		var uv1 = document.getElementById( "uv1" ).value;
@@ -93,19 +69,26 @@ var updateUint = function(){
 		var uv4 = document.getElementById( "uv4" ).value;
 		var uv5 = document.getElementById( "uv5" ).value;
 		var uv6 = document.getElementById( "uv6" ).value;
+		var uv7 = document.getElementById( "uv7" ).value;
+		var uv8 = document.getElementById( "uv8" ).value;
+		var uv9 = document.getElementById( "uv9" ).value;
 
 		var note = document.getElementById( "note" ).value;
-		$.post( "gm-unit.cgi", { command:'update', code:code, uk0:uk0, uk1:uk1, uk2:uk2, uk3:uk3, uk4:uk4, uk5:uk5, uk6:uk6,
-			uv0:uv0, uv1:uv1, uv2:uv2, uv3:uv3, uv4:uv4, uv5:uv5, uv6:uv6, note:note}, function( data ){ $( "#LF" ).html( data );});
+		$.post( "gm-unit.cgi", { command:'update', code:code, uk0:uk0, uk1:uk1, uk2:uk2, uk3:uk3, uk4:uk4, uk5:uk5, uk6:uk6, uk7:uk7, uk8:uk8, uk9:uk9,
+			uv0:uv0, uv1:uv1, uv2:uv2, uv3:uv3, uv4:uv4, uv5:uv5, uv6:uv6, uv7:uv7, uv8:uv8, uv9:uv9, note:note}, function( data ){ $( "#LF" ).html( data );});
 		displayVIDEO( code + ' saved' );
 	}
 };
 
 
-
-
-
-
+// Overall unit exchange
+var exUnit = function( code ){
+	var bunit = document.getElementById( "bunit" ).value;
+	var aunit = document.getElementById( "aunit" ).value;
+	$.post( "gm-unit.cgi", { command:'exunit', code:code, bunit:bunit, aunit:aunit }, function( data ){
+		displayVIDEO( 'Exchange' );
+	});
+};
 
 
 /////////////////////////////////////////////////////////////////////////////////

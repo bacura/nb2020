@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.10b
+#Nutrition browser 2020 detail viewer 0.11b
 
 #==============================================================================
 # LIBRARY
@@ -79,12 +79,14 @@ r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false, @deb
 if r.first
 	unith = JSON.parse( r.first['unit'] )
 	unith.each do |k, v|
-		unit_set << k
-		if k == selectu
-			unit_select << 'SELECTED'
-			uk = BigDecimal( v.to_s )
-		else
-			unit_select << ''
+		unless k == 'note'
+			unit_set << k
+			if k == selectu
+				unit_select << 'SELECTED'
+				uk = BigDecimal( v.to_s )
+			else
+				unit_select << ''
+			end
 		end
 	end
 end

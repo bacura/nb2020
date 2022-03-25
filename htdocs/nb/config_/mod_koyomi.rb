@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for koyomiex 0.10b
+# Nutorition browser 2020 Config module for koyomiex 0.11b
 #encoding: utf-8
 
 @debug = false
@@ -78,6 +78,11 @@ def config_module( cgi, user, lp )
 			kex_oname = koyomi['kex_oname']
 			kex_ounit = koyomi['kex_ounit']
 			p koyomi if @debug
+			if kex_select == nil || kex_oname == nil || kex_ounit == nil
+				kex_select = { "0"=>"ND", "1"=>"ND", "2"=>"ND", "3"=>"ND", "4"=>"ND", "5"=>"ND", "6"=>"ND", "7"=>"ND", "8"=>"ND", "9"=>"ND" }
+				kex_oname = { "0"=>"", "1"=>"", "2"=>"", "3"=>"", "4"=>"", "5"=>"", "6"=>"", "7"=>"", "8"=>"", "9"=>"" }
+				kex_ounit = { "0"=>"", "1"=>"", "2"=>"", "3"=>"", "4"=>"", "5"=>"", "6"=>"", "7"=>"", "8"=>"", "9"=>"" }
+			end
 		else
 			kex_select = { "0"=>"ND", "1"=>"ND", "2"=>"ND", "3"=>"ND", "4"=>"ND", "5"=>"ND", "6"=>"ND", "7"=>"ND", "8"=>"ND", "9"=>"ND" }
 			kex_oname = { "0"=>"", "1"=>"", "2"=>"", "3"=>"", "4"=>"", "5"=>"", "6"=>"", "7"=>"", "8"=>"", "9"=>"" }
