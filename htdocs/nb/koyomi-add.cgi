@@ -122,16 +122,19 @@ end
 puts 'Getting standard meal start & time<br>' if @debug
 start_time_set= []
 meal_tiems_set = []
-r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+hh_mm = '00:00'
+meal_time = 20
+r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['bio'] != nil && r.first['bio'] != ''
 		bio = JSON.parse( r.first['bio'] )
 		start_times_set = [bio['bst'], bio['lst'], bio['dst']]
 		meal_tiems_set = [bio['bti'].to_i, bio['lti'].to_i, bio['dti'].to_i]
+
+		hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
+		meal_time = meal_tiems_set[tdiv] if meal_time == 0
 	end
 end
-hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
-meal_time = meal_tiems_set[tdiv] if meal_time == 0
 
 
 new_solid = ''

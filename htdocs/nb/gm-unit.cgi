@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM unit editor 0.10b
+#Nutrition browser GM unit editor 0.11b
 
 #==============================================================================
 #LIBRARY
@@ -81,7 +81,7 @@ when 'exunit'
 			food_list = r['sum'].split( "\t" )
 			food_list.each do |e|
 				a = e.split( ':' )
-				if a[2] == bunit
+				if a[2] == bunit && code == a[0]
 					a[2] = aunit
 					ex_flag = true
 				end
@@ -103,7 +103,7 @@ when 'exunit'
 			food_list = r['koyomi'].split( "\t" )
 			food_list.each do |e|
 				a = e.split( '~' )
-				if a[2] == bunit
+				if a[2] == bunit && code == a[0]
 					a[2] = aunit
 					ex_flag = true
 				end

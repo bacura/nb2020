@@ -333,10 +333,10 @@ def ext_update( gycv_file, shun_file, unit_file )
 	f.each_line do |e|
 		food_no = e.chomp
 		query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
-		$DB.query( query )
+#		$DB.query( query )
 	end
 	f.close
-	puts 'Green/Yellow color vegitable in ext has been updated.'
+#	puts 'Green/Yellow color vegitable in ext has been updated.'
 
 	# Shun
 	f = open( shun_file, 'r' )
@@ -352,20 +352,20 @@ def ext_update( gycv_file, shun_file, unit_file )
 		shun2s = 0 if shun2s == nil || shun2s == ''
 		shun2e = 0 if shun2e == nil || shun2e == ''
 		query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
-		$DB.query( query )
+#		$DB.query( query )
 	end
 	f.close
-	puts 'Shun in ext has been updated.'
+#	puts 'Shun in ext has been updated.'
 
 	# Unit
 	f = open( unit_file, 'r' )
 	f.each_line do |e|
 		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 		query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
-		$DB.query( query )
+#		$DB.query( query )
 	end
 	f.close
-	puts 'Unit in ext has been updated.'
+#	puts 'Unit in ext has been updated.'
 end
 
 

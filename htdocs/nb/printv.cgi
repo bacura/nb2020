@@ -162,8 +162,7 @@ def extract_foods( recipe, dish, template, ew_mode )
 			when 2
 				tags = bind_tags( res )
 				if /^\=/ =~ fi
-					tags = fi.sub( '=', '' )
-					fi = ''
+					fi = fi.sub!( '=', '' )
 				end
 				return_foods << "<tr><td>#{fn}</td><td>#{tags}</td><td>#{fi}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td><td align='right'>#{few_v.ceil( 1 )}</td></tr>\n" if res.first
 			when 3

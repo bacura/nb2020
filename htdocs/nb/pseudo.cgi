@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.10b
+#Nutrition browser 2020 pseudo food editer 0.11b
 
 #==============================================================================
 # LIBRARY
@@ -260,36 +260,15 @@ disabled_option = 'disabled' if tag_user != user.name && tag_user != nil && user
 
 
 #### html_fct_block
-html_fct_block1 = '<table class="table-sm table-striped" width="100%">'
-html_fct_block1 << "<tr><td>#{@fct_name['REFUSE']}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='pREFUSE' value=\"#{refuse}\" #{disabled_option}></td><td>#{@fct_unit['REFUSE']}</td></tr>"
-0.upto( 2 ) do |i| html_fct_block1 << "<tr><td>#{fct.names[i]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{fct.units[i]}</td></tr>\n" end
-html_fct_block1 << "<tr><td></td><td align='right' width='20%''></td><td></td></tr>"
-html_fct_block1 << "<tr><td>#{fct.names[65]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[65]}' value=\"#{fct.total[65].to_f}\" #{disabled_option}></td><td>#{fct.units[65]}</td></tr>"
-html_fct_block1 << "<tr><td>#{fct.names[63]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[63]}' value=\"#{fct.total[63].to_f}\" #{disabled_option}></td><td>#{fct.units[63]}</td></tr>"
-html_fct_block1 << "<tr><td>#{fct.names[26]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[26]}' value=\"#{fct.total[26].to_f}\" #{disabled_option}></td><td>#{fct.units[26]}</td></tr>"
-html_fct_block1 << "<tr><td>#{fct.names[64]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[64]}' value=\"#{fct.total[64].to_f}\" #{disabled_option}></td><td>#{fct.units[64]}</td></tr>"
-html_fct_block1 << '</table>'
-
-html_fct_block2 = '<table class="table-sm table-striped" width="100%">'
-3.upto( 12 ) do |i| html_fct_block2 << "<tr><td>#{fct.names[i]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{fct.units[i]}</td></tr>\n" end
-html_fct_block2 << '</table>'
-
-html_fct_block3 = '<table class="table-sm table-striped" width="100%">'
-13.upto( 25 ) do |i| html_fct_block3 << "<tr><td>#{fct.names[i]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{fct.units[i]}</td></tr>\n" end
-html_fct_block3 << '</table>'
-
-html_fct_block4 = '<table class="table-sm table-striped" width="100%">'
-27.upto( 40 ) do |i| html_fct_block4 << "<tr><td>#{fct.names[i]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{fct.units[i]}</td></tr>\n" end
-html_fct_block4 << '</table>'
-
-html_fct_block5 = '<table class="table-sm table-striped" width="100%">'
-41.upto( 52 ) do |i| html_fct_block5 << "<tr><td>#{fct.names[i]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{fct.units[i]}</td></tr>\n" end
-html_fct_block5 << '</table>'
-
-html_fct_block6 = '<table class="table-sm table-striped" width="100%">'
-53.upto( 62 ) do |i| html_fct_block6 << "<tr><td>#{fct.names[i]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{fct.items[i]}' value=\"#{fct.total[i].to_f}\" #{disabled_option}></td><td>#{fct.units[i]
-}</td></tr>\n" end
-html_fct_block6 << '</table>'
+fct_block = ['', '', '', '', '', '', '']
+@fct_rew.each do |e| fct_block[0] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+@fct_pf.each do |e| fct_block[1] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+@fct_cho.each do |e| fct_block[2] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+@fct_m.each do |e| fct_block[3] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+@fct_fsv.each do |e| fct_block[4] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+@fct_wsv.each do |e| fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+fct_block[5] << "<tr><td><hr></td></tr>"
+@fct_as.each do |e| fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
 
 
 #### save button
@@ -356,7 +335,7 @@ html = <<-"HTML"
 	<hr>
 	<div class="row">
 		<div class="col-4">
-			#{html_fct_block1}
+			<table class="table-sm table-striped" width="100%">#{fct_block[0]}</table>
 
 			<div style='border: solid gray 1px; margin: 0.5em; padding: 0.5em;'>
 				備考：<br>
@@ -365,11 +344,11 @@ html = <<-"HTML"
 		</div>
 
 		<div class="col-4">
-			#{html_fct_block2}
+			<table class="table-sm table-striped" width="100%">#{fct_block[1]}</table>
 		</div>
 
 		<div class="col-4">
-			#{html_fct_block3}
+			<table class="table-sm table-striped" width="100%">#{fct_block[2]}</table>
 		</div>
 	</div>
 
@@ -377,15 +356,15 @@ html = <<-"HTML"
 
 	<div class="row">
 		<div class="col-4">
-			#{html_fct_block4}
+			<table class="table-sm table-striped" width="100%">#{fct_block[3]}</table>
 		</div>
 
 		<div class="col-4">
-			#{html_fct_block5}
+			<table class="table-sm table-striped" width="100%">#{fct_block[4]}</table>
 		</div>
 
 		<div class="col-4">
-			#{html_fct_block6}
+			<table class="table-sm table-striped" width="100%">#{fct_block[5]}</table>
 		</div>
 	</div>
 	<div class='code'>#{code}</div>

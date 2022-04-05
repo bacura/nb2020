@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.22b
+#Nutrition browser 2020 brain 0.23b
 
 #==============================================================================
 # LIBRARY
@@ -522,8 +522,8 @@ class FCT
 
   def calc_pfc()
     ei = @items.index( 'ENERC_KCAL' )
-    pi = @items.index( 'PROT' )
-    fi = @items.index( 'FAT' )
+    pi = @items.index( 'PROTV' )
+    fi = @items.index( 'FATV' )
     pfc = []
     if ei != nil && pi != nil && fi != nil
       pfc[0] = ( @total[pi] * 4 / @total[ei] * 100 ).round( 1 )

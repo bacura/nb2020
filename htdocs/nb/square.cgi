@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.05b
+#Nutrition browser 2020 food square 0.07b
 
 
 #==============================================================================
@@ -490,8 +490,12 @@ when 'fctb_l5'
 
 		sub_components = ''
 		fc_items.each do |e|
-			t = num_opt( res.first[e], food_weight, frct_mode, @fct_frct[e] )
-			sub_components << "<td align='center'>#{t}</td>"
+			if res.first[e] != nil
+				t = num_opt( res.first[e], food_weight, frct_mode, @fct_frct[e] )
+				sub_components << "<td align='center'>#{t}</td>"
+			else
+				sub_components << "<td align='center'><span class='error'>[FCTP load]ERROR!!</td>"
+			end
 		end
 
 		# 追加・変更ボタン
@@ -512,23 +516,30 @@ when 'fctb_l5'
 
 		# GM/SGM専用単位変換ボタン
 		gm_unitc = ''
-		gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{lp[4]}</button>" if user.status >= 8
-
 		gm_color = ''
-#		gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{lp[5]}</button>" if user.status >= 8
-
 		gm_allergen = ''
-#		gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{lp[6]}</button>" if user.status >= 8
-
 		gm_shun = ''
-		gm_shun = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{lp[7]}</button>" if user.status >= 8
 
+		if user.status >= 8
+			res = mdb( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN=#{food_no_list[c]};", false, @debug )
+			if res.first
+				gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{lp[4]}</button>"
+
+#				gm_color = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{lp[5]}</button>"
+
+#				gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{lp[6]}</button>"
+
+				bc = 'btn-outline-danger'
+				bc = 'btn-outline-success' if res.first['shun1s'] != 0;
+				gm_shun = "<button type='button' class='btn btn #{bc} btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{lp[7]}</button>"
+			end
+		end
 
 		tags = "<span class='tag1'>#{tag1_list[c]}</span> <span class='tag2'>#{tag2_list[c]}</span> <span class='tag3'>#{tag3_list[c]}</span> <span class='tag4'>#{tag4_list[c]}</span> <span class='tag5'>#{tag5_list[c]}</span>"
 		if pseudo_flag
-			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;#{koyomi_button} #{gm_unitc}#{gm_color}#{gm_allergen}#{gm_shun}</td>#{sub_components}</tr>\n"
+			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;&nbsp;#{koyomi_button}&nbsp;&nbsp;#{gm_unitc}&nbsp;#{gm_color}&nbsp;#{gm_allergen}&nbsp;#{gm_shun}</td>#{sub_components}</tr>\n"
 		else
-			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;#{koyomi_button} #{gm_unitc}#{gm_color}#{gm_allergen}#{gm_shun}</td>#{sub_components}</tr>\n"
+			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;&nbsp;#{koyomi_button}&nbsp;&nbsp;#{gm_unitc}&nbsp;#{gm_color}&nbsp;#{gm_allergen}&nbsp;#{gm_shun}</td>#{sub_components}</tr>\n"
 		end
 	end
 	db.close

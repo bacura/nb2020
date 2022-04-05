@@ -475,14 +475,14 @@ recipes.each do |e|
 	recipe_html << "</td>"
 	recipe_html << "<td>"
 	if user.status >= 2 && e.user == user.name
-		recipe_html << "	<span onclick=\"addingMeal( '#{e.code}', '#{e.name}' )\">#{lp[8]}</span>&nbsp;"
+		recipe_html << "	<span onclick=\"addingMeal( '#{e.code}', '#{e.name}' )\">#{lp[8]}</span>&nbsp;&nbsp;"
 	end
 	if user.status >= 2 && e.user == user.name
-		recipe_html << "&nbsp;<span onclick=\"addKoyomi( '#{e.code}' )\">#{lp[21]}</span>"
+		recipe_html << "&nbsp;<span onclick=\"addKoyomi( '#{e.code}' )\">#{lp[21]}</span>&nbsp;&nbsp;"
 	end
-	recipe_html << "	<span onclick=\"print_templateSelect( '#{e.code}' )\">#{lp[9]}</span>"
+	recipe_html << "	<span onclick=\"print_templateSelect( '#{e.code}' )\">#{lp[9]}</span>&nbsp;&nbsp;"
 	if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
-		recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{lp[20]}</span>&nbsp;"
+		recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{lp[20]}</span>"
 	end
 	recipe_html << "</td>"
 
@@ -517,7 +517,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-2'></div>
 		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{lp[13]}</button></div>
-		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
+		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
 		<div class='col-2'>#{recipe3ds_button}</div>
 	</div>
 	<br>
