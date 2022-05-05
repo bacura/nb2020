@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.11b
+#Nutrition browser 2020 pseudo food editer 0.12b
 
 #==============================================================================
 # LIBRARY
@@ -261,14 +261,42 @@ disabled_option = 'disabled' if tag_user != user.name && tag_user != nil && user
 
 #### html_fct_block
 fct_block = ['', '', '', '', '', '', '']
-@fct_rew.each do |e| fct_block[0] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
-@fct_pf.each do |e| fct_block[1] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
-@fct_cho.each do |e| fct_block[2] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
-@fct_m.each do |e| fct_block[3] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
-@fct_fsv.each do |e| fct_block[4] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
-@fct_wsv.each do |e| fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+@fct_rew.each do |e|
+	t = nil
+	t = fct.pickt( e ).to_f if fct.pickt( e ) != nil && fct.pickt( e ) != ''
+	fct_block[0] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{t}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+end
+@fct_pf.each do |e|
+	t = nil
+	t = fct.pickt( e ).to_f if fct.pickt( e ) != nil && fct.pickt( e ) != ''
+	fct_block[1] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{t}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+end
+@fct_cho.each do |e|
+	t = nil
+	t = fct.pickt( e ).to_f if fct.pickt( e ) != nil && fct.pickt( e ) != ''
+	fct_block[2] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{t}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+end
+@fct_m.each do |e|
+	t = nil
+	t = fct.pickt( e ).to_f if fct.pickt( e ) != nil && fct.pickt( e ) != ''
+	fct_block[3] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{t}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+end
+@fct_fsv.each do |e|
+	t = nil
+	t = fct.pickt( e ).to_f if fct.pickt( e ) != nil && fct.pickt( e ) != ''
+	fct_block[4] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{t}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+end
+@fct_wsv.each do |e|
+	t = nil
+	t = fct.pickt( e ).to_f if fct.pickt( e ) != nil && fct.pickt( e ) != ''
+	fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{t}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+end
 fct_block[5] << "<tr><td><hr></td></tr>"
-@fct_as.each do |e| fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>" end
+@fct_as.each do |e|
+	t = nil
+	t = fct.pickt( e ) if fct.pickt( e ) == nil || fct.pickt( e ) == ''
+	fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+end
 
 
 #### save button

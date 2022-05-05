@@ -1,4 +1,4 @@
-//guild.js ver 0.11b 20220320
+//guild.js ver 0.20b 20220505
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -665,6 +665,32 @@ var initElderly = function(){
 // Pathology init
 var initPathology = function(){
 
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Food rank //////////////////////////////////////////////////////////////
+
+// Dosplaying recipe by scatter plott
+var foodRank = function(){
+	$.post( "food-rank.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+// Dosplaying recipe by scatter plott
+var foodRankList = function(){
+	var main_item = document.getElementById( "main_item" ).value;
+	var comp_item = document.getElementById( "comp_item" ).value;
+	var rank_order = document.getElementById( "rank_order" ).value;
+
+	$.post( "food-rank.cgi", { command:'list', main_item:main_item, comp_item:comp_item, rank_order:rank_order }, function( data ){
+		$( "#L1" ).html( data );
+	});
 };
 
 

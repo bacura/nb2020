@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.07b
+#Nutrition browser 2020 food square 0.08b
 
 
 #==============================================================================
@@ -521,7 +521,7 @@ when 'fctb_l5'
 		gm_shun = ''
 
 		if user.status >= 8
-			res = mdb( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN=#{food_no_list[c]};", false, @debug )
+			res = mdb( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false, @debug )
 			if res.first
 				gm_unitc = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{lp[4]}</button>"
 

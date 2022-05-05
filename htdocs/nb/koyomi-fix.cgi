@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.06b
+#Nutrition browser koyomi fix fct editer 0.07b
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 
@@ -80,13 +80,14 @@ if r.first
 	end
 end
 hh_mm = start_times[tdiv] if hh_mm == '' || hh_mm == nil
+hh_mm = @time_now.strftime( "%H:%M" ) if hh_mm == nil
 meal_time = meal_tiems[tdiv] if meal_time == 0
 
 
 puts 'Loading FCT items<br>' if @debug
 fix_opt = Hash.new
 if command == 'init'
-	@fct_min_nr.each do |e| fix_opt[e] = 0.0 end
+	@fct_min_nr.each do |e| fix_opt[e] = nil end
 end
 
 
@@ -96,7 +97,7 @@ if command == 'save'
 	puts 'Calculating fct<br>' if @debug
 	@fct_min_nr.each do |e|
 		if @cgi[e] == '' || @cgi[e] == nil || @cgi[e] == '-'
-			fix_opt[e] = '-'
+			fix_opt[e] = 0.0
 		else
 			fix_opt[e] = ( BigDecimal( @cgi[e] ) / 100 * food_weight * food_number ).round( @fct_frct[e] )
 		end
@@ -192,7 +193,7 @@ html_fct_blocks[0] = '<table class="table-sm table-striped" width="100%">'
 @fct_ew.each do |e|
 	po = @fct_item.index( e )
 	if palette.bit[po] == 1
-		html_fct_blocks[0] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value=\"#{fix_opt[e].to_f}\"></td><td>#{@fct_unit[e]}</td></tr>"
+		html_fct_blocks[0] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value=\"#{fix_opt[e]}\"></td><td>#{@fct_unit[e]}</td></tr>"
 	else
 		html_fct_blocks[0] << "<input type='hidden' value='0.0' id='kf#{e}'>"
 	end
@@ -203,7 +204,7 @@ html_fct_blocks[1] = '<table class="table-sm table-striped" width="100%">'
 @fct_pf.each do |e|
 	po = @fct_item.index( e )
 	if palette.bit[po] == 1
-		html_fct_blocks[1] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e].to_f}'></td><td>#{@fct_unit[e]}</td></tr>"
+		html_fct_blocks[1] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e]}'></td><td>#{@fct_unit[e]}</td></tr>"
 	else
 		html_fct_blocks[1] << "<input type='hidden' value='0.0' id='kf#{e}'>"
 	end
@@ -214,7 +215,7 @@ html_fct_blocks[2] = '<table class="table-sm table-striped" width="100%">'
 @fct_cho.each do |e|
 	po = @fct_item.index( e )
 	if palette.bit[po] == 1
-		html_fct_blocks[2] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e].to_f}'></td><td>#{@fct_unit[e]}</td></tr>"
+		html_fct_blocks[2] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e]}'></td><td>#{@fct_unit[e]}</td></tr>"
 	else
 		html_fct_blocks[2] << "<input type='hidden' value='0.0' id='kf#{e}'>"
 	end
@@ -225,7 +226,7 @@ html_fct_blocks[3] = '<table class="table-sm table-striped" width="100%">'
 @fct_m.each do |e|
 	po = @fct_item.index( e )
 	if palette.bit[po] == 1
-		html_fct_blocks[3] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e].to_f}'></td><td>#{@fct_unit[e]}</td></tr>"
+		html_fct_blocks[3] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e]}'></td><td>#{@fct_unit[e]}</td></tr>"
 	else
 		html_fct_blocks[3] << "<input type='hidden' value='0.0' id='kf#{e}'>"
 	end
@@ -236,7 +237,7 @@ html_fct_blocks[4] = '<table class="table-sm table-striped" width="100%">'
 @fct_fsv.each do |e|
 	po = @fct_item.index( e )
 	if palette.bit[po] == 1
-		html_fct_blocks[4] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e].to_f}'></td><td>#{@fct_unit[e]}</td></tr>"
+		html_fct_blocks[4] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%'><input type='text' class='form-control form-control-sm' id='kf#{e}' value='#{fix_opt[e]}'></td><td>#{@fct_unit[e]}</td></tr>"
 	else
 		html_fct_blocks[4] << "<input type='hidden' value='0.0' id='kf#{e}'>"
 	end

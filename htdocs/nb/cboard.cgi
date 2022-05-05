@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.11b
+#Nutrition browser 2020 cutting board 0.12b
 
 #==============================================================================
 #LIBRARY
@@ -536,7 +536,8 @@ when 'wadj'
 	food_list.size.times do |c|
 		if ( food_list[c].check == '1' || check_all ) && food_list[c].weight != '-' && food_list[c].weight != '+'
 			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * wadj_rate )
-			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * wadj_rate )
+			fw, uv = food_weight_check( food_list[c].unitv )
+			food_list[c].unitv = proc_wf( BigDecimal( uv ) * wadj_rate )
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * wadj_rate )
 		end
 	end
@@ -551,7 +552,8 @@ when 'eadj'
 	food_list.size.times do |c|
 		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
 			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * eadj_rate )
-			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * eadj_rate )
+			fw, uv = food_weight_check( food_list[c].unitv )
+			food_list[c].unitv = proc_wf( BigDecimal( uv ) * eadj_rate )
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * eadj_rate )
 		end
 	end
@@ -566,7 +568,8 @@ when 'sadj'
 	food_list.size.times do |c|
 		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
 			food_list[c].weight = proc_wf( BigDecimal( food_list[c].weight ) * sadj_rate )
-			food_list[c].unitv = proc_wf( BigDecimal( food_list[c].unitv ) * sadj_rate )
+			fw, uv = food_weight_check( food_list[c].unitv )
+			food_list[c].unitv = proc_wf( BigDecimal( uv ) * sadj_rate )
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * sadj_rate )
 		end
 	end
