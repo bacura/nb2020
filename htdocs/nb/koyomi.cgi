@@ -187,6 +187,7 @@ palette.set_bit( nil )
 
 puts "Multi calc process<br>" if @debug
 fct_day_htmls = ['']
+visio_htmls = ['']
 1.upto( calendar.ddl ) do |c|
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
@@ -289,6 +290,7 @@ fct_day_htmls = ['']
 		if pfc.size == 3
 			t << "<br><span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = "
 			t << "<span style='color:crimson'>#{pfc[0]}</span> : <span style='color:green'>#{pfc[1]}</span> : <span style='color:blue'>#{pfc[2]}</span>"
+			t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{c}' )\">#{lp[28]}</span>" if user.status >= 5
 		end
 		fct_day_htmls << t
 	end
@@ -344,7 +346,7 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	style = 'display:none' if fct_day_htmls[c] == '' || fct_day_htmls[c] == nil
 	date_html << "<tr id='nutrition#{c}' class='table-borderless' style='#{style}'>"
 	date_html << "<td></td><td colspan='6'>#{fct_day_htmls[c]}</td>"
-	date_html << "<td></td>"
+#	date_html << "<td></td>"
 	date_html << "</tr>"
 
 	week_count += 1

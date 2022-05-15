@@ -235,3 +235,145 @@ var initToker = function(){
 var tokerForm = function( mod ){
 	$.post( "toker.cgi", { mod:mod, command:'form' }, function( data ){ $( "#L1" ).html( data );});
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Nutrition visionnerz //////////////////////////////////////////////////////////////
+
+// Init
+var visionnerz = function( yyyymmdd ){
+	$.post( "visionnerz.cgi", { command:'init', yyyymmdd:yyyymmdd }, function( data ){
+		$( "#LF" ).html( data );
+
+		$.post( "visionnerz.cgi", { command:'raw', yyyymmdd:yyyymmdd }, function( raw ){
+			$( "#L5" ).html( raw );
+
+			var column = ( String( raw )).split( ':' );
+			var hours = ( String( column[0] )).split(',');
+			var minutes = ( String( column[0] )).split(',');
+			var d_energy = ( String( column[1] )).split(',');
+			var d_protein = ( String( column[2] )).split(',');
+			var d_fat = ( String( column[3] )).split(',');
+			var d_carbohydrate = ( String( column[4] )).split(',');
+			var d_fiber = ( String( column[5] )).split(',');
+			var d_sodium = ( String( column[6] )).split(',');
+
+			var chart = c3.generate({
+				bindto: '#visionnerz-digestion',
+
+				data: {
+					x: '時間',
+					columns: [hours, d_energy, d_protein, d_fat, d_carbohydrate, d_fiber, d_sodium]
+				},
+				axis: {
+					x: {
+						 label: {text: '時間（時）', position: 'outer-center' },
+						 tick: { values: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24']}
+					}
+				},
+				point: { show: false },
+				legend: { show: true, position: 'right' }
+			});
+		});
+
+		pushBW();
+		flashBW();
+		dll = true;
+		dl5 = true;
+		dlf = true;
+		displayBW();
+	});
+};
+
+//				data: {
+//					columns: [ minutes, d_energy, d_protein, d_fat, d_carbohydrate, d_fiber, d_sodium ],
+//					x: 'minutes',
+//					axes: {
+//						#{l['data_bfr']}: 'y2',
+//					},
+//					labels: false,
+//					type : 'line',
+//					colors: {
+//						#{l['data_weight']}: '#dc143c',
+//						#{l['data_bfr']}: '#228b22'
+//					},
+//				},
+//
+//				axis: {
+//			    	x: {
+//			    		type: 'timeseries',
+//			    		tick: { culling:true }
+//					},
+//					y: {
+//			    		type: 'linear',
+//						padding: {top: 100, bottom: 200 },
+//						label: { text: '#{l['label_weight']}', position: 'outer-middle' }
+//					}
+//					y2: {
+//						show: true,
+//			    		type: 'linear',
+//						padding: {top: 200, bottom: 100},
+//	 					tick: { format: d3.format("01d") },
+//	 					label: { text: '#{l['label_bfr']}', position: 'outer-middle' }
+//					}
+//				},
+//
+//				legend: { show: true, position: 'bottom' },
+//
+//				line: { connectNull: true, step: { type: 'step' }},
+//				zoom: { enabled: true, type: 'drag' },
+//			});
+//
+//	//--------------------------------------------------------------------------
+//			var chart_sub = c3.generate({
+//				bindto: '#visionnerz-blood',
+//
+//				data: {
+//					columns: [
+//						f_weight,
+//						f_bfr,
+//						r_weight,
+//						r_bfr,
+//						p_weight,
+//						p_bfr,
+//						rd_weight,
+//						rd_bfr
+//					],
+//					xs: { #{l['data_first']}:'f_bfr', #{l['data_latest']}:'rd_bfr', #{l['data_recent']}:'p_bfr', #{l['data_past']}:'r_bfr' },
+//					labels: true,
+//					type : 'scatter',
+//					colors: { #{l['data_first']}:'#4b0082', #{l['data_latest']}:'#dc143c', #{l['data_recent']}:'#00ff00', #{l['data_past']}:'#c0c0c0'}
+//				},
+//
+//				axis: {
+//			    	x: {
+//						label: { text: '#{l['label_bfr']}', position: 'outer-center' },
+//						padding: {left: 1, right: 1 },
+//						tick: { fit: false }
+//					},
+//					y: {
+//						label: { text: '#{l['label_weight']}', position: 'outer-middle' },
+//						padding: {top: 20, bottom: 20 },
+//						tick: { fit: false }
+//					},
+//				},
+//				grid: {
+//	     			x: { show: true },
+//	        		y: { show: true }
+//	            },
+//				legend: { show: true, position: 'bottom' },
+//				point: { show: true, r: 4 },
+//				tooltip: { show: false }
+//			});
+//
+//			var menergy = column[9];
+//			document.getElementById( 'menergy' ).value = menergy;
+//		});
+//
+//	};
+//
+//	drawChart();
+//
+//
+//
+

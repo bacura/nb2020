@@ -639,3 +639,43 @@ class FCT
   def debug()
   end
 end
+
+
+class Bio
+  attr_accessor :sex, :birth, :age, :height, :weight, :kexow, :pgene
+
+  def initialize( user )
+    @user = user.name
+    r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{@user}';", false, @debug )
+    if r.first
+      if r.first['bio'] != nil && r.first['bio'] != ''
+        bio = JSON.parse( r.first['bio'] )
+        @sex = bio['sex'].to_i
+        @birth = Time.parse( bio['birth'] )
+        @height = bio['height'].to_f * 100
+        @weight = bio['weight'].to_f
+        @kexow = bio['kexow'].to_i
+        @pgene = bio['pgene'].to_i
+        @age = ( Date.today.strftime( "%Y%m%d" ).to_i - @birth.strftime( "%Y%m%d" ).to_i ) / 10000
+      end
+    end
+  end
+
+  def kex_ow()
+    r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@user}';", false, @debug )
+    if r.first && @kexow == 1
+      koyomi = JSON.parse( r.first['koyomi'] )
+      kex_select = koyomi['kex_select']
+      0.upto( 9 ) do |c|
+        @height = kex_select[c.to_s].to_f * 100 if kex_select[c.to_s] == 'HEIGHT'
+        @weight = kex_select[c.to_s].to_f if kex_select[c.to_s] == 'WEIGHT'
+      end
+    end
+  end
+
+  def debug()
+    puts @sex, @birth, @age, @height, @weight, @kexow, @pgene
+  end
+
+
+end

@@ -535,15 +535,20 @@ var importkoyomiex = function(){
 
 
 // Updating koyomiex with table file
+//var writekoyomiex = function( file, size, msg ){
 var writekoyomiex = function( file, size, msg ){
-	if( document.getElementById( 'skip_line1' ).checked ){ skip_line1 = 1; }else{ var skip_line1 = 0; }
-	if( document.getElementById( 'overwrite' ).checked ){ overwrite = 1; }else{ var soverwrite = 0; }
-	var date_flag= false;
+	if( document.getElementById( 'skip_line1' ).checked ){ var skip_line1 = 1; }else{ var skip_line1 = 0; }
+	if( document.getElementById( 'overwrite' ).checked ){ var overwrite = 1; }else{ var overwrite = 0; }
+	var date_flag = false;
 
 	var items = [];
 	for( i = 0; i < size; i++ ){
-		if( document.getElementById( 'item' + i ) != null ){ items[i] = document.getElementById( 'item' + i ).value; }
-		if( items[i] == '99' ){ date_flag = true; }
+		if( document.getElementById( 'item' + i ) != null ){
+			items[i] = document.getElementById( 'item' + i ).value;
+			if( items[i] == 'date' ){
+				date_flag = true;
+			}
+		}
 	}
 	var item_solid = items.join( ':' );
 
@@ -551,7 +556,7 @@ var writekoyomiex = function( file, size, msg ){
 		$.post( "koyomiex-in.cgi", { command:'update', file:file, skip_line1:skip_line1, overwrite:overwrite, item_solid:item_solid }, function( data ){
 			$( "#L2" ).html( data );
 
-			initKoyomiex();
+//			initKoyomiex();
 		});
 	}else{
 		displayVIDEO( msg );
@@ -688,7 +693,10 @@ var foodRankList = function(){
 	var comp_item = document.getElementById( "comp_item" ).value;
 	var rank_order = document.getElementById( "rank_order" ).value;
 
-	$.post( "food-rank.cgi", { command:'list', main_item:main_item, comp_item:comp_item, rank_order:rank_order }, function( data ){
+	if( document.getElementById( "ex_inf" ).checked ){ var ex_inf = 1; }else{ var ex_inf = 0; }
+	if( document.getElementById( "ex_zero" ).checked ){ var ex_zero = 1; }else{ var ex_zero = 0; }
+
+	$.post( "food-rank.cgi", { command:'list', main_item:main_item, comp_item:comp_item, rank_order:rank_order, ex_inf:ex_inf, ex_zero:ex_zero }, function( data ){
 		$( "#L1" ).html( data );
 	});
 };
@@ -819,6 +827,7 @@ var recipe3dsPlottDraw = function(){
 		});
 	});
 };
+
 
 // Dosplaying recipe by scatter plott
 var recipe3dsReset = function(){

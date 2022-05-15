@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food ranking 0.00b
+#Nutrition browser 2020 food ranking 0.01b
 
 
 #==============================================================================
@@ -33,8 +33,12 @@ lp = user.load_lp( script )
 
 #### POST
 command = @cgi['command']
+ex_inf = @cgi['ex_inf'].to_i
+ex_zero = @cgi['ex_zero'].to_i
 if @debug
 	puts "command: #{command}<br>"
+	puts "ex_inf: #{ex_inf}<br>"
+	puts "ex_zero: #{ex_zero}<br>"
 	puts "<hr>"
 end
 
@@ -73,7 +77,11 @@ if command == 'list'
 		main_value[food_no] = BigDecimal( convert_zero( r[main_item] ).to_s )
 		if comp_flag
 			comp_value[food_no] =  BigDecimal( convert_zero( r[comp_item] ).to_s )
-			ratio[food_no] = ( main_value[food_no] / comp_value[food_no] ).round( 2 ) if comp_value[food_no] != 0
+			if comp_value[food_no] != 0
+				ratio[food_no] = ( main_value[food_no] / comp_value[food_no] ).round( 4 )
+			else
+				ratio[food_no] = 99999999
+			end
 		else
 			comp_value[food_no] = 1
 			ratio[food_no] = main_value[food_no]
@@ -100,7 +108,6 @@ if command == 'list'
 
 	count = 1
 	ratio.each do |k, v|
-
 		sub_class = ''
 		sub_class << food_tag[k]['class1'].sub( '+', '' ) if /\+$/ =~ food_tag[k]['class1']
 		sub_class << food_tag[k]['class2'].sub( '+', '' ) if /\+$/ =~ food_tag[k]['class2']
@@ -116,15 +123,27 @@ if command == 'list'
 		recipe_serch = ''
 		recipe_serch = "<span class='badge bg-info text-dark' onclick=\"searchDR( '#{food_name}' )\">#{lp[11]}</span>" if recipei[food_name] == true
 
+
+
+
+		unless ( ratio[k] == 99999999 && ex_inf == 1 ) || ( ratio[k] == 0 && ex_zero == 1 )
 		list_html << '<tr>'
 		list_html << "<td>#{count}</td>"
 		list_html << "<td>#{k}</td>"
 		list_html << "<td class='link_cursor' onclick=\"detailView_his( '#{k}' )\">#{tags}</td>"
 		list_html << "<td>#{main_value[k].to_f}</td>"
 		list_html << "<td>#{comp_value[k].to_f}</td>"
-		list_html << "<td>#{ratio[k].to_f}</td>"
+		t = ratio[k].to_f
+		t = '∞' if t == 99999999
+
+		list_html << "<td>#{t}</td>"
 		list_html << "<td>#{recipe_serch}</td>"
 		list_html << '</tr>'
+		end
+
+
+
+
 
 		break if count == 100
 		count += 1
@@ -169,6 +188,13 @@ else
 end
 rank_order_select << '</select>'
 
+ex_inf_check = ''
+ex_inf_check = 'CHECKED' if ex_inf == 1
+
+
+ex_zero_check = ''
+ex_zero_check = 'CHECKED' if ex_zero == 1
+
 
 puts "Control HTML<br>" if @debug
 html = <<-"HTML"
@@ -191,7 +217,19 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<div class='row'>
-		<div class='col-11'>
+		<div class='col-2'>
+			<div class="form-check">
+				<input class="form-check-input" type="checkbox" id="ex_inf" #{ex_inf_check}>
+				<label class="form-check-label">∞を除外</label>
+			</div>
+		</div>
+		<div class='col-2'>
+			<div class="form-check">
+				<input class="form-check-input" type="checkbox" id="ex_zero" #{ex_zero_check}>
+				<label class="form-check-label">0を除外</label>
+			</div>
+		</div>
+		<div class='col-7'>
 		</div>
 		<div class='col-1'>
 			<button class="btn btn-outline-primary btn-sm" type="button" onclick="foodRankList()">#{lp[6]}</button>

@@ -76,6 +76,7 @@ html = <<-"HTML"
 		</div>
 HTML
 	when 'raw'
+		puts 'raw<br>' if @debug
 		start_date = cgi['start_date']
 		pal = cgi['pal'].to_f
 
@@ -103,9 +104,10 @@ HTML
 		if r.first
 			koyomi = JSON.parse( r.first['koyomi'] )
 			kex_select = koyomi['kex_select']
+			p kex_select if @debug
 			0.upto( 9 ) do |c|
- 				weight_kex = c if kex_select[c.to_s] == 3
-				bfr_kex = c if kex_select[c.to_s] == 5
+ 				weight_kex = c if kex_select[c.to_s] == 'WEIGHT'
+				bfr_kex = c if kex_select[c.to_s] == 'BFR'
 			end
 		end
 		puts "weight_kex:#{weight_kex}<br>" if @debug
@@ -370,7 +372,7 @@ def module_lp( language )
 		'sex' => "代謝的性別",\
 		'age' => "年齢",\
 		'height' => "身長（cm）",\
-		'weight' => "維持体重（kg）",\
+		'weight' => "目標維持体重（kg）",\
 		'start_date' => "開始日",\
 		'pal' => "身体活動レベル",\
 		'menergy' => "目安摂取エネルギー（kcal）",\

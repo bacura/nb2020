@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.13b
+#Nutrition browser 2020 koyomi editor 0.14b
 
 
 #==============================================================================
@@ -425,13 +425,17 @@ MEMO2
 end
 
 
+visionnerz_html = ''
+visionnerz_html = "<div align='center' class='col-1 joystic_koyomi' onclick=\"visionnerz( '#{yyyy}-#{mm}-#{dd}' )\">#{lp[22]}</div>" if user.status >= 5
+
+
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><h5>#{yyyy} / #{mm} / #{dd}</h5></div>
 		<div align='center' class='col-8 joystic_koyomi' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</div>
 		<div align='center' class='col-1'></div>
-		<div align='center' class='col-1 joystic_koyomi' onclick="">#{lp[22]}</div>
+		#{visionnerz_html}
 	</div>
 	<br>
 

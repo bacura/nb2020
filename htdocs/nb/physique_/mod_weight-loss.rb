@@ -114,8 +114,8 @@ HTML
 			koyomi = JSON.parse( r.first['koyomi'] )
 			kex_select = koyomi['kex_select']
 			0.upto( 9 ) do |c|
- 				weight_kex = c if kex_select[c.to_s] == 3
-				denergy_kex = c if kex_select[c.to_s] == 9
+ 				weight_kex = c if kex_select[c.to_s] == 'WEIGHT'
+				denergy_kex = c if kex_select[c.to_s] == 'dENERGY'
 			end
 		end
 

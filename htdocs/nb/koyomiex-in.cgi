@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 file into koyomi extra 0.11b
+#Nutrition browser 2020 file into koyomi extra 0.12b
 
 
 #==============================================================================
@@ -55,16 +55,16 @@ end
 
 puts "Loading config<br>" if @debug
 kex_select = Hash.new
-kex_item = Hash.new
-kex_unit = Hash.new
+#kex_item = Hash.new
+#kex_unit = Hash.new
 r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 		koyomi = JSON.parse( r.first['koyomi'] )
 		start = koyomi['start'].to_i
 		kex_select = koyomi['kex_select']
-		kex_item = koyomi['kex_item']
-		kex_unit = koyomi['kex_unit']
+		kex_oname = koyomi['kex_oname']
+		kex_ounit = koyomi['kex_ounit']
 		p koyomi if @debug
 	end
 end
@@ -73,7 +73,7 @@ end
 case command
 when 'upload'
 	puts 'Upload' if @debug
-	file_origin = @cgi['extable'].original_filename
+	file_origin = @cgi['extable'].original_filename.force_encoding( 'utf-8' )
 	file_type = @cgi['extable'].content_type
 	file_body = @cgi['extable'].read
 	file_size = file_body.size.to_i
@@ -120,9 +120,9 @@ when 'upload'
 			puts "<td>"
 			puts "<SELECT class='form-select form-select-sm' id='item#{c}'>"
 			puts "<OPTION value='0'>#{lp[8]}</OPTION>"
-			puts "<OPTION value='99'>#{lp[12]}</OPTION>"
-			0.upto( @kex_column ) do |cc|
-				puts "<OPTION value='#{kex_select[cc.to_s]}'>#{@kex_item[kex_select[cc.to_s]]}</OPTION>" if kex_select[cc.to_s] != 0
+			puts "<OPTION value='date'>#{lp[12]}</OPTION>"
+			0.upto( 9 ) do |cc|
+				puts "<OPTION value='#{kex_select[cc.to_s]}'>#{@kex_item[kex_select[cc.to_s]]}</OPTION>" if kex_select[cc.to_s] != 'ND'
 			end
 			puts "/<SELECT>"
 			puts "</td>"
@@ -169,16 +169,16 @@ when 'update'
 	date_column = 0
 	file_date_column = 0
 	file_item_nos.size.times do |c|
-		if file_item_nos[c] == '99'
+		if file_item_nos[c] == 'date'
 			date_column = c
 		end
 	end
 
 	item_column_posi = []
-	0.upto( @kex_column ) do |c|
-		if kex_select[c.to_s] != 0
+	0.upto( 9 ) do |c|
+		if kex_select[c.to_s] != 'ND'
 			file_item_nos.size.times do |cc|
-				if kex_select[c.to_s] == file_item_nos[cc].to_i
+				if kex_select[c.to_s] == file_item_nos[cc]
 					item_column_posi[c] = cc
 				end
 			end

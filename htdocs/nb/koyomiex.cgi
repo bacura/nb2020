@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi extra 0.12b
+#Nutrition browser 2020 koyomi extra 0.13b
 
 
 #==============================================================================
@@ -87,8 +87,6 @@ sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 
 puts "Loading config<br>" if @debug
 kex_select = Hash.new
-kex_item = Hash.new
-kex_unit = Hash.new
 r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
