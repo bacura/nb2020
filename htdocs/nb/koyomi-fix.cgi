@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.07b
+#Nutrition browser koyomi fix fct editer 0.08b
 
 #==============================================================================
 # LIBRARY
@@ -45,6 +45,9 @@ meal_time = @cgi['meal_time'].to_i
 order = @cgi['order'].to_i
 palette_ = @cgi['palette']
 modifyf = @cgi['modifyf'].to_i
+carry_on = @cgi['carry_on']
+carry_on = 1 if @cgi['carry_on'] == ''
+carry_on = carry_on.to_i
 food_name = @cgi['food_name']
 food_number = @cgi['food_number'].to_i
 food_number = 1 if food_number == 0
@@ -64,6 +67,7 @@ if @debug
 	puts "order: #{order}<br>\n"
 	puts "palette_: #{palette_}<br>\n"
 	puts "modifyf: #{modifyf}<br>\n"
+	puts "carry_on:#{carry_on}<br>\n"
 	puts "<hr>\n"
 end
 
@@ -125,6 +129,11 @@ if command == 'save'
 					koyomi_update << "#{aa[0]}~#{aa[1]}~#{aa[2]}~#{hh_mm}~#{meal_time}\t"
 				else
 					koyomi_update << "#{t[c]}\t"
+					if carry_on == 1
+						aa = a[c].split( "~" )
+						hh_mm = aa[3]
+						meal_time = aa[4]
+					end
 				end
 			end
 		end
@@ -137,7 +146,17 @@ if command == 'save'
 
 		if r.first
 			koyomi = r.first['koyomi']
-			koyomi << "\t#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
+			delimiter = ''
+			if koyomi != ''
+				delimiter = "\t"
+				if carry_on == 1
+					a = koyomi.split( delimiter )
+					aa = a.last.split( '~' )
+					hh_mm = aa[3]
+					meal_time = aa[4]
+				end
+			end
+			koyomi << "#{delimiter}#{code}~100~99~#{hh_mm}~#{meal_time}"
 			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
 			koyomi = "#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
@@ -280,6 +299,11 @@ eat_time_html << "<label class='input-group-text'>#{lp[9]}</label>"
 eat_time_html << "</div>"
 
 
+#### carry_on_check
+carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )}>"
+carry_on_html << '<label class="form-check-label">時間継承</label>'
+
+
 puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -292,7 +316,7 @@ html = <<-"HTML"
 			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">
 		</div>
 		<div class="col">#{eat_time_html}</div>
-		<div class="col"></div>
+		<div class="col">#{carry_on_html}</div>
 		<div class="col-1" align="right">
 			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{lp[1]}</button>
 		</div>

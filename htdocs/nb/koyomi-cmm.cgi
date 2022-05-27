@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.06b
+#Nutrition browser 2020 koyomi menu copy / move 0.07b
 
 
 #==============================================================================
@@ -48,6 +48,9 @@ tdiv = @cgi['tdiv'].to_i
 hh_mm = @cgi['hh_mm']
 meal_time = @cgi['meal_time'].to_i
 cm_mode = @cgi['cm_mode']
+carry_on = @cgi['carry_on']
+carry_on = 1 if @cgi['carry_on'] == ''
+carry_on = carry_on.to_i
 origin = @cgi['origin']
 origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}" if origin == ''
 if @debug
@@ -59,6 +62,7 @@ if @debug
 	puts "hh_mm:#{hh_mm}<br>\n"
 	puts "meal_time:#{meal_time}<br>\n"
 	puts "cm_mode:#{cm_mode}<br>\n"
+	puts "carry_on:#{carry_on}<br>\n"
 	puts "origin:#{origin}<br>\n"
 	puts "<hr>\n"
 end
@@ -81,18 +85,22 @@ end
 
 
 puts 'Getting standard meal start & time<br>' if @debug
-start_time_set= []
+start_time_set = []
 meal_tiems_set = []
-r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['bio'] != nil && r.first['bio'] != ''
 		bio = JSON.parse( r.first['bio'] )
 		start_times_set = [bio['bst'], bio['lst'], bio['dst']]
 		meal_tiems_set = [bio['bti'].to_i, bio['lti'].to_i, bio['dti'].to_i]
+
+		hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
+		meal_time = meal_tiems_set[tdiv] if meal_time == 0
 	end
 end
-hh_mm = start_times_set[tdiv] if hh_mm == '' || hh_mm == nil
-meal_time = meal_tiems_set[tdiv] if meal_time == 0
+hh_mm = '00:00' if hh_mm == nil || hh_mm == ''
+meal_time = 20 if meal_time == nil || meal_time == '' || meal_time == 0
+
 
 yyyy_ = nil
 mm_ = nil
@@ -217,6 +225,11 @@ eat_time_html << "<label class='input-group-text'>#{lp[19]}</label>"
 eat_time_html << "</div>"
 
 
+#### carry_on_check
+carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )} DISABLED>"
+carry_on_html << '<label class="form-check-label">時間継承</label>'
+
+
 return_button = ''
 if yyyy_ == nil
 	return_button << "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[17]}</div>"
@@ -246,6 +259,7 @@ html = <<-"HTML"
 			#{eat_time_html}
 		</div>
 		<div class='col-3 form-inline'>
+			#{carry_on_html}
 		</div>
 		<div class='col-1 form-inline' align="right">
 			#{save_button}

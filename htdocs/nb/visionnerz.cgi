@@ -18,12 +18,98 @@ script = 'visionnerz'
 x_axis = 60 * 24
 
 #koyomi "#{delimiter}#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
-
+palette_bit = '00000011001001000000000011000000000001100000000000000000000000000000000011'.split( '' )
+palette_bit.map! do |x| x.to_i end
+#
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
+class DOFC
+	attr_accessor :fc
 
+	def initialize()
+		@fc = Hash.new
+		@fc['protein'] = 0.0
+		@fc['protein_'] = 0.0
+		@fc['sugars']= 0.0
+		@fc['sugars_'] = 0.0
+		@fc['fat'] = 0.0
+		@fc['fat_'] = 0.0
+		@fc['fiber']= 0.0
+		@fc['water'] = 0.0
+		@fc['sodium'] = 0.0
+		@fc['potassium'] = 0.0
+		@fc['alcohol'] = 0.0
+	end
+
+	def copy( source )
+		source.fc.each do |k, v| @fc[k] = v end
+	end
+
+	def plus( source )
+		source.fc.each do |k, v| @fc[k] += v end
+	end
+end
+
+
+class Oral
+	def initialize( debug )
+		@stock = DOFC.new
+		@post = DOFC.new
+		@debug = debug
+	end
+
+	def in( fct_slow, fct_fast )
+		@stock.fc['protein'] = fct_slow.pickt( 'PROTV' )
+		@stock.fc['protein_'] = fct_fast.pickt( 'PROTV' )
+
+		@stock.fc['sugars'] = fct_slow.pickt( 'CHOV' )
+		@stock.fc['sugars_'] = fct_fast.pickt( 'CHOV' )
+
+		@stock.fc['fat'] = fct_slow.pickt( 'FATV' )
+		@stock.fc['fat_'] = fct_fast.pickt( 'FATV' )
+
+		@stock.fc['fiber'] = fct_slow.pickt( 'FIB' )
+		@stock.fc['fiber'] += fct_fast.pickt( 'FIB' )
+
+		@stock.fc['water'] =  fct_slow.pickt( 'WATER' )
+		@stock.fc['water'] += fct_fast.pickt( 'WATER' )
+
+		na = fct_slow.pickt( 'NA' )
+		na = ( fct_slow.pickt( 'NACL_EQ' ) / 2.54 * 1000 ).round( 0 ) if na == nil
+		@stock.fc['sodium'] = na
+
+		na = fct_fast.pickt( 'NA' )
+		na = ( fct_fast.pickt( 'NACL_EQ' ) / 2.54 * 1000 ).round( 0 ) if na == nil
+		@stock.fc['sodium'] += na
+
+		@stock.fc['potassium'] = fct_slow.pickt( 'K' )
+		@stock.fc['potassium'] += fct_fast.pickt( 'K' )
+
+		@stock.fc['alcohol'] = fct_slow.pickt( 'ALC' )
+		@stock.fc['alcohol'] += fct_fast.pickt( 'ALC' )
+	end
+
+	def function()
+		##############################################
+		# alpha-amylase
+		# feeling
+		##############################################
+		k = 0.01
+		max = 1
+		imp = @stock.fc['sugars'] * k
+		imp = 1 if imp > max
+		@stock.fc['sugars'] -= imp
+		@stock.fc['sugars_'] += imp
+	end
+
+	def out()
+		@post.copy( @stock )
+
+		return @post
+	end
+end
 
 #==============================================================================
 # Main
@@ -48,18 +134,18 @@ mybio.debug if @debug
 
 case command
 when 'raw'
-	puts "Palette setting<br>" if @debug
-	palette = Palette.new( user.name )
-	palette.set_bit( nil )
+	puts "making meal time table<br>" if @debug
 
-	fct_min = []
+	fct_slow = []
+	fct_fast = []
 	0.upto( x_axis ) do |c|
-		fct_min[c] = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
-		fct_min[c].load_palette( palette.bit )
+		fct_slow[c] = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+		fct_fast[c] = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+		fct_slow[c].load_palette( palette_bit )
+		fct_fast[c].load_palette( palette_bit )
 	end
 
-
-	r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
+	r = mdb( "SELECT koyomi, tdiv FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
 	memo = ''
 	r.each do |e|
 		if e['tdiv'].to_i == 4
@@ -75,17 +161,17 @@ when 'raw'
 				meal_time = meal_time.to_i
 				z, rate = food_weight_check( rate_ )
 
-				fct_tmp = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
-				fct_tmp.load_palette( palette.bit )
 
 				if /\?/ =~ code
 				elsif /\-z\-/ =~ code
 					puts 'FIX<br>' if @debug
+					fct_tmp = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+					fct_tmp.load_palette( palette_bit )
 					fct_tmp.load_fcz( user.name, code, 'fix' )
 					fct_tmp.calc
 					a = fct_tmp.total.map do |x| x / meal_time end
 					0.upto( meal_time ) do |c|
-						fct_min[meal_start + c].into_solid( a ) if ( meal_start + c ) <= x_axis
+						fct_slow[meal_start + c].into_solid( a ) if ( meal_start + c ) <= x_axis
 					end
 				else
 					puts 'Recipe<br>' if @debug
@@ -110,11 +196,39 @@ when 'raw'
 					end
 
 					puts 'Foods<br>' if @debug
-					fct_tmp.set_food( user.name, food_nos, food_weights, false )
-					fct_tmp.calc
-					a = fct_tmp.total.map do |x| x / meal_time end
+					fct_tmp_slow = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+					fct_tmp_fast = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+					fct_tmp_slow.load_palette( palette_bit )
+					fct_tmp_fast.load_palette( palette_bit )
+
+					food_nos_slow = []
+					food_nos_fast = []
+					food_weights_slow = []
+					food_weights_fast = []
+
+					food_nos.size.times do |c|
+						fg = food_nos[c].sub( /P|U/, '' ).slice( 0..1 )
+						case fg
+						when '03', '07', '16', '17'
+							food_nos_fast << food_nos[c]
+							food_weights_fast << food_weights[c]
+						else
+							food_nos_slow << food_nos[c]
+							food_weights_slow << food_weights[c]
+						end
+					end
+
+					fct_tmp_slow.set_food( user.name, food_nos_slow, food_weights_slow, false )
+					fct_tmp_fast.set_food( user.name, food_nos_fast, food_weights_fast, false )
+					fct_tmp_slow.calc
+					fct_tmp_fast.calc
+					a = fct_tmp_slow.total.map do |x| x / meal_time end
 					0.upto( meal_time ) do |c|
-						fct_min[meal_start + c].into_solid( a ) if ( meal_start + c ) <= x_axis
+						fct_slow[meal_start + c].into_solid( a ) if ( meal_start + c ) <= x_axis
+					end
+					a = fct_tmp_fast.total.map do |x| x / meal_time end
+					0.upto( meal_time ) do |c|
+						fct_fast[meal_start + c].into_solid( a ) if ( meal_start + c ) <= x_axis
 					end
 				end
 			end
@@ -122,49 +236,66 @@ when 'raw'
 	end
 
 	puts "Data generating<br>" if @debug
+	fc_final = DOFC.new
+	oral = Oral.new( @debug )
+
 	hours = []
-	energy = []
 	protein = []
+	protein_ = []
+	sugars = []
+	sugars_ = []
 	fat = []
-	carbohydrate = []
+	fat_ = []
 	fiber = []
 	sodium = []
-
-
-
+	potassium = []
+	water = []
+	alcohol = []
 	0.upto( x_axis ) do |c|
-		fct_min[c].into_solid( fct_min[c - 1].total ) unless c == 0
-		fct_min[c].calc
-		fct_min[c].digit
+		fct_slow[c].calc
+		fct_fast[c].calc
+		fct_slow[c].digit
+		fct_fast[c].digit
+
+		oral.in( fct_slow[c], fct_fast[c] )
+		oral.function
+		fc_final.copy( oral.out )
 
 		hours << ( c.to_f / 60 ).round( 4 )
-		energy << fct_min[c].pickt( 'ENERC_KCAL' )
-		protein << fct_min[c].pickt( 'PROTV' )
-		fat << fct_min[c].pickt( 'FATV' )
-		carbohydrate << fct_min[c].pickt( 'CHOV' )
-		fib = fct_min[c].pickt( 'fiber' )
-		fib = 0 if fib == nil
-		fiber << fib
-		na = fct_min[c].pickt( 'NA' )
-		na = ( fct_min[c].pickt( 'NACL_EQ' ) / 2.54 * 1000 ).round( 0 ) if na == nil
-		sodium << na
+		protein << fc_final.fc['protein']
+		protein_ << fc_final.fc['protein_']
+		fat << fc_final.fc['fat']
+		fat_ << fc_final.fc['fat_']
+		sugars << fc_final.fc['sugars']
+		sugars_ << fc_final.fc['sugars_']
+		sodium << fc_final.fc['sodium']
+		potassium << fc_final.fc['potassium']
+		fiber << fc_final.fc['fiber']
+		water << fc_final.fc['water']
+		alcohol << fc_final.fc['alcohol']
 	end
 
+	puts "Data binding<br>" if @debug
 	raw = []
-	raw[0] = hours.unshift( lp[4] ).join( ',' )
-	raw[1] = energy.unshift( lp[5] ).join( ',' )
-	raw[2] = protein.unshift( lp[6] ).join( ',' )
-	raw[3] = fat.unshift( lp[7] ).join( ',' )
-	raw[4] = carbohydrate.unshift( lp[8] ).join( ',' )
-	raw[5] = fiber.unshift( lp[9] ).join( ',' )
-	raw[6] = sodium.unshift( lp[10] ).join( ',' )
+	raw[0] = hours.unshift( '時間' ).join( ',' )
+	raw[1] = protein.unshift( 'たんぱく質' ).join( ',' )
+	raw[2] = protein_.unshift( 'たんぱく質_' ).join( ',' )
+	raw[3] = fat.unshift( '脂質' ).join( ',' )
+	raw[4] = fat_.unshift( '脂質_' ).join( ',' )
+	raw[5] = sugars.unshift( '糖質' ).join( ',' )
+	raw[6] = sugars_.unshift( '糖質_' ).join( ',' )
+	raw[7] = sodium.unshift( 'ナトリウム' ).join( ',' )
+	raw[8] = potassium.unshift( 'カリウム' ).join( ',' )
+	raw[9] = fiber.unshift( '食物繊維' ).join( ',' )
+	raw[10] = water.unshift( '水分' ).join( ',' )
+	raw[11] = alcohol.unshift( 'アルコール' ).join( ',' )
 
 	puts raw.join( ':' )
 	exit( 0 )
 else
 	html = <<-"HTML"
 <div class="row">
-
+<h6>#{yyyymmdd}</h6>
 </div>
 
 <hr>

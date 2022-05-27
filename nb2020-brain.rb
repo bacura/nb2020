@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.23b
+#Nutrition browser 2020 brain 0.24b
 
 #==============================================================================
 # LIBRARY
@@ -540,6 +540,15 @@ class FCT
     @foods << nil
     @weights << 100
     @solid << Marshal.load( Marshal.dump( fct ))
+  end
+
+  def into_zero()
+    @fns << nil
+    @foods << nil
+    @weights << 100
+    zero = []
+    @item.size.times do zero << 0 end
+    @solid << Marshal.load( Marshal.dump( zero ))
   end
 
   def put_solid( item, solid_no, value )

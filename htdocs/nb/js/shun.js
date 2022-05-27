@@ -243,32 +243,48 @@ var tokerForm = function( mod ){
 // Init
 var visionnerz = function( yyyymmdd ){
 	$.post( "visionnerz.cgi", { command:'init', yyyymmdd:yyyymmdd }, function( data ){
-		$( "#LF" ).html( data );
+		$( "#L4" ).html( data );
 
 		$.post( "visionnerz.cgi", { command:'raw', yyyymmdd:yyyymmdd }, function( raw ){
-			$( "#L5" ).html( raw );
+			$( "#LF" ).html( raw );
 
 			var column = ( String( raw )).split( ':' );
 			var hours = ( String( column[0] )).split(',');
-			var minutes = ( String( column[0] )).split(',');
-			var d_energy = ( String( column[1] )).split(',');
-			var d_protein = ( String( column[2] )).split(',');
+			var d_protein = ( String( column[1] )).split(',');
+			var d_protein_ = ( String( column[2] )).split(',');
 			var d_fat = ( String( column[3] )).split(',');
-			var d_carbohydrate = ( String( column[4] )).split(',');
-			var d_fiber = ( String( column[5] )).split(',');
-			var d_sodium = ( String( column[6] )).split(',');
+			var d_fat_ = ( String( column[4] )).split(',');
+			var d_sugars = ( String( column[5] )).split(',');
+			var d_sugars_ = ( String( column[6] )).split(',');
+			var d_sodium = ( String( column[7] )).split(',');
+			var d_potassium = ( String( column[8] )).split(',');
+			var d_fiber = ( String( column[9] )).split(',');
+			var d_water = ( String( column[10] )).split(',');
+			var d_alcohol = ( String( column[11] )).split(',');
 
 			var chart = c3.generate({
-				bindto: '#visionnerz-digestion',
+				bindto: '#visionnerz-intake',
 
 				data: {
 					x: '時間',
-					columns: [hours, d_energy, d_protein, d_fat, d_carbohydrate, d_fiber, d_sodium]
+					axes: { '水分(g)':'y2', 'ナトリウム(mg)':'y2', 'カリウム(mg)':'y2' },
+					columns: [hours, d_protein, d_fat, d_sugars, d_sodium, d_potassium, d_fiber, d_water, d_alcohol]
 				},
 				axis: {
 					x: {
-						 label: {text: '時間（時）', position: 'outer-center' },
-						 tick: { values: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24']}
+						 label:{text:'時間（時）', position:'outer-center' },
+						 tick:{ values: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24']}
+					},
+					y: {
+			    		type:'linear', min:0, padding:{bottom:0},
+			    		tick:{  values:['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'] },
+	 					label:{ text:'たんぱく質 / 脂質 / 糖質 / 食物繊維 / アルコール', position: 'outer-middle' }
+					},
+					y2: {
+						show: true,
+			    		type: 'linear', min: 0, padding: {bottom: 0},
+			    		tick: { format: d3.format( "01d" ) },
+	 					label: { text: '水分 / ナトリウム / カリウム', position: 'outer-middle' }
 					}
 				},
 				point: { show: false },
@@ -279,7 +295,7 @@ var visionnerz = function( yyyymmdd ){
 		pushBW();
 		flashBW();
 		dll = true;
-		dl5 = true;
+		dl4 = true;
 		dlf = true;
 		displayBW();
 	});

@@ -208,6 +208,14 @@ def modify_protocol( protocol )
 		elsif /^\!/ =~ e
 			t = e.delete( '!' )
 			return_protocol << "<span class='print_subtitle'>#{t}</span><br>\n"
+		elsif /^\&/ =~ e
+			link_code = e.sub( '&', '' ).chomp
+			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{link_code}';", false, @debug )
+			if r.first
+				return_protocol << "参照：<a href='http://localhost/nb/printv.cgi?&c=#{link_code}' target='sub_link'>#{r.first['name']}</a><br>\n"
+			end
+
+
 		elsif /^\#/ =~ e
 		elsif e == ''
 			return_protocol << "<br>\n"
@@ -269,6 +277,16 @@ end
 ew_mode = get_data['ew'].to_i
 frct_mode = get_data['fm'].to_i
 csc = get_data['cs'].to_s
+
+
+puts "Loading recipe<br>" if @debug
+recipe = Recipe.new( user )
+recipe.load_db( code, true )
+dish = recipe.dish if dish == 0
+recipe.load_media
+photo_num = recipe.media.size
+
+
 url = "https://bacura.jp/nb/printv.cgi?c=#{code}&t=#{template}&d=#{dish}&p=#{palette_}"
 url << "&cs=#{csc}" unless csc == ''
 if @debug
@@ -278,14 +296,6 @@ if @debug
 	puts "url: #{url}<br>"
 	puts "<hr>"
 end
-
-
-puts "Loading recipe<br>" if @debug
-recipe = Recipe.new( user )
-recipe.load_db( code, true )
-dish = recipe.dish if dish == 0
-recipe.load_media
-photo_num = recipe.media.size
 
 
 puts "html header<br>" if @debug

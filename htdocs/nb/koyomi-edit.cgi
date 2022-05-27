@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.14b
+#Nutrition browser 2020 koyomi editor 0.17b
 
 
 #==============================================================================
@@ -39,7 +39,8 @@ def meals( e, lp, user, freeze_flag )
 		code = aa[0]
 		wt = aa[1]
 		unit = aa[2]
-
+		hh_mm = aa[3]
+		meal_time = aa[4]
 		item_name = ''
 		onclick = ''
 		fix_copy_button = ''
@@ -61,7 +62,7 @@ def meals( e, lp, user, freeze_flag )
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
 				onclick = " onclick=\"modifysaveKoyomiFC( '#{code}', '#{origin}' )\"" if freeze_flag == 0
-				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{c}' )\">#{lp[30]}</span>"
+				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\">#{lp[30]}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
 				onclick = ''
@@ -70,7 +71,7 @@ def meals( e, lp, user, freeze_flag )
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 			if rr.first
 				item_name = rr.first['name']
-				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
+				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
 				recipe_button = "<span onclick=\"initCB( 'load', '#{code}' )\">#{lp[31]}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
@@ -81,7 +82,7 @@ def meals( e, lp, user, freeze_flag )
 			rr = mdb( q, false, @debug )
 			if rr.first
 				item_name = rr.first['name']
-				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{aa[3]}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
+				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
 			end
@@ -342,7 +343,7 @@ r.each do |e|
 		end
 
 		total_html = ''
-		fct.total.size.times do |i| total_html << "#{fct.names[i]}[#{fct.total[i]}]&nbsp;&nbsp;&nbsp;&nbsp;" end
+		fct.total.size.times do |i| total_html << "#{fct.names[i]}[#{fct.total[i].to_f}]&nbsp;&nbsp;&nbsp;&nbsp;" end
 		koyomi_html[e['tdiv']] << total_html
 	end
 end

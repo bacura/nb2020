@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.10b
+#Nutrition browser 2020 koyomi 0.11b
 
 
 #==============================================================================
@@ -228,6 +228,7 @@ visio_htmls = ['']
 					unit = unit_set[cc]
 
 					if /\?/ =~ code
+						fct_tdiv.into_zero
 					elsif /\-z\-/ =~ code
 						puts 'FIX<br>' if @debug
 						fct_tdiv.load_fcz( user.name, code, 'fix' )

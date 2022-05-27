@@ -1,4 +1,4 @@
-# Weight loss module for Physique 0.26b
+# Weight loss module for Physique 0.27b
 #encoding: utf-8
 
 @module = 'weight-loss'
@@ -145,7 +145,7 @@ HTML
 			skip = 0
 			0.upto( 95 ) do |c|
 				break if persed_date > persed_today
-				if measured[c] != nil
+				if measured[c] != nil && measured[c] != '' && measured[c] != 0
 					case skip
 					when 0
 						d4sw[c] = measured[c]
@@ -355,7 +355,7 @@ HTML
 		html << "</div>"
 		html << '<div class="col-3">'
 		html << "<div class='input-group input-group-sm'>"
-		html << "  <span class='input-group-text'>fainal period</span>"
+		html << "  <span class='input-group-text'>final period</span>"
 		html << "  <input type='text' class='form-control form-control-sm' id='aveep4' value='' DISABLED>"
 		html << "</div>"
 		html << "</div>"

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.08b
+#Nutrition browser 2020 koyomi adding panel 0.10b
 
 #==============================================================================
 #LIBRARY
@@ -13,7 +13,7 @@ require './brain'
 #STATIC
 #==============================================================================
 script = 'koyomi-add'
-@debug = false
+@debug = true
 
 
 #==============================================================================
@@ -79,6 +79,9 @@ hh_mm = @cgi['hh_mm']
 meal_time = @cgi['meal_time'].to_i
 order = @cgi['order'].to_i
 copy = @cgi['copy'].to_i
+carry_on = @cgi['carry_on']
+carry_on = 1 if @cgi['carry_on'] == ''
+carry_on = carry_on.to_i
 origin = @cgi['origin']
 dd = 1 if dd == 0
 ev = 100 if ev == 0 || ev == '' || ev == nil
@@ -95,6 +98,7 @@ if @debug
 	puts "eu:#{eu}<br>\n"
 	puts "order:#{order}<br>\n"
 	puts "copy:#{copy}<br>\n"
+	puts "carry_on:#{carry_on}<br>\n"
 	puts "origin:#{origin}<br>\n"
 	puts "<hr>\n"
 end
@@ -120,10 +124,8 @@ end
 
 
 puts 'Getting standard meal start & time<br>' if @debug
-start_time_set= []
+start_time_set = []
 meal_tiems_set = []
-hh_mm = '00:00'
-meal_time = 20
 r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['bio'] != nil && r.first['bio'] != ''
@@ -135,6 +137,8 @@ if r.first
 		meal_time = meal_tiems_set[tdiv] if meal_time == 0
 	end
 end
+hh_mm = '00:00' if hh_mm == nil || hh_mm == ''
+meal_time = 20 if meal_time == nil || meal_time == '' || meal_time == 0
 
 
 new_solid = ''
@@ -160,18 +164,15 @@ if command == 'save' || command == 'move'
 	if r.first
 		koyomi = r.first['koyomi']
 		delimiter = ''
-		delimiter = "\t" if koyomi != ''
-		a = koyomi.split( delimiter )
-		koyomi_ = []
-		a.each do |e|
-			aa = e.split( '~' )
-			if tdiv != 3
-				aa[3] = hh_mm
-				aa[4] = meal_time
+		if koyomi != ''
+			delimiter = "\t"
+			if carry_on == 1
+				a = koyomi.split( delimiter )
+				aa = a.last.split( '~' )
+				hh_mm = aa[3]
+				meal_time = aa[4]
 			end
-			koyomi_ << aa.join( '~' )
 		end
-		koyomi = koyomi_.join( delimiter )
 		koyomi << "#{delimiter}#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
 
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
@@ -190,7 +191,7 @@ save_button = "<button class='btn btn-sm btn-outline-primary' type='button' oncl
 ####
 if command == 'modify' || command == 'move' || command == 'move_fix'
 	copy_html << "<div class='form-group form-check'>"
-    copy_html << "<input type='checkbox' class='form-check-input' id='copy'>"
+    copy_html << "<input type='checkbox' class='form-check-input' id='copy' #{checked( copy )}>"
     copy_html << "<label class='form-check-label'>#{lp[24]}</label>"
 	copy_html << "</div>"
 
@@ -319,6 +320,11 @@ else
 end
 
 
+#### carry_on_check
+carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )}>"
+carry_on_html << '<label class="form-check-label">時間継承</label>'
+
+
 onchange = "onChange=\"changeKoyomiAdd( 'init', '#{code}', '#{origin}' )\""
 onchange = "onChange=\"changeKoyomiAdd( 'modify', '#{code}', '#{origin}' )\"" if command == 'modify'
 
@@ -338,7 +344,12 @@ html = <<-"HTML"
 		</div>
 		<div class='col-2 form-inline'>#{tdiv_html}</div>
 		<div class='col-3 form-inline'>#{eat_time_html}</div>
+		<div class='col-2 form-check'>#{carry_on_html}</div>
 		<div class='col-3 form-inline'>#{rate_html}</div>
+	</div>
+	<br>
+	<div class='row'>
+		<div class='col-10'></div>
 		<div class='col-1 form-inline'>#{save_button}</div>
 		<div class='col-1 form-inline'>#{copy_html}</div>
 	</div>
