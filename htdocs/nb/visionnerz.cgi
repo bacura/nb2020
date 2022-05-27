@@ -262,33 +262,33 @@ when 'raw'
 		fc_final.copy( oral.out )
 
 		hours << ( c.to_f / 60 ).round( 4 )
-		protein << fc_final.fc['protein']
-		protein_ << fc_final.fc['protein_']
-		fat << fc_final.fc['fat']
-		fat_ << fc_final.fc['fat_']
-		sugars << fc_final.fc['sugars']
-		sugars_ << fc_final.fc['sugars_']
-		sodium << fc_final.fc['sodium']
-		potassium << fc_final.fc['potassium']
-		fiber << fc_final.fc['fiber']
-		water << fc_final.fc['water']
-		alcohol << fc_final.fc['alcohol']
+		protein << fc_final.fc['protein'].round( 2 )
+		protein_ << fc_final.fc['protein_'].round( 2 )
+		fat << fc_final.fc['fat'].round( 2 )
+		fat_ << fc_final.fc['fat_'].round( 2 )
+		sugars << fc_final.fc['sugars'].round( 2 )
+		sugars_ << fc_final.fc['sugars_'].round( 2 )
+		sodium << fc_final.fc['sodium'].round( 2 )
+		potassium << fc_final.fc['potassium'].round( 2 )
+		fiber << fc_final.fc['fiber'].round( 2 )
+		water << fc_final.fc['water'].round( 2 )
+		alcohol << fc_final.fc['alcohol'].round( 2 )
 	end
 
 	puts "Data binding<br>" if @debug
 	raw = []
 	raw[0] = hours.unshift( '時間' ).join( ',' )
-	raw[1] = protein.unshift( 'たんぱく質' ).join( ',' )
+	raw[1] = protein.unshift( 'たんぱく質(g)' ).join( ',' )
 	raw[2] = protein_.unshift( 'たんぱく質_' ).join( ',' )
-	raw[3] = fat.unshift( '脂質' ).join( ',' )
+	raw[3] = fat.unshift( '脂質(g)' ).join( ',' )
 	raw[4] = fat_.unshift( '脂質_' ).join( ',' )
-	raw[5] = sugars.unshift( '糖質' ).join( ',' )
+	raw[5] = sugars.unshift( '糖質(g)' ).join( ',' )
 	raw[6] = sugars_.unshift( '糖質_' ).join( ',' )
-	raw[7] = sodium.unshift( 'ナトリウム' ).join( ',' )
-	raw[8] = potassium.unshift( 'カリウム' ).join( ',' )
-	raw[9] = fiber.unshift( '食物繊維' ).join( ',' )
-	raw[10] = water.unshift( '水分' ).join( ',' )
-	raw[11] = alcohol.unshift( 'アルコール' ).join( ',' )
+	raw[7] = sodium.unshift( 'ナトリウム(mg)' ).join( ',' )
+	raw[8] = potassium.unshift( 'カリウム(mg)' ).join( ',' )
+	raw[9] = fiber.unshift( '食物繊維(g)' ).join( ',' )
+	raw[10] = water.unshift( '水分(g)' ).join( ',' )
+	raw[11] = alcohol.unshift( 'アルコール(g)' ).join( ',' )
 
 	puts raw.join( ':' )
 	exit( 0 )
@@ -300,6 +300,10 @@ else
 
 <hr>
 <div class="row">
+#摂食<br>
+<div id='visionnerz-intake' align='center'></div>
+</div>
+
 #{lp[1]}<br>
 <div id='visionnerz-digestion' align='center'></div>
 </div>
@@ -308,6 +312,7 @@ else
 <div class='col-1'>#{lp[2]}</div>
 <div class='col'><div id='visionnerz-blood' align='center'></div></div>
 </div>
+
 <div class="row">
 <div class='col-1'>#{lp[3]}</div>
 <div class='col'><div id='visionnerz-tissue' align='center'></div></div>
