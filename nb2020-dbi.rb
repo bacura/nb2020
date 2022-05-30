@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.34b
+#nb2020-dbi.rb 0.35b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -440,7 +440,7 @@ def dic_init()
 	if res.first
 		puts 'dic table already exists.'
 	else
-		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), default VARCHAR(8), user VARCHAR(32));'
+		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), default VARCHAR(8), user VARCHAR(32), def_fn VARCHAR(16));'
 		$DB.query( query )
 		puts 'dic table has been created.'
 
