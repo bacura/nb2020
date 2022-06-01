@@ -45,7 +45,7 @@ def html_head_pv( recipe )
  	<!-- Twitter card -->
  	<meta name="twitter:card" content="summary" />
  	<meta name="twitter:site" content="@ho_meow" />
- 	<meta name="twitter:title" content="ユビキタス総合栄養ツール：栄養ブラウザ" />
+ 	<meta name="twitter:title" content="ユビキタス栄養ツール：栄養ブラウザ" />
  	<meta name="twitter:description" content="公開レシピ紹介///#{recipe_name}" />
  	#{tw_image}
  	<meta name="twitter:image:alt" content="ばきゅら京都Labロゴ" />
@@ -214,8 +214,6 @@ def modify_protocol( protocol )
 			if r.first
 				return_protocol << "参照：<a href='http://localhost/nb/printv.cgi?&c=#{link_code}' target='sub_link'>#{r.first['name']}</a><br>\n"
 			end
-
-
 		elsif /^\#/ =~ e
 		elsif e == ''
 			return_protocol << "<br>\n"
@@ -347,12 +345,6 @@ palette_html << "</select>"
 palette_html << '</div>'
 
 
-puts 'Nimono alart select HTML<br>' if @debug
-nimono_html = ''
-if recipe.dish != dish
-end
-
-
 puts 'FCT Calc<br>' if @debug
 fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, frct_accu, frct_mode )
 fct.load_palette( palette.bit )
@@ -433,6 +425,16 @@ if template >= 2
 end
 
 
+nimono = ''
+if recipe.tags.include?( "煮物警報" ) && recipe.dish != dish
+	if recipe.dish < dish
+		nimono = ' <span class="text-danger">▲煮物警報▲</span>　設定人数が元レシピより多いので、煮汁を調節しないと時間がかかったり、味が濃くなるかも！'
+	else
+		nimono = ' <span class="text-danger">▲煮物警報▲▲</span>　設定人数が元レシピより少ないので、煮汁を調節しないと火が通らなかったり、味が薄くなるかも！'
+	end
+end
+
+
 puts 'Common header <br>' if @debug
 html_head = <<-"HTML"
 <div class='container'>
@@ -463,6 +465,7 @@ html_head = <<-"HTML"
 		</div>
 	</div>
 	</form>
+	#{nimono}
 	<hr>
 HTML
 
@@ -473,8 +476,8 @@ if csc == ''
 	<hr>
 	<div class='row'>
 		<div class='col-7'>
-			栄養士・管理栄養士の慾を如意自在に同化する<br>
-			ユビキタス総合栄養ツール<br><br>
+			栄養者の慾を如意自在に同化する<br>
+			ユビキタス栄養ツール<br><br>
 			<a href='https://bacura.jp/nb/' class='h4 alert alert-danger'>栄養ブラウザ</a>
 		</div>
 		<div class='col-5' align="right">#{code}<br>
@@ -521,6 +524,7 @@ else
 </div>
 HTML
 end
+
 
 case template
 #### 基本レシピ / 詳細レシピ

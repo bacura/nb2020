@@ -261,7 +261,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 
 		$.post( "koyomi-fix.cgi", {
 			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
-			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, carry_on:carry_no, order:order,
+			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, carry_on:carry_on, order:order,
 			ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
 			PROTCAA:PROTCAA, PROT:PROT, PROTV:PROTV, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, FATV:FATV, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, CHOV:CHOV, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
 			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
