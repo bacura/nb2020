@@ -90,7 +90,7 @@ def html_head( interrupt, status, sub_title )
   <title>栄養ブラウザ #{sub_title}</title>
   <meta charset="UTF-8">
   <meta name="keywords" content="栄養士,管理栄養士,無料,フリー,Webサービス,nutrition,Nutritionist,food,検索,計算,解析,評価,栄養計算">
-  <meta name="description" content="栄養士・管理栄養士が欲しい機能を如意自在に同化するユビキタス総合栄養ツール">
+  <meta name="description" content="栄養者の慾を如意自在に同化するユビキタス栄養ツール">
   <meta name="robots" content="index,follow">
   <meta name="author" content="Shinji Yoshiyama@ばきゅら京都Lab">
 

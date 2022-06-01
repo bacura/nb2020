@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.20b
+#Nutrition browser 2020 soul 0.21b
 
 #==============================================================================
 # LIBRARY
@@ -538,7 +538,7 @@ end
 
 
 class Recipe
-  attr_accessor :code, :user, :branch, :root, :public, :protect, :draft, :name, :dish, :type, :role, :tech, :time, :cost, :sum, :protocol, :media, :date
+  attr_accessor :code, :user, :branch, :root, :public, :protect, :draft, :name, :dish, :type, :role, :tech, :time, :cost, :sum, :protocol, :tags, :comment, :media, :date
 
   def initialize( user )
     @code = nil
@@ -557,6 +557,8 @@ class Recipe
     @cost = 0
     @sum = ''
     @protocol = ''
+    @tags = []
+    @comment = ''
     @date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
     @media = []
   end
@@ -614,6 +616,15 @@ class Recipe
     @sum = res['sum'].to_s
     @protocol = res['protocol'].to_s
     @date = res['date']
+
+    a = @protocol.split( "\n" )
+    if /^\#/ =~ a[0]
+      a[0].sub!(  '#', '' )
+      a[0].gsub!( "　", "\t" )
+      a[0].gsub!( "\s", "\t" )
+      @tags = a[0].chomp.split( "\t" )
+    end
+    @comment = a[1].chomp.sub( '#', '' ) if /^\#/ =~ a[1]
   end
 
   def insert_db()
