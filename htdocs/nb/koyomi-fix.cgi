@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.08b
+#Nutrition browser koyomi fix fct editer 0.09b
 
 #==============================================================================
 # LIBRARY
@@ -60,11 +60,12 @@ if @debug
 	puts "food_weight: #{food_weight}<br>\n"
 	puts "food_number: #{food_number}<br>\n"
 	puts "yyyy: #{yyyy}<br>\n"
-	puts "hh_mm: #{hh_mm}<br>\n"
-	puts "meal_time: #{meal_time}<br>\n"
+	puts "mm: #{mm}<br>\n"
 	puts "dd: #{dd}<br>\n"
 	puts "tdiv: #{tdiv}<br>\n"
 	puts "order: #{order}<br>\n"
+	puts "hh_mm: #{hh_mm}<br>\n"
+	puts "meal_time: #{meal_time}<br>\n"
 	puts "palette_: #{palette_}<br>\n"
 	puts "modifyf: #{modifyf}<br>\n"
 	puts "carry_on:#{carry_on}<br>\n"
@@ -121,19 +122,15 @@ if command == 'save'
 			mdb( "UPDATE #{$MYSQL_TB_FCZ} SET name='#{food_name}', #{fix_set} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug )
 		end
 		koyomi_update = ''
+		delimiter = "\t"
 		r.each do |e|
-			a = e['koyomi'].split( "\t" )
+			a = e['koyomi'].split( delimiter )
 			a.size.times do |c|
 				if c == order
 					aa = a[c].split( "~" )
-					koyomi_update << "#{aa[0]}~#{aa[1]}~#{aa[2]}~#{hh_mm}~#{meal_time}\t"
+					koyomi_update << "#{delimiter}#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
 				else
-					koyomi_update << "#{t[c]}\t"
-					if carry_on == 1
-						aa = a[c].split( "~" )
-						hh_mm = aa[3]
-						meal_time = aa[4]
-					end
+					koyomi_update << "#{a[c]}\t"
 				end
 			end
 		end
@@ -143,7 +140,6 @@ if command == 'save'
  		fix_code = generate_code( user.name, 'z' )
 		mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET base='fix', code='#{fix_code}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}', name='#{food_name}',user='#{user.name}', #{fix_set};", false, @debug )
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
-
 		if r.first
 			koyomi = r.first['koyomi']
 			delimiter = ''
@@ -156,7 +152,7 @@ if command == 'save'
 					meal_time = aa[4]
 				end
 			end
-			koyomi << "#{delimiter}#{code}~100~99~#{hh_mm}~#{meal_time}"
+			koyomi << "#{delimiter}#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
 			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		else
 			koyomi = "#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
@@ -300,7 +296,12 @@ eat_time_html << "</div>"
 
 
 #### carry_on_check
-carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )}>"
+carry_on_disabled = ''
+if command == 'modify'
+	carry_on = 0
+	carry_on_disabled = 'DISABLED'
+end
+carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )} #{carry_on_disabled}>"
 carry_on_html << '<label class="form-check-label">時間継承</label>'
 
 

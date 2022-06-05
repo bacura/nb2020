@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM export 0.00b
+#Nutrition browser 2020 GM export 0.01b
 
 #==============================================================================
 #LIBRARY
@@ -42,8 +42,8 @@ when 'shun'
 
 when 'dic'
 	export = ''
-	r = mdb( "SELECT FN, unit FROM #{$MYSQL_TB_DIC};", false, false )
-	r.each do |e| export << "#{e['FN']}\t#{e['unit']}\n" end
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC};", false, false )
+	r.each do |e| export << "#{e['FG']}\t#{e['org_name']}\t#{e['alias']}\t#{e['user']}\t#{e['def_fn']}\n" end
 	puts "NB2020 [dic] data\n"
 	puts export.force_encoding( 'UTF-8' )
 

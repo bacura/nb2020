@@ -1,4 +1,4 @@
-//guild.js ver 0.21b 20220527
+//guild.js ver 0.22b 20220527
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -271,7 +271,7 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 			FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, FAPUN3:FAPUN3, FAPUN6:FAPUN6,
 			FIBTG:FIBTG, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTDF:FIBTDF, FIBSDFS:FIBSDFS, FIBSDFP:FIBSDFP, FIBIDF:FIBIDF, STARES:STARES
 		}, function( data ){
-			$( "#L3" ).html( data );
+//			$( "#L3" ).html( data );
 			$.post( "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){
 				$( "#L2" ).html( data );
 

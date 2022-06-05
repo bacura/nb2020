@@ -1,4 +1,4 @@
-// master.js 0.01b 20220323
+// master.js 0.02b 20220605
 /////////////////////////////////////////////////////////////////////////////////
 // Unit exchange ////////////////////////////////////////////////////////////////////////
 
@@ -203,8 +203,12 @@ var changeDic = function( sg ){
 // Direct food name dictionary button
 var saveDic = function( org_name, sg ){
 	var aliases = document.getElementById( org_name ).value;
-	$.post( "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases, sg:sg }, function( data ){});
-	displayVIDEO( org_name + ' modified' );
+	var dfn = document.getElementById( 'dfn_' + org_name ).value;
+	$.post( "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases, sg:sg, dfn:dfn }, function( data ){
+		$( "#L1" ).html( data );
+//	displayVIDEO( org_name + ' modified' );
+		displayVIDEO( dfn );
+	});
 };
 
 

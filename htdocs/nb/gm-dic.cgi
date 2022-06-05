@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM food alias dictionary editor 0.11b
+#Nutrition browser GM food alias dictionary editor 0.20b
 
 #==============================================================================
 #LIBRARY
@@ -43,11 +43,13 @@ sg = @cgi['sg']
 sg = '01' if command == 'init'
 org_name = @cgi['org_name'].to_s
 aliases = @cgi['aliases'].to_s
+dfn = @cgi['dfn'].to_s
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "sg:#{sg}<br>\n"
 	puts "org_name:#{org_name}<br>\n"
 	puts "aliases:#{aliases}<br>\n"
+	puts "dfn:#{dfn}<br>\n"
 	puts "<hr>\n"
 end
 
@@ -88,24 +90,27 @@ when 'update'
 	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND FG ='#{sg}';", false, @debug )
 	a = aliases.split( ',' )
 	a.each do |e|
-		mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET alias='#{e}', org_name='#{org_name}', FG ='#{sg}', user='#{user.name}';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET alias='#{e}', org_name='#{org_name}', def_fn='#{dfn}', FG ='#{sg}', user='#{user.name}';", false, @debug )
 	end
 	exit
 else
-	r = mdb( "SELECT DISTINCT org_name FROM #{$MYSQL_TB_DIC} WHERE FG ='#{sg}' ORDER BY org_name ASC;", false, @debug )
+	r = mdb( "SELECT DISTINCT org_name, def_fn FROM #{$MYSQL_TB_DIC} WHERE FG ='#{sg}' ORDER BY org_name ASC;", false, @debug )
 	r.each do |e|
 		rr = mdb( "SELECT alias from #{$MYSQL_TB_DIC} WHERE org_name='#{e['org_name']}' AND FG ='#{sg}';", false, @debug )
 		list_html << "<div class='row'>"
 		list_html << "<div class='col-2'>"
 		list_html << "#{e['org_name']}"
 		list_html << '</div>'
-		list_html << "<div class='col-10'>"
+		list_html << "<div class='col-9'>"
 
 		alias_value = ''
 		rr.each do |ee| alias_value << "#{ee['alias']}," end
 		alias_value.chop!
 
 		list_html << "<input type='text' class='form-control' id=\'#{e['org_name']}' value='#{alias_value}' onchange=\"saveDic( '#{e['org_name']}', '#{sg}' )\">"
+		list_html << '</div>'
+		list_html << "<div class='col-1'>"
+		list_html << "<input type='text' class='form-control' id=\'dfn_#{e['org_name']}' value='#{e['def_fn']}' onchange=\"saveDic( '#{e['org_name']}', '#{sg}' )\">"
 		list_html << '</div>'
 		list_html << '</div>'
 	end
