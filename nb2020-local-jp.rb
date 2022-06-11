@@ -90,7 +90,7 @@ def html_head( interrupt, status, sub_title )
   <title>栄養ブラウザ #{sub_title}</title>
   <meta charset="UTF-8">
   <meta name="keywords" content="栄養士,管理栄養士,無料,フリー,Webサービス,nutrition,Nutritionist,food,検索,計算,解析,評価,栄養計算">
-  <meta name="description" content="栄養者の慾を如意自在に同化するユビキタス栄養ツール">
+  <meta name="description" content="*栄養者の慾を如意自在に同化するユビキタス栄養ツール">
   <meta name="robots" content="index,follow">
   <meta name="author" content="Shinji Yoshiyama@ばきゅら京都Lab">
 
@@ -112,12 +112,11 @@ def html_head( interrupt, status, sub_title )
   #{js_guild}
   #{js_shun}
   #{js_master}
-
-  #{tracking}
 </head>
 
 
 <body class="body" id='top'>
+  #{tracking}
   <span class="world_frame" id="world_frame">
 HTML
 
@@ -142,6 +141,28 @@ def html_foot()
 HTML
 
   puts html
+end
+
+
+#==============================================================================
+# HTML Tracking code
+#==============================================================================
+def tracking()
+  code = <<-"CODE"
+<script src="//accaii.com/bacura/script.js" async></script><noscript><img src="//accaii.com/bacura/script?guid=on"></noscript>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HKNQHH8RH9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-HKNQHH8RH9');
+</script>
+CODE
+
+  puts code
 end
 
 #==============================================================================

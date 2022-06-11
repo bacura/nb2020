@@ -859,3 +859,154 @@ var recipe3dsReset = function(){
 	document.getElementById( "zml" ).value = 0;
 	document.getElementById( "zrange" ).value = 0;
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// FCZ edit //////////////////////////////////////////////////////////////
+
+// FCZ list init
+var initFCZlist = function(){
+	$.post( "fcz-list.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+// FCZ list change
+var baseFCZlist = function( page ){
+	var base = document.getElementById( "base_select" ).value;
+	$.post( "fcz-list.cgi", { command:'init', base:base, page:page }, function( data ){ $( "#L1" ).html( data ); });
+};
+
+// FCZ list delete
+var deleteFCZlist = function( fcz_code, page ){
+	var base = document.getElementById( "base_select" ).value;
+	if( document.getElementById( fcz_code ).checked ){
+		$.post( "fcz-list.cgi", { command:'delete', base:base, page:page, fcz_code:fcz_code }, function( data ){ $( "#L1" ).html( data ); });
+	}else{
+		displayVIDEO( 'Check!(>_<)' );
+	}
+};
+
+// FCZ editor
+var initFCZedit = function( fcz_code ){
+	var base = document.getElementById( "base_select" ).value;
+	$.post( "fcz-edit.cgi", { command:'init', base:base, fcz_code:fcz_code }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl1 = false;
+		dl2 = true;
+		displayBW();
+	});
+};
+
+
+// FCZ editor save
+var saveFCZedit = function( fcz_code ){
+	var base = document.getElementById( "base" ).value;
+	var fcz_name = document.getElementById( "fcz_name" ).value;
+	var origin = document.getElementById( "origin" ).value;
+
+	var ENERC = document.getElementById( "zENERC" ).value;
+	var ENERC_KCAL = document.getElementById( "zENERC_KCAL" ).value;
+	var WATER = document.getElementById( "zWATER" ).value;
+
+	var PROTCAA = document.getElementById( "zPROTCAA" ).value;
+	var PROT = document.getElementById( "zPROT" ).value;
+	var PROTV = document.getElementById( "zPROTV" ).value;
+	var FATNLEA = document.getElementById( "zFATNLEA" ).value;
+	var CHOLE = document.getElementById( "zCHOLE" ).value;
+	var FAT = document.getElementById( "zFAT" ).value;
+	var FATV = document.getElementById( "zFATV" ).value;
+	var CHOAVLM = document.getElementById( "zCHOAVLM" ).value;
+	var CHOAVL = document.getElementById( "zCHOAVL" ).value;
+	var CHOAVLDF = document.getElementById( "zCHOAVLDF" ).value;
+	var CHOV = document.getElementById( "zCHOV" ).value;
+	var FIB = document.getElementById( "zFIB" ).value;
+	var POLYL = document.getElementById( "zPOLYL" ).value;
+	var CHOCDF = document.getElementById( "zCHOCDF" ).value;
+	var OA = document.getElementById( "zOA" ).value;
+
+	var ASH = document.getElementById( "zASH" ).value;
+	var NA = document.getElementById( "zNA" ).value;
+	var K = document.getElementById( "zK" ).value;
+	var CA = document.getElementById( "zCA" ).value;
+	var MG = document.getElementById( "zMG" ).value;
+	var P = document.getElementById( "zP" ).value;
+	var FE = document.getElementById( "zFE" ).value;
+	var ZN = document.getElementById( "zZN" ).value;
+	var CU = document.getElementById( "zCU" ).value;
+	var MN = document.getElementById( "zMN" ).value;
+	var ID = document.getElementById( "zID" ).value;
+	var SE = document.getElementById( "zSE" ).value;
+	var CR = document.getElementById( "zCR" ).value;
+	var MO = document.getElementById( "zMO" ).value;
+
+	var RETOL = document.getElementById( "zRETOL" ).value;
+	var CARTA = document.getElementById( "zCARTA" ).value;
+	var CARTB = document.getElementById( "zCARTB" ).value;
+	var CRYPXB = document.getElementById( "zCRYPXB" ).value;
+	var CARTBEQ = document.getElementById( "zCARTBEQ" ).value;
+	var VITA_RAE = document.getElementById( "zVITA_RAE" ).value;
+	var VITD = document.getElementById( "zVITD" ).value;
+	var TOCPHA = document.getElementById( "zTOCPHA" ).value;
+	var TOCPHB = document.getElementById( "zTOCPHB" ).value;
+	var TOCPHG = document.getElementById( "zTOCPHG" ).value;
+	var TOCPHD = document.getElementById( "zTOCPHD" ).value;
+	var VITK = document.getElementById( "zVITK" ).value;
+
+	var THIA = document.getElementById( "zTHIA" ).value;
+	var RIBF = document.getElementById( "zRIBF" ).value;
+	var NIA = document.getElementById( "zNIA" ).value;
+	var NE = document.getElementById( "zNE" ).value;
+	var VITB6A = document.getElementById( "zVITB6A" ).value;
+	var VITB12 = document.getElementById( "zVITB12" ).value;
+	var FOL = document.getElementById( "zFOL" ).value;
+	var PANTAC = document.getElementById( "zPANTAC" ).value;
+	var BIOT = document.getElementById( "zBIOT" ).value;
+	var VITC = document.getElementById( "zVITC" ).value;
+
+	var ALC = document.getElementById( "zALC" ).value;
+	var NACL_EQ = document.getElementById( "zNACL_EQ" ).value;
+
+	var FASAT = document.getElementById( "zFASAT" ).value;
+	var FAMS = document.getElementById( "zFAMS" ).value;
+	var FAPU = document.getElementById( "zFAPU" ).value;
+	var FAPUN3 = document.getElementById( "zFAPUN3" ).value;
+	var FAPUN6 = document.getElementById( "zFAPUN6" ).value;
+
+	var FIBTG = document.getElementById( "zFIBTG" ).value;
+	var FIBSOL = document.getElementById( "zFIBSOL" ).value;
+	var FIBINS = document.getElementById( "zFIBINS" ).value;
+	var FIBTDF = document.getElementById( "zFIBTDF" ).value;
+	var FIBSDFS = document.getElementById( "zFIBSDFS" ).value;
+	var FIBSDFP = document.getElementById( "zFIBSDFP" ).value;
+	var FIBIDF = document.getElementById( "zFIBIDF" ).value;
+	var STARES = document.getElementById( "zSTARES" ).value;
+
+	$.post( "fcz-edit.cgi", {
+		command:'save', fcz_code:fcz_code, base:base, fcz_name:fcz_name, origin:origin, food_code:null, food_name:null, food_weight:100,
+		ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
+		PROTCAA:PROTCAA, PROT:PROT, PROTV:PROTV, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, FATV:FATV, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, CHOV:CHOV, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
+		ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
+		RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
+		THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
+		ALC:ALC, NACL_EQ:NACL_EQ,
+		FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, FAPUN3:FAPUN3, FAPUN6:FAPUN6,
+		FIBTG:FIBTG, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTDF:FIBTDF, FIBSDFS:FIBSDFS, FIBSDFP:FIBSDFP, FIBIDF:FIBIDF, STARES:STARES
+	}, function( data ){
+//			$( "#L2" ).html( data );
+		$.post( "fcz-list.cgi", { command:'init', base:base }, function( data ){
+			$( "#L1" ).html( data );
+
+			dl1 = true;
+			dl2 = false;
+			displayBW();
+			displayVIDEO( 'saved' );
+		});
+
+	});
+};

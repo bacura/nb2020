@@ -126,31 +126,6 @@ def text_init
 end
 
 
-#### Tracking code
-def tracking()
-  code = <<-"CODE"
-<!-- Matomo -->
-<script>
-  var _paq = window._paq = window._paq || [];
-  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
-  (function() {
-    var u="https://bacura.jp/matomo/";
-    _paq.push(['setTrackerUrl', u+'matomo.php']);
-    _paq.push(['setSiteId', '1']);
-    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-  })();
-</script>
-<!-- End Matomo Code -->
-CODE
-
-  puts code
-end
-
-
 #### GETデータの抽出
 def get_data()
   data = Hash.new
@@ -183,7 +158,7 @@ def mdb( query, html_opt, debug )
       html_init( nil )
       html_head( nil )
     end
-      puts "<span class='error'>[mdb]ERROR!!<br>"
+      puts "<span class='error'>[mdb]ERROR!!</span><br>"
   end
   return res
 end

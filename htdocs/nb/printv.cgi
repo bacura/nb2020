@@ -476,7 +476,7 @@ if csc == ''
 	<hr>
 	<div class='row'>
 		<div class='col-7'>
-			栄養者の慾を如意自在に同化する<br>
+			*栄養者の慾を如意自在に同化する<br>
 			ユビキタス栄養ツール<br><br>
 			<a href='https://bacura.jp/nb/' class='h4 alert alert-danger'>栄養ブラウザ</a>
 		</div>
