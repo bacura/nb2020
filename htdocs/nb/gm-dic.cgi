@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM food alias dictionary editor 0.20b
+#Nutrition browser GM food alias dictionary editor 0.30b
 
 #==============================================================================
 #LIBRARY
@@ -80,14 +80,14 @@ HTML_SUB
 	puts html_sub
 	exit
 
-when 'update'
+when 'update', 'new'
 	aliases.gsub!( "\s", ',' )
 	aliases.gsub!( '　', ',' )
 	aliases.gsub!( '、', ',' )
 	aliases.gsub!( '，', ',' )
 	aliases.gsub!( ',,', ',' )
 
-	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND FG ='#{sg}';", false, @debug )
+	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND FG ='#{sg}';", false, @debug ) if command == 'update'
 	a = aliases.split( ',' )
 	a.each do |e|
 		mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET alias='#{e}', org_name='#{org_name}', def_fn='#{dfn}', FG ='#{sg}', user='#{user.name}';", false, @debug )
@@ -117,11 +117,53 @@ else
 end
 
 
+select_html = "<select id='new_fg' class='form-control'>"
+1.upto( 18 ) do |c|
+	fg = c
+	fg = "0#{fg}" if c < 10
+	select_html << "<option value='#{fg}'>#{@category[c]}</option>"
+end
+select_html << "<option value='00'>#{@category[0]}</option>"
+select_html << '</select>'
+
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col'><h5>#{lp[1]}: </h5></div>
-	</div><br>
+	</div>
+	<br>
+	<div class='row'>
+		<div class='col-2'>
+			<div class="input-group input-group-sm">
+				<span class="input-group-text">食品群</span>
+				#{select_html}
+			</div>
+		</div>
+
+		<div class='col-3'>
+			<div class="input-group input-group-sm">
+				<span class="input-group-text">食品名</span>
+				<input type='text' id='new_org_name' class='form-control'>
+			</div>
+		</div>
+
+		<div class='col-3'>
+			<div class="input-group input-group-sm">
+				<span class="input-group-text">別名</span>
+				<input type='text' id='new_alias' class='form-control'>
+			</div>
+		</div>
+
+		<div class='col-3'>
+			<div class="input-group input-group-sm">
+				<span class="input-group-text">リンク食品番号</span>
+				<input type='text' id='dic_def_fn' class='form-control'>
+			</div>
+		</div>
+
+		<div class='col-1'><button type='button' class='btn btn-outline-primary btn-sm btn-sm' onclick="newDic()">追加</button></div>
+	</div>
+	<br>
 	#{list_html}
 HTML
 

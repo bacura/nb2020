@@ -1,7 +1,7 @@
 # Ginmi module for basal metabolism 0.10b
 #encoding: utf-8
 
-@debug = true
+@debug = false
 
 def ginmi_module( cgi, user )
 	l = module_lp( user.language )

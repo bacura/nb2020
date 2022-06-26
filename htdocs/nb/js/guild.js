@@ -706,11 +706,12 @@ var foodRankList = function(){
 	var main_item = document.getElementById( "main_item" ).value;
 	var comp_item = document.getElementById( "comp_item" ).value;
 	var rank_order = document.getElementById( "rank_order" ).value;
+	var rank_display = document.getElementById( "rank_display" ).value;
 
 	if( document.getElementById( "ex_inf" ).checked ){ var ex_inf = 1; }else{ var ex_inf = 0; }
 	if( document.getElementById( "ex_zero" ).checked ){ var ex_zero = 1; }else{ var ex_zero = 0; }
 
-	$.post( "food-rank.cgi", { command:'list', main_item:main_item, comp_item:comp_item, rank_order:rank_order, ex_inf:ex_inf, ex_zero:ex_zero }, function( data ){
+	$.post( "food-rank.cgi", { command:'list', main_item:main_item, comp_item:comp_item, rank_order:rank_order, rank_display:rank_display, ex_inf:ex_inf, ex_zero:ex_zero }, function( data ){
 		$( "#L1" ).html( data );
 	});
 };

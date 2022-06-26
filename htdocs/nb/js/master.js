@@ -1,4 +1,4 @@
-// master.js 0.02b 20220605
+// master.js 0.03b 20220625
 /////////////////////////////////////////////////////////////////////////////////
 // Unit exchange ////////////////////////////////////////////////////////////////////////
 
@@ -205,12 +205,22 @@ var saveDic = function( org_name, sg ){
 	var aliases = document.getElementById( org_name ).value;
 	var dfn = document.getElementById( 'dfn_' + org_name ).value;
 	$.post( "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases, sg:sg, dfn:dfn }, function( data ){
-		$( "#L1" ).html( data );
-//	displayVIDEO( org_name + ' modified' );
-		displayVIDEO( dfn );
+//		$( "#L1" ).html( data );
+		displayVIDEO( org_name + ' modified' );
 	});
 };
 
+// Add new food into dictionary button
+var newDic = function(){
+	var org_name = document.getElementById( 'new_org_name' ).value;
+	var aliases = document.getElementById( 'new_alias' ).value;
+	var sg = document.getElementById( 'new_fg' ).value;
+	var dfn = document.getElementById( 'dic_def_fn' ).value;
+	$.post( "gm-dic.cgi", { command:'new', org_name:org_name, aliases:aliases, sg:sg, dfn:dfn }, function( data ){
+//		$( "#L1" ).html( data );
+		displayVIDEO( org_name + ' saved' );
+	});
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Allergen ////////////////////////////////////////////////////////////////////////

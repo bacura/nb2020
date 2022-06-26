@@ -103,7 +103,7 @@ def html_top( user, lp )
         <div class="container-fluid">
           <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{lp[54]}</a>
           <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-          <a href='https://neg.bacura.jp/?page_id=1154' target='manual'>#{lp[51]}</a>
+          <a href='https://bacura.jp/?page_id=1154' target='manual'>#{lp[51]}</a>
           <span class="d-flex">
             <select class="form-select" id="qcate">
               <option value='0'>#{lp[57]}</option>

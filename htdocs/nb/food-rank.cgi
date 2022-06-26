@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food ranking 0.01b
+#Nutrition browser 2020 food ranking 0.10b
 
 
 #==============================================================================
@@ -35,30 +35,22 @@ lp = user.load_lp( script )
 command = @cgi['command']
 ex_inf = @cgi['ex_inf'].to_i
 ex_zero = @cgi['ex_zero'].to_i
-if @debug
-	puts "command: #{command}<br>"
-	puts "ex_inf: #{ex_inf}<br>"
-	puts "ex_zero: #{ex_zero}<br>"
-	puts "<hr>"
-end
+p command, ex_inf, ex_zero, "<hr>" if @debug
 
 
 main_item = 'ENERC_KCAL'
 comp_item = 'weight'
 rank_order = 0
-
+rank_display = 50
 
 list_html = ''
 if command == 'list'
 	main_item = @cgi['main_item'].to_s
 	comp_item = @cgi['comp_item'].to_s
+
 	rank_order = @cgi['rank_order'].to_i
-	if @debug
-		puts "main_item: #{main_item}<br>"
-		puts "comp_item: #{comp_item}<br>"
-		puts "rank_order: #{rank_order}<br>"
-		puts "<hr>"
-	end
+	rank_display = @cgi['rank_display'].to_i
+	p main_item, comp_item, rank_order, rank_display, "<hr>" if @debug
 
 	comp_sql = nil
 	comp_flag = false
@@ -123,9 +115,6 @@ if command == 'list'
 		recipe_serch = ''
 		recipe_serch = "<span class='badge bg-info text-dark' onclick=\"searchDR( '#{food_name}' )\">#{lp[11]}</span>" if recipei[food_name] == true
 
-
-
-
 		unless ( ratio[k] == 99999999 && ex_inf == 1 ) || ( ratio[k] == 0 && ex_zero == 1 )
 		list_html << '<tr>'
 		list_html << "<td>#{count}</td>"
@@ -141,11 +130,7 @@ if command == 'list'
 		list_html << '</tr>'
 		end
 
-
-
-
-
-		break if count == 100
+		break if count == rank_display
 		count += 1
 	end
 	list_html << '</table>'
@@ -188,6 +173,18 @@ else
 end
 rank_order_select << '</select>'
 
+
+####
+rank_nums = [ 50,  100,  500, 1000, 2000, 3000 ]
+rank_nums_ = [ '50', '100',  '500', '1000', '2000', 'all' ]
+rank_display_select = '<select class="form-select" id="rank_display">'
+rank_nums.size.times do |c|
+	s = ''
+	s = 'SELECTED' if rank_display == rank_nums[c]
+	rank_display_select << "<option value='#{rank_nums[c]}' #{s}>#{rank_nums_[c]}</option>"
+end
+
+
 ex_inf_check = ''
 ex_inf_check = 'CHECKED' if ex_inf == 1
 
@@ -217,24 +214,38 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<div class='row'>
-		<div class='col-2'>
+		<div class='col-3'>
+			<div class="input-group input-group-sm">
+			<label class="input-group-text">表示数</label>
+			<select class="form-select" id="rank_display">
+				<option value="50">50</option>
+				<option value="100">100</option>
+				<option value="500">500</option>
+				<option value="1000">1000</option>
+				<option value="2000">2000</option>
+				<option value="3000">all</option>
+			</select>
+			</div>
+		</div>
+		<div class='col-1'>
 			<div class="form-check">
 				<input class="form-check-input" type="checkbox" id="ex_inf" #{ex_inf_check}>
 				<label class="form-check-label">∞を除外</label>
 			</div>
 		</div>
-		<div class='col-2'>
+		<div class='col-1'>
 			<div class="form-check">
 				<input class="form-check-input" type="checkbox" id="ex_zero" #{ex_zero_check}>
 				<label class="form-check-label">0を除外</label>
 			</div>
 		</div>
-		<div class='col-7'>
+		<div class='col-6'>
 		</div>
 		<div class='col-1'>
 			<button class="btn btn-outline-primary btn-sm" type="button" onclick="foodRankList()">#{lp[6]}</button>
 		</div>
 	</div>
+	<br>
 	<div class='row'>
 	#{list_html}
 	</div>

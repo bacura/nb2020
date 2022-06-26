@@ -507,13 +507,29 @@ var luckyInput = function(){
 // Lucky☆転送ボタンを押してL2に確認画面を表示
 var luckyAnalyze = function(){
 	var lucky_data = document.getElementById( 'lucky_data' ).value;
-	$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){
-		$( "#L2" ).html( data );
-		$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-		refreshCBN();
-		displayVIDEO( 'Lucky?' );
-	});
+	if( lucky_data != '' ){
+		$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){
+			$( "#L2" ).html( data );
+			displayVIDEO( 'Lucky?' );
+		});
+	}
 };
+
+// Lucky☆転送ボタンを押してL2に確認画面を表示
+var luckyPush = function(){
+	var lucky_data = document.getElementById( 'lucky_data' ).value;
+	if( lucky_data != '' ){
+		$.post( "lucky.cgi", { command:'push', lucky_data:lucky_data }, function( data ){
+			$( "#L2" ).html( data );
+			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
+			refreshCBN();
+
+			dl2 = false;
+			displayBW();
+		});
+	}
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Foodize ////////////////////////////////////////////////////////////////////////
