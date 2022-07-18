@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM food alias dictionary editor 0.30b
+#Nutrition browser GM food alias dictionary editor 0.32b
 
 #==============================================================================
 #LIBRARY
@@ -86,17 +86,18 @@ when 'update', 'new'
 	aliases.gsub!( '、', ',' )
 	aliases.gsub!( '，', ',' )
 	aliases.gsub!( ',,', ',' )
-
-	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND FG ='#{sg}';", false, @debug ) if command == 'update'
 	a = aliases.split( ',' )
+	a.uniq!
+
+	mdb( "DELETE FROM #{$MYSQL_TB_DIC} WHERE org_name='#{org_name}' AND FG ='#{sg}' AND ( def_fn='#{dfn}' OR def_fn='' OR def_fn IS NULL);", false, @debug )
 	a.each do |e|
 		mdb( "INSERT INTO #{$MYSQL_TB_DIC} SET alias='#{e}', org_name='#{org_name}', def_fn='#{dfn}', FG ='#{sg}', user='#{user.name}';", false, @debug )
 	end
+
 	exit
 else
 	r = mdb( "SELECT DISTINCT org_name, def_fn FROM #{$MYSQL_TB_DIC} WHERE FG ='#{sg}' ORDER BY org_name ASC;", false, @debug )
 	r.each do |e|
-		rr = mdb( "SELECT alias from #{$MYSQL_TB_DIC} WHERE org_name='#{e['org_name']}' AND FG ='#{sg}';", false, @debug )
 		list_html << "<div class='row'>"
 		list_html << "<div class='col-2'>"
 		list_html << "#{e['org_name']}"
@@ -104,13 +105,18 @@ else
 		list_html << "<div class='col-9'>"
 
 		alias_value = ''
-		rr.each do |ee| alias_value << "#{ee['alias']}," end
+		def_fn = ''
+		rr = mdb( "SELECT DISTINCT * from #{$MYSQL_TB_DIC} WHERE org_name='#{e['org_name']}' AND FG ='#{sg}' AND ( def_fn='#{e['def_fn']}' OR def_fn='' OR def_fn IS NULL);", false, @debug )
+		rr.each do |ee|
+			alias_value << "#{ee['alias']},"
+			def_fn = ee['def_fn']
+		end
 		alias_value.chop!
 
 		list_html << "<input type='text' class='form-control' id=\'#{e['org_name']}' value='#{alias_value}' onchange=\"saveDic( '#{e['org_name']}', '#{sg}' )\">"
 		list_html << '</div>'
 		list_html << "<div class='col-1'>"
-		list_html << "<input type='text' class='form-control' id=\'dfn_#{e['org_name']}' value='#{e['def_fn']}' onchange=\"saveDic( '#{e['org_name']}', '#{sg}' )\">"
+		list_html << "<input type='text' class='form-control' id=\'dfn_#{e['org_name']}' value='#{def_fn}' onchange=\"saveDic( '#{e['org_name']}', '#{sg}' )\">"
 		list_html << '</div>'
 		list_html << '</div>'
 	end
@@ -119,9 +125,12 @@ end
 
 select_html = "<select id='new_fg' class='form-control'>"
 1.upto( 18 ) do |c|
+
 	fg = c
 	fg = "0#{fg}" if c < 10
-	select_html << "<option value='#{fg}'>#{@category[c]}</option>"
+	s = ''
+	s = 'SELECTED' if fg.to_s == sg
+	select_html << "<option value='#{fg}' #{s}>#{@category[c]}</option>"
 end
 select_html << "<option value='00'>#{@category[0]}</option>"
 select_html << '</select>'
@@ -143,7 +152,7 @@ html = <<-"HTML"
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
 				<span class="input-group-text">食品名</span>
-				<input type='text' id='new_org_name' class='form-control'>
+				<input type='text' id='new_org_name' value='#{org_name}' class='form-control'>
 			</div>
 		</div>
 
@@ -157,7 +166,7 @@ html = <<-"HTML"
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
 				<span class="input-group-text">リンク食品番号</span>
-				<input type='text' id='dic_def_fn' class='form-control'>
+				<input type='text' id='dic_def_fn' value='#{dfn}' class='form-control'>
 			</div>
 		</div>
 

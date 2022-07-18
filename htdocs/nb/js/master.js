@@ -1,4 +1,4 @@
-// master.js 0.03b 20220625
+// master.js 0.04b 20220712
 /////////////////////////////////////////////////////////////////////////////////
 // Unit exchange ////////////////////////////////////////////////////////////////////////
 
@@ -184,9 +184,9 @@ var updateColor = function(){
 // Food name dictionary ////////////////////////////////////////////////////////////////////////
 
 // Food name dictionary init
-var initDic = function( command, sg ){
+var initDic = function( command, sg, org_name, dfn ){
 	$.post( "gm-dic.cgi", { command:'menu' }, function( data ){ $( "#LINE" ).html( data );});
-	$.post( "gm-dic.cgi", { command:command, sg:sg }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "gm-dic.cgi", { command:command, sg:sg, org_name:org_name, dfn:dfn }, function( data ){ $( "#L1" ).html( data );});
 
 	flashBW();
 	dl1 = true;

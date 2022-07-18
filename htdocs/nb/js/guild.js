@@ -97,7 +97,7 @@ var koyomiPhotoSave = function( code, form, dd ){
 			contentType: false,
 			data: form_data,
 			dataype: 'html',
-			success: function( data ){ setTimeout( editKoyomi( 'init', dd ), 2000); }
+			success: function( data ){ setTimeout( editKoyomi( 'init', dd ), 1000 ); }
 		}
 	);
 };
@@ -108,7 +108,6 @@ var koyomiPhotoDel = function( code, mcode, dd ){
 	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){
 		editKoyomi( 'init', dd );
 	});
-//	setTimeout( editKoyomi( 'init', dd ), 2000);
 };
 
 
@@ -715,6 +714,97 @@ var foodRankList = function(){
 		$( "#L1" ).html( data );
 	});
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Note //////////////////////////////////////////////////////////////
+
+// Note book
+var initNote = function(){
+	$.post( "note.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+// Note book
+var writeNote = function(){
+	var note = document.getElementById( "note" ).value;
+	if( note != '' ){
+		$.post( "note.cgi", { command:'write', note:note }, function( data ){ $( "#L1" ).html( data );});
+	}
+};
+
+// Note book
+var deleteNote = function( code ){
+	if( document.getElementById( code ).checked ){
+		$.post( "note.cgi", { command:'delete', code:code }, function( data ){
+			$( "#L1" ).html( data );}
+		);
+		displayVIDEO( 'Deleted' );
+	}else{
+		displayVIDEO( 'Check!(>_<)' );
+	}
+};
+
+// Note book
+var photoNote = function(){
+	$.post( "note.cgi", { command:'mcode_update' }, function( data ){
+		$( "#L3" ).html( data );
+
+	});
+};
+
+// Note book
+var photoDeleteNote = function(){
+	$.post( "note.cgi", { command:'deletep' }, function( data ){
+		$( "#L1" ).html( data );
+
+	});
+};
+
+
+// レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
+var photoNoteSave = function( code ){
+	$.post( "note.cgi", { command:'photo' }, function( data ){
+//		$( "#L2" ).html( data );
+		dl1 = true;
+		dl2 = true;
+		dl3 = true;
+		displayBW();
+
+		form_data = new FormData( $( "photo_note" )[0] );
+		form_data.append( 'command', 'upload' );
+		form_data.append( 'code', code );
+		form_data.append( 'base', 'note' );
+		$.ajax( "photo.cgi",
+			{
+				type: 'post',
+				processData: false,
+				contentType: false,
+				data: form_data,
+				dataype: 'html',
+				success: function( data ){
+					photoNote();
+					$( "#L2" ).html( data );
+				}
+			}
+		);
+	});
+};
+
+
+// delete photo from media db
+var koyomiPhotoDel = function( code, mcode, dd ){
+	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){
+		editKoyomi( 'init', dd );
+	});
+//	setTimeout( editKoyomi( 'init', dd ), 2000);
+};
+
 
 
 /////////////////////////////////////////////////////////////////////////////////

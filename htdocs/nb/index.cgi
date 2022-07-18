@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.20b
+#Nutrition browser 2020 index page 0.21b
 
 
 #==============================================================================
@@ -136,6 +136,7 @@ def html_nav( user, lp )
       cb_num = 0
     end
     # 献立カウンター
+
     r = mdb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
     if r.first
       t = []
@@ -223,7 +224,7 @@ def html_nav( user, lp )
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initMomChai()">#{lp[42]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[43]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[44]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[49]}</button>
+          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initNote()">#{lp[49]}</button>
           <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initFCZlist()">#{lp[13]}</button>
       </nav>
       </nav>
@@ -287,6 +288,7 @@ puts "<div style='position:fixed; z-index:100; background-color:white'>" if ifix
 
 html_top( user, lp )
 html_nav( user, lp )
+
 
 if ifix == 1
   puts '</div>'

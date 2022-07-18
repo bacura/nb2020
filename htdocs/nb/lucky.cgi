@@ -12,7 +12,7 @@ require 'natto'
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 script = 'lucky'
 
 
@@ -39,6 +39,7 @@ def predict_html( lucky_data )
   	html << '</tr></thead>'
 	id_counter = 0
 	lucky_solid = lucky_data.split( "\n" )
+
 	lucky_solid.each do |e|
 		food_no = ''
 		weight = 100
@@ -46,6 +47,14 @@ def predict_html( lucky_data )
 		vol = ''
 		unit = ''
 		food = e.split( '#' ).first
+		food.gsub!( /\(/, '' )
+		food.gsub!( /\)/, '' )
+		puts food if @debug
+
+		if food.size < 1
+			puts "<br>" if @debug
+			next 
+		end
       	id_counter += 1
 
 		puts 'vol~' if @debug
@@ -60,20 +69,18 @@ def predict_html( lucky_data )
 			end
 		else
 			food_no = '+'
-			food = ''
-			memo = e
 		end
 
 		puts 'kakko~' if @debug
 		a = e.scan( /\((.+)\)/ )
 		if a.size > 0 && memo == ''
 			memo = a.first.first
-			food.sub!( /\(.+\)/, '' )
+			food.gsub!( /\(.+\)/, '' )
 		end
 
 		puts 'Dic~' if @debug
 		dic_hit = 0
-		if memo == ''
+		if memo == '' && food.size >= 1
 			predict_food = ''
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{food}';", false, @debug )
 			dic_hit = r.size
@@ -83,61 +90,80 @@ def predict_html( lucky_data )
 					food_no = r.first['def_fn']
 				else
 					food_no = '+'
-					food = ''
-					vol = ''
-					unit = ''
-					memo = e
 				end
 			else
 				food_sub_max = 0
+				mecab = Natto::MeCab.new
 				mecab.parse( food ) do |n|
-					food_sub = n.feature.force_encoding( 'utf-8' ).split( ',' )
-					if foos_sub.size > foos_sub_max
-						rr = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{food_sub}';", false, @debug )
-						if rr.first
-							predict_food = rr.first['org_name']
-							food_no = rr.first['def_fn']
-							food_sub_max = food_sub.size
+					a = n.feature.force_encoding( 'utf-8' ).split( ',' )
+		 			if a[0] == '名詞' && ( a[1] == '一般' || a[1] == '固有名詞' || a[1] == '普通名詞'  || a[1] == '人名' )
+						if n.surface.size > food_sub_max
+							rr = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{n.surface}';", false, @debug )
+							if rr.first
+								dic_hit = rr.size
+								predict_food = rr.first['org_name']
+								food_no = rr.first['def_fn']
+								food_sub_max = n.surface.size
+							end
 						end
 					end
 				end
 
-				if food_sub_max == 0
-					food_no = '+'
-					food = ''
-					vol = ''
-					unit = ''
-					memo = e
-				end
+				food_no = '+' if predict_food == ''
 			end
 		end
 
 		puts 'Unit~' if @debug
-		if vol == '0' || food_no == '+'
+		if food_no == '+' || food_no == '' || food_no == nil
+			food_no = '+'
+			predict_food = '-'
+			unit = '-'
+			dic_hit = '-'
+			vol = '-'
+			weight = '-'
+			memo = e.gsub( '#', '' ).gsub( '[', '' ).gsub( ']', '' )
+		elsif vol == 0
 			memo = unit
 			unit = 'g'
+			weight = 0
 		else
 			r = mdb( "SELECT unit from #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false, @debug )
 			if r.first
 				unith = JSON.parse( r.first['unit'] )
-				p unith[unit]
-
-
-
-
-
+				if unith[unit] != nil
+					weight = ( vol.to_f * unith[unit].to_f ).round( 2 )
+				elsif unith["#{unit}M"] != nil
+					unit = "#{unit}M"
+					weight = ( vol.to_f * unith["#{unit}M"].to_f ).round( 2 )
+				elsif unith["#{unit}S"] != nil
+					unit = "#{unit}S"
+					weight = ( vol.to_f * unith["#{unit}S"].to_f ).round( 2 )
+				elsif unith["#{unit}L"] != nil
+					unit = "#{unit}L"
+					weight = ( vol.to_f * unith["#{unit}L"].to_f ).round( 2 )
+				else
+					memo = "#{vol}#{unit}"
+					unit = 'g'
+					vol = 0
+					weight = 0
+				end
 			else
+				memo = "#{vol}#{unit}"
+				vol = 0
 				unit = 'g'
 				weight = vol
 			end
 		end
 
-
 		lucky_sum = "#{food_no}:#{weight}:#{unit}:#{vol}:0:#{memo}:1.0:#{weight}"
 
-		puts 'Check~' if @debug
+		puts 'Check~<br>' if @debug
 		checked = ''
-		checked = 'CHECKED' unless food_no == ''
+		disabled = 'DISABLED'
+		if food_no != '' && food_no != nil
+			checked = 'CHECKED'
+			disabled = ''
+		end
 		html << '<tr>'
       	html << "<td>#{food}[#{dic_hit}]</td>"
       	html << "<td>#{food_no}</td>"
@@ -145,7 +171,7 @@ def predict_html( lucky_data )
       	html << "<td>#{memo}</td>"
       	html << "<td>#{vol}</td>"
       	html << "<td>#{unit}</td>"
-      	html << "<td><input type='checkbox' id='lucky#{id_counter}' CHECKED></td>"
+      	html << "<td><input type='checkbox' id='lucky#{id_counter}' #{checked} #{disabled}></td>"
       	html << "</tr>"
       	html << "<input type='hidden' id='lucky_sum#{id_counter}' value='#{lucky_sum}'></td>"
 
@@ -178,6 +204,7 @@ lucky_solid = @cgi['lucky_solid']
 if @debug
 	puts "command:#{command}<br>"
 	puts "lucky_data:#{lucky_data}<br>"
+	puts "lucky_solid:#{lucky_solid}<br>"
 	puts "<hr>"
 end
 
@@ -190,10 +217,10 @@ when 'form'
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-10'>
-			<textarea class="form-control" aria-label="lucky_data" id="lucky_data"></textarea>
+			<textarea class="form-control" rows="10" aria-label="lucky_data" id="lucky_data"></textarea>
 		</div>
 		<div class='col-2'>
-			<button type='button' class='btn btn-warning' onclick=\"luckyAnalyze()\">#{lp[2]}</button>
+			<button type='button' class='btn btn-warning' onclick="luckyAnalyze()">#{lp[2]}</button>
 		</div>
 	</div>
 </div>
@@ -219,7 +246,8 @@ when 'analyze'
 		lucky_data.gsub!( "\r\n", "\n")
 		lucky_data.gsub!( "\r", "\n")
 		lucky_data.gsub!( /\n+/, "\n")
-		lucky_data.gsub!( " ", "\t")
+
+		lucky_data.gsub!( "\s", "\t")
 		lucky_data.gsub!( "　", "\t")
 		lucky_data.gsub!( ",", "\t")
 		lucky_data.gsub!( /\t+/, "\t")
@@ -229,6 +257,7 @@ when 'analyze'
 		lucky_data.gsub!( '[', '')
 		lucky_data.gsub!( ']', '')
 		lucky_data.gsub!( '#', '')
+		lucky_data.gsub!( '…', '')
 
 		# 単位の検出とマーク
 		lucky_data.gsub!( /g/, "\t[g]" )
@@ -253,6 +282,8 @@ when 'analyze'
 		lucky_data.gsub!( '匹', "\t[匹]" )
 		lucky_data.gsub!( '切れ', "\t[切れ]" )
 		lucky_data.gsub!( '片', "\t[片]" )
+		lucky_data.gsub!( '束', "\t[束]" )
+		lucky_data.gsub!( '缶', "\t[缶]" )
 
 		lucky_data.gsub!( 'ひとつまみ', "\t1\t[つまみ]" )
 		lucky_data.gsub!( 'ふたつまみ', "\t2\t[つまみ]" )
@@ -280,34 +311,32 @@ when 'analyze'
 			x = "#{$1}\n"
 		end
 
+		# ()付き数字のマーク
+		lucky_data = lucky_data.gsub( /(\(\d+g\))/ ) do |x|
+			x = ""
+		end
+
 		# 数字のマーク
 		lucky_data = lucky_data.gsub( /(\d+\/?\.?\d*)/ ) do |x|
 			x = "##{$1}#"
 		end
+
 	end
 
 	html = predict_html( lucky_data )
 
 when 'push'
-	new_sum = "+:-:-:-:0:UNLUCKY!:-:-\t"
+	new_sum = ''
+	lucky_solid.sub!( /^\t/, '' )
 
-	if mode == 'add'
-		# まな板データの読み込み
-		q = "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{uname}';"
-		err = 'sum select'
-#		r = db_process( q, err, false )
-		new_sum << "#{r.first['sum']}\t" if r.first
-	end
-
-	lucky_solid.each do |e|
-		# dummy
-	end
-	new_sum.chop!
+	# まな板データの読み込み
+	r = mdb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
+	new_sum << r.first['sum'] if r.first
+	new_sum << "\t" if new_sum != ''
+	new_sum << lucky_solid if lucky_solid != ''
 
 	# まな板データ更新
-	q = "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{uname}';"
-	err = 'sum update'
-#	db_process( q, err, false )
+	mdb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
 end
 
 puts html

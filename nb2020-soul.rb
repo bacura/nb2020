@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.21b
+#Nutrition browser 2020 soul 0.4b
 
 #==============================================================================
 # LIBRARY
@@ -28,37 +28,36 @@ $MYSQL_DBR = 'rr2020'
 $MYSQL_USER = 'user'
 $MYSQL_USERR = 'userr'
 $MYSQL_PW = 'password'
-$MYSQL_TB_FCT = 'fct'
-$MYSQL_TB_FCTS = 'fcts'
-$MYSQL_TB_FCTP = 'fctp'
 $MYSQL_TB_CFG = 'cfg'
-$MYSQL_TB_TAG = 'tag'
-$MYSQL_TB_EXT = 'ext'
 $MYSQL_TB_DIC = 'dic'
-$MYSQL_TB_MEDIA = 'media'
-$MYSQL_TB_SLOGF = 'slogf'
-$MYSQL_TB_SLOGR = 'slogr'
-$MYSQL_TB_SLOGM = 'slogm'
-$MYSQL_TB_USER = 'user'
-$MYSQL_TB_RECIPE = 'recipe'
-$MYSQL_TB_RECIPEI = 'recipei'
-$MYSQL_TB_PRICE = 'price'
-$MYSQL_TB_PRICEM = 'pricem'
-$MYSQL_TB_SUM = 'sum'
+$MYSQL_TB_EXT = 'ext'
+$MYSQL_TB_FCT = 'fct'
+$MYSQL_TB_FCTP = 'fctp'
+$MYSQL_TB_FCTS = 'fcts'
+$MYSQL_TB_FCZ = 'fcz'
 $MYSQL_TB_HIS = 'his'
-$MYSQL_TB_PALETTE = 'palette'
-$MYSQL_TB_MEAL = 'meal'
-$MYSQL_TB_MENU = 'menu'
-$MYSQL_TB_MEMORY = 'memory'
 $MYSQL_TB_KOYOMI = 'koyomi'
 $MYSQL_TB_KOYOMIEX = 'koyomiex'
-$MYSQL_TB_FCZ = 'fcz'
+$MYSQL_TB_MEAL = 'meal'
+$MYSQL_TB_MEDIA = 'media'
 $MYSQL_TB_METS = 'mets'
 $MYSQL_TB_METST = 'metst'
+$MYSQL_TB_MODJ = 'modj'
+$MYSQL_TB_NOTE = 'note'
+$MYSQL_TB_PALETTE = 'palette'
+$MYSQL_TB_PRICE = 'price'
+$MYSQL_TB_PRICEM = 'pricem'
+$MYSQL_TB_RECIPE = 'recipe'
+$MYSQL_TB_RECIPEI = 'recipei'
 $MYSQL_TB_SCHOOLK = 'schoolk'
 $MYSQL_TB_SCHOOLM = 'schoolm'
 $MYSQL_TB_SCHOOLC = 'schoolc'
-$MYSQL_TB_MODJ = 'modj'
+$MYSQL_TB_SLOGF = 'slogf'
+$MYSQL_TB_SLOGR = 'slogr'
+$MYSQL_TB_SLOGM = 'slogm'
+$MYSQL_TB_SUM = 'sum'
+$MYSQL_TB_TAG = 'tag'
+$MYSQL_TB_USER = 'user'
 
 $PHOTO = 'photo_'
 $PHOTO_PATH = "#{$HTDOCS_PATH}/#{$PHOTO}"
@@ -200,14 +199,16 @@ def generate_code( uname, c )
     code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}"
     query = ''
     case c
-    when 'r'
-      query = "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';"
     when 'm'
       query = "SELECT * FROM #{$MYSQL_TB_MENU} WHERE code='#{code}';"
-    when 'z'
-      query = "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}';"
+    when 'n'
+      query = "SELECT * FROM #{$MYSQL_TB_NOTE} WHERE code='#{code}';"
     when 'p', 'png', 'pdf'
       query = "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE code='#{code}';"
+    when 'r'
+      query = "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';"
+    when 'z'
+      query = "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}';"
     else
       skip = true
       break;
@@ -417,7 +418,7 @@ class User
     puts "name:#{@name}<br>"
     puts "uid:#{@uid}<br>"
     puts "status:#{@status}<br>"
-    puts "alias:#{@alias}<br>"
+    puts "aliasu:#{@aliasu}<br>"
     puts "mom:#{@mom}<br>"
     puts "mid:#{@mid}<br>"
     puts "language:#{@language}<br>"

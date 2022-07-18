@@ -1,4 +1,4 @@
-// Recipe java script for nb2020 0.04b
+// Recipe java script for nb2020 0.06b
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -332,6 +332,15 @@ var recipeProtocol = function( code ){
 	}
 };
 
+
+// レシピ編集エリアのカーソル位置にwordsをペーストする。
+function words2Protocol(){
+	var protocol = document.getElementById( 'protocol' );
+	var words = document.getElementById( 'words' ).value;
+	protocol.value = protocol.value.substr( 0, protocol.selectionStart ) + words + protocol.value.substr( protocol.selectionStart );
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Recipe list ////////////////////////////////////////////////////////////////////////
 
@@ -339,6 +348,7 @@ var recipeProtocol = function( code ){
 var recipeList = function( com ){
 	$.post( "recipel.cgi", { command:com }, function( data ){
 		$( "#L1" ).html( data );
+		if( com == 'reset'){ document.getElementById( "words" ).value = ''; }
 
 		flashBW();
 		dl1 = true;
@@ -516,11 +526,19 @@ var luckyAnalyze = function(){
 };
 
 // Lucky☆転送ボタンを押してL2に確認画面を表示
-var luckyPush = function(){
-	var lucky_data = document.getElementById( 'lucky_data' ).value;
-	if( lucky_data != '' ){
-		$.post( "lucky.cgi", { command:'push', lucky_data:lucky_data }, function( data ){
-			$( "#L2" ).html( data );
+var luckyPush = function( idc ){
+	let lucky_solid = '';
+	for( let i = 1; i <= idc; i++ ){
+		if( document.getElementById( "lucky" + i ).checked ){
+			if( document.getElementById( "lucky_sum" + i ).value != '' ){
+				lucky_solid = lucky_solid + "\t" + document.getElementById( "lucky_sum" + i ).value;
+			}
+		}
+	}
+
+	if( lucky_solid != '' ){
+		$.post( "lucky.cgi", { command:'push', lucky_solid:lucky_solid }, function( data ){
+//			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
 			refreshCBN();
 

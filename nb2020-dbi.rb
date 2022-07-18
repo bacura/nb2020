@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.35b
+#nb2020-dbi.rb 0.40b
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -797,7 +797,7 @@ def media_init()
 	if res.first
 		puts 'media table already exists.'
 	else
-		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(32), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, z UNSIGNED TINYINT );'
+		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(64), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, z UNSIGNED TINYINT );'
 		$DB.query( query )
 		puts 'media table has been created.'
 	end
@@ -942,6 +942,21 @@ def fcz_init( plus_fct )
 		$DB.query( query )
 
 		puts 'fcz table has been created.'
+	end
+end
+
+
+#### Making note table for koyomi.
+def note_init()
+	query = "SHOW TABLES LIKE 'note';"
+	res = $DB.query( query )
+	if res.first
+		puts 'note already exists.'
+	else
+		query = 'CREATE TABLE note ( code VARCHAR(64) NOT NULL PRIMARY KEY, mcode VARCHAR(64), user VARCHAR(32), aliasm VARCHAR(64), note VARCHAR(512), datetime DATETIME);'
+		$DB.query( query )
+
+		puts 'note table has been created.'
 	end
 end
 
@@ -1238,6 +1253,8 @@ koyomi_init
 koyomiex_init
 
 fcz_init( plus_fct )
+
+note_init()
 
 metst_init( mets_file )
 mets_init()

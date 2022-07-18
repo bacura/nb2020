@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 regist 0.03b
+#Nutrition browser 2020 regist 0.04b
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 
 #==============================================================================
@@ -216,7 +216,7 @@ when 'finish'
   mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", false, @debug )
 
   # Inserting new config
-  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', his_max=200, recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
+  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', his_max=200;", false, @debug )
 
   html_regist_finish( lp )
 

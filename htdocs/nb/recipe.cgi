@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.07b
+#Nutrition browser 2020 recipe editor 0.10b
 
 #==============================================================================
 #LIBRARY
@@ -285,10 +285,14 @@ html = <<-"HTML"
   		</div>
 	</div>
 	<div class='row'>
-		<div class='col-4'>
+		<div class='col'>
 			#{form_photo}
 		</div>
-		<div align='right' class='col-8 code'>#{recipe.code}</div>
+		<div class='col'>
+			<span onclick="words2Protocol()" >#{lp[14]}</span>
+		</div>
+
+		<div align='right' class='col code'>#{recipe.code}</div>
 		</div>
 	</div>
 

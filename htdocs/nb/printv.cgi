@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.17b
+#Nutrition browser 2020 print web page 0.18b
 
 #==============================================================================
 #LIBRARY
@@ -212,7 +212,7 @@ def modify_protocol( protocol )
 			link_code = e.sub( '&', '' ).chomp
 			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{link_code}';", false, @debug )
 			if r.first
-				return_protocol << "参照：<a href='http://localhost/nb/printv.cgi?&c=#{link_code}' target='sub_link'>#{r.first['name']}</a><br>\n"
+				return_protocol << "参照：<a href='printv.cgi?&c=#{link_code}' target='sub_link'>#{r.first['name']}</a><br>\n"
 			end
 		elsif /^\#/ =~ e
 		elsif e == ''
@@ -430,7 +430,7 @@ if recipe.tags.include?( "煮物警報" ) && recipe.dish != dish
 	if recipe.dish < dish
 		nimono = ' <span class="text-danger">▲煮物警報▲</span>　設定人数が元レシピより多いので、煮汁を調節しないと時間がかかったり、味が濃くなるかも！'
 	else
-		nimono = ' <span class="text-danger">▲煮物警報▲▲</span>　設定人数が元レシピより少ないので、煮汁を調節しないと火が通らなかったり、味が薄くなるかも！'
+		nimono = ' <span class="text-danger">▲煮物警報▲</span>　設定人数が元レシピより少ないので、煮汁を調節しないと火が通らなかったり、味が薄くなるかも！'
 	end
 end
 

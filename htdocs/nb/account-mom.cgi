@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser account mother 0.02b
+#Nutrition browser account mother 0.03b
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 
 #==============================================================================
@@ -37,7 +37,7 @@ def new_account( user, lp )
 	mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}', meal='';", false, @debug )
 
 	# Inserting new config
-	mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', his_max=200, recipel='1:0:99:99:99:99:99', koyomiex='0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t:0\t\t';", false, @debug )
+	mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', his_max=200;", false, @debug )
 end
 
 #==============================================================================

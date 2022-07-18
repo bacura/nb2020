@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.08b
+#Nutrition browser 2020 recipe list 0.20b
 
 
 #==============================================================================
@@ -223,12 +223,18 @@ if r.first['icache'].to_i == '1'
 else
 	html_init( nil )
 end
+
+
 page_limit = r.first['recipel_max'].to_i if r.first['recipel_max'].to_i > 0
-
-
 recipe_cfg = Hash.new
-recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
+begin
+	recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
+rescue
+	recipe_cfg['words'] = nil
+end
 puts recipe_cfg if @debug
+
+
 
 #### POST
 command = @cgi['command']
@@ -484,6 +490,9 @@ recipes.each do |e|
 	if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
 		recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{lp[20]}</span>"
 	end
+	if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
+		recipe_html << "	<span onclick=\"cp2words( '#{e.code}', '' )\">#{lp[40]}</span>"
+	end
 	recipe_html << "</td>"
 
 	if e.user == user.name
@@ -547,5 +556,6 @@ HTML
 puts html
 
 #### 検索設定の保存
+words = nil if recipe_code_list.size == 0
 recipe_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "words" => words } )
 mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )

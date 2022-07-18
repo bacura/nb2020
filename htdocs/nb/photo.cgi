@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.14b
+#Nutrition browser 2020 recipe photo 0.2b
 
 #==============================================================================
 #LIBRARY
@@ -51,7 +51,7 @@ lp = user.load_lp( script )
 
 # POST
 command = @cgi['command']
-base= @cgi['base']
+base = @cgi['base']
 code = @cgi['code']
 mcode = @cgi['mcode']
 if @debug
@@ -72,10 +72,13 @@ if code == ''
 		query = "SELECT code FROM #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';"
 	when 'recipe'
 		query = "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
-	when 'koyomi'
+	when 'note'
+		query = "SELECT code FROM #{$MYSQL_TB_NOTE} WHERE user='#{user.name}' AND mcode='note_tmp_new';"
 	end
-	r = mdb( query, false, @debug )
-	code = r.first['code']
+	if query != ''
+		r = mdb( query, false, @debug )
+		code = r.first['code']
+	end
 end
 
 
@@ -90,6 +93,7 @@ when 'upload'
 	media.code = code
 	media.type = 'jpg'
 	media.date = @datetime
+
 
 	media.origin = @cgi['photo'].original_filename
 	photo_type = @cgi['photo'].content_type
