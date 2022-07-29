@@ -12,7 +12,7 @@ require './probe'
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = true
+@debug = false
 script = 'note'
 
 
@@ -62,20 +62,17 @@ when 'photo'
 			aliasm = user.mom if aliasm == '' || aliasm == nil
 		end
 	end
-	note_code = generate_code( user.name, 'n' )
-	mdb( "INSERT INTO #{$MYSQL_TB_NOTE} SET code='#{note_code}', mcode='note_tmp_new', user='#{user.name}', aliasm='#{aliasm}', note='', datetime='#{@datetime}';", false, @debug )
-	exit()
 
-when 'mcode_update'
-	r = mdb( "SELECT code FROM #{$MYSQL_TB_NOTE} WHERE user='#{user.name}' AND mcode='note_tmp_new';", false, @debug )
+	note_code = generate_code( user.name, 'n' )
+	mdb( "UPDATE #{$MYSQL_TB_MEDIA} SET code='#{note_code}' WHERE code='note_tmp_new' AND user='#{user.name}';", false, @debug )
+
+	r = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{note_code}';", false, @debug )
 	if r.first
-		rr = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{r.first['code']}';", false, @debug )
-		if rr.first
-			mdb( "UPDATE #{$MYSQL_TB_NOTE} SET mcode='#{rr.first['mcode']}' WHERE mcode='note_tmp_new' AND 'user='#{user.name}';", false, @debug )
-		else
-			mdb( "DELETE FROM #{$MYSQL_TB_NOTE} WHERE mcode='note_tmp_new' AND user='#{user.name}';", false, @debug )
-		end
+		mdb( "INSERT INTO #{$MYSQL_TB_NOTE} SET code='#{note_code}', mcode='#{r.first['mcode']}', user='#{user.name}', aliasm='#{aliasm}', note='', datetime='#{@datetime}';", false, @debug )
+	else
+		mdb( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE code='note_tmp_new' AND user='#{user.name}';", false, @debug )
 	end
+
 	exit()
 when 'delete'
 	note_code = @cgi['code']
@@ -98,7 +95,7 @@ r.each do |e|
 	note = e['note'].gsub( "\n", '<br>' )
 
 	note_html << '<div class="row">'
-p e['mcode']
+
 	if e['mcode'] == nil
 		if e['aliasm'] == ''
 			note_html << '<div class="col-2"></div>'
@@ -124,10 +121,31 @@ p e['mcode']
 			note_html << '<div class="col-2"></div>'
 		end
 	else
-		note_html << e['mcode']
-
+		if e['aliasm'] == ''
+			note_html << '<div class="col-2"></div>'
+			note_html << "<div class='col-9' align='right'>"
+			note_html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['mcode']}-tn.jpg' class='img-thumbnail'></a><br>"
+			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
+			if daughter_delete
+				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
+				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['mcode']}' )\">#{lp[2]}</span>"
+			end
+			note_html << '</div>'
+			note_html << "<div class='col-1'>#{user.aliasu}</div>"
+		else
+			note_html << "<div class='col-1'>#{e['aliasm']}</div>"
+			note_html << "<div class='col-9' align='left'>"
+			note_html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['mcode']}-tn.jpg' class='img-thumbnail'></a><br>"
+			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
+			if user.mid != nil
+				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
+				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['mcode']}' )\">#{lp[2]}</span>"
+			end
+			note_html << '</div>'
+			note_html << '<div class="col-2"></div>'
+		end
 	end
-	note_html << '</div>'
+	note_html << '</div><br>'
 end
 
 
@@ -141,18 +159,12 @@ html = <<-"HTML"
 			</div>
 			<div class="row">
 				<div class='col-4'>
-
-
-					<form method='post' enctype='multipart/form-data' id='photo_form_note'>
+					<form method='post' enctype='multipart/form-data' id='photo_form'>
 						<div class="input-group input-group-sm">
-							<label class='input-group-text'>#{lp[26]}</label>
-							<input type='file' class='form-control' name='photo_note' onchange="photoNoteSave( '' )">
+							<label class='input-group-text'>#{lp[3]}</label>
+							<input type='file' class='form-control' name='photo' onchange="photoNoteSave( 'note_tmp_new' )">
 						</div>
 					</form>
-				</div>
-				<div class='col-2'></div>
-				<div class='col'>
-					<div class="row"><button class='btn btn-sm btn-outline-primary' onclick="writeNote()">#{lp[1]}</button></div>
 				</div>
 			</div>
 			<br>
@@ -160,7 +172,7 @@ html = <<-"HTML"
 		</div>
 
 		<div class="col-2">
-
+			<button class='btn btn-sm btn-success' onclick="writeNote()">#{lp[1]}</button>
 		</div>
 	</div>
 </div>

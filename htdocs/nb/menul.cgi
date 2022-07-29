@@ -37,7 +37,7 @@ end
 
 #### HTML of label
 def label_html( user, label, lp )
-	r = mdb( "SELECT label from #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND name!='';", false, @debug )
+	r = mdb( "SELECT label FROM #{$MYSQL_TB_MENU} WHERE user='#{user.name}' AND name!='';", false, @debug )
 
 	label_list = []
 	r.each do |e| label_list << e['label'] end

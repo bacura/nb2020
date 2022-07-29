@@ -135,7 +135,8 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col"><h5>#{fcz_code}</h5></div>
-		<div class="col-1">#{save_button}</div>
+		<div align='center' class='col joystic_koyomi' onclick="fczlReturn()">#{lp[5]}</div>
+		<div class="col-1" align="right">#{save_button}</div>
 	</div>
 	<br>
 

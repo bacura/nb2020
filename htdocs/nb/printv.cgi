@@ -198,9 +198,11 @@ end
 
 
 #### プロトコール変換
-def modify_protocol( protocol )
+def modify_protocol( recipe, user, depth )
 	return_protocol = "<ul>\n"
-	a = protocol.split( "\n" )
+	a = recipe.protocol.split( "\n" )
+
+	c = 1
 	a.each do |e|
 		if /^\@/ =~ e
 			t = e.delete( '@' )
@@ -210,9 +212,26 @@ def modify_protocol( protocol )
 			return_protocol << "<span class='print_subtitle'>#{t}</span><br>\n"
 		elsif /^\&/ =~ e
 			link_code = e.sub( '&', '' ).chomp
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{link_code}';", false, @debug )
-			if r.first
-				return_protocol << "参照：<a href='printv.cgi?&c=#{link_code}' target='sub_link'>#{r.first['name']}</a><br>\n"
+			if recipe.code == link_code || depth > 1
+				return_protocol << "<span class='error'>循環参照</span><br>\n"
+			else
+				local_recipe = Recipe.new( user )
+				recipe_load_flag = local_recipe.load_db( link_code, true )
+
+				if recipe_load_flag
+					local_return_protocol = modify_protocol( local_recipe, user, depth + 1 )
+					return_protocol << "<div class='accordion' id='accordion#{c}'>"
+					return_protocol << "	<div class='accordion-item'>"
+	  			return_protocol << "		<h2 class='accordion-header' id='heading#{c}'><button class='accordion-button' type='button' data-bs-toggle='collapse' data-bs-target='#collapse#{c}' aria-expanded='true' aria-controls='collapse#{c}'>参照：<a href='printv.cgi?&c=#{link_code}' target='sub_link'>#{local_recipe.name}</a></button></h2>"
+	  			return_protocol << "		<div id='collapse#{c}' class='accordion-collapse collapse' aria-labelledby='heading#{c}' data-bs-parent='#accordion#{c}'>"
+	    		return_protocol << "			<div class='accordion-body'>#{local_return_protocol }</div>"
+	  			return_protocol << "		</div>"
+					return_protocol << "	</div>"
+					return_protocol << "</div>"
+					c += 1
+				else
+					return_protocol << "<h6>参照レシピ読み込みエラー[#{link_code}]</h6>"
+				end
 			end
 		elsif /^\#/ =~ e
 		elsif e == ''
@@ -306,7 +325,7 @@ puts "foods: #{foods}<br>" if @debug
 
 
 puts 'Protocol html<br>' if @debug
-protocol = modify_protocol( recipe.protocol )
+protocol = modify_protocol( recipe, user, 0 )
 
 
 puts 'Photo html<br>' if @debug

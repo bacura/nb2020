@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.08b
+#Nutrition browser recipe to pseudo food 0.09b (20022/07/24)
 
 #==============================================================================
 # LIBRARY
@@ -67,7 +67,7 @@ fct.load_palette( @palette_bit_all )
 
 puts 'Extracting SUM<br>' if @debug
 r = mdb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
-food_name = r.first['name']
+food_name = r.first['name'] if food_name == ''
 code = r.first['code']
 dish_num = r.first['dish'].to_i
 food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, 0 )

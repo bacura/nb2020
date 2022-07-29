@@ -196,8 +196,8 @@ html = <<-"HTML"
 			#{lp[6]}：#{sid}</span>
 			<span onclick="detailPage( 'fwd', '#{sid}' )">#{lp[8]}</span>
 		</div>
-		<div class="col"><h5>#{fct_opt['Tagnames']}</h5></div>
-	  	<div class="col"><h5>#{food_volume.to_f} #{selectu}&nbsp;(#{food_weight.to_f} g)</h5></div>
+		<div class="col"><h6>#{fct_opt['Tagnames']}</h6></div>
+	  	<div class="col-1"><h6>#{food_volume.to_f} #{selectu}<br>#{food_weight.to_f} g</h6></div>
 		<div align='center' class='col joystic_koyomi' onclick="detailReturn()">#{lp[15]}</div>
 
 	  </div>

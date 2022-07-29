@@ -739,7 +739,7 @@ puts html
 puts 'HTML food list part<br>' if @debug
 c = 0
 food_list.each do |e|
-	puts e.unit if user.status >= 8 && e.unit != 'g'
+#	puts e.unit if user.status >= 8 && e.unit != 'g'
 
 	# フードチェック
 	check = ''

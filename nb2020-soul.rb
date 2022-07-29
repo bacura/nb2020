@@ -40,6 +40,8 @@ $MYSQL_TB_KOYOMI = 'koyomi'
 $MYSQL_TB_KOYOMIEX = 'koyomiex'
 $MYSQL_TB_MEAL = 'meal'
 $MYSQL_TB_MEDIA = 'media'
+$MYSQL_TB_MEMORY = 'memory'
+$MYSQL_TB_MENU = 'menu'
 $MYSQL_TB_METS = 'mets'
 $MYSQL_TB_METST = 'metst'
 $MYSQL_TB_MODJ = 'modj'
@@ -570,6 +572,8 @@ class Recipe
       else
         puts "<span class='error'>[Recipe load]ERROR!!<br>"
         puts "code:#{@code}</span><br>"
+
+        return false
       end
     else
       res = code
@@ -601,6 +605,8 @@ class Recipe
       @tags = a[0].chomp.split( "\t" )
     end
     @comment = a[1].chomp.sub( '#', '' ) if /^\#/ =~ a[1]
+
+    return true
   end
 
   def insert_db()

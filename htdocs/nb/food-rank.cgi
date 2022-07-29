@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food ranking 0.10b
+#Nutrition browser 2020 food ranking 0.11b
 
 
 #==============================================================================
@@ -35,7 +35,7 @@ lp = user.load_lp( script )
 command = @cgi['command']
 ex_inf = @cgi['ex_inf'].to_i
 ex_zero = @cgi['ex_zero'].to_i
-p command, ex_inf, ex_zero, "<hr>" if @debug
+p command, ex_inf, ex_zero, '<hr>' if @debug
 
 
 main_item = 'ENERC_KCAL'
@@ -45,12 +45,13 @@ rank_display = 50
 
 list_html = ''
 if command == 'list'
+	puts 'Lsit<br>' if @debug
 	main_item = @cgi['main_item'].to_s
 	comp_item = @cgi['comp_item'].to_s
 
 	rank_order = @cgi['rank_order'].to_i
 	rank_display = @cgi['rank_display'].to_i
-	p main_item, comp_item, rank_order, rank_display, "<hr>" if @debug
+	p main_item, comp_item, rank_order, rank_display, '<hr>' if @debug
 
 	comp_sql = nil
 	comp_flag = false
@@ -64,14 +65,20 @@ if command == 'list'
 	comp_value = Hash.new
 	ratio = Hash.new
 
+	puts 'Zero process<br>' if @debug
 	r.each do |r|
 		food_no = r['FN']
 		main_value[food_no] = BigDecimal( convert_zero( r[main_item] ).to_s )
 		if comp_flag
 			comp_value[food_no] =  BigDecimal( convert_zero( r[comp_item] ).to_s )
 			if comp_value[food_no] != 0
+				# normal
 				ratio[food_no] = ( main_value[food_no] / comp_value[food_no] ).round( 4 )
+			elsif main_value[food_no] == 0 && comp_value[food_no] == 0
+				# zero / zero
+				ratio[food_no] = 0
 			else
+				#infinity
 				ratio[food_no] = 99999999
 			end
 		else
@@ -83,6 +90,7 @@ if command == 'list'
 	a.reverse! if rank_order == 0
 	ratio = a.to_h
 
+	puts 'Rank HTML<br>' if @debug
 	list_html = '<table class="table table-sm">'
 	list_html << '<thead>'
 	list_html << '<tr>'
@@ -115,19 +123,22 @@ if command == 'list'
 		recipe_serch = ''
 		recipe_serch = "<span class='badge bg-info text-dark' onclick=\"searchDR( '#{food_name}' )\">#{lp[11]}</span>" if recipei[food_name] == true
 
-		unless ( ratio[k] == 99999999 && ex_inf == 1 ) || ( ratio[k] == 0 && ex_zero == 1 )
-		list_html << '<tr>'
-		list_html << "<td>#{count}</td>"
-		list_html << "<td>#{k}</td>"
-		list_html << "<td class='link_cursor' onclick=\"detailView_his( '#{k}' )\">#{tags}</td>"
-		list_html << "<td>#{main_value[k].to_f}</td>"
-		list_html << "<td>#{comp_value[k].to_f}</td>"
-		t = ratio[k].to_f
-		t = '∞' if t == 99999999
+		unless ( v == 99999999 && ex_inf == 1 ) || ( v == 0 && ex_zero == 1 )
+			list_html << '<tr>'
+			list_html << "<td>#{count}</td>"
+			list_html << "<td>#{k}</td>"
+			list_html << "<td class='link_cursor' onclick=\"detailView_his( '#{k}' )\">#{tags}</td>"
+			list_html << "<td>#{main_value[k].to_f}</td>"
+			list_html << "<td>#{comp_value[k].to_f}</td>"
 
-		list_html << "<td>#{t}</td>"
-		list_html << "<td>#{recipe_serch}</td>"
-		list_html << '</tr>'
+			if v == 99999999
+				list_html << "<td>∞</td>"
+			else
+				list_html << "<td>%.4f</td>" % v.to_f
+			end
+
+			list_html << "<td>#{recipe_serch}</td>"
+			list_html << '</tr>'
 		end
 
 		break if count == rank_display
@@ -138,6 +149,7 @@ end
 
 
 ####
+puts 'Main item select-HTML<br>' if @debug
 main_item_select = '<select class="form-select" id="main_item">'
 @fct_item.each do |e|
 	unless e == 'FG' || e == 'FN' || e == 'SID' || e == 'Tagnames' || e == 'REFUSE' || e == 'Notice'
@@ -150,6 +162,7 @@ main_item_select << '</select>'
 
 
 ####
+puts 'Comp item select-HTML<br>' if @debug
 comp_item_select = '<select class="form-select" id="comp_item">'
 comp_item_select << "<option value='weight'>#{lp[3]}</option>"
 @fct_item.each do |e|
@@ -233,15 +246,13 @@ html = <<-"HTML"
 				<label class="form-check-label">∞を除外</label>
 			</div>
 		</div>
-		<div class='col-1'>
+		<div class='col-2'>
 			<div class="form-check">
 				<input class="form-check-input" type="checkbox" id="ex_zero" #{ex_zero_check}>
-				<label class="form-check-label">0を除外</label>
+				<label class="form-check-label">0を除外 (0/0含む)</label>
 			</div>
 		</div>
-		<div class='col-6'>
-		</div>
-		<div class='col-1'>
+		<div class='col' align="right">
 			<button class="btn btn-outline-primary btn-sm" type="button" onclick="foodRankList()">#{lp[6]}</button>
 		</div>
 	</div>

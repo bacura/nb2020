@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Lucky sum input driver 0.01b
+#Nutrition browser Lucky sum input driver 0.02b
 
 #==============================================================================
 #LIBRARY
@@ -316,16 +316,22 @@ when 'analyze'
 			x = ""
 		end
 
+		# 範囲の平均化
+		lucky_data = lucky_data.gsub( /(\d+)\-(\d+)/ ) do |x|
+			ave = ( $1.to_f + $2.to_f ) / 2
+			x = ave
+		end
+
 		# 数字のマーク
 		lucky_data = lucky_data.gsub( /(\d+\/?\.?\d*)/ ) do |x|
 			x = "##{$1}#"
 		end
-
 	end
 
 	html = predict_html( lucky_data )
 
 when 'push'
+	puts "Push<br>" if @debug
 	new_sum = ''
 	lucky_solid.sub!( /^\t/, '' )
 

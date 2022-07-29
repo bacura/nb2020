@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 fcz edit list 0.00b
+#Nutrition browser 2020 fcz edit list 0.00b ()
 
 
 #==============================================================================
@@ -56,37 +56,34 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+html_init( nil )
 
 user = User.new( @cgi )
-#user.debug if @debug
+user.debug if @debug
 lp = user.load_lp( script )
 
-#r = mdb( "SELECT icache, fcz, fczl_max FROM cfg WHERE user='#{user.name}';", false, false )
-#if r.first['icache'].to_i == '1'
-#	html_init_cache( nil )
-#else
-#	html_init( nil )
-#end
-#page_limit = r.first['fczl_max'].to_i if r.first['fczl_max'].to_i > 0
-
-
-#fcz_cfg = Hash.new
-#fcz_cfg = JSON.parse( r.first['fcz'] ) if r.first['fcz'] != nil && r.first['fcz'] != ''
-#puts fcz_cfg if @debug
 
 #### POST
 command = @cgi['command']
 page = @cgi['page'].to_i
-page = 1 if page == 0
 base = @cgi['base'].to_s
 fcz_code = @cgi['fcz_code'].to_s
-base = 'general' if base == ''
-puts command, base, page, base, '<hr>' if @debug
+
+fcze_cfg = Hash.new
+r = mdb( "SELECT fcze FROM cfg WHERE user='#{user.name}';", false, @debug )
+if r.first
+	fcze_cfg = JSON.parse( r.first['fcze'] )
+	puts fcze_cfg if @debug
+	page = fcze_cfg['page'].to_i if page == 0
+	base = fcze_cfg['base'] if base == ''
+end
+base = 'general' if base == nil || base == ''
+puts command, base, page, '<hr>' if @debug
 
 
-reserve_flag = false
+protect_flag = false
 reserves.each do |e|
-	reserve_flag = true if e == base
+	protect_flag = true if e == base
 end
 
 
@@ -144,7 +141,7 @@ r.each do |e|
 	fcz_html << "<td>#{e['origin']}</td>"
 	fcz_html << "<td><span onclick=\"initFCZedit( '#{e['code']}' )\">#{lp[8]}</span></td>"
 	fcz_html << "<td>"
-	unless reserve_flag
+	unless protect_flag
 		fcz_html << "<td><input class='form-check-input' type='checkbox' id='#{e['code']}'>"
 		fcz_html << "&nbsp;<span onclick=\"deleteFCZlist( '#{e['code']}', '#{page}' )\">#{lp[9]}</span></td>"
 	end
@@ -198,5 +195,5 @@ HTML
 puts html
 
 #### 検索設定の保存
-#fcz_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "words" => words } )
-#mdb( "UPDATE #{$MYSQL_TB_CFG} SET fcz='#{fcz_}' WHERE user='#{user.name}';", false, @debug )
+fcze_ = JSON.generate( { "page" => page, "base" => base } )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET fcze='#{fcze_}' WHERE user='#{user.name}';", false, @debug )

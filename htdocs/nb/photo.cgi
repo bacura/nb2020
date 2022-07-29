@@ -72,8 +72,6 @@ if code == ''
 		query = "SELECT code FROM #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';"
 	when 'recipe'
 		query = "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
-	when 'note'
-		query = "SELECT code FROM #{$MYSQL_TB_NOTE} WHERE user='#{user.name}' AND mcode='note_tmp_new';"
 	end
 	if query != ''
 		r = mdb( query, false, @debug )
@@ -93,7 +91,6 @@ when 'upload'
 	media.code = code
 	media.type = 'jpg'
 	media.date = @datetime
-
 
 	media.origin = @cgi['photo'].original_filename
 	photo_type = @cgi['photo'].content_type

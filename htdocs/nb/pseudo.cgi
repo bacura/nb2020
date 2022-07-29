@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.12b
+#Nutrition browser 2020 pseudo food editer 0.13b (2022/07/24)
 
 #==============================================================================
 # LIBRARY
@@ -294,8 +294,8 @@ end
 fct_block[5] << "<tr><td><hr></td></tr>"
 @fct_as.each do |e|
 	t = nil
-	t = fct.pickt( e ) if fct.pickt( e ) == nil || fct.pickt( e ) == ''
-	fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+	t = fct.pickt( e ).to_f if fct.pickt( e ) != nil || fct.pickt( e ) != ''
+	fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='p#{e}' value=\"#{t}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
 end
 
 
