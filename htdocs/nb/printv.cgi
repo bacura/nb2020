@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.18b
+#Nutrition browser 2020 print web page 0.20b
 
 #==============================================================================
 #LIBRARY
@@ -197,6 +197,61 @@ def extract_foods( recipe, dish, template, ew_mode )
 end
 
 
+#### 食材抽出・参照
+def extract_ref_foods( recipe )
+	sum = recipe.sum
+	dish_recipe = recipe.dish
+	uname = recipe.user
+	calc_weight = [ '単純換算g','予想摂取g' ]
+	return_foods = "<table class='table table-sm' style='font-size:x-small'>"
+	return_foods << "<thead><tr><th class='align_l'>食材</th><th class='align_r'>数量</th><th class='align_r'>単位</th></tr></thead>"
+
+	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+	a = sum.split( "\t" )
+
+	a.each do |e|
+		fn, fw, fu, fuv, fc, fi, frr, few = e.split( ':' )
+		few = fw if few == nil
+
+		if fn == '-'
+			return_foods << "<tr><td></td></tr>\n"
+		elsif fn == '+'
+			return_foods << "<tr><td class='print_subtitle'>#{fi}</td></tr>\n"
+		else
+			# 人数分調整
+			z, fuv = food_weight_check( fuv ) if /\// =~ fuv
+			fuv = BigDecimal( fuv )
+			fuv_v = unit_value( fuv )
+			few = BigDecimal( few )
+			few_v = unit_value( few )
+
+			query = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{fn}';"
+			res = db.query( query )
+
+			class_add = ''
+			if /\+/ =~ res.first['class1']
+				class_add = "<span class='tagc'>#{res.first['class1'].sub( '+', '' )}</span> "
+			elsif /\+/ =~ res.first['class2']
+				class_add = "<span class='tagc'>#{res.first['class2'].sub( '+', '' )}</span> "
+			elsif /\+/ =~ res.first['class3']
+				class_add = "<span class='tagc'>#{res.first['class3'].sub( '+', '' )}</span> "
+			end
+			food_name = res.first['name']
+			if /^\=/ =~ fi
+				food_name = fi.sub( '=', '' )
+				fi = ''
+			end
+			return_foods << "<tr><td>#{class_add}#{food_name}</td><td align='right'>#{fuv_v.ceil( 1 )}</td><td align='right'>#{fu}</td></tr>" if res.first
+
+		end
+	end
+	db.close
+	return_foods << "</table>"
+
+	return return_foods
+end
+
+
 #### プロトコール変換
 def modify_protocol( recipe, user, depth )
 	return_protocol = "<ul>\n"
@@ -215,17 +270,21 @@ def modify_protocol( recipe, user, depth )
 			if recipe.code == link_code || depth > 1
 				return_protocol << "<span class='error'>循環参照</span><br>\n"
 			else
-				local_recipe = Recipe.new( user )
-				recipe_load_flag = local_recipe.load_db( link_code, true )
+				ref_recipe = Recipe.new( user )
+				recipe_load_flag = ref_recipe.load_db( link_code, true )
 
 				if recipe_load_flag
-					local_return_protocol = modify_protocol( local_recipe, user, depth + 1 )
-					return_protocol << "<div class='accordion' id='accordion#{c}'>"
+					local_return_protocol = modify_protocol( ref_recipe, user, depth + 1 )
+					local_foods = extract_ref_foods( ref_recipe )
+
+					return_protocol << "<div class='accordion' id='accordion#{c}'><div align='right'><a href='printv.cgi?&c=#{link_code}' target='sub_link'><span class='badge bg-info text-dark'>Link</span></a></div>"
 					return_protocol << "	<div class='accordion-item'>"
-	  			return_protocol << "		<h2 class='accordion-header' id='heading#{c}'><button class='accordion-button' type='button' data-bs-toggle='collapse' data-bs-target='#collapse#{c}' aria-expanded='true' aria-controls='collapse#{c}'>参照：<a href='printv.cgi?&c=#{link_code}' target='sub_link'>#{local_recipe.name}</a></button></h2>"
+	  			return_protocol << "		<div class='accordion-header' id='heading#{c}'><button class='accordion-button' type='button'  style='padding-top: 0.2rem; padding-bottom: 0.2rem;' data-bs-toggle='collapse' data-bs-target='#collapse#{c}' aria-expanded='true' aria-controls='collapse#{c}'>参照：#{ref_recipe.name}（#{ref_recipe.dish}人分）</button></div>"
 	  			return_protocol << "		<div id='collapse#{c}' class='accordion-collapse collapse' aria-labelledby='heading#{c}' data-bs-parent='#accordion#{c}'>"
-	    		return_protocol << "			<div class='accordion-body'>#{local_return_protocol }</div>"
-	  			return_protocol << "		</div>"
+	    		return_protocol << "			<div class='accordion-body'><div class='row'>"
+	    		return_protocol << "	    	<div class='col-7' style='font-size:small'>#{local_return_protocol }</div>"
+	    		return_protocol << "	    	<div class='col-5' style='font-size:x-small'>#{local_foods }</div>"
+	  			return_protocol << "		</div></div>"
 					return_protocol << "	</div>"
 					return_protocol << "</div>"
 					c += 1

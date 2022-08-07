@@ -1,4 +1,4 @@
-// Recipe java script for nb2020 0.06b
+// Recipe java script for nb2020 0.07b (2022/08/07)
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -234,6 +234,15 @@ var cb_summon = function( key, weight, base_fn ){
 		displayBW();
 	});
 };
+
+
+// Retrun to CB
+var returnCB = function(){
+		flashBW();
+		dl1 = true;
+		displayBW();
+};
+
 
 // Chomi% category
 var chomiSelect =  function(){

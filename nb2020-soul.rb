@@ -69,7 +69,7 @@ $TNS_SIZE = 40
 $PHOTO_SIZE_MAX = 2000
 
 $JS_PATH = 'js'
-$CSS_PATH = 'css'
+$CSS_PATH = 'scss'
 $BOOK_PATH = 'books'
 
 $SELECT = { true => 'SELECTED', false => ''}
@@ -166,7 +166,7 @@ end
 
 
 #### 履歴追加
-def add_his( user, fn )
+def add_his( user, code )
   r = mdb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user}';", true, $DEBUG )
   if r.first
     current_his = r.first['his'].split( "\t" )
@@ -181,9 +181,9 @@ def add_his( user, fn )
   his_max = r.first['his_max'].to_i  if r.first
   his_max = 200 if his_max < 200 || his_max > 500
 
-  new_his = "#{fn}\t"
+  new_his = "#{code}\t"
   0.upto( his_max - 1 ) do |c|
-    new_his << "#{current_his[c]}\t" unless fn == current_his[c]
+    new_his << "#{current_his[c]}\t" unless code == current_his[c]
   end
   new_his.chop!
 

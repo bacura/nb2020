@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.12b
+#Nutrition browser 2020 cutting board 0.13b
 
 #==============================================================================
 #LIBRARY
@@ -258,6 +258,7 @@ puts "Loading Sum<br>" if @debug
 q = ''
 if command == 'load'
 	q = "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{recipe_user}' AND code='#{code}';"
+	
 else
 	q = "SELECT * from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
 end
@@ -868,3 +869,5 @@ food_list.each do |e| sum_new << "#{e.fn}:#{e.weight}:#{e.unit}:#{e.unitv}:#{e.c
 sum_new.chop!
 
 mdb( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{user.name}';", false, @debug )
+
+add_his( user.name, code ) if command == 'load'

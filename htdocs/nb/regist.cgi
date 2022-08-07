@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 regist 0.04b
+#Nutrition browser 2020 regist 0.05b
 
 #==============================================================================
 #LIBRARY
@@ -165,7 +165,7 @@ case get_data['mode']
 when 'confirm'
 
   # Checking improper characters
-  if /[^0-9a-zA-Z\-\_]/ =~ @cgi['id']
+  if /[^0-9a-zA-Z\_]/ =~ @cgi['id']
     msg = "<p class='msg_small_red'>#{lp[1]}</p>"
     html_regist_form( nil, @cgi['mail'], nil, msg, @cgi['aliasu'], lp )
 

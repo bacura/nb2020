@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.10b
+#Nutrition browser 2020 food square 0.11b (2022/08/07)
 
 
 #==============================================================================
@@ -554,7 +554,7 @@ when 'fctb_l5'
 
  	#
 	return_button = ''
-	return_button = "<div align='center' class='joystic_koyomi' onclick=\"changingCB( '', '' )\">#{lp[17]}</div><br>" if base == 'cb'
+	return_button = "<div align='center' class='joystic_koyomi' onclick=\"returnCB( '', '' )\">#{lp[17]}</div><br>" if base == 'cb'
 
 
 	html = <<-"HTML"

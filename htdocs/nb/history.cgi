@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser history 0.11b
+#Nutritoin browser history 0.20b
 
 
 #==============================================================================
@@ -25,6 +25,7 @@ $ALL_LIMIT = 100
 def get_histry( lp, user, sub_fg )
 	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 	history = []
+	sgh = Hash.new
 	res = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';" )
 	t = res.first['his'].split( "\t" )
 
@@ -38,39 +39,61 @@ def get_histry( lp, user, sub_fg )
 		$ALL_LIMIT.times do |c|
 			break if c > t.size - 1
 			history << t[c]
+			if /\-r\-/ =~ t[c]
+				sgh[t[c]] = 'r'
+			else
+				sgh[t[c]] = 'f'
+			end
 		end
 	else
 		t.each do |e|
 			if /P|U/ =~ e
 				history << e if e[1..2].to_i == sub_fg.to_i
+				sgh[e] = 'f'
+			elsif /\-r\-/ =~ e
+				history << e
+				sgh[e] = 'r'
 			else
 				history << e if e[0..1].to_i == sub_fg.to_i
+				sgh[e] = 'f'
 			end
 		end
 	end
 
 	html = ''
 	history.each do |e|
-		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
-		r_tag = db.query( q )
-		if r_tag.first
-			if sub_fg == '6'
-				res2 = db.query( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{e}';" )
-				if res2.first
-					next if res2.first['gycv'] == 1 && ( not gycv )
-					next if res2.first['gycv'] != 1 && gycv
+		if sgh[e] == 'f' && sub_fg != 'R'
+			q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
+			r_tag = db.query( q )
+			if r_tag.first
+				if sub_fg == '6'
+					res2 = db.query( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{e}';" )
+					if res2.first
+						next if res2.first['gycv'] == 1 && ( not gycv )
+						next if res2.first['gycv'] != 1 && gycv
+					end
 				end
+
+				food_name = r_tag.first['name']
+				tags = bind_tags( r_tag ) if r_tag.first
+
+				# buttons
+				add_button = "<span onclick=\"addingCB( '#{e}', '', '#{food_name}' )\">#{lp[3]}</span>" if user.name
+				koyomi_button = "<span onclick=\"addKoyomi( '#{e}', 1 )\">#{lp[35]}</span>" if user.status >= 2
+
+				html << "<tr class='fct_value'><td class='link_cursor' onclick=\"detailView_his( '#{e}' )\">#{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}</td></tr>\n"
 			end
+		elsif ( sgh[e] == 'r' && sub_fg == 'R' ) || sub_fg == 'all'
+			q = "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}';"
+			r = db.query( q )
+			if r.first
+				recipe_name = r.first['name']
+				koyomi_button = "<span onclick=\"addKoyomi( '#{e}' )\">#{lp[35]}</span>" if user.status >= 2
+				print_button = "<span onclick=\"print_templateSelect( '#{e}' )\">#{lp[28]}</span>"
+				cp2w_button = "	<span onclick=\"cp2words( '#{e}', '' )\">#{lp[29]}</span>"
 
-
-			food_name = r_tag.first['name']
-			tags = bind_tags( r_tag ) if r_tag.first
-
-			# buttons
-			add_button = "<span onclick=\"addingCB( '#{e}', '', '#{food_name}' )\">#{lp[3]}</span>" if user.name
-			koyomi_button = "<span onclick=\"addKoyomi( '#{e}', 1 )\">#{lp[35]}</span>" if user.status >= 2
-
-			html << "<tr class='fct_value'><td class='link_cursor' onclick=\"detailView_his( '#{e}' )\">#{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}</td></tr>\n"
+				html << "<tr class='fct_value'><td class='link_cursor' onclick=\"initCB( 'load', '#{e}', '#{r.first['user']}' )\">#{recipe_name}</td><td>#{add_button}&nbsp;#{koyomi_button}&nbsp;#{print_button}&nbsp;#{cp2w_button}</td></tr>\n"
+			end
 		end
 	end
 	db.close
@@ -101,6 +124,7 @@ def sub_menu( lp )
 <span class="btn badge rounded-pill bg-light text-dark" onclick="historySub( '17' )">#{lp[23]}</span>
 <span class="btn badge rounded-pill bg-secondary" onclick="historySub( '18' )">#{lp[24]}</span>
 <span class="btn badge rounded-pill bg-light text-dark" onclick="historySub( '00' )">#{lp[25]}</span>
+<span class="btn badge rounded-pill bg-dark text-light" onclick="historySub( 'R' )">#{lp[26]}</span>
 HTML_SUB
 	puts html_sub
 	exit
@@ -116,7 +140,7 @@ user.debug if @debug
 lp = user.load_lp( script )
 
 
-#### Getting POST
+puts 'POST<br>' if @debug
 command = @cgi['command']
 sub_fg = @cgi['sub_fg']
 if @debug
@@ -141,7 +165,7 @@ if sub_fg == 'init'
 end
 
 
-#### グループ名変換
+puts 'Group name<br>' if @debug
 sub_title = ''
 if sub_fg == '00'
 	sub_title = "#{lp[2]}"
@@ -149,17 +173,22 @@ elsif sub_fg == '6'
 	sub_title = "#{lp[5]}"
 elsif sub_fg == '6_'
 	sub_title = "#{lp[6]}"
+elsif sub_fg == 'R'
+	sub_title = "#{lp[30]}"
 else
 	sub_title = @category[sub_fg.to_i]
 end
 
 
-#### 各食品ラインの生成
+puts 'History Line All<br>' if @debug
 food_html_all = get_histry( lp, user, 'all' )
+
+
+puts 'History Line SG<br>' if @debug
 food_html_sg = get_histry( lp, user, sub_fg )
 
 
-#### HTML生成
+puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
