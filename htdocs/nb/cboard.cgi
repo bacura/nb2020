@@ -825,9 +825,9 @@ end
 puts 'HTML lower menu part<br>' if @debug
 price_html = ''
 if recipe_name != '' && update == ''
-	price_html = "<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"priceView( '#{code}' )\">#{lp[20]}</button></div>" if recipe_name != '' && update == ''
+	price_html = "<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick=\"priceView( '#{code}' )\">#{lp[20]}</button></div>" if recipe_name != '' && update == ''
 else
-	price_html = "<div class='col-2'><button type='button' class='btn btn-secondary btn-sm'\">#{lp[20]}</button></div>"
+	price_html = "<div class='col-1'><button type='button' class='btn btn-secondary btn-sm'\">#{lp[20]}</button></div>"
 end
 
 #### Quick Save
@@ -846,14 +846,26 @@ else
 	qprint_html = "<div class='col-1'><span onclick=\"print_templateSelect( '#{code}' )\">#{lp[34]}</span></div>"
 end
 
+
+#### Detective
+detective_html = ''
+if user.status >= 3
+	detective_html = "<div class='col-1'><span onclick=\"initDetective()\">#{lp[37]}</span></div>"
+else
+	detective_html = "<div class='col-1'></div>"
+end
+
+
 foot_html = <<-"LOWER_MENU"
 <br>
 	<div class='row'>
-		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick="recipeEdit( 'view', '#{code}' )">#{lp[18]}</button></div>
-		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick="calcView( '#{code}' )">#{lp[19]}</button></div>
+		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="recipeEdit( 'view', '#{code}' )">#{lp[18]}</button></div>
+		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="calcView( '#{code}' )">#{lp[19]}</button></div>
 		#{price_html}
-		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick="luckyInput()">#{lp[21]}</button></div>
-		<div class='col-2'><button class='btn btn-primary btn-sm' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</button></div>
+		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="luckyInput()">#{lp[21]}</button></div>
+		<div class='col-1'><button class='btn btn-primary btn-sm' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</button></div>
+		<div class='col-4'></div>
+		#{detective_html}
 		#{qsave_html}
 		#{qprint_html}
 	</div>

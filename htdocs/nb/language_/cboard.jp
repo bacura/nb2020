@@ -15,10 +15,10 @@
 量
 単位
 摂食率
-レシピ編集
-栄養計算
-原価計算
-Lucky☆入力
+レシピ
+栄養
+原価
+Lucky☆
 g/人
 <img src='bootstrap-dist/icons/save.svg' style='height:1.8em; width:1.8em;'>
 食品化
@@ -34,3 +34,4 @@ g/人
 <img src='bootstrap-dist/icons/printer.svg' style='height:1.8em; width:1.8em;'>
 目安塩
 <img src='bootstrap-dist/icons/sort-down.svg' style='height:1.2em; width:1.2em;'>
+<img src='bootstrap-dist/icons/incognito.svg' style='height:1.8em; width:1.8em;'>

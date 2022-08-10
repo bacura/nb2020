@@ -606,15 +606,20 @@ var savePseudo_R2F = function( code ){
 
 // レシピ帳の印刷ボタンを押してL2に印刷画面テンプレートを表示
 var print_templateSelect = function( code ){
-	$.post( "print.cgi", { command:'select', code:code }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'none';
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "print.cgi", { command:'select', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl2 = true;
+		displayBW();
+	});
 };
 
 // 印刷テンプレート画面の戻るボタンを押してレシピ帳に復帰
 var print_templateReturen = function(){
-	document.getElementById( "L1" ).style.display = 'block';
-	document.getElementById( "L2" ).style.display = 'none';
+		flashBW();
+		dl1 = true;
+		displayBW();
 };
 
 // 印刷テンプレート画面の印刷表示ボタンを押して新規タブに印刷画面を表示する。
@@ -633,6 +638,42 @@ var openPrint = function( uname, code, template, dish ){
 	window.open( url, 'print' );
 	displayVIDEO( 'Printing page was opend on the another tab' );
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Detective ////////////////////////////////////////////////////////////////////////
+
+//
+var initDetective = function(){
+	var code = document.getElementById( "words" ).value;
+
+	$.post( "detective.cgi", { command:'hints', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+//
+var reasoning = function(){
+	var volume = document.getElementById( "volume" ).value;
+	var energy = document.getElementById( "energy" ).value;
+	var protein = document.getElementById( "protein" ).value;
+	var fat = document.getElementById( "fat" ).value;
+	var carbo = document.getElementById( "carbo" ).value;
+	var salt = document.getElementById( "salt" ).value;
+
+	$.post( "detective.cgi", { command:'reasoning', volume:volume, energy:energy, protein:protein, fat:fat, carbo:carbo, salt:salt }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////////
