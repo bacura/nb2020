@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.13b
+#Nutrition browser 2020 cutting board 0.13b (2022/08/11)
 
 #==============================================================================
 #LIBRARY
@@ -847,15 +847,6 @@ else
 end
 
 
-#### Detective
-detective_html = ''
-if user.status >= 3
-	detective_html = "<div class='col-1'><span onclick=\"initDetective()\">#{lp[37]}</span></div>"
-else
-	detective_html = "<div class='col-1'></div>"
-end
-
-
 foot_html = <<-"LOWER_MENU"
 <br>
 	<div class='row'>
@@ -864,8 +855,8 @@ foot_html = <<-"LOWER_MENU"
 		#{price_html}
 		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="luckyInput()">#{lp[21]}</button></div>
 		<div class='col-1'><button class='btn btn-primary btn-sm' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</button></div>
+		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick=\"initDetective()\">#{lp[28]}</button></div>
 		<div class='col-4'></div>
-		#{detective_html}
 		#{qsave_html}
 		#{qprint_html}
 	</div>
