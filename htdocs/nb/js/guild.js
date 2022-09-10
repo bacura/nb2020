@@ -515,11 +515,11 @@ var changeKoyomiex = function(){
 
 
 // Updating Koyomiex cell
-var updateKoyomiex = function( dd, item_no, cell_id ){
+var updateKoyomiex = function( kex_key, dd ){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	var cell = document.getElementById( cell_id ).value;
-//	$.post( "koyomiex.cgi", { command:"update", yyyy_mm:yyyy_mm, dd:dd, item_no:item_no, cell:cell }, function( data ){ $( "#L1" ).html( data );});
-	$.post( "koyomiex.cgi", { command:"update", yyyy_mm:yyyy_mm, dd:dd, item_no:item_no, cell:cell }, function( data ){});
+	var cell = document.getElementById( kex_key + dd ).value;
+	$.post( "koyomiex.cgi", { command:"update", yyyy_mm:yyyy_mm, dd:dd, kex_key:kex_key, cell:cell }, function( data ){ $( "#L1" ).html( data );});
+//	$.post( "koyomiex.cgi", { command:"update", yyyy_mm:yyyy_mm, dd:dd, kex_key:kex_key, cell:cell }, function( data ){});
 };
 
 

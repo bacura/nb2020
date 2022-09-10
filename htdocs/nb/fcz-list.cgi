@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 fcz edit list 0.00b ()
+#Nutrition browser 2020 fcz edit list 0.01b (2022/08/20)
 
 
 #==============================================================================
@@ -72,10 +72,12 @@ fcz_code = @cgi['fcz_code'].to_s
 fcze_cfg = Hash.new
 r = mdb( "SELECT fcze FROM cfg WHERE user='#{user.name}';", false, @debug )
 if r.first
-	fcze_cfg = JSON.parse( r.first['fcze'] )
-	puts fcze_cfg if @debug
-	page = fcze_cfg['page'].to_i if page == 0
-	base = fcze_cfg['base'] if base == ''
+	if r.first['fcze'] != nil
+		fcze_cfg = JSON.parse( r.first['fcze'] )
+		puts fcze_cfg if @debug
+		page = fcze_cfg['page'].to_i if page == 0
+		base = fcze_cfg['base'] if base == ''
+	end
 end
 base = 'general' if base == nil || base == ''
 puts command, base, page, '<hr>' if @debug
@@ -133,13 +135,15 @@ base_select << '</SELECT>'
 puts "FCZ list<br>" if @debug
 fcz_html = ''
 offset = ( page - 1 ) * page_limit
+offset = 0 if offset < 0
 r = mdb( "SELECT code, origin, base, name FROM #{$MYSQL_TB_FCZ} WHERE base='#{base}' ORDER BY name LIMIT #{offset}, #{page_limit};", false, @debug )
 r.each do |e|
 	fcz_html << '<tr style="font-size:medium;">'
 	fcz_html << "<td>#{e['code']}</td>"
 	fcz_html << "<td>#{e['name']}</td>"
 	fcz_html << "<td>#{e['origin']}</td>"
-	fcz_html << "<td><span onclick=\"initFCZedit( '#{e['code']}' )\">#{lp[8]}</span></td>"
+	fcz_html << "<td><span onclick=\"initFCZedit( '#{e['code']}' )\">#{lp[8]}</span>"
+	fcz_html << "&nbsp;&nbsp;<span onclick=\"cp2words( '#{e['code']}', '' )\">#{lp[10]}</span></td>"
 	fcz_html << "<td>"
 	unless protect_flag
 		fcz_html << "<td><input class='form-check-input' type='checkbox' id='#{e['code']}'>"

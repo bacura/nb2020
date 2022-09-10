@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi extra 0.13b
+#Nutrition browser 2020 koyomi extra 0.20b (2022/09/10)
 
 
 #==============================================================================
@@ -15,7 +15,6 @@ require './brain'
 #==============================================================================
 script = 'koyomiex'
 @debug = false
-item_max = 9	#start from 0
 
 
 #==============================================================================
@@ -31,15 +30,16 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 lp = user.load_lp( script )
+html = []
 
-#### Guild member check
+puts 'CHECK membership<br>' if @debug
 if user.status < 3
 	puts "Guild member error."
 	exit
 end
 
 
-#### Getting POST data
+puts 'GET POST<br>' if @debug
 command = @cgi['command']
 yyyy = @cgi['yyyy'].to_i
 mm = @cgi['mm'].to_i
@@ -51,20 +51,20 @@ unless yyyy_mm == ''
 	mm = a[1].to_i
 end
 dd = 1 if dd == 0
-item_no = @cgi['item_no'].to_i
+kex_key = @cgi['kex_key']
 cell = @cgi['cell']
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
 	puts "mm:#{mm}<br>\n"
 	puts "dd:#{dd}<br>\n"
-	puts "item_no:#{item_no}<br>\n"
+	puts "kex_key:#{kex_key}<br>\n"
 	puts "cell:#{cell}<br>\n"
 	puts "<hr>\n"
 end
 
 
-#### Getting date
+puts "INITIALIZE Date<br>" if @debug
 date = Date.today
 date = Date.new( yyyy, mm, dd ) unless yyyy == 0
 if yyyy == 0
@@ -76,8 +76,7 @@ if @debug
 	puts "date:#{date.to_time}<br>\n"
 end
 
-
-puts "Date & calendar config<br>" if @debug
+puts "INITIALIZE calendar<br>" if @debug
 calendar = Calendar.new( user.name, yyyy, mm, dd )
 calendar_td = Calendar.new( user.name, 0, 0, 0 )
 calendar.debug if @debug
@@ -85,80 +84,84 @@ sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
 sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 
 
-puts "Loading config<br>" if @debug
-kex_select = Hash.new
+puts "LOAD config<br>" if @debug
+start = Time.new.year
+kexu = Hash.new
+kexa = Hash.new
 r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-		koyomi = JSON.parse( r.first['koyomi'] )
+		koyomi = JSON.parse( r.first['koyomi'] ) if r.first['koyomi'] != ''
 		start = koyomi['start'].to_i
-		kex_select = koyomi['kex_select']
-		kex_oname = koyomi['kex_oname']
-		kex_ounit = koyomi['kex_ounit']
-		p koyomi if @debug
+		kexu = koyomi['kexu']
+		kexa = koyomi['kexa']
 	end
 end
 
 
-puts "Updating cell<br>" if @debug
-if command == 'update'
-	r = mdb( "SELECT user FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
-	if r.first
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{item_no}='#{cell}' WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
-	else
-		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET item#{item_no}='#{cell}', user='#{user.name}', date='#{sql_ymd}';", false, @debug )
-	end
-end
-
-
-puts "Header html<br>" if @debug
+puts "HTML Header<br>" if @debug
 th_html = '<thead><tr>'
 th_html << "<th align='center'></th>"
-0.upto( item_max ) do |c|
-	unit= ''
-	unit = "(#{kex_ounit[c.to_s]})" if kex_ounit[c.to_s] != ''
-	th_html << "<th align='center'>#{kex_oname[c.to_s]} #{unit}</th>" if kex_select[c.to_s] != 'ND'
+kexu.each do |k, v|
+	th_html << "<th align='center'>#{k} (#{v})</th>" if kexa[k] == '1'
 end
 th_html << '</tr></thead>'
 
 
-puts "Week html<br>" if @debug
-date_html = ''
-week_count = calendar.wf
-weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
+puts "LOAD date cell<br>" if @debug
+cells_day = []
 r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", false, @debug )
-koyomir = []
-r.each do |e| koyomir[e['date'].day] = e end
+r.each do |e|
+	if e['cell'] != nil && e['cell'] != ''
+		cells_day[e['date'].day] = JSON.parse( e['cell'] )
+	end
+end
 
 
-puts "Cell data html<br>" if @debug
+if command == 'update'
+	puts "UPDATE cell<br>" if @debug
+	if cells_day[dd] == nil || cells_day[dd] == ''
+		kexc = Hash.new
+		kexu.each do |k, |
+			if k == kex_key
+				kexc[k] = cell
+			else
+				kexc[k] = ''
+			end
+			cells_day[dd] = kexc
+		end
+	else
+		cells_day[dd][kex_key] = cell
+	end
+end
+
+
+puts "HTML Cell<br>" if @debug
+week_count = calendar.wf
+date_html = ''
+weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 1.upto( calendar.ddl ) do |c|
+	style = ''
+	style = "style='color:red;'" if week_count == 0
 	date_html << "<tr id='day#{c}'>"
-	if week_count == 0
-		date_html << "<td style='color:red;'><span>#{c}</span> (#{weeks[week_count]})</td>"
-	else
-		date_html << "<td><span>#{c}</span> (#{weeks[week_count]})</td>"
-	end
-
-	if koyomir[c] == nil
-		0.upto( item_max ) do |cc|
-			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 'ND'
-		end
-	else
-		0.upto( item_max ) do |cc|
-			t = koyomir[c]["item#{cc}"]
-			date_html << "<td><input type='text' id='id#{c}_#{kex_select[cc.to_s]}' value='#{t}' onChange=\"updateKoyomiex( '#{c}', '#{cc}', 'id#{c}_#{kex_select[cc.to_s]}' )\"></td>" if kex_select[cc.to_s] != 'ND'
+	date_html << "<td #{style}><span>#{c}</span> (#{weeks[week_count]})</td>"
+	kexa.each do |k, v|
+		if cells_day[c] == nil
+			date_html << "<td><input type='text' id='#{k}#{c}' value='' onChange=\"updateKoyomiex( '#{k}', '#{c}' )\"></td>" if v == '1'
+		else
+			date_html << "<td><input type='text' id='#{k}#{c}' value='#{cells_day[c][k]}' onChange=\"updateKoyomiex( '#{k}', '#{c}' )\"></td>" if v == '1'
 		end
 	end
-
 	date_html << "</tr>"
 	week_count += 1
 	week_count = 0 if week_count > 6
 end
 
 
-puts "HTML<br>" if @debug
-html = <<-"HTML"
+####
+####
+puts "HTML10<br>" if @debug
+html[10] = <<-"HTML10"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><h5>#{lp[8]}</h5></div>
@@ -185,6 +188,26 @@ html = <<-"HTML"
 	#{date_html}
 	</table>
 
-HTML
+HTML10
+####
+####
 
-puts html
+puts html.join
+
+
+if command == 'update'
+	puts "UPDATE cell<br>" if @debug
+	cell_ = JSON.generate( cells_day[dd] )
+	r = mdb( "SELECT user FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
+	if r.first
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}' WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
+	else
+		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}', user='#{user.name}', date='#{sql_ymd}';", false, @debug )
+	end
+end
+
+
+if command == 'init'
+	puts "CLEAN empty cell<br>" if @debug
+#	mdb( "DELETE FROM #{$MYSQL_TB_KOYOMIEX} WHERE cell='' OR cell IS NULL;", false, @debug )
+end

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Detective input 0.00b (2022/08/11)
+#Nutrition browser Detective input 0.01b (2022/08/20)
 
 #==============================================================================
 #LIBRARY
@@ -13,7 +13,7 @@ require './probe'
 #==============================================================================
 @debug = false
 script = 'detective'
-food_max = 5
+food_max = 10
 
 #==============================================================================
 #DEFINITION
@@ -57,11 +57,13 @@ html = ''
 case command
 when 'reasoning'
 	puts 'REASONING<br>' if @debug
-	delta1p = [[],[],[],[],[]]
-	delta2p = [[],[],[],[],[]]
+	dp1 = [[],[],[],[],[],[],[],[],[],[]]
+	dp2 = [[],[],[],[],[],[],[],[],[],[]]
 	vmax = []
 	vmin = []
 	food_nos = []
+	food_weights = []
+	food_checks = []
 
 	r = mdb( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 	if r.first
@@ -70,25 +72,35 @@ when 'reasoning'
 		food_max.times do |c|
 			if foods[c]
 				a = foods[c].split( ':' )
-				fn = a[0]
-				food_nos << fn
-				rr = mdb( "SELECT ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCT} WHERE FN='#{fn}';", false, @debug )
-				if rr.first
-					delta1p[c] << rr.first['ENERC_KCAL'].to_f / 100
-					delta1p[c] << rr.first['PROTV'].to_f / 100
-					delta1p[c] << rr.first['FATV'].to_f / 100
-					delta1p[c] << rr.first['CHOV'].to_f / 100
-					delta1p[c] << rr.first['NACL_EQ'].to_f / 100
+				food_nos << a[0]
+				food_weights << a[1].to_f
+				food_checks << a[4].to_i
 
-					delta2p[c] << rr.first['ENERC_KCAL'].to_f / 1000
-					delta2p[c] << rr.first['PROTV'].to_f / 1000
-					delta2p[c] << rr.first['FATV'].to_f / 1000
-					delta2p[c] << rr.first['CHOV'].to_f / 1000
-					delta2p[c] << rr.first['NACL_EQ'].to_f / 1000
+				query = ''
+				if /P/ =~ a[0]
+          			query  = "SELECT ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCTP} WHERE FN='#{a[0]}';"
+				elsif /U/ =~ a[0]
+          			query  = "SELECT ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCTP} WHERE FN='#{a[0]}' AND user='#{user.name}';"
+				else
+          			query  = "SELECT ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCT} WHERE FN='#{a[0]}';"
+				end
+				rr = mdb( query, false, @debug )
+				if rr.first
+					dp1[c] << rr.first['ENERC_KCAL'].to_f / 100
+					dp1[c] << rr.first['PROTV'].to_f / 100
+					dp1[c] << rr.first['FATV'].to_f / 100
+					dp1[c] << rr.first['CHOV'].to_f / 100
+					dp1[c] << rr.first['NACL_EQ'].to_f / 100
+
+					dp2[c] << rr.first['ENERC_KCAL'].to_f / 1000
+					dp2[c] << rr.first['PROTV'].to_f / 1000
+					dp2[c] << rr.first['FATV'].to_f / 1000
+					dp2[c] << rr.first['CHOV'].to_f / 1000
+					dp2[c] << rr.first['NACL_EQ'].to_f / 1000
 				end
 			else
-				delta1p[c] = [0, 0, 0, 0, 0]
-				delta2p[c] = [0, 0, 0, 0, 0]
+				dp1[c] = [0, 0, 0, 0, 0]
+				dp2[c] = [0, 0, 0, 0, 0]
 			end
 		end
 
@@ -96,41 +108,65 @@ when 'reasoning'
 		puts "1st pass<br>" if @debug
 		food_max.times do |c|
 			limit = [1, 1, 1, 1, 1]
-			limit[0] = ( energy / delta1p[c][0] ) if delta1p[c][0] != 0
-			limit[1] = ( protein / delta1p[c][1] ) if delta1p[c][1] != 0
-			limit[2] = ( fat / delta1p[c][2] ) if delta1p[c][2] != 0
-			limit[3] = ( carbo / delta1p[c][3] ) if delta1p[c][3] != 0
-			limit[4] = ( salt / delta1p[c][4] ) if delta1p[c][4] != 0
+			limit[0] = ( energy / dp1[c][0] ) if dp1[c][0] != 0
+			limit[1] = ( protein / dp1[c][1] ) if dp1[c][1] != 0
+			limit[2] = ( fat / dp1[c][2] ) if dp1[c][2] != 0
+			limit[3] = ( carbo / dp1[c][3] ) if dp1[c][3] != 0
+			limit[4] = ( salt / dp1[c][4] ) if dp1[c][4] != 0
 			vmax << limit.max.ceil
 		end
 		( food_max - 1 ).times do |c|
 			vmax[c + 1] = vmax[c] if vmax[c] < vmax[c + 1]
 		end
-		p vmax if @debug
+
+		food_max.times do |c|
+			if food_checks[c] == 1
+				vmin[c] = ( food_weights[c].floor ).to_i
+				vmax[c] = ( food_weights[c].ceil ).to_i
+			else
+				vmin[c] = 0
+			end
+		end
+		p vmax, vmin if @debug
 
 		puts "1st reasoning<br>" if @debug
 		delta_min = -1
 		delta_min_vol = []
-		0.upto( vmax[0] ) do |c0|
-			0.upto( vmax[1] ) do |c1|
+		vmin[0].upto( vmax[0] ) do |c0|
+			vmin[1].upto( vmax[1] ) do |c1|
 				break if c1 > c0
-				0.upto( vmax[2] ) do |c2|
+				vmin[2].upto( vmax[2] ) do |c2|
 					break if c2 > c1
-					0.upto( vmax[3] ) do |c3|
+					vmin[3].upto( vmax[3] ) do |c3|
 						break if c3 > c2
-						0.upto( vmax[4] ) do |c4|
-							break if c4 > c3 || ( c0 + c1 + c2 + c3 + c4 ) > volume
+						vmin[4].upto( vmax[4] ) do |c4|
+							break if c4 > c3
+							vmin[5].upto( vmax[5] ) do |c5|
+								break if c5 > c4
+								vmin[6].upto( vmax[6] ) do |c6|
+									break if c6 > c5
+									vmin[7].upto( vmax[7] ) do |c7|
+										break if c7 > c6
+										vmin[8].upto( vmax[8] ) do |c8|
+											break if c8 > c7
+											vmin[9].upto( vmax[9] ) do |c9|
+												break if c9 > c8 || ( c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9 ) > volume
 
-							e_ = ( energy - ( delta1p[0][0] * c0 ) - ( delta1p[1][0] * c1 ) - ( delta1p[2][0] * c2 ) - ( delta1p[3][0] * c3 ) - ( delta1p[4][0] * c4 )) ** 2
-							p_ = ( protein - ( delta1p[0][1] * c0 ) - ( delta1p[1][1] * c1 ) - (delta1p[2][1] * c2 ) - ( delta1p[3][1] * c3 ) - ( delta1p[4][1] * c4 )) ** 2
-							f_ = ( fat - ( delta1p[0][2] * c0 ) - ( delta1p[1][2] * c1 ) - ( delta1p[2][2] * c2 ) - ( delta1p[3][2] * c3 ) - ( delta1p[4][2] * c4 ))  ** 2
-							c_ = ( carbo - ( delta1p[0][3] * c0 ) - ( delta1p[1][3] * c1 ) - ( delta1p[2][3] * c2 ) - ( delta1p[3][3] * c3 ) - ( delta1p[4][3] * c4 ))  ** 2
-							s_ = ( salt - ( delta1p[0][4] * c0 ) - ( delta1p[1][4] * c1 ) - ( delta1p[2][4] * c2 ) - ( delta1p[3][4] * c3 ) - ( delta1p[4][4] * c4 ))  ** 2
-							delta = e_ + p_ + f_ + c_ + s_
+												e_ = ( energy - ( dp1[0][0] * c0 ) - ( dp1[1][0] * c1 ) - ( dp1[2][0] * c2 ) - ( dp1[3][0] * c3 ) - ( dp1[4][0] * c4 ) - ( dp1[5][0] * c5 ) - ( dp1[6][0] * c6 ) - ( dp1[7][0] * c7 ) - ( dp1[8][0] * c8 ) - ( dp1[9][0] * c9 )) ** 2
+												p_ = ( protein - ( dp1[0][1] * c0 ) - ( dp1[1][1] * c1 ) - (dp1[2][1] * c2 ) - ( dp1[3][1] * c3 ) - ( dp1[4][1] * c4 ) - ( dp1[5][1] * c5 ) - ( dp1[6][1] * c6 ) - ( dp1[7][1] * c7 ) - ( dp1[8][1] * c8 ) - ( dp1[9][1] * c9 )) ** 2
+												f_ = ( fat - ( dp1[0][2] * c0 ) - ( dp1[1][2] * c1 ) - ( dp1[2][2] * c2 ) - ( dp1[3][2] * c3 ) - ( dp1[4][2] * c4 ) - ( dp1[5][2] * c5 ) - ( dp1[6][2] * c6 ) - ( dp1[7][2] * c7 ) - ( dp1[8][2] * c8 ) - ( dp1[9][2] * c9 ))  ** 2
+												c_ = ( carbo - ( dp1[0][3] * c0 ) - ( dp1[1][3] * c1 ) - ( dp1[2][3] * c2 ) - ( dp1[3][3] * c3 ) - ( dp1[4][3] * c4 ) - ( dp1[5][3] * c5 ) - ( dp1[6][3] * c6 ) - ( dp1[7][3] * c7 ) - ( dp1[8][3] * c8 ) - ( dp1[9][3] * c9 ))  ** 2
+												s_ = ( salt - ( dp1[0][4] * c0 ) - ( dp1[1][4] * c1 ) - ( dp1[2][4] * c2 ) - ( dp1[3][4] * c3 ) - ( dp1[4][4] * c4 ) - ( dp1[5][4] * c5 ) - ( dp1[6][4] * c6 ) - ( dp1[7][4] * c7 ) - ( dp1[8][4] * c8 ) - ( dp1[9][4] * c9 ))  ** 2
+												delta = e_ + p_ + f_ + c_ + s_
 
-							if delta_min > delta || delta_min < 0
-								delta_min = delta
-								delta_min_vol = [c0, c1, c2, c3, c4]
+												if delta_min > delta || delta_min < 0
+													delta_min = delta
+													delta_min_vol = [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9]
+												end
+											end
+										end
+									end
+								end
 							end
 						end
 					end
@@ -141,7 +177,10 @@ when 'reasoning'
 
 		puts "2nd pass<br>" if @debug
 		food_max.times do |c|
-			if delta2p[c][0] == 0 && delta2p[c][1] == 0 && delta2p[c][2] == 0 && delta2p[c][3] == 0 && delta2p[c][4] == 0
+			if food_checks[c] == 1
+				vmin[c] = ( food_weights[c] * 10 ).floor.to_i
+				vmax[c] = ( food_weights[c] * 10 ).ceil.to_i
+			elsif dp2[c][0] == 0 && dp2[c][1] == 0 && dp2[c][2] == 0 && dp2[c][3] == 0 && dp2[c][4] == 0
 				vmin[c] = 0
 				vmax[c] = 1
 			else
@@ -164,18 +203,33 @@ when 'reasoning'
 					vmin[3].upto( vmax[3] ) do |c3|
 						break if c3 > c2
 						vmin[4].upto( vmax[4] ) do |c4|
-							break if c4 > c3 || ( c0 + c1 + c2 + c3 + c4 ) > volume10
+							break if c4 > c3
+							vmin[5].upto( vmax[5] ) do |c5|
+								break if c5 > c4
+								vmin[6].upto( vmax[6] ) do |c6|
+									break if c6 > c5
+									vmin[7].upto( vmax[7] ) do |c7|
+										break if c7 > c6
+										vmin[8].upto( vmax[8] ) do |c8|
+											break if c8 > c7
+											vmin[9].upto( vmax[9] ) do |c9|
+												break if c9 > c8 || ( c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9 ) > volume10
 
-							e_ = ( energy - ( delta2p[0][0] * c0 ) - ( delta2p[1][0] * c1 ) - ( delta2p[2][0] * c2 ) - ( delta2p[3][0] * c3 ) - ( delta2p[4][0] * c4 )) ** 2
-							p_ = (( protein - ( delta2p[0][1] * c0 ) - ( delta2p[1][1] * c1 ) - (delta2p[2][1] * c2 ) - ( delta2p[3][1] * c3 ) - ( delta2p[4][1] * c4 )) * ( energy / protein )) ** 2
-							f_ = (( fat - ( delta2p[0][2] * c0 ) - ( delta2p[1][2] * c1 ) - ( delta2p[2][2] * c2 ) - ( delta2p[3][2] * c3 ) - ( delta2p[4][2] * c4 )) * ( energy / fat ))  ** 2
-							c_ = (( carbo - ( delta2p[0][3] * c0 ) - ( delta2p[1][3] * c1 ) - ( delta2p[2][3] * c2 ) - ( delta2p[3][3] * c3 ) - ( delta2p[4][3] * c4 )) * ( energy / carbo )) ** 2
-							s_ = (( salt - ( delta2p[0][4] * c0 ) - ( delta2p[1][4] * c1 ) - ( delta2p[2][4] * c2 ) - ( delta2p[3][4] * c3 ) - ( delta2p[4][4] * c4 )) * ( energy / salt )) ** 2
-							delta = e_ + p_ + f_ + c_ + s_
+												e_ = ( energy - ( dp2[0][0] * c0 ) - ( dp2[1][0] * c1 ) - ( dp2[2][0] * c2 ) - ( dp2[3][0] * c3 ) - ( dp2[4][0] * c4 ) - ( dp2[5][0] * c5 ) - ( dp2[6][0] * c6 ) - ( dp2[7][0] * c7 ) - ( dp2[8][0] * c8 ) - ( dp2[9][0] * c9 )) ** 2
+												p_ = (( protein - ( dp2[0][1] * c0 ) - ( dp2[1][1] * c1 ) - (dp2[2][1] * c2 ) - ( dp2[3][1] * c3 ) - ( dp2[4][1] * c4 ) - ( dp2[5][1] * c5 ) - ( dp2[6][1] * c6 ) - ( dp2[7][1] * c7 ) - ( dp2[8][1] * c8 ) - ( dp2[9][1] * c9 )) * ( energy / protein )) ** 2
+												f_ = (( fat - ( dp2[0][2] * c0 ) - ( dp2[1][2] * c1 ) - ( dp2[2][2] * c2 ) - ( dp2[3][2] * c3 ) - ( dp2[4][2] * c4 ) - ( dp2[5][2] * c5 ) - ( dp2[6][2] * c6 ) - ( dp2[7][2] * c7 ) - ( dp2[8][2] * c8 ) - ( dp2[9][2] * c9 )) * ( energy / fat )) ** 2
+												c_ = (( carbo - ( dp2[0][3] * c0 ) - ( dp2[1][3] * c1 ) - ( dp2[2][3] * c2 ) - ( dp2[3][3] * c3 ) - ( dp2[4][3] * c4 ) - ( dp2[5][3] * c5 ) - ( dp2[6][3] * c6 ) - ( dp2[7][3] * c7 ) - ( dp2[8][3] * c8 ) - ( dp2[9][3] * c9 )) * ( energy / carbo )) ** 2
+												s_ = (( salt - ( dp2[0][4] * c0 ) - ( dp2[1][4] * c1 ) - ( dp2[2][4] * c2 ) - ( dp2[3][4] * c3 ) - ( dp2[4][4] * c4 ) - ( dp2[5][4] * c5 ) - ( dp2[6][4] * c6 ) - ( dp2[7][4] * c7 ) - ( dp2[8][4] * c8 ) - ( dp2[9][4] * c9 )) * ( energy / salt )) ** 2
+												delta = e_ + p_ + f_ + c_ + s_
 
-							if delta_min > delta || delta_min < 0
-								delta_min = delta
-								delta_min_vol = [c0, c1, c2, c3, c4]
+												if delta_min > delta || delta_min < 0
+													delta_min = delta
+													delta_min_vol = [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9]
+												end
+											end
+										end
+									end
+								end
 							end
 						end
 					end
@@ -186,16 +240,20 @@ when 'reasoning'
 
 		puts "Calculation FCT<br>" if @debug
 		fw_ex = []
-		fct_ex = [[],[],[],[],[]]
+		fct_ex = [[],[],[],[],[],[],[],[],[],[]]
 		fct_ex_total = [0.0, 0.0, 0.0, 0.0, 0.0]
 		delta_min_vol.size.times do |c|
 			t = ( delta_min_vol[c].to_f / 10 )
 			fw_ex << t.round( 1 )
 			food_max.times do |cc|
-				fct_ex[c] << ( delta1p[c][cc] * t ).round( 1 )
-				fct_ex_total[cc] += BigDecimal(( delta1p[c][cc] * t ).to_s )
+				if dp1[c][cc] != nil
+					fct_ex[c] << ( dp1[c][cc] * t ).round( 1 )
+					fct_ex_total[cc] += BigDecimal(( dp1[c][cc] * t ).to_s )
+				end
 			end
 		end
+		fw_ex_set = fw_ex.join( ':' )
+
 		fct_ex_total.map! do |x| x = x.round( 1 ) end
 
 		puts "FCT ratio<br>" if @debug
@@ -265,7 +323,7 @@ when 'reasoning'
 	</div>
 	<br>
 	<div class='row'>
-		<button type='button' class='btn btn-sm btn-success' onclick="detectiveAdopt( '#{fw_ex[0]}', '#{fw_ex[1]}', '#{fw_ex[2]}', '#{fw_ex[3]}', '#{fw_ex[4]}' )">#{lp[8]}</button>
+		<button type='button' class='btn btn-sm btn-success' onclick="detectiveAdopt( '#{fw_ex_set}' )">#{lp[8]}</button>
 	</div>
 </div>
 HTML
@@ -276,7 +334,7 @@ HTML
 
 when 'adopt'
 	puts 'ADOPT<br>' if @debug
-	fws = [@cgi['fw1'], @cgi['fw2'], @cgi['fw3'], @cgi['fw4'], @cgi['fw5']]
+	fws = @cgi['fw_set'].split( ':' )
 
 	r = mdb( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
 	if r.first

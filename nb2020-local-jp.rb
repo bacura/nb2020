@@ -61,7 +61,10 @@ $PALETTE_DEFAULT = { 'jp' => @palette_default }
 
 #             0                1                   2                 3                4             5                 6                7                     8              9               10                   11                  12                  13                14               15                   16                     17                     18             19             20             21             22             23
 @kex_item = { 'ND'=>'未設定', 'original'=>'独自→', 'HEIGHT'=>'身長', 'WEIGHT'=>'体重', 'BMI'=>'BMI', 'BFR'=>'体脂肪率', 'WAIST'=>'腹囲', 'BS'=>'ブリストルスケール','SETP'=>'歩数', 'METs'=>'METs', 'dENERGY'=>'Δエネルギー', 'SDB'=>'収縮期血圧', 'DBP'=>'拡張期血圧', 'FBS'=>'空腹時血糖', 'HbA1c'=>'HbA1c', 'TG'=>'中性脂肪', 'TC'=>'総コレステロール', 'LDL'=>'LDLコレステロール', 'HDL'=>'HDLコレステロール', 'UA'=>'尿酸',  'AST'=>'AST',  'ALT'=>'ALT',  'ALP'=>'ALP',  'LDH'=>'LDH',  'gGTP'=>'γ-GTP' }
-@kex_unit = { 'ND'=>'',      'original'=>'',      'HEIGHT'=>'cm',   'WEIGHT'=>'kg',  'BMI'=>'',    'BFR'=>'%',        'WAIST'=>'cm',  'BS'=>'',             'STEP'=>'歩',  'METs'=>'',     'dENERGY'=>'kcal',      'SDB'=>'mmHg',      'DBP'=>'mmHg',      'FBS'=>'mg/dl',     'HbA1c'=>'%',     'TG'=>'mg/dL',   'TC'=>'mg/dL',       'LDL'=>'mg/dL',         'HDL'=>'mg/dL',        'UA'=>'mg/dL', 'AST'=>'IU/L', 'ALT'=>'IU/L', 'ALP'=>'IU/L', 'LDH'=>'IU/L', 'gGTP'=>'IU/L' }
+@kex_unit = { 'ND'=>'',      'original'=>'',      'HEIGHT'=>'cm',   'WEIGHT'=>'kg',  'BMI'=>'',  'BFR'=>'%',  'WAIST'=>'cm',  'BS'=>'',  'STEP'=>'歩',  'METs'=>'', 'dENERGY'=>'kcal', 'SDB'=>'mmHg',  'DBP'=>'mmHg',      'FBS'=>'mg/dl',     'HbA1c'=>'%',     'TG'=>'mg/dL',   'TC'=>'mg/dL',       'LDL'=>'mg/dL',         'HDL'=>'mg/dL',        'UA'=>'mg/dL', 'AST'=>'IU/L', 'ALT'=>'IU/L', 'ALP'=>'IU/L', 'LDH'=>'IU/L', 'gGTP'=>'IU/L' }
+@kex_std = { '身長'=>'cm', '体重'=>'kg', 'BMI'=>'', '体脂肪率'=>'%', '腹囲'=>'cm', 'ブリストルスケール'=>'','歩数'=>'歩', 'METs'=>'', 'Δエネルギー'=>'kcal', '収縮期血圧'=>'mmHg', '拡張期血圧'=>'mmHg', '空腹時血糖'=>'mg/dl', 'HbA1c'=>'%', '中性脂肪'=>'mg/dL', '総コレステロール'=>'mg/dL', 'LDL'=>'mg/dL', 'HDL'=>'mg/dL', '尿酸'=>'mg/dL',  'AST'=>'IU/L',  'ALT'=>'IU/L',  'ALP'=>'IU/L',  'LDH'=>'IU/L',  'γ-GTP'=>'IU/L' }
+
+
 @kex_column = 9
 
 @something = {'?--'=>'何か食べた（微盛）', '?-'=>'何か食べた（小盛）', '?='=>'何か食べた（並盛）', '?+'=>'何か食べた（大盛）', '?++'=>'何か食べた（特盛）', '?0'=>'何も食べない'}

@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.41b (2020/07/24)
+#nb2020-dbi.rb 0.42b (2020/09/10)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -663,7 +663,7 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipe VARCHAR(256), recipe3ds VARCHAR(256), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(64), icalc TINYINT, koyomi VARCHAR(512), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255), fcze VARCHAR(128), school VARCHAR(512));'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipe VARCHAR(256), recipe3ds VARCHAR(256), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(64), icalc TINYINT, koyomi VARCHAR(1000), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255), fcze VARCHAR(128), school VARCHAR(512));'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
@@ -909,7 +909,7 @@ def koyomiex_init()
 	if res.first
 		puts 'koyomiex already exists.'
 	else
-		query = 'CREATE TABLE koyomiex (user VARCHAR(32), item0 VARCHAR(16), item1 VARCHAR(16), item2 VARCHAR(16), item3 VARCHAR(16), item4 VARCHAR(16), item5 VARCHAR(16), item6 VARCHAR(16), item7 VARCHAR(16), item8 VARCHAR(16), item9 VARCHAR(16), date DATE );'
+		query = 'CREATE TABLE koyomiex (user VARCHAR(32), cell VARCHAR(1000), date DATE );'
 		$DB.query( query )
 		puts 'koyomiex table has been created.'
 	end

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 file into koyomi extra 0.12b
+#Nutrition browser 2020 file into koyomi extra 0.20b (2022/09/10)
 
 
 #==============================================================================
@@ -30,8 +30,10 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 lp = user.load_lp( script )
+html = []
 
-#### Guild member check
+
+puts 'CHECK membership<br>' if @debug
 if user.status < 3
 	puts "Guild member error."
 	exit
@@ -53,19 +55,17 @@ if @debug
 end
 
 
-puts "Loading config<br>" if @debug
-kex_select = Hash.new
-#kex_item = Hash.new
-#kex_unit = Hash.new
+puts "LOAD config<br>" if @debug
+start = Time.new.year
+kexu = Hash.new
+kexa = Hash.new
 r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-		koyomi = JSON.parse( r.first['koyomi'] )
+		koyomi = JSON.parse( r.first['koyomi'] ) if r.first['koyomi'] != ''
 		start = koyomi['start'].to_i
-		kex_select = koyomi['kex_select']
-		kex_oname = koyomi['kex_oname']
-		kex_ounit = koyomi['kex_ounit']
-		p koyomi if @debug
+		kexu = koyomi['kexu']
+		kexa = koyomi['kexa']
 	end
 end
 
@@ -76,13 +76,19 @@ when 'upload'
 	file_origin = @cgi['extable'].original_filename.force_encoding( 'utf-8' )
 	file_type = @cgi['extable'].content_type
 	file_body = @cgi['extable'].read
-	file_size = file_body.size.to_i
+	file_size = "#{( file_body.size / 1000 ).to_i} kbyte"
 
-	puts "<table class='table'>"
-	puts "<tr><td>#{lp[2]}</td><td>#{file_origin}</td></tr>"
-	puts "<tr><td>#{lp[3]}</td><td>#{file_type}</td></tr>"
-	puts "<tr><td>#{lp[4]}</td><td>#{file_size}</td></tr>"
-	puts "</table>"
+	####
+####
+html[10] = <<-"HTML10"
+<table class='table'>
+	<tr><td>#{lp[2]}</td><td>#{file_origin}</td></tr>
+	<tr><td>#{lp[3]}</td><td>#{file_type}</td></tr>
+	<tr><td>#{lp[4]}</td><td>#{file_size}</td></tr>
+</table>
+HTML10
+####
+	####
 
 	if file_type == 'text/plain' || file_type == 'text/csv' || file_type == 'application/vnd.ms-excel'
 		file_body.gsub!( "\r\n", "\n" )
@@ -100,58 +106,78 @@ when 'upload'
 		f.puts file_body
 		f.close
 
-		puts "<table class='table table-bordered'>"
-		puts "<tr>"
-		puts "<td></td>"
-		line1.size.times do |c| puts "<th>#{c}</th>" end
-		puts "</tr>"
-		puts "<tr>"
-		puts "<th>#{lp[5]}</th>"
-		line1.each do |e| puts "<td>#{e}</td>" end
-		puts "</tr>"
-		puts "<tr>"
-		puts "<th>#{lp[6]}</th>"
-		line2.each do |e| puts "<td>#{e}</td>" end
-		puts "</tr>"
+		col_no_html = ''
+		line1.size.times do |c| col_no_html << "<th align='center'>#{c}</th>" end
 
-		puts "<tr>"
-		puts "<th>#{lp[7]}</th>"
-		line1.size.times do |c|
-			puts "<td>"
-			puts "<SELECT class='form-select form-select-sm' id='item#{c}'>"
-			puts "<OPTION value='0'>#{lp[8]}</OPTION>"
-			puts "<OPTION value='date'>#{lp[12]}</OPTION>"
-			0.upto( 9 ) do |cc|
-				puts "<OPTION value='#{kex_select[cc.to_s]}'>#{@kex_item[kex_select[cc.to_s]]}</OPTION>" if kex_select[cc.to_s] != 'ND'
-			end
-			puts "/<SELECT>"
-			puts "</td>"
+		lin = ''
+		line1.each do |e|
+			lin << "#{e}"
 		end
-		puts "</tr>"
-		puts "</table>"
+puts lin
+#		line1.each do |e| line1_html << "<td style='font-size:0.5rem'></td>" end
+		line2_html = ''
+		line2.each do |e| line2_html << "<td style='font-size:1rem'>#{e}</td>" end
 
-		puts "<div class='row'>"
-		puts "<div class='col-2'>"
-		puts "	<div class='form-check'>"
-		puts "	<input class='form-check-input' type='checkbox' id='skip_line1'>"
-		puts "	<label class='form-check-label'>#{lp[9]}</label>"
-		puts "	</div>"
-		puts "</div>"
-		puts "<div class='col-2'>"
-		puts "	<div class='form-check'>"
-		puts "	<input class='form-check-input' type='checkbox' id='overwrite'>"
-		puts "	<label class='form-check-label'>#{lp[10]}</label>"
-		puts "	</div>"
-		puts "</div>"
-		puts "<div align='right' class='col-8'>"
-		puts "	<button type='button' class='btn btn-sm btn-outline-primary' onclick=\"writekoyomiex( '#{tmp_file}', '#{line1.size}', '#{lp[13]}' )\">#{lp[11]}</button>"
-		puts "</div>"
-		puts "</div>"
+		line_select = ''
+		line1.size.times do |c|
+			line_select << "<td>"
+			line_select << "<SELECT class='form-select form-select-sm' id='item#{c}'>"
+			line_select << "<OPTION value='date'>#{lp[12]}</OPTION>"
+			kexu.each do |k, v| line_select << "<OPTION value='#{k}'>#{k}</OPTION>" end
+			line_select << "/<SELECT>"
+			line_select << "</td>"
+		end
+
+		########
+########
+html[20] = <<-"HTML20"
+<table class='table table-bordered'>
+	<tr>
+		<td></td>
+		#{col_no_html}
+	</tr>
+	<tr>
+		<th>#{lp[5]}</th>
+		#{lin}
+	</tr>
+	<tr>
+		<th>#{lp[6]}</th>
+		#{line2_html}
+	</tr>
+
+	<tr>
+		<th>#{lp[7]}</th>
+		#{line_select}
+	</tr>
+</table>
+
+<div class='row'>
+	<div class='col-2'>
+		<div class='form-check'>
+			<input class='form-check-input' type='checkbox' id='skip_line1'>
+			<label class='form-check-label'>#{lp[9]}</label>
+		</div>
+	</div>
+	<div class='col-2'>
+		<div class='form-check'>
+			<input class='form-check-input' type='checkbox' id='overwrite'>
+			<label class='form-check-label'>#{lp[10]}</label>
+		</div>
+	</div>
+	<div align='right' class='col-8'>
+		<button type='button' class='btn btn-sm btn-outline-primary' onclick=\"writekoyomiex( '#{tmp_file}', '#{line1.size}', '#{lp[13]}' )\">#{lp[11]}</button>
+	</div>
+</div>
+HTML20
+########
+		########
 
 	else
 		puts lp[1]
 		exit
 	end
+
+
 when 'update'
 	puts "Loading temporary file<br>" if @debug
 	matrix = []
@@ -243,3 +269,5 @@ when 'update'
 	end
 	puts lp[16]
 end
+
+puts html.join

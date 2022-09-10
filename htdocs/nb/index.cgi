@@ -165,19 +165,19 @@ def html_nav( user, lp )
   else
     cb = "#{lp[1]} <span class='badge badge-pill badge-secondary' id='CBN'>#{cb_num}</span>"
     mb = "#{lp[2]} <span class='badge badge-pill badge-secondary' id='MBN'>#{meal_num}</span>"
-    special_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{@category[0]}</button></a>"
-    his_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[4]}</button></a>"
-    sum_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{cb}</button></a>"
-    recipe_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[5]}</button></a>"
-    menu_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{mb}</button></a>"
-    set_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[6]}</button></a>"
-    config_button = "<a href='login.cgi'><button type='button' class='btn btn btn-dark btn-sm nav_button text-secondary'>#{lp[7]}</button></a>"
+    special_button = "<a href='login.cgi'><button type='button' class='btn-dark btn-sm nav_button text-secondary'>#{@category[0]}</button></a>"
+    his_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[4]}</button></a>"
+    sum_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{cb}</button></a>"
+    recipe_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[5]}</button></a>"
+    menu_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{mb}</button></a>"
+    set_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[6]}</button></a>"
+    config_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[7]}</button></a>"
   end
 
   if user.status >= 3
-    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu( '#{user.status}' )\">G</button>"
+    g_button = "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu( '#{user.status}' )\">G</button>"
   else
-    g_button = "<button type='button' class='btn btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVIDEO( '#{lp[9]}' )\">G</button>"
+    g_button = "<button type='button' class='btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVIDEO( '#{lp[9]}' )\">G</button>"
   end
 
   gm_account = ''

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.13b (2022/08/11)
+#Nutrition browser 2020 cutting board 0.14b (2022/08/29)
 
 #==============================================================================
 #LIBRARY
@@ -846,6 +846,13 @@ else
 	qprint_html = "<div class='col-1'><span onclick=\"print_templateSelect( '#{code}' )\">#{lp[34]}</span></div>"
 end
 
+#### Detective
+detective_html = ''
+if user.status < 2
+	detective_html = "<div class='col-1'></div>"
+else
+	detective_html = "<div class='col-1'><button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick='initDetective()'>#{lp[28]}</button></div>"
+end
 
 foot_html = <<-"LOWER_MENU"
 <br>
@@ -855,7 +862,7 @@ foot_html = <<-"LOWER_MENU"
 		#{price_html}
 		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="luckyInput()">#{lp[21]}</button></div>
 		<div class='col-1'><button class='btn btn-primary btn-sm' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</button></div>
-		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick=\"initDetective()\">#{lp[28]}</button></div>
+		#{detective_html}
 		<div class='col-4'></div>
 		#{qsave_html}
 		#{qprint_html}
