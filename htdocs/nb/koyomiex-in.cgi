@@ -43,14 +43,10 @@ end
 #### Getting POST data
 command = @cgi['command']
 file = @cgi['file']
-skip_line1 = @cgi['skip_line1']
-overwrite = @cgi['overwrite']
 item_solid = @cgi['item_solid']
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "file:#{file}<br>\n"
-	puts "skip_line1:#{skip_line1}<br>\n"
-	puts "overwrite:#{overwrite}<br>\n"
 	puts "item_solid:#{item_solid}<br>\n"
 end
 
@@ -59,6 +55,10 @@ puts "LOAD config<br>" if @debug
 start = Time.new.year
 kexu = Hash.new
 kexa = Hash.new
+kexc = Hash.new
+skip_line1 = nil
+overwrite = nil
+
 r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
@@ -66,6 +66,7 @@ if r.first
 		start = koyomi['start'].to_i
 		kexu = koyomi['kexu']
 		kexa = koyomi['kexa']
+		kexin = koyomi['kexin']
 	end
 end
 
@@ -77,6 +78,11 @@ when 'upload'
 	file_type = @cgi['extable'].content_type
 	file_body = @cgi['extable'].read
 	file_size = "#{( file_body.size / 1000 ).to_i} kbyte"
+
+	unless kexin == nil
+		overwrite = kexin['overwrite']
+		skip_line1 = kexin['skip_line1']
+	end
 
 	####
 ####
@@ -96,7 +102,7 @@ HTML10
 		file_body.gsub!( ',', "\t" )
 		file_body.gsub!( '"', '' )
 
-		rows = file_body.split( "\n" )
+		rows = file_body.force_encoding( 'utf-8' ).split( "\n" )
 		line1 = rows[0].split( "\t" )
 		line2 = rows[1].split( "\t" )
 
@@ -109,12 +115,9 @@ HTML10
 		col_no_html = ''
 		line1.size.times do |c| col_no_html << "<th align='center'>#{c}</th>" end
 
-		lin = ''
-		line1.each do |e|
-			lin << "#{e}"
-		end
-puts lin
-#		line1.each do |e| line1_html << "<td style='font-size:0.5rem'></td>" end
+		line1_html = ''
+		line1.each do |e| line1_html << "<td style='font-size:0.5rem'>#{e}</td>" end
+
 		line2_html = ''
 		line2.each do |e| line2_html << "<td style='font-size:1rem'>#{e}</td>" end
 
@@ -122,11 +125,20 @@ puts lin
 		line1.size.times do |c|
 			line_select << "<td>"
 			line_select << "<SELECT class='form-select form-select-sm' id='item#{c}'>"
+			line_select << "<OPTION value='-'></OPTION>"
 			line_select << "<OPTION value='date'>#{lp[12]}</OPTION>"
 			kexu.each do |k, v| line_select << "<OPTION value='#{k}'>#{k}</OPTION>" end
 			line_select << "/<SELECT>"
 			line_select << "</td>"
 		end
+
+
+		skip_line1_checked = ''
+		skip_line1_checked = 'CHECKED' if skip_line1 == '1'
+
+		overwrite_checked = ''
+		overwrite_checked = 'CHECKED' if overwrite == '1'
+
 
 		########
 ########
@@ -136,10 +148,12 @@ html[20] = <<-"HTML20"
 		<td></td>
 		#{col_no_html}
 	</tr>
+
 	<tr>
-		<th>#{lp[5]}</th>
-		#{lin}
+	<th>#{lp[5]}</th>
+		#{line1_html}
 	</tr>
+
 	<tr>
 		<th>#{lp[6]}</th>
 		#{line2_html}
@@ -154,19 +168,19 @@ html[20] = <<-"HTML20"
 <div class='row'>
 	<div class='col-2'>
 		<div class='form-check'>
-			<input class='form-check-input' type='checkbox' id='skip_line1'>
+			<input class='form-check-input' type='checkbox' id='skip_line1' #{skip_line1_checked}>
 			<label class='form-check-label'>#{lp[9]}</label>
 		</div>
 	</div>
 	<div class='col-2'>
 		<div class='form-check'>
-			<input class='form-check-input' type='checkbox' id='overwrite'>
+			<input class='form-check-input' type='checkbox' id='overwrite'  #{overwrite_checked}>
 			<label class='form-check-label'>#{lp[10]}</label>
 		</div>
 	</div>
-	<div align='right' class='col-8'>
-		<button type='button' class='btn btn-sm btn-outline-primary' onclick=\"writekoyomiex( '#{tmp_file}', '#{line1.size}', '#{lp[13]}' )\">#{lp[11]}</button>
-	</div>
+</div>
+<div class='row'>
+	<button type='button' class='btn btn-sm btn-warning' onclick=\"writekoyomiex( '#{tmp_file}', '#{line1.size}', '#{lp[13]}' )\">#{lp[11]}</button>
 </div>
 HTML20
 ########
@@ -177,9 +191,11 @@ HTML20
 		exit
 	end
 
-
 when 'update'
 	puts "Loading temporary file<br>" if @debug
+	skip_line1 = @cgi['skip_line1']
+	overwrite = @cgi['overwrite']
+
 	matrix = []
 	d = 0
 	f = open( "#{$TMP_PATH}/#{file}", 'r' )
@@ -190,35 +206,22 @@ when 'update'
 	f.close
 	matrix.shift if skip_line1 == '1'
 
+
 	puts 'Detevting item column<br>' if @debug
-	file_item_nos = item_solid.split( ':' )
-	date_column = 0
-	file_date_column = 0
-	file_item_nos.size.times do |c|
-		if file_item_nos[c] == 'date'
-			date_column = c
-		end
+	kex_key = item_solid.split( ':' )
+	kex_posi = Hash.new
+	c = 0
+	kex_key.each do |e|
+		kex_posi['date'] = c if e == 'date'
+		kex_posi[e] = c if e != nil || e != ''
+		c += 1
 	end
 
-	item_column_posi = []
-	0.upto( 9 ) do |c|
-		if kex_select[c.to_s] != 'ND'
-			file_item_nos.size.times do |cc|
-				if kex_select[c.to_s] == file_item_nos[cc]
-					item_column_posi[c] = cc
-				end
-			end
-			item_column_posi[c] = 0 if item_column_posi[c] == nil
-		else
-			item_column_posi[c] = 0
-		end
-	end
 
-	puts "date_column:#{date_column}<br>" if @debug
-	puts "item_column_posi:#{item_column_posi}<br>" if @debug
+	puts "kex_posi:#{kex_posi}<br>" if @debug
 	count = 0
 	matrix.each do |ea|
-		t = ea[date_column]
+		t = ea[kex_posi['date']]
 		t.gsub!( '/', '-' )
 		t.gsub!( '.', '-' )
 		t.gsub!( '年', '-' )
@@ -228,32 +231,31 @@ when 'update'
 		yyyymmdd = a[0]
 
 		if yyyymmdd != nil
-			sql_set = 'SET '
+			puts "LOAD date cell<br>" if @debug
 			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
+			kexc = Hash.new
+			count_flag = false
 			if r.first
-				item_column_posi.size.times do |c|
-					if item_column_posi[c] != 0 && ( r.first["item#{c}"] == '' || r.first["item#{c}"] == nil ) || ( overwrite == '1' && item_column_posi[c] != 0 )
-						sql_set << "item#{c}='#{ea[item_column_posi[c]]}',"
+				kexc = JSON.parse( r.first['cell'] ) if r.first['cell'] != nil && r.first['cell'] != ''
+				kex_posi.each do |k, v|
+					unless k == 'date'
+						if kexc[k] == '' || kexc[k] == nil || overwrite == '1'
+							kexc[k] = ea[v]
+							count_flag = true
+						end
 					end
 				end
-				sql_set.chop!
+				cell_ = JSON.generate( kexc )
+				mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}' WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
+				count += 1 if count_flag
 
-				if sql_set != 'SET'
-					mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} #{sql_set} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
-					count += 1
-				end
 			else
-				item_column_posi.size.times do |c|
-					if item_column_posi[c] != 0
-						sql_set << "item#{c}='#{ea[item_column_posi[c]]}',"
-					end
+				kex_posi.each do |k, v|
+					kexc[k] = ea[v] unless k == 'date'
 				end
-				sql_set.chop!
-
- 				if sql_set != 'SET'
-					mdb( "INSERT #{$MYSQL_TB_KOYOMIEX} #{sql_set}, user='#{user.name}', date='#{yyyymmdd}';", false, @debug )
-					count += 1
-				end
+				cell_ = JSON.generate( kexc )
+				mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}', user='#{user.name}', date='#{yyyymmdd}';", false, @debug )
+				count += 1
 			end
 		else
 			puts lp[15]
@@ -261,13 +263,23 @@ when 'update'
 		end
 	end
 
-	puts "#{lp[17]}<br>" if skip_line1 == "1"
-	if overwrite == "1"
-		puts "#{lp[18]} (#{count}/#{matrix.size})<br>"
+	puts "Infom result<br>" if @debug
+	html[30] = ''
+	html[30] << "#{lp[17]}<br>" if skip_line1 == '1'
+	if overwrite == '1'
+		html[30] << "#{lp[18]} (#{count}/#{matrix.size})<br>"
 	else
-		puts "#{lp[19]} (#{count}/#{matrix.size})<br>"
+		html[30] << "#{lp[19]} (#{count}/#{matrix.size})<br>"
 	end
-	puts lp[16]
 end
 
 puts html.join
+
+
+if command == 'update'
+	puts 'UPDATE config<br>' if @debug
+
+	kexin = { 'skip_line1'=>skip_line1, 'overwrite'=>overwrite }
+	koyomi_ = JSON.generate( { "start"=>start,  "kexu"=>kexu, "kexa"=>kexa, "kexin"=>kexin } )
+	mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
+end

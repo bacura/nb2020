@@ -39,7 +39,7 @@ def config_module( cgi, user, lp )
 	case step
 	when 'kstart'
 		start = cgi['kstart'].to_i
-		puts "start: #{start}<br>"
+		puts "start: #{start}<br>" if @debug
 
 	when 'new'
 		kexu[kex_add_key] = kex_add_unit
