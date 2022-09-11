@@ -1,4 +1,4 @@
-# Weight keep module for Physique 0.02b
+# Weight keep module for Physique 0.03b (2022/09/11)
 #encoding: utf-8
 
 @module = 'weight-keep'
@@ -6,9 +6,9 @@
 
 def physique_module( cgi, user )
 	l = module_lp( user.language )
-	persed_today = Time.parse( @datetime )
+	today_p = Time.parse( @datetime )
 
-	#importing from config
+	puts "LOAD bio config<br>" if @debug
 	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
@@ -17,7 +17,6 @@ def physique_module( cgi, user )
 			birth = Time.parse( bio['birth'] )
 			height = bio['height'].to_f * 100
 			weight = bio['weight'].to_f
-			kexow = bio['kexow'].to_i
 			pgene = bio['pgene'].to_i
 			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
 		end
@@ -43,40 +42,43 @@ def physique_module( cgi, user )
 		end
 
 		sex_ = [l['male'], l['female']]
-		female_selected = ''
-		female_selected = 'SELECTED ' if sex == 1
 
+		####
+########
 html = <<-"HTML"
-		<div class='row'>
-			<div class='col'><h5>#{l['chart_name']}</h5></div>
-		</div>
+<div class='row'>
+	<div class='col'><h5>#{l['chart_name']}</h5></div>
+</div>
 
-		<div class='row'>
-		<div class='col-6'>
-		<table class='table table-sm'>
-			<thead><th></th><th>#{l['sex']}</th><th>#{l['age']}</th><th>#{l['height']}</th><th>#{l['weight']}</th></thead>
-			<tr><td></td><td>#{sex_[sex]}</td><td>#{age}</td><td>#{height}</td><td>#{weight}</td></tr>
-		</table>
-		</div>
-		</div>
+<div class='row'>
+<div class='col-6'>
+<table class='table table-sm'>
+	<thead><th></th><th>#{l['sex']}</th><th>#{l['age']}</th><th>#{l['height']}</th><th>#{l['weight']}</th></thead>
+	<tr><td></td><td>#{sex_[sex]}</td><td>#{age}</td><td>#{height}</td><td>#{weight}</td></tr>
+</table>
+</div>
+</div>
 
-		<div class='row'>
-			<div class='col-3'>
-				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{l['start_date']}</span>
-					<input type='date' class='form-control' id='start_date' value='#{start_date}' onchange='drawChart()'>
-				</div>
-			</div>
-			<div class='col-3'>
-				<div class="input-group input-group-sm">
-					<label class="input-group-text">#{l['pal']}</label>
-					<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
-				</div>
-			</div>
+<div class='row'>
+	<div class='col-3'>
+		<div class='input-group input-group-sm'>
+			<span class='input-group-text'>#{l['start_date']}</span>
+			<input type='date' class='form-control' id='start_date' value='#{start_date}' onchange='drawChart()'>
 		</div>
+	</div>
+	<div class='col-3'>
+		<div class="input-group input-group-sm">
+			<label class="input-group-text">#{l['pal']}</label>
+			<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
+		</div>
+	</div>
+</div>
 HTML
+########
+		####
+
 	when 'raw'
-		puts 'raw<br>' if @debug
+		puts "SET date<br>" if @debug
 		start_date = cgi['start_date']
 		pal = cgi['pal'].to_f
 
@@ -87,60 +89,50 @@ HTML
 		else
 			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, @debug )
 		end
+		start_date_p = Time.parse( start_date )
+		p start_date if @debug
 
-		# X axis
+		puts "SET X axis<br>" if @debug
 		x_day = []
-		persed_date = Time.parse( start_date )
-		while persed_date <= persed_today do
-			x_day << persed_date.strftime( "%Y-%m-%d" )
-			persed_date += 86400
+		start_date_p = Time.parse( start_date )
+		while start_date_p <= today_p do
+			x_day << start_date_p.strftime( "%Y-%m-%d" )
+			start_date_p += 86400
 		end
 
-		#Koyomiex config
-		puts "Loading config<br>" if @debug
-		weight_kex = -1
-		bfr_kex = -1
-		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-		if r.first
-			koyomi = JSON.parse( r.first['koyomi'] )
-			kex_select = koyomi['kex_select']
-			p kex_select if @debug
-			0.upto( 9 ) do |c|
- 				weight_kex = c if kex_select[c.to_s] == 'WEIGHT'
-				bfr_kex = c if kex_select[c.to_s] == 'BFR'
-			end
-		end
-		puts "weight_kex:#{weight_kex}<br>" if @debug
-		puts "bfr_kex:#{bfr_kex}<br>" if @debug
-
-
-		# measured weight & body fat tate
+		puts "SET measured weight & body fat tate<br>" if @debug
 		measured_weight = []
 		bfr = []
 		recent_weight = 0.0
-		persed_date = Time.parse( start_date )
-		while persed_date <= persed_today do
-			target_date = persed_date.strftime( "%Y-%m-%d" )
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{target_date}';", false, @debug )
-			if r.first
-				if weight_kex >= 0 && r.first["item#{weight_kex}"].to_f != 0
-					measured_weight << r.first["item#{weight_kex}"].to_f
-					recent_weight = r.first["item#{weight_kex}"].to_f if r.first["item#{weight_kex}"].to_f != 0
-				else
-					measured_weight << 'NA'
-				end
-				if bfr_kex >= 0 && r.first["item#{bfr_kex}"].to_f != 0
-					bfr << r.first["item#{bfr_kex}"].to_f
-				else
-					bfr << 'NA'
-				end
-			else
-				measured_weight << 'NA'
-				bfr << 'NA'
-			end
-			persed_date += 86400
+		start_date_p = Time.parse( start_date )
+
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date>='#{start_date}';", false, @debug )
+		r.each do |e|
+			kexc = JSON.parse( e['cell'] )
+			day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" ) ) - start_date_p ) / 86400 ).to_i
+			measured_weight[day_pass] = kexc['体重'].to_f if kexc['体重'] != nil
+			recent_weight = kexc['体重'].to_f if kexc['体重'] != nil
+			bfr[day_pass] = kexc['体脂肪率'].to_f if kexc['体脂肪率'] != nil
 		end
 
+		measured_weight.map! do |x|
+			if x == nil
+				x = 'NA'
+			else
+				x = x
+			end
+		end
+
+		bfr.map! do |x|
+			if x == nil
+				x = 'NA'
+			else
+				x = x
+			end
+		end
+
+
+		puts "CALC energy<br>" if @debug
 		m_energy = calc_energy( recent_weight, height, age, sex, pal )
 		delta_weight = recent_weight - weight
 		delta_energy = 0.0
@@ -278,36 +270,38 @@ var drawChart = function(){
 
 //--------------------------------------------------------------------------
 		var day_size = x_day.length - 1;
-		var rd_weight = ['#{l['data_latest']}'];
-		var rd_bfr = ['rd_bfr'];
-		var p_weight = ['#{l['data_recent']}'];
+		var l_weight = ['#{l['data_latest']}'];
+		var l_bfr = ['l_bfr'];
+		var p_weight = ['#{l['data_past']}'];
 		var p_bfr = ['p_bfr'];
-		var r_weight = ['#{l['data_past']}'];
+		var r_weight = ['#{l['data_recent']}'];
 		var r_bfr = ['r_bfr'];
 		var f_weight = ['#{l['data_first']}'];
 		var	f_bfr = ['f_bfr'];
-		var rd_flag = true;
+		var l_flag = true;
 		var p_flag = true;
+
 		for( i = day_size; i >= 1; i-- ){
-			if( y_weight[i] != 'NA' ){
-				if( rd_flag ){
-					rd_weight.push( y_weight[i] );
-					rd_bfr.push( y_bfr[i] );
-					rd_flag = false;
+			if( y_weight[i] != 'NA' && y_bfr[i] != 'NA' && y_weight[i] != null && y_bfr[i] != null ){
+				if( l_flag ){
+					l_weight.push( y_weight[i] );
+					l_bfr.push( y_bfr[i] );
+					l_flag = false;
 				}else if( p_flag ){
-					p_weight.push( y_weight[i] );
-					p_bfr.push( y_bfr[i] );
+					r_weight.push( y_weight[i] );
+					r_bfr.push( y_bfr[i] );
 					if( i <= day_size - 23 ){
 						p_flag = false;
 					}
 				}else{
-					r_weight.push( y_weight[i] );
-					r_bfr.push( y_bfr[i] );
+					p_weight.push( y_weight[i] );
+					p_bfr.push( y_bfr[i] );
 				}
 			}
 		}
-		f_weight[1] = r_weight.pop();
-		f_bfr[1] = r_bfr.pop();
+
+		f_weight[1] = p_weight.pop();
+		f_bfr[1] = p_bfr.pop();
 
 		var chart_sub = c3.generate({
 			bindto: '#physique_#{@module}-chart-sub',
@@ -316,17 +310,17 @@ var drawChart = function(){
 				columns: [
 					f_weight,
 					f_bfr,
-					r_weight,
-					r_bfr,
 					p_weight,
 					p_bfr,
-					rd_weight,
-					rd_bfr
+					r_weight,
+					r_bfr,
+					l_weight,
+					l_bfr
 				],
-				xs: { #{l['data_first']}:'f_bfr', #{l['data_latest']}:'rd_bfr', #{l['data_recent']}:'p_bfr', #{l['data_past']}:'r_bfr' },
+				xs: { #{l['data_first']}:'f_bfr', #{l['data_past']}:'p_bfr', #{l['data_latest']}:'l_bfr', #{l['data_recent']}:'r_bfr' },
 				labels: true,
 				type : 'scatter',
-				colors: { #{l['data_first']}:'#4b0082', #{l['data_latest']}:'#dc143c', #{l['data_recent']}:'#00ff00', #{l['data_past']}:'#c0c0c0'}
+				colors: { #{l['data_first']}:'#4b0082', #{l['data_past']}:'#c0c0c0',  #{l['data_recent']}:'#00ff00', #{l['data_latest']}:'#dc143c' }
 			},
 
 			axis: {

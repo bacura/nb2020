@@ -1,29 +1,29 @@
-# Growth curve module for Momchai 0.00b
+# Growth curve module for Momchai 0.01b (2022/09/11)
 #encoding: utf-8
 
 require 'time'
 
 @module = 'growth-curve'
+@debug = false
 
 def momchai_module( cgi, user, debug )
 	l = module_lp( user.language )
-	persed_today = Time.parse( @datetime )
+	today_p = Time.parse( @datetime )
 
-	#importing from config
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, debug )
+	puts "LOAD bio config<br>" if @debug
+	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
 			sex = bio['sex'].to_i
-			birth = Time.parse( bio['birth'] )
-			birth_ = birth.strftime( "%Y-%m-%d" )
+			birth_p = Time.parse( bio['birth'] )
+			birth = birth_p.strftime( "%Y-%m-%d" )
 			height = bio['height'].to_f * 100
 			weight = bio['weight'].to_f
-			kexow = bio['kexow'].to_i
-			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
-			age_yyyy = (( persed_today - birth ) / 31536000 ).to_i
-			age_mm = ((( persed_today - birth ) % 31536000 ) / ( 2628000 )).to_i
-			age_dd = (( persed_today - birth ) / 86400).to_i
+			age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth_p.strftime( "%Y%m%d" ).to_i ) / 10000
+			age_yyyy = (( today_p - birth_p ) / 31536000 ).to_i
+			age_mm = ((( today_p - birth_p ) % 31536000 ) / ( 2628000 )).to_i
+			age_dd = (( today_p - birth_p ) / 86400).to_i
 		end
 	end
 
@@ -38,89 +38,84 @@ def momchai_module( cgi, user, debug )
 		module_js( l )
 
 		sex_ = [l['male'], l['female']]
-		female_selected = ''
-		female_selected = 'SELECTED ' if sex == 1
 
+		########
+########
 html = <<-"HTML"
-		<div class='row'>
-			<div class='col'><h5>#{l['chart_name']}</h5></div>
-		</div>
+<div class='row'>
+	<div class='col'><h5>#{l['chart_name']}</h5></div>
+</div>
 
-		<div class='row'>
-		<div class='col-6'>
+<div class='row'>
+	<div class='col-6'>
 		<table class='table table-sm'>
-			<thead><th></th><th>#{l['start_date']}</th><th>#{l['age']}</th><th>#{l['height']}</th><th>#{l['weight']}</th><th>#{l['sex']}</th></thead>
-			<tr><td></td><td>#{birth_}</td><td>#{age_yyyy}#{l['sai']}#{age_mm}#{l['getsu']}</td><td>#{height}</td><td>#{weight}</td><td>#{sex_[sex]}</td></tr>
+			<thead>
+				<th></th>
+				<th>#{l['start_date']}</th>
+				<th>#{l['age']}</th>
+				<th>#{l['height']}</th>
+				<th>#{l['weight']}</th>
+				<th>#{l['sex']}</th>
+			</thead>
+			<tr>
+				<td></td>
+				<td>#{birth}</td>
+				<td>#{age_yyyy}#{l['sai']}#{age_mm}#{l['getsu']}</td>
+				<td>#{height}</td>
+				<td>#{weight}</td>
+				<td>#{sex_[sex]}</td>
+			</tr>
 		</table>
-		</div>
-		</div>
-
+	</div>
+</div>
 HTML
+########
+		########
+
 	when 'raw'
-
-		# X axis
-		x_day = []
-		persed_date = birth
-		c = 0
-		while persed_date <= persed_today do
-#			x_day << persed_date.strftime( "%Y-%m-%d" )
-			x_day << c
-			persed_date += 86400
-			c += 1
-		end
-
-
-		#Koyomiex config
-		puts "Loading config<br>" if @debug
-		height_kex = -1
-		weight_kex = -1
-		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-		if r.first
-			koyomi = JSON.parse( r.first['koyomi'] )
-			kex_select = koyomi['kex_select']
-			0.upto( 9 ) do |c|
-				height_kex = c if kex_select[c.to_s] == 2
- 				weight_kex = c if kex_select[c.to_s] == 3
-			end
-		end
-
-
-		# measured height & weight
-		c = 0
-		height_x_day = []
-		weight_x_day = []
+		puts "LOAD height & weight<br>" if @debug
+		hx_day = []
+		wx_day = []
 		height_measured = []
 		weight_measured = []
-		persed_date = birth
-		while persed_date <= persed_today do
-			target_date = persed_date.strftime( "%Y-%m-%d" )
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{target_date}';", false, @debug )
-			if r.first
-				if height_kex >= 0 && r.first["item#{height_kex}"].to_f != 0
-					height_measured << r.first["item#{height_kex}"].to_f
-					height_x_day << c
-				end
-				if weight_kex >= 0 && r.first["item#{weight_kex}"].to_f != 0
-					weight_measured << r.first["item#{weight_kex}"].to_f
-					weight_x_day << c
-				end
-			end
-			persed_date += 86400
-			c += 1
-		end
 
+		age_select = 0
+		growth_period = 0
 		if age_dd < 6
 			age_select = 0
+			growth_period = 5
 		elsif age_dd < 711
 			age_select = 1
+			growth_period = 710
 		else
 			age_select = 2
+			growth_period = 6
+		end
+		p age_select, growth_period if @debug
+
+		birthdate = birth_p.strftime( "%Y-%m-%d" )
+		growth_date = ( birth_p + growth_period * 86400 ).strftime( "%Y-%m-%d" )
+		p birthdate, growth_date if @debug
+
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date BETWEEN '#{birthdate}' AND '#{growth_date}';", false, @debug )
+		r.each do |e|
+			kexc = JSON.parse( e['cell'] )
+			day_pass = (( Time.parse(e['date'].strftime( "%Y-%m-%d" )) - birth_p ) / 86400 ).to_i
+			if kexc['身長'] != nil && kexc['身長'] != ''
+				height_measured << kexc['身長'].to_f
+				hx_day << day_pass
+			end
+			if kexc['体重'] != nil && kexc['体重'] != ''
+				weight_measured << kexc['体重'].to_f
+				wx_day << day_pass
+			end
 		end
 
+		puts "SEND data<br>" if @debug
 		raw = []
-		raw[0] = height_x_day.unshift( 'hx_day' ).join( ',' )
-		raw[1] = height_measured.unshift( l['data_height'] ).join( ',' )
-		raw[2] = weight_x_day.unshift( 'wx_day' ).join( ',' )
+		raw[0] = hx_day.unshift( 'hx_day' ).join( ',' )
+		raw[1] = wx_day.unshift( 'wx_day' ).join( ',' )
+		raw[2] = height_measured.unshift( l['data_height'] ).join( ',' )
 		raw[3] = weight_measured.unshift( l['data_weight'] ).join( ',' )
 		raw[8] = age_select
 		raw[9] = sex
@@ -151,8 +146,8 @@ var drawChart = function(){
 
 		var column = ( String( raw )).split( ':' );
 		var hx_day = ( String( column[0] )).split(',');
-		var y_heihgt = ( String( column[1] )).split(',');
-		var wx_day = ( String( column[2] )).split(',');
+		var wx_day = ( String( column[1] )).split(',');
+		var y_heihgt = ( String( column[2] )).split(',');
 		var y_weight = ( String( column[3] )).split(',');
 		var age_select = column[8];
 		var sex = column[9];
