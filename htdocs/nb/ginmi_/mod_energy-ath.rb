@@ -1,4 +1,4 @@
-# Ginmi module for basal metabolism of athlete 0.00
+# Ginmi module for basal metabolism of athlete 0.01b  (2020/09/12)
 #encoding: utf-8
 
 @debug = false
@@ -18,7 +18,7 @@ def ginmi_module( cgi, user )
 
 	case command
 	when 'form'
-		#importing from config
+		puts "Load bio config" if @debug
 		weight = 0.0
 		body_fat = 10.0
 		kexow = 0
@@ -31,30 +31,25 @@ def ginmi_module( cgi, user )
 			end
 		end
 
-		# importing from koyomiex
+		puts "IMPORT body_fatt & weight from KEX" if @debug
 		if kexow == 1
-			kex_select = Hash.new
-			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-			if r.first
-				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-					koyomi = JSON.parse( r.first['koyomi'] )
-					kex_select = koyomi['kex_select']
+			body_fat_flag = true
+			weight_flag = true
+			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r.each do |e|
+				kexc = JSON.parse( e['cell'] )
+				if body_fat_flag && e['体脂肪率'] != nil
+					body_fat = kexc['体脂肪率'].to_f
+					body_fat = false
 				end
-			end
+				if weight_flag && e['体重'] != nil
+					weight = kexc['体重'].to_f
+					weight_flag = false
+				end
 
-			kex_select.each do |k, v|
-				if v == 5
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					body_fat = rr.first["item#{k}"].to_f if rr.first
-				end
-
-				if v == 3
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					weight = rr.first["item#{k}"].to_f if rr.first
-				end
+				break unless body_fat_flag || weight_flag
 			end
 		end
-
 
 html = <<-"HTML"
 		<div class='row'>
@@ -63,14 +58,14 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>体重(kg)</span>
 					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 				</div>
 			</div>
 
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>体脂肪率(%)</span>
 					<input type='text' class='form-control' id='body_fat' maxlength='6' value='#{body_fat}'>
@@ -104,9 +99,7 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiEnergyAthres()">計算</button>
-			</div>
+			<button class='btn btn-sm btn-info' onclick="ginmiEnergyAthres()">計算</button>
 		</div>
 HTML
 	when 'result'

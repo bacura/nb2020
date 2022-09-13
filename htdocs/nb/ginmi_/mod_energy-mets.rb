@@ -1,4 +1,4 @@
-# Ginmi module for METs 0.00b
+# Ginmi module for METs 0.01b (2020/09/12)
 #encoding: utf-8
 
 @debug = false
@@ -23,8 +23,7 @@ def ginmi_module( cgi, user )
 	html = ''
 	case command
 	when 'form'
-		#importing from config
-
+		puts "Load bio config" if @debug
 		weight = 0.0
 		kexow = 0
 		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
@@ -36,22 +35,18 @@ def ginmi_module( cgi, user )
 			end
 		end
 
-		# importing from koyomiex
+		puts "IMPORT height & weight from KEX" if @debug
 		if kexow == 1
-			kex_select = Hash.new
-			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-			if r.first
-				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-					koyomi = JSON.parse( r.first['koyomi'] )
-					kex_select = koyomi['kex_select']
+			weight_flag = true
+			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r.each do |e|
+				kexc = JSON.parse( e['cell'] )
+				if weight_flag && e['体重'] != nil
+					weight = kexc['体重'].to_f
+					weight_flag = false
 				end
-			end
 
-			kex_select.each do |k, v|
-				if v == 3
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					weight = rr.first["item#{k}"].to_f if rr.first
-				end
+				break unless weight_flag
 			end
 		end
 
@@ -361,11 +356,11 @@ RESULT_HTML
 				</select>
 			</div>
 		</div>
-		<div class='col-2'>
-			<button class='btn btn-sm btn-outline-primary' onclick="ginmiEnergyMETsres()">追加 / 表示</button>
-		</div>
 	</div>
 	<br>
+	<div class='row'>
+		<button class='btn btn-sm btn-info' onclick="ginmiEnergyMETsres()">追加 / 表示</button>
+	</div>
 HTML
 
 	return html

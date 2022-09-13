@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 file into koyomi extra 0.20b (2022/09/10)
+#Nutrition browser 2020 file into koyomi extra 0.21b (2022/09/12)
 
 
 #==============================================================================
@@ -125,7 +125,7 @@ HTML10
 		line1.size.times do |c|
 			line_select << "<td>"
 			line_select << "<SELECT class='form-select form-select-sm' id='item#{c}'>"
-			line_select << "<OPTION value='-'></OPTION>"
+			line_select << "<OPTION value='ND'>ND</OPTION>"
 			line_select << "<OPTION value='date'>#{lp[12]}</OPTION>"
 			kexu.each do |k, v| line_select << "<OPTION value='#{k}'>#{k}</OPTION>" end
 			line_select << "/<SELECT>"
@@ -213,7 +213,7 @@ when 'update'
 	c = 0
 	kex_key.each do |e|
 		kex_posi['date'] = c if e == 'date'
-		kex_posi[e] = c if e != nil || e != ''
+		kex_posi[e] = c if e != nil && e != '' && e != 'ND'
 		c += 1
 	end
 

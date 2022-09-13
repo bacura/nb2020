@@ -1,4 +1,4 @@
-# Ginmi module for Estimated muscle 0.00
+# Ginmi module for Estimated muscle 0.01b (2020/09/12)
 #encoding: utf-8
 
 def ginmi_module( cgi, user )
@@ -19,7 +19,7 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<div class='col-3'>
+			<div class='col-4'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>上腕周囲長(cm)</span>
 					<input type='text' class='form-control' id='ac' maxlength='6' value='#{ac}'>
@@ -36,9 +36,7 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiEsMuscleres()">計算</button>
-			</div>
+				<button class='btn btn-sm btn-info' onclick="ginmiEsMuscleres()">計算</button>
 		</div>
 HTML
 	when 'result'

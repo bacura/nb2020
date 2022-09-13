@@ -74,7 +74,7 @@ html = <<-"HTML"
 		</div>
 	</div>
 
-	<div class='col-3'>
+	<div class='col-4'>
 		<div class='input-group input-group-sm'>
 			<span class='input-group-text'>#{l['eenergy']}</span>
 			<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}' onchange='drawChart()'>
@@ -118,15 +118,18 @@ HTML
 		start_date_p = Time.parse( start_date )
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date BETWEEN '#{start_date}' AND '#{end_date}';", false, @debug )
 		r.each do |e|
-			kexc = JSON.parse( e['cell'] )
-			day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" ) ) - start_date_p ) / 86400 ).to_i
-			measured[day_pass] = kexc['体重'].to_f if kexc['体重'] != nil
-			denergy[day_pass] = kexc['Δエネルギー'].to_f if kexc['Δエネルギー'] != nil
+			if e['cell'] != nil
+				kexc = JSON.parse( e['cell'] )
+				day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" )) - start_date_p ) / 86400 ).to_i
+				measured[day_pass] = kexc['体重'].to_f if kexc['体重'] != nil
+				denergy[day_pass] = kexc['Δエネルギー'].to_f if kexc['Δエネルギー'] != nil
+			end
 		end
+
 
 		puts "Day 4 stable weight<br>" if @debug
 		d4sw = []
-		if measured.size >= 1 and measured[0] != nil
+		if measured.size >= 1
 			start_day_p = Time.parse( start_date )
 			skip = 0
 			@period.times do |c|
@@ -153,6 +156,7 @@ HTML
 
 				start_day_p += 86400
 			end
+
 			d4sw.map! do |x|
 				if x == nil
 					x = 'NA'
@@ -168,7 +172,7 @@ HTML
 		res_koyomi = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=1 AND tdiv!=4 AND date BETWEEN '#{start_date}' AND '#{end_date}';", false, @debug )
 		res_koyomi.each do |e|
 			tdiv = e['tdiv'].to_i
-			day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" ) ) - start_date_p ) / 86400 ).to_i
+			day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" )) - start_date_p ) / 86400 ).to_i
 			if /^\?\-\-/ =~ e['koyomi']
 				tdiv_enargy[tdiv][day_pass] = '?--'
 			elsif /^\?\-/ =~ e['koyomi']

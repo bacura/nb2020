@@ -1,4 +1,4 @@
-# Ginmi module for BMI 0.10b
+# Ginmi module for BMI 0.11b (2020/09/12)
 #encoding: utf-8
 
 @debug = false
@@ -8,12 +8,11 @@ def ginmi_module( cgi, user )
 	module_js()
 
 	command = cgi['command']
-	html = ''
+	html = []
 
 	case command
 	when 'form'
-		#importing from config
-
+		puts "Load bio config" if @debug
 		age = 0
 		height = 0.0
 		weight = 0.0
@@ -30,27 +29,23 @@ def ginmi_module( cgi, user )
 			end
 		end
 
-		# importing from koyomiex
+		puts "IMPORT height & weight from KEX" if @debug
 		if kexow == 1
-			kex_select = Hash.new
-			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-			if r.first
-				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-					koyomi = JSON.parse( r.first['koyomi'] )
-					kex_select = koyomi['kex_select']
+			height_flag = true
+			weight_flag = true
+			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r.each do |e|
+				kexc = JSON.parse( e['cell'] )
+				if height_flag && e['身長'] != nil
+					height = kexc['身長'].to_f / 100
+					height_flag = false
 				end
-			end
+				if weight_flag && e['体重'] != nil
+					weight = kexc['体重'].to_f
+					weight_flag = false
+				end
 
-			kex_select.each do |k, v|
-				if v == 2
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					height = rr.first["item#{k}"].to_f / 100 if rr.first
-				end
-
-				if v == 3
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					weight = rr.first["item#{k}"].to_f if rr.first
-				end
+				break unless height_flag || weight_flag
 			end
 		end
 
@@ -63,46 +58,49 @@ def ginmi_module( cgi, user )
 			age_select[2] = 'SELECTED'
 		end
 
-html = <<-"HTML"
-		<div class='row'>
-		<h5>#{l['title']}</h5>
+		####
+########
+html[10] = <<-"HTML10"
+<div class='row'>
+<h5>#{l['title']}</h5>
+</div>
+<br>
+
+<div class='row'>
+	<div class='col-3'>
+		<div class="input-group input-group-sm">
+			<label class="input-group-text">#{l['age']}</label>
+			<select class="form-select form-select-sm" id="age">
+				<option value='18' #{age_select[0]}>18歳-49歳</option>
+				<option value='50' #{age_select[1]}>50歳-69歳</option>
+				<option value='70' #{age_select[2]}>70歳- </option>
+			</select>
 		</div>
-		<br>
+	</div>
 
-		<div class='row'>
-			<div class='col-3'>
-				<div class="input-group input-group-sm">
-					<label class="input-group-text">#{l['age']}</label>
-					<select class="form-select form-select-sm" id="age">
-						<option value='18' #{age_select[0]}>18歳-49歳</option>
-						<option value='50' #{age_select[1]}>50歳-69歳</option>
-						<option value='70' #{age_select[2]}>70歳- </option>
-					</select>
-				</div>
-			</div>
-
-			<div class='col-2'>
-				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{l['height']}</span>
-					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
-				</div>
-			</div>
-
-			<div class='col-2'>
-				<div class='input-group input-group-sm'>
-					<span class='input-group-text'>#{l['weight']}</span>
-					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
-				</div>
-			</div>
+	<div class='col-3'>
+		<div class='input-group input-group-sm'>
+			<span class='input-group-text'>#{l['height']}</span>
+			<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 		</div>
-		<br>
+	</div>
 
-		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiBMIres()">#{l['calc']}</button>
-			</div>
+	<div class='col-3'>
+		<div class='input-group input-group-sm'>
+			<span class='input-group-text'>#{l['weight']}</span>
+			<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
 		</div>
-HTML
+	</div>
+</div>
+<br>
+
+<div class='row'>
+	<button class='btn btn-sm btn-info' onclick="ginmiBMIres()">#{l['calc']}</button>
+</div>
+HTML10
+########
+		####
+
 	when 'result'
 		age = cgi['age'].to_i
 		weight = BigDecimal( cgi['weight'] )
@@ -182,104 +180,109 @@ HTML
 			obesity_hit_bg[5] = 'bg-warning'
 		end
 
-html = <<-"HTML"
-		<div class='row'>
-			<div class='col-2'>BMI値</div>
-			<div class='col-2'>#{result.to_f}</div>
-			<div class='col-2'>計算式</div>
-			<div class='col-6'>#{weight.to_f} / ( #{height.to_f} * #{height.to_f} )</div>
-		</div>
-		<br>
+		####
+########
+html[20] = <<-"HTML20"
+<div class='row'>
+	<div class='col-2'>BMI値</div>
+	<div class='col-2'>#{result.to_f}</div>
+	<div class='col-2'>計算式</div>
+	<div class='col-6'>#{weight.to_f} / ( #{height.to_f} * #{height.to_f} )</div>
+</div>
+<br>
 
-		<table class='table table-sm table-bordered'>
-			<thead class='thead-light'>
-				<tr>
-					<th scope='col'>年齢</th>
-					<th scope='col'>やせ</th>
-					<th scope='col'>標準</th>
-					<th scope='col'>肥満(I)</th>
-					<th scope='col'>肥満(II)</th>
-					<th scope='col'>肥満(III)</th>
-					<th scope='col'>肥満(IV)</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<th scope='row'>18歳-49歳</th>
-					<td class='#{hit_bg[0][0]}'> - 18.4</td>
-					<td class='#{hit_bg[0][1]}'>18.5 - 24.9</td>
-					<td class='#{hit_bg[0][2]}'>25.0 - 29.9</td>
-					<td class='#{hit_bg[0][3]}'>30.0 - 34.9</td>
-					<td class='#{hit_bg[0][4]}'>35.0 - 39.9</td>
-					<td class='#{hit_bg[0][5]}'>40.0 - </td>
-				</tr>
-				<tr>
-					<th scope='row'>50歳-69歳</th>
-					<td class='#{hit_bg[1][0]}'> - 19.9</td>
-					<td class='#{hit_bg[1][1]}'>20.0 - 24.9</td>
-					<td class='#{hit_bg[1][2]}'>25.0 - 29.9</td>
-					<td class='#{hit_bg[1][3]}'>30.0 - 34.9</td>
-					<td class='#{hit_bg[1][4]}'>35.0 - 39.9</td>
-					<td class='#{hit_bg[1][5]}'>40.0 - </td>
-				</tr>
-				<tr>
-					<th scope='row'>70歳-</th>
-					<td class='#{hit_bg[2][0]}'> - 21.4</td>
-					<td class='#{hit_bg[2][1]}'>21.5 - 24.9</td>
-					<td class='#{hit_bg[2][2]}'>25.0 - 29.9</td>
-					<td class='#{hit_bg[2][3]}'>30.0 - 34.9</td>
-					<td class='#{hit_bg[2][4]}'>35.0 - 39.9</td>
-					<td class='#{hit_bg[2][5]}'>40.0 - </td>
-				</tr>
-			</tbody>
-		</table>
-		<br>
+<table class='table table-sm table-bordered'>
+	<thead class='thead-light'>
+		<tr>
+			<th scope='col'>年齢</th>
+			<th scope='col'>やせ</th>
+			<th scope='col'>標準</th>
+			<th scope='col'>肥満(I)</th>
+			<th scope='col'>肥満(II)</th>
+			<th scope='col'>肥満(III)</th>
+			<th scope='col'>肥満(IV)</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope='row'>18歳-49歳</th>
+			<td class='#{hit_bg[0][0]}'> - 18.4</td>
+			<td class='#{hit_bg[0][1]}'>18.5 - 24.9</td>
+			<td class='#{hit_bg[0][2]}'>25.0 - 29.9</td>
+			<td class='#{hit_bg[0][3]}'>30.0 - 34.9</td>
+			<td class='#{hit_bg[0][4]}'>35.0 - 39.9</td>
+			<td class='#{hit_bg[0][5]}'>40.0 - </td>
+		</tr>
+		<tr>
+			<th scope='row'>50歳-69歳</th>
+			<td class='#{hit_bg[1][0]}'> - 19.9</td>
+			<td class='#{hit_bg[1][1]}'>20.0 - 24.9</td>
+			<td class='#{hit_bg[1][2]}'>25.0 - 29.9</td>
+			<td class='#{hit_bg[1][3]}'>30.0 - 34.9</td>
+			<td class='#{hit_bg[1][4]}'>35.0 - 39.9</td>
+			<td class='#{hit_bg[1][5]}'>40.0 - </td>
+		</tr>
+		<tr>
+			<th scope='row'>70歳-</th>
+			<td class='#{hit_bg[2][0]}'> - 21.4</td>
+			<td class='#{hit_bg[2][1]}'>21.5 - 24.9</td>
+			<td class='#{hit_bg[2][2]}'>25.0 - 29.9</td>
+			<td class='#{hit_bg[2][3]}'>30.0 - 34.9</td>
+			<td class='#{hit_bg[2][4]}'>35.0 - 39.9</td>
+			<td class='#{hit_bg[2][5]}'>40.0 - </td>
+		</tr>
+	</tbody>
+</table>
+<br>
 
-		<div class='row'>
-			<div class='col-2'>標準体重 (kg)</div>
-			<div class='col-2'>#{ibw.to_f}</div>
-			<div class='col-2'>計算式</div>
-			<div class='col-6'>22 * #{height.to_f} * #{height.to_f}</div>
-		</div>
-		<br>
+<div class='row'>
+	<div class='col-2'>標準体重 (kg)</div>
+	<div class='col-2'>#{ibw.to_f}</div>
+	<div class='col-2'>計算式</div>
+	<div class='col-6'>22 * #{height.to_f} * #{height.to_f}</div>
+</div>
+<br>
 
-		<div class='row'>
-			<div class='col-2'>肥満度 (%)</div>
-			<div class='col-2'>#{obesity.to_f}</div>
-			<div class='col-2'>計算式</div>
-			<div class='col-6'>( #{weight.to_f} - #{ibw.to_f} ) / #{ibw.to_f} * 100</div>
-		</div>
-		<br>
+<div class='row'>
+	<div class='col-2'>肥満度 (%)</div>
+	<div class='col-2'>#{obesity.to_f}</div>
+	<div class='col-2'>計算式</div>
+	<div class='col-6'>( #{weight.to_f} - #{ibw.to_f} ) / #{ibw.to_f} * 100</div>
+</div>
+<br>
 
-		<table class='table table-sm table-bordered'>
-		<thead class='thead-light'>
-			<tr>
-				<th scope='col'>やせすぎ</th>
-				<th scope='col'>やけ</th>
-				<th scope='col'>標準</th>
-				<th scope='col'>ふとりぎみ</th>
-				<th scope='col'>ややふとりすぎ</th>
-				<th scope='col'>ふとりすぎ</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td class='#{obesity_hit_bg[0]}'>-20%未満</td>
-				<td class='#{obesity_hit_bg[1]}'>-15%未満</td>
-				<td class='#{obesity_hit_bg[2]}'>-15%以上 +15%未満</td>
-				<td class='#{obesity_hit_bg[3]}'>+15%以上</td>
-				<td class='#{obesity_hit_bg[4]}'>+20%以上</td>
-				<td class='#{obesity_hit_bg[5]}'>+30%以上</td>
-			</tr>
-		</tbody>
-	</table>
+<table class='table table-sm table-bordered'>
+	<thead class='thead-light'>
+		<tr>
+			<th scope='col'>やせすぎ</th>
+			<th scope='col'>やけ</th>
+			<th scope='col'>標準</th>
+			<th scope='col'>ふとりぎみ</th>
+			<th scope='col'>ややふとりすぎ</th>
+			<th scope='col'>ふとりすぎ</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class='#{obesity_hit_bg[0]}'>-20%未満</td>
+			<td class='#{obesity_hit_bg[1]}'>-15%未満</td>
+			<td class='#{obesity_hit_bg[2]}'>-15%以上 +15%未満</td>
+			<td class='#{obesity_hit_bg[3]}'>+15%以上</td>
+			<td class='#{obesity_hit_bg[4]}'>+20%以上</td>
+			<td class='#{obesity_hit_bg[5]}'>+30%以上</td>
+		</tr>
+	</tbody>
+</table>
 ※区分は目安です。
-HTML
+HTML20
+########
+		####
+
 	when 'save'
 
 	end
 
-	return html
+	return html.join
 end
 
 
@@ -291,10 +294,13 @@ var ginmiBMIres = function(){
 	var age = document.getElementById( "age" ).value;
 	var height = document.getElementById( "height" ).value;
 	var weight = document.getElementById( "weight" ).value;
-	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){
+		$( "#L2" ).html( data );
 
-	dl2 = true;
-	displayBW();
+		dl2 = true;
+		displayBW();
+	});
+
 };
 
 
@@ -310,7 +316,7 @@ def module_lp( language )
 		'age' => "年齢",\
 		'height' => "身長(m)",\
 		'weight' => "体重(kg)",\
-		'calc' => "計算"
+		'calc' => "計　算"
 	}
 
 	return l[language]

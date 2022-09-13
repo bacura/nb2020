@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.14b (2022/08/29)
+#Nutrition browser 2020 cutting board 0.15b (2022/09/12)
 
 #==============================================================================
 #LIBRARY
@@ -651,7 +651,7 @@ html = <<-"UPPER_MENU"
 	</div>
 
 	<div class='row'>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="dish_num">#{lp[2]}</label>
   				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB( '#{code}' )\">
@@ -672,40 +672,44 @@ html = <<-"UPPER_MENU"
 		</div>
 	</div>
 	<br>
+
 	<div class='row'>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="weight_ctrl">#{lp[25]}</label>
   				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl.round}">
 	        	<span onclick=\"weightAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="energy_ctrl">#{lp[26]}</label>
   				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl.round}">
 	        	<span onclick=\"energyAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="salt_ctrl">#{lp[35]}</label>
   				<input type="number" min='1' step="0.1" class="form-control" id="salt_adj" value="#{salt_ctrl.round( 1 ).to_f}">
 	        	<span onclick=\"saltAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-2'>
+		<div class='col-3'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text" for="energy_ctrl">#{lp[29]}</label>
   				<input type="number" min='0' class="form-control" id="loss_adj" value="0">
 	        	<span onclick=\"lossAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-2' align='right'>
+	</div>
+	<br>
+
+	<div class='row'>
+		<div class='col' align='right'>
 			<input type='checkbox' id='gn_check'>&nbsp;
 			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange( '#{code}' )\">#{lp[22]}</button>
-		</div>
-		<div class='col-2' align='right'>
+			&nbsp;&nbsp;&nbsp;&nbsp;
 			<input type='checkbox' id='all_check'>&nbsp;
 			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clearCB( 'all', '#{code}' )\">#{lp[8]}</button>
 		</div>
@@ -825,9 +829,9 @@ end
 puts 'HTML lower menu part<br>' if @debug
 price_html = ''
 if recipe_name != '' && update == ''
-	price_html = "<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick=\"priceView( '#{code}' )\">#{lp[20]}</button></div>" if recipe_name != '' && update == ''
+	price_html = "<div class='col-1 btn btn-info btn-sm nav_button' onclick=\"priceView( '#{code}' )\">#{lp[20]}</div>" if recipe_name != '' && update == ''
 else
-	price_html = "<div class='col-1'><button type='button' class='btn btn-secondary btn-sm'\">#{lp[20]}</button></div>"
+	price_html = "<div class='col-1 btn btn-secondary btn-sm nav_button'>#{lp[20]}</div>"
 end
 
 #### Quick Save
@@ -851,17 +855,17 @@ detective_html = ''
 if user.status < 2
 	detective_html = "<div class='col-1'></div>"
 else
-	detective_html = "<div class='col-1'><button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick='initDetective()'>#{lp[28]}</button></div>"
+	detective_html = "<div class='col-1 btn btn-warning btn-sm nav_button text-warning guild_color' onclick='initDetective()'>#{lp[28]}</div>"
 end
 
 foot_html = <<-"LOWER_MENU"
 <br>
 	<div class='row'>
-		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="recipeEdit( 'view', '#{code}' )">#{lp[18]}</button></div>
-		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="calcView( '#{code}' )">#{lp[19]}</button></div>
+		<div class='col-1 btn btn-info btn-sm nav_button' onclick="recipeEdit( 'view', '#{code}' )">#{lp[18]}</div>
+		<div class='col-1 btn btn-info btn-sm nav_button' onclick="calcView( '#{code}' )">#{lp[19]}</div>
 		#{price_html}
-		<div class='col-1'><button type='button' class='btn btn-primary btn-sm' onclick="luckyInput()">#{lp[21]}</button></div>
-		<div class='col-1'><button class='btn btn-primary btn-sm' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</button></div>
+		<div class='col-1 btn btn-info btn-sm nav_button' onclick="luckyInput()">#{lp[21]}</div>
+		<div class='col-1 btn btn-info btn-sm nav_button' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</div>
 		#{detective_html}
 		<div class='col-4'></div>
 		#{qsave_html}

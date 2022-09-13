@@ -1,4 +1,4 @@
-# Ginmi module for Laurel index 0.10
+# Ginmi module for Laurel index 0.11b (2022/09/12)
 #encoding: utf-8
 
 @debug = false
@@ -12,8 +12,7 @@ def ginmi_module( cgi, user )
 
 	case command
 	when 'form'
-		#importing from config
-
+		puts "Load bio config" if @debug
 		height = 0.0
 		weight = 0.0
 		kexow = 0
@@ -28,27 +27,23 @@ def ginmi_module( cgi, user )
 		end
 
 
-		# importing from koyomiex
+		puts "IMPORT height & weight from KEX" if @debug
 		if kexow == 1
-			kex_select = Hash.new
-			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-			if r.first
-				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-					koyomi = JSON.parse( r.first['koyomi'] )
-					kex_select = koyomi['kex_select']
+			height_flag = true
+			weight_flag = true
+			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r.each do |e|
+				kexc = JSON.parse( e['cell'] )
+				if height_flag && e['身長'] != nil
+					height = kexc['身長'].to_f
+					height_flag = false
 				end
-			end
+				if weight_flag && e['体重'] != nil
+					weight = kexc['体重'].to_f
+					weight_flag = false
+				end
 
-			kex_select.each do |k, v|
-				if v == 2
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					height = rr.first["item#{k}"].to_f  if rr.first
-				end
-
-				if v == 3
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					weight = rr.first["item#{k}"].to_f if rr.first
-				end
+				break unless height_flag || weight_flag
 			end
 		end
 
@@ -59,14 +54,14 @@ def ginmi_module( cgi, user )
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>#{l['height']}</span>
 					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 				</div>
 			</div>
 
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>#{l['weight']}</span>
 					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
@@ -76,9 +71,7 @@ def ginmi_module( cgi, user )
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiLaurelres()">#{l['calc']}</button>
-			</div>
+			<button class='btn btn-sm btn-info' onclick="ginmiLaurelres()">#{l['calc']}</button>
 		</div>
 HTML
 	when 'result'

@@ -1,4 +1,4 @@
-# Ginmi module for basal metabolism reference 0.10b
+# Ginmi module for basal metabolism reference 0.11b  (2020/09/12)
 #encoding: utf-8
 
 @debug = false
@@ -12,7 +12,7 @@ def ginmi_module( cgi, user )
 
 	case command
 	when 'form'
-		#importing from config
+		puts "Load bio config" if @debug
 		sex = 0
 		age = 0
 		weight = 0.0
@@ -29,22 +29,18 @@ def ginmi_module( cgi, user )
 			end
 		end
 
-		# importing from koyomiex
+		puts "IMPORT height & weight from KEX" if @debug
 		if kexow == 1
-			kex_select = Hash.new
-			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-			if r.first
-				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-					koyomi = JSON.parse( r.first['koyomi'] )
-					kex_select = koyomi['kex_select']
+			weight_flag = true
+			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r.each do |e|
+				kexc = JSON.parse( e['cell'] )
+				if weight_flag && e['体重'] != nil
+					weight = kexc['体重'].to_f
+					weight_flag = false
 				end
-			end
 
-			kex_select.each do |k, v|
-				if v == 3
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					weight = rr.first["item#{k}"].to_f if rr.first
-				end
+				break unless weight_flag
 			end
 		end
 
@@ -72,14 +68,14 @@ html = <<-"HTML"
 				</div>
 			</div>
 
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>#{l['age']}</span>
 					<input type='number' class='form-control' id='age' min='0' value='#{age}'>
 				</div>
 			</div>
 
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>#{l['weight']}</span>
 					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight.to_f}'>
@@ -112,16 +108,14 @@ html = <<-"HTML"
 					</select>
 				</div>
 			</div>
-			<div class='col-9'>
+			<div class='col'>
 				※体重を0に設定すると参照体重を使用します。
 			</div>
 		</div>
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiEnergyRefres()">計算</button>
-			</div>
+			<button class='btn btn-sm btn-info' onclick="ginmiEnergyRefres()">計算</button>
 		</div>
 HTML
 	when 'result'

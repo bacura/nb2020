@@ -1,4 +1,4 @@
-# Ginmi module for basal metabolism Harris-Benedict Equation 0.10b
+# Ginmi module for basal metabolism Harris-Benedict Equation 0.11b (2022/09/12)
 #encoding: utf-8
 
 @debug = false
@@ -12,7 +12,7 @@ def ginmi_module( cgi, user )
 
 	case command
 	when 'form'
-		#importing from config
+		puts "Load bio config" if @debug
 		sex = 0
 		age = 0
 		height = 0.0
@@ -31,30 +31,25 @@ def ginmi_module( cgi, user )
 			end
 		end
 
-		# importing from koyomiex
+		puts "IMPORT height & weight from KEX" if @debug
 		if kexow == 1
-			kex_select = Hash.new
-			r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-			if r.first
-				if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-					koyomi = JSON.parse( r.first['koyomi'] )
-					kex_select = koyomi['kex_select']
+			height_flag = true
+			weight_flag = true
+			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r.each do |e|
+				kexc = JSON.parse( e['cell'] )
+				if height_flag && e['身長'] != nil
+					height = kexc['身長'].to_f * 100
+					height_flag = false
 				end
-			end
+				if weight_flag && e['体重'] != nil
+					weight = kexc['体重'].to_f
+					weight_flag = false
+				end
 
-			kex_select.each do |k, v|
-				if v == 2
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					height = rr.first["item#{k}"].to_f * 100 if rr.first
-				end
-
-				if v == 3
-					rr = mdb( "SELECT item#{k} FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND item#{k}!='' ORDER BY date DESC LIMIT 1;", false, @debug )
-					weight = rr.first["item#{k}"].to_f if rr.first
-				end
+				break unless height_flag || weight_flag
 			end
 		end
-
 
 		sex_select = []
 		if sex = 0
@@ -81,21 +76,21 @@ html = <<-"HTML"
 				</div>
 			</div>
 
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>年齢</span>
 					<input type='number' class='form-control' id='age' min='0' value='#{age}'>
 				</div>
 			</div>
 
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>身長(cm)</span>
 					<input type='text' class='form-control' id='height' maxlength='6' value='#{height}'>
 				</div>
 			</div>
 
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class='input-group input-group-sm'>
 					<span class='input-group-text'>体重(kg)</span>
 					<input type='text' class='form-control' id='weight' maxlength='6' value='#{weight}'>
@@ -105,7 +100,7 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<div class='col-3'>
+			<div class='col-4'>
 				<div class="input-group input-group-sm">
 					<label class="input-group-text">活動係数</label>
 					<select class="form-select form-select-sm" id="active">
@@ -139,7 +134,7 @@ html = <<-"HTML"
 					</select>
 				</div>
 			</div>
-			<div class='col-2'>
+			<div class='col-3'>
 				<div class="input-group input-group-sm">
 					<label class="input-group-text">体温(℃)</label>
 					<select class="form-select form-select-sm" id="btm">
@@ -159,9 +154,7 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="ginmiEnergyHBres()">計算</button>
-			</div>
+			<button class='btn btn-sm btn-info' onclick="ginmiEnergyHBres()">計算</button>
 		</div>
 HTML
 	when 'result'

@@ -108,11 +108,13 @@ HTML
 
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date>='#{start_date}';", false, @debug )
 		r.each do |e|
-			kexc = JSON.parse( e['cell'] )
-			day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" ) ) - start_date_p ) / 86400 ).to_i
-			measured_weight[day_pass] = kexc['体重'].to_f if kexc['体重'] != nil
-			recent_weight = kexc['体重'].to_f if kexc['体重'] != nil
-			bfr[day_pass] = kexc['体脂肪率'].to_f if kexc['体脂肪率'] != nil
+			if e['cell'] != nil
+				kexc = JSON.parse( e['cell'] )
+				day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" ) ) - start_date_p ) / 86400 ).to_i
+				measured_weight[day_pass] = kexc['体重'].to_f if kexc['体重'] != nil
+				recent_weight = kexc['体重'].to_f if kexc['体重'] != nil
+				bfr[day_pass] = kexc['体脂肪率'].to_f if kexc['体脂肪率'] != nil
+			end
 		end
 
 		measured_weight.map! do |x|
@@ -299,9 +301,16 @@ var drawChart = function(){
 				}
 			}
 		}
-
-		f_weight[1] = p_weight.pop();
-		f_bfr[1] = p_bfr.pop();
+		if( p_weight.length > 1 ){
+			f_weight[1] = p_weight.pop();
+			f_bfr[1] = p_bfr.pop();
+		}else if( r_weight.length > 1 ){
+			f_weight[1] = r_weight.pop();
+			f_bfr[1] = r_bfr.pop();
+		}else{
+			f_weight[1] = y_weight[1];
+			f_bfr[1] = y_bfr[1];
+		}
 
 		var chart_sub = c3.generate({
 			bindto: '#physique_#{@module}-chart-sub',

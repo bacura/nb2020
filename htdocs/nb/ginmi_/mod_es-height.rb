@@ -13,6 +13,22 @@ def ginmi_module( cgi, user )
 		age = 18
 		knee_height = 0
 
+		puts "Load bio config" if @debug
+		sex = 0
+		age = 18
+		kexow = 0
+		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		if r.first
+			if r.first['bio'] != nil && r.first['bio'] != ''
+				bio = JSON.parse( r.first['bio'] )
+				birth = Time.parse( bio['birth'] )
+				age = ( Date.today.strftime( "%Y%m%d" ).to_i - birth.strftime( "%Y%m%d" ).to_i ) / 10000
+				height = bio['height'].to_f
+				weight = bio['weight'].to_f
+				kexow = bio['kexow'].to_i
+			end
+		end
+
 		sex_select = []
 		if sex = 0
 			sex_select[0] = 'SELECTED'
@@ -56,9 +72,7 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<div class='col-2'>
-				<button class='btn btn-sm btn-primary' onclick="Calculate()">計算</button>
-			</div>
+			<button class='btn btn-sm btn-info' onclick="Calculate()">計算</button>
 		</div>
 HTML
 	when 'result'
