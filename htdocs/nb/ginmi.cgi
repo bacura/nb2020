@@ -24,17 +24,17 @@ script = 'ginmi'
 #### line menu
 def line( lp )
 	html = <<-"HTML"
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'bmi' )">#{lp[1]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'kaupi' )">#{lp[2]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'laureli' )">#{lp[3]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'bmi' )">#{lp[1]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'kaupi' )">#{lp[2]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'laureli' )">#{lp[3]}</span>
 	<span class='btn badge rounded-pill bg-light text-light' onclick="ginmiForm( 'obesity' )">#{lp[4]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-ref' )">#{lp[5]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-hn' )">#{lp[6]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-hb' )">#{lp[7]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-ath' )">#{lp[8]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'energy-mets' )">#{lp[9]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'es-height' )">#{lp[10]}</span>
-	<span class='btn badge rounded-pill bg-info text-dark' onclick="ginmiForm( 'es-muscle' )">#{lp[11]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'energy-ref' )">#{lp[5]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'energy-hn' )">#{lp[6]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'energy-hb' )">#{lp[7]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'energy-ath' )">#{lp[8]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'energy-mets' )">#{lp[9]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'es-height' )">#{lp[10]}</span>
+	<span class='btn badge rounded-pill ppill' onclick="ginmiForm( 'es-muscle' )">#{lp[11]}</span>
 	<span class='btn badge rounded-pill bg-light text-light' onclick="">#{lp[12]}</span>
 	<span class='btn badge rounded-pill bg-light text-light' onclick="">#{lp[13]}</span>
 	<span class='btn badge rounded-pill bg-light text-light' onclick="">#{lp[14]}</span>

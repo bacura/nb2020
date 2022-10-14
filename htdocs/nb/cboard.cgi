@@ -829,7 +829,7 @@ end
 puts 'HTML lower menu part<br>' if @debug
 price_html = ''
 if recipe_name != '' && update == ''
-	price_html = "<div class='col-1 btn btn-info btn-sm nav_button' onclick=\"priceView( '#{code}' )\">#{lp[20]}</div>" if recipe_name != '' && update == ''
+	price_html = "<div class='col-1 btn btn-light btn-sm nav_button' onclick=\"priceView( '#{code}' )\">#{lp[20]}</div>" if recipe_name != '' && update == ''
 else
 	price_html = "<div class='col-1 btn btn-secondary btn-sm nav_button'>#{lp[20]}</div>"
 end
@@ -852,20 +852,20 @@ end
 
 #### Detective
 detective_html = ''
-if user.status < 2
+if user.status < 7
 	detective_html = "<div class='col-1'></div>"
 else
-	detective_html = "<div class='col-1 btn btn-warning btn-sm nav_button text-warning guild_color' onclick='initDetective()'>#{lp[28]}</div>"
+	detective_html = "<div class='col-1 btn btn-dark btn-sm nav_button shun_color' onclick='initDetective()'>#{lp[28]}</div>"
 end
 
 foot_html = <<-"LOWER_MENU"
 <br>
 	<div class='row'>
-		<div class='col-1 btn btn-info btn-sm nav_button' onclick="recipeEdit( 'view', '#{code}' )">#{lp[18]}</div>
-		<div class='col-1 btn btn-info btn-sm nav_button' onclick="calcView( '#{code}' )">#{lp[19]}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick="recipeEdit( 'view', '#{code}' )" align='justify'>#{lp[18]}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick="calcView( '#{code}' )">#{lp[19]}</div>
 		#{price_html}
-		<div class='col-1 btn btn-info btn-sm nav_button' onclick="luckyInput()">#{lp[21]}</div>
-		<div class='col-1 btn btn-info btn-sm nav_button' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick="luckyInput()">#{lp[21]}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</div>
 		#{detective_html}
 		<div class='col-4'></div>
 		#{qsave_html}

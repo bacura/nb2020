@@ -1,4 +1,4 @@
-//guild.js ver 0.31b (2022/07/24)
+//guild.js ver 0.32b (2022/09/17)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -586,14 +586,13 @@ var initGinmi = function(){
 	$.post( "ginmi.cgi", { mod:'line' }, function( data ){
 		$( "#LINE" ).html( data );
 
+		flashBW();
 		dline = true;
+		dl1 = true;
 		displayBW();
 	});
 	$.post( "ginmi.cgi", { mod:'' }, function( data ){
 		$( "#L1" ).html( data );
-
-		dl1 = true;
-		displayBW();
 	});
 };
 
@@ -601,6 +600,7 @@ var ginmiForm = function( mod ){
 	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){
 		$( "#L1" ).html( data );
 
+		flashBW();
 		dline = true;
 		dl1 = true;
 		displayBW();
@@ -792,7 +792,6 @@ var koyomiPhotoDel = function( code, mcode, dd ){
 	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){
 		editKoyomi( 'init', dd );
 	});
-//	setTimeout( editKoyomi( 'init', dd ), 2000);
 };
 
 

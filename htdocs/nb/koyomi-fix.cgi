@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.09b
+#Nutrition browser koyomi fix fct editer 0.09b (2022/09/27)
 
 #==============================================================================
 # LIBRARY
@@ -318,9 +318,6 @@ html = <<-"HTML"
 		</div>
 		<div class="col">#{eat_time_html}</div>
 		<div class="col">#{carry_on_html}</div>
-		<div class="col-1" align="right">
-			<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{lp[1]}</button>
-		</div>
 	</div>
 	<br>
 
@@ -358,6 +355,12 @@ html = <<-"HTML"
 		<div class="col-4">#{html_fct_blocks[4]}</div>
 		<div class="col-4">#{html_fct_blocks[5]}</div>
 	</div>
+	<br>
+
+	<div class="row">
+		<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{lp[1]}</button>
+	</div>
+
 </div>
 HTML
 

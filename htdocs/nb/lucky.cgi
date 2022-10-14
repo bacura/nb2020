@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Lucky sum input driver 0.02b
+#Nutrition browser Lucky sum input driver 0.03b (2022/09/17)
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require 'natto'
 
 
@@ -213,15 +213,15 @@ end
 html = ''
 case command
 when 'form'
-	html = <<-"HTML"
+
+html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-10'>
-			<textarea class="form-control" rows="10" aria-label="lucky_data" id="lucky_data"></textarea>
-		</div>
-		<div class='col-2'>
-			<button type='button' class='btn btn-warning' onclick="luckyAnalyze()">#{lp[2]}</button>
-		</div>
+		<textarea class="form-control" rows="5" aria-label="lucky_data" id="lucky_data"></textarea>
+	</div>
+	<br>
+	<div class='row'>
+		<button type='button' class='btn btn-sm btn-info' onclick="luckyAnalyze()">#{lp[2]}</button>
 	</div>
 </div>
 HTML

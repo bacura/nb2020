@@ -640,50 +640,6 @@ var openPrint = function( uname, code, template, dish ){
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////
-// Detective ////////////////////////////////////////////////////////////////////////
-
-//
-var initDetective = function(){
-	var code = document.getElementById( "words" ).value;
-
-	$.post( "detective.cgi", { command:'hints', code:code }, function( data ){
-		$( "#L2" ).html( data );
-
-		dl2 = true;
-		displayBW();
-	});
-};
-
-//
-var reasoning = function(){
-	var volume = document.getElementById( "volume" ).value;
-	var energy = document.getElementById( "energy" ).value;
-	var protein = document.getElementById( "protein" ).value;
-	var fat = document.getElementById( "fat" ).value;
-	var carbo = document.getElementById( "carbo" ).value;
-	var salt = document.getElementById( "salt" ).value;
-
-	$.post( "detective.cgi", { command:'reasoning', volume:volume, energy:energy, protein:protein, fat:fat, carbo:carbo, salt:salt }, function( data ){
-		$( "#L2" ).html( data );
-
-		dl2 = true;
-		displayBW();
-	});
-};
-
-var detectiveAdopt = function( fw_set ){
-	$.post( "detective.cgi", { command:'adopt', fw_set:fw_set}, function( data ){
-		$.post( "cboard.cgi", { command:'init' }, function( data ){
-			$( "#L1" ).html( data );
-		});
-
-		dl2 = false;
-		displayBW();
-	});
-};
-
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Set menu ////////////////////////////////////////////////////////////////////////

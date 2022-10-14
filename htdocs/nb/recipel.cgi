@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.20b
+#Nutrition browser 2020 recipe list 0.20b (2022/09/17)
 
 
 #==============================================================================
@@ -458,7 +458,7 @@ recipes.each do |e|
 	end
 
 	tags =''
-	e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bg-info text-dark' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
+	e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bbg' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
 	recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
 
 	recipe_html << "<td>"
@@ -506,7 +506,7 @@ recipes.each do |e|
 end
 
 recipe3ds_button = ''
-recipe3ds_button = "<button class='btn btn btn-warning btn-sm nav_button text-warning guild_color' onclick='recipe3ds()'>#{lp[38]}</button>" if user.status > 1
+recipe3ds_button = "<button class='btn btn-dark btn-sm shun_color' onclick='recipe3ds()'>#{lp[38]}</button>" if user.status > 7
 
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -524,10 +524,9 @@ html = <<-"HTML"
 		<div class='col'>#{html_cost}</div>
 	</div><br>
 	<div class='row'>
-		<div class='col-2'></div>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{lp[13]}</button></div>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
-		<div class='col-2'>#{recipe3ds_button}</div>
+		<div class='col-4' align="center"><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{lp[13]}</button></div>
+		<div class='col-4' align="center"><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
+		<div class='col-4' align="center">#{recipe3ds_button}</div>
 	</div>
 	<br>
 

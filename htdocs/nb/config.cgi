@@ -21,19 +21,19 @@ script = 'config'
 #### 初期画面
 def init( lp, user )
 	bio = ''
-	bio = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'bio' )\">#{lp[11]}</span>" if user.status >= 2
+	bio = "<span class='badge rounded-pill ppill' onclick=\"configForm( 'bio' )\">#{lp[11]}</span>" if user.status >= 2
 	koyomiex = ''
-	koyomiex = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'koyomi' )\">#{lp[9]}</span>" if user.status >= 2
+	koyomiex = "<span class='badge rounded-pill ppill' onclick=\"configForm( 'koyomi' )\">#{lp[9]}</span>" if user.status >= 2
 	school = ''
-	school = "<span class='badge rounded-pill bg-info text-dark' onclick=\"configForm( 'school' )\">#{lp[20]}</span>" if user.status >= 8 || user.status == 5
+	school = "<span class='badge rounded-pill ppill' onclick=\"configForm( 'school' )\">#{lp[20]}</span>" if user.status >= 8 || user.status == 5
 
 	html = <<-"HTML"
-<span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'account' )">#{lp[1]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'display' )">#{lp[10]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'palette' )">#{lp[2]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'history' )">#{lp[6]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'sum' )">#{lp[7]}</span>
-<span class="btn badge rounded-pill bg-info text-dark" onclick="configForm( 'convert' )">#{lp[72]}</span>
+<span class="btn badge rounded-pill ppill" onclick="configForm( 'account' )">#{lp[1]}</span>
+<span class="btn badge rounded-pill ppill" onclick="configForm( 'display' )">#{lp[10]}</span>
+<span class="btn badge rounded-pill ppill" onclick="configForm( 'palette' )">#{lp[2]}</span>
+<span class="btn badge rounded-pill ppill" onclick="configForm( 'history' )">#{lp[6]}</span>
+<span class="btn badge rounded-pill ppill" onclick="configForm( 'sum' )">#{lp[7]}</span>
+<span class="btn badge rounded-pill ppill" onclick="configForm( 'convert' )">#{lp[72]}</span>
 #{bio}
 #{koyomiex}
 #{school}

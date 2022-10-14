@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.11b (2022/08/07)
+#Nutrition browser 2020 food square 0.12b (2022/09/14)
 
 
 #==============================================================================
@@ -482,7 +482,7 @@ when 'fctb_l5'
 		res = db.query( query )
 		unless res.first
 			puts "<span class='error'>[FCTP load]ERROR!!<br>"
-			puts "code:#{od_no_list[c]}</span><br>"
+			puts "code:#{food_no_list[c]}</span><br>"
 			db.query( "DELETE FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
 			db.query( "DELETE FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
 			exit()
@@ -550,7 +550,7 @@ when 'fctb_l5'
  	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{lp[15]}</span>\n" if user.status > 0
 
  	# Recipe search badge
- 	recipe_search = "&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"searchDR( '#{food_name}' )\">#{lp[16]}</span><br><br>"
+ 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{lp[16]}</span><br><br>"
 
  	#
 	return_button = ''

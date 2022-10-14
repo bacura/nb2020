@@ -1,4 +1,4 @@
-/* Nutorition browser 2020 core css */
+/* Nutorition browser 2020 core css 0.00b (2022/09/17) */
 
 /* tag base */
 a {
@@ -31,6 +31,7 @@ nav {
 
 .nav_button{
   margin-bottom: 0.5em;
+  text-align: justify-all;
 }
 
 .nav_msg{
@@ -81,9 +82,21 @@ nav {
   text-align: center;
 }
 
-.guild_color{
+.shun_color{
+  background: indigo;
+  color: silver;
+  font-weight: bold;
+}
+
+.master_color{
   background: indigo;
   color: gold;
+  font-weight: bold;
+}
+
+.guild_color{
+  background: indigo;
+  color: chocolate;
   font-weight: bold;
 }
 
@@ -107,6 +120,16 @@ nav {
   border: solid gray 1px;
   margin: 0.5em;
   padding: 0.5em;
+}
+
+.ppill{
+  background: white;
+  color: deeppink;
+}
+
+.bbg{
+  background: white;
+  color: darkslateblue;
 }
 
 /*=====================*/

@@ -1,9 +1,9 @@
-#Nutrition browser 2020 soul Japanese pack 0.10b
+#Nutrition browser 2020 soul Japanese pack 0.11b (2022/09/17)
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@category = %w( 特殊 穀類 いも・でん粉類 砂糖・甘味類 豆類 種実類 野菜類 果実類 きのこ類 藻類 魚介類 肉類 卵類 乳類 油脂類 菓子類 し好飲料類 調味料・香辛料類 調理・流通食品類 特殊 )
+@category = %w( 特　殊 穀　類 いも・でん粉類 砂糖・甘味類 豆　類 種実類 野菜類 果実類 きのこ類 藻　類 魚介類 肉　類 卵　類 乳　類 油脂類 菓子類 し好飲料類 調味料・香辛料類 調理・流通食品類 特　殊 )
 
 #$FCT = {'I' => @fct_item, 'N' => @fct_name, 'U' => @fct_unit, 'F' => @fct_frct }
 @fct_base = %w( FG FN SID Tagnames )
@@ -119,11 +119,11 @@ def html_head( interrupt, status, sub_title )
   #{js_guild}
   #{js_shun}
   #{js_master}
+
+  #{tracking()}
 </head>
 
-
 <body class="body" id='top'>
-  #{tracking}
   <span class="world_frame" id="world_frame">
 HTML
 
@@ -156,20 +156,18 @@ end
 #==============================================================================
 def tracking()
   code = <<-"CODE"
-<script src="//accaii.com/bacura/script.js" async></script><noscript><img src="//accaii.com/bacura/script?guid=on"></noscript>
 
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HKNQHH8RH9"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-HKNQHH8RH9');
-</script>
 CODE
 
-  puts code
+  return code
+end
+
+def adsense()
+  code = <<-"CODE"
+
+CODE
+
+  return code
 end
 
 #==============================================================================

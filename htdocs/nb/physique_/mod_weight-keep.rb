@@ -1,4 +1,4 @@
-# Weight keep module for Physique 0.03b (2022/09/11)
+# Weight keep module for Physique 0.04b (2022/09/16)
 #encoding: utf-8
 
 @module = 'weight-keep'
@@ -118,7 +118,7 @@ HTML
 		end
 
 		measured_weight.map! do |x|
-			if x == nil
+			if x == nil || x == 0
 				x = 'NA'
 			else
 				x = x
@@ -126,7 +126,7 @@ HTML
 		end
 
 		bfr.map! do |x|
-			if x == nil
+			if x == nil || x == 0
 				x = 'NA'
 			else
 				x = x
@@ -249,6 +249,7 @@ var drawChart = function(){
 				y: {
 		    		type: 'linear',
 					padding: {top: 100, bottom: 200 },
+					tick: { format: d3.format( ".1f" ) },
 					label: { text: '#{l['label_weight']}', position: 'outer-middle' }
 				},
 				y2: {
@@ -336,12 +337,12 @@ var drawChart = function(){
 		    	x: {
 					label: { text: '#{l['label_bfr']}', position: 'outer-center' },
 					padding: {left: 1, right: 1 },
-					tick: { fit: false }
+					tick: { fit: false, format: d3.format( "01D" ) }
 				},
 				y: {
 					label: { text: '#{l['label_weight']}', position: 'outer-middle' },
 					padding: {top: 20, bottom: 20 },
-					tick: { fit: false }
+					tick: { fit: false, format: d3.format( ".1f" ) }
 				},
 			},
 			grid: {
@@ -385,7 +386,7 @@ def module_lp( language )
 		'label_bfr' => "体脂肪率 (%)",\
 		'data_first' => "開始",\
 		'data_past' => "過去",\
-		'data_recent' => "最近",\
+		'data_recent' => "近頃",\
 		'data_latest' => "直近",\
 		'error_no-set' => "設定から生体情報を設定してください。"
 	}

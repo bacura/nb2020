@@ -1,11 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser statistics tools 0.01b
+#Nutrition browser statistics tools 0.01b (2022/09/18)
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
+require './brain'
 require 'fileutils'
 
 
@@ -41,7 +42,7 @@ def init( lp )
 
 	html = ''
 	mod_list.size.times do |c|
-		html << "<span class='badge rounded-pill bg-info text-dark btn' onclick=\"tokerForm( '#{mod_list[c]}' )\">#{mod_name_list[c]}</span>&nbsp;"
+		html << "<span class='badge rounded-pill ppill' onclick=\"tokerForm( '#{mod_list[c]}' )\">#{mod_name_list[c]}</span>&nbsp;"
 	end
 
 	return html

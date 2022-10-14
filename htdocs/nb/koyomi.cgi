@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.11b
+#Nutrition browser 2020 koyomi 0.12b (2022/09/17)
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 
@@ -26,8 +26,8 @@ def sub_menu( lp )
 	html = <<-"MENU"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><span class='btn badge rounded-pill bg-info text-dark' onclick="initKoyomi()">#{lp[23]}</span></div>
-		<div class='col-2'><span class='btn badge rounded-pill bg-info text-dark' onclick="initKoyomiex()">#{lp[24]}</span></div>
+		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomi()">#{lp[23]}</span></div>
+		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomiex()">#{lp[24]}</span></div>
 		<div class='col-2'><span class='btn badge rounded-pill bg-secondry' onclick="">#{lp[25]}</span></div>
 		<div class='col-2'><span class='btn badge rounded-pill bg-secondry' onclick="">#{lp[26]}</span></div>
 		<div class='col-2'></div>
@@ -354,6 +354,11 @@ weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 	week_count = 0 if week_count > 6
 end
 
+
+joystic_goto = calendar_td.dd - 1
+joystic_goto = 1 if joystic_goto < 1
+
+
 puts "HTML process<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -362,7 +367,7 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			<input type='month' class='form-control form-control-sm' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomi()">
 		</div>
-		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{calendar_td.dd}';">#{lp[18]}</div>
+		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{joystic_goto}';">#{lp[18]}</div>
 	</div>
 	<br>
 

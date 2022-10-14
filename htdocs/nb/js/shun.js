@@ -1,3 +1,5 @@
+//shun.js ver 0.00b (2022/09/28)
+
 /////////////////////////////////////////////////////////////////////////////////
 // Cooking school //////////////////////////////////////////////////////////////
 
@@ -393,3 +395,204 @@ var visionnerz = function( yyyymmdd ){
 //
 //
 
+/////////////////////////////////////////////////////////////////////////////////
+// Detective ////////////////////////////////////////////////////////////////////////
+
+//
+var initDetective = function(){
+	var code = document.getElementById( "words" ).value;
+
+	$.post( "detective.cgi", { command:'hints', code:code }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
+};
+
+//
+var reasoning = function(){
+	var volume = document.getElementById( "volume" ).value;
+	var energy = document.getElementById( "energy" ).value;
+	var protein = document.getElementById( "protein" ).value;
+	var fat = document.getElementById( "fat" ).value;
+	var carbo = document.getElementById( "carbo" ).value;
+	var salt = document.getElementById( "salt" ).value;
+
+	if(volume != '' && volume != '0' ){
+		$.post( "detective.cgi", { command:'wait', volume:volume, energy:energy, protein:protein, fat:fat, carbo:carbo, salt:salt }, function( data ){
+			$( "#L2" ).html( data );
+
+			$.post( "detective.cgi", { command:'reasoning', volume:volume, energy:energy, protein:protein, fat:fat, carbo:carbo, salt:salt }, function( data ){
+				$( "#L2" ).html( data );
+			});
+		});
+	}else{
+		displayVIDEO( 'Volume!(>_<)' );
+	}
+};
+
+//
+var detectiveAdopt = function( food_nos_solid, fw_ex_solid ){
+	$.post( "detective.cgi", { command:'adopt', food_nos_solid:food_nos_solid, fw_ex_solid:fw_ex_solid }, function( data ){
+//		$( "#L2" ).html( data );
+		$.post( "cboard.cgi", { command:'init' }, function( data ){
+			$( "#L1" ).html( data );
+		});
+
+		dl2 = false;
+		displayBW();
+	});
+};
+
+//
+var loadDetectiveResult = function(){
+	$.post( "detective.cgi", { command:'load_result' }, function( data ){ $( "#L2" ).html( data );});
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// 3D recipe plott search //////////////////////////////////////////////////////////////
+
+// Dosplaying recipe by scatter plott
+var recipe3ds = function(){
+	flashBW();
+	$.post( "recipe3ds.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+		$.post( "recipe3ds.cgi", { command:'plott_area' }, function( data ){
+			$( "#L2" ).html( data );
+			recipe3dsPlottDraw();
+			dl1 = true;
+			dl2 = true;
+			dl3 = true;
+			displayBW();
+		});
+	});
+};
+
+// Dosplaying recipe by scatter plott
+var recipe3dsPlottDraw = function(){
+	var range = document.getElementById( "range" ).value;
+	var type = document.getElementById( "type" ).value;
+	var role = document.getElementById( "role" ).value;
+	var tech = document.getElementById( "tech" ).value;
+	var time = document.getElementById( "time" ).value;
+	var cost = document.getElementById( "cost" ).value;
+
+	var xitem = document.getElementById( "xitem" ).value;
+	var yitem = document.getElementById( "yitem" ).value;
+	var zitem = document.getElementById( "zitem" ).value;
+	var zml = document.getElementById( "zml" ).value;
+	var zrange = document.getElementById( "zrange" ).value;
+	$.post( "recipe3ds.cgi", { command:'monitor', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
+		xitem:xitem, yitem:yitem, zitem:zitem, zml:zml, zrange:zrange }, function( data ){
+		$( "#L3" ).html( data );
+	});
+
+	$.post( "recipe3ds.cgi", { command:'plott_data', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
+		xitem:xitem, yitem:yitem, zitem:zitem, zml:zml, zrange:zrange }, function( raw ){
+		var column = ( String( raw )).split( ':' );
+		var x_values = ( String( column[0] )).split(',');
+		var y_values = ( String( column[1] )).split(',');
+		var names = ( String( column[2] )).split(',');
+		var codes = ( String( column[3] )).split(',');
+		var x_tickv = ( String( column[4] )).split(',');
+
+		var plott_size = document.documentElement.clientWidth
+		if ( plott_size > 800 ){ var plott_size = plott_size * 0.9; }
+		if ( plott_size > 1000 ){ var plott_size = plott_size * 0.9; }
+		if ( plott_size > 1200 ){ var plott_size = plott_size * 0.9; }
+		if ( plott_size > 1600 ){ var plott_size = plott_size * 0.9; }
+
+
+		if ( chart != null ){
+			chart.destroy();
+			displayVIDEO( 'Flush!' );
+		}
+
+		var chart = c3.generate({
+			bindto: '#recipe3ds_plott',
+			size:{ width: plott_size, height: plott_size },
+
+			data: {
+				columns: [
+					x_values,	// x軸
+					y_values,	// y軸
+				],
+			    x: x_values[0],
+				type: 'scatter'
+//				colors:{ x_values[0]: '#ff44FF' }
+			},
+			axis: {
+			    x: {
+			    	type: 'indexed',
+			    	label: x_values[0],
+			    	min:0,
+					tick: {
+						fit: true,
+						count: 10,
+						format: d3.format( "01d" ),
+						values: x_tickv
+					},
+					padding: { left: 0, right: 10 }
+				},
+			    y: {
+			    	label: y_values[0],
+			    	type: 'linear',
+			    	min: 0,
+			  		padding: { top: 10, bottom: 0 }
+			    }
+			},
+			point: {
+				r: 8,
+				focus: { expand: { r: 10 }}
+			 },
+			grid: {
+     			x: { show: true },
+        		y: { show: true }
+            },
+			legend: { show: false },
+			tooltip: {
+				grouped: false,
+//				format: {
+//					title: function ( x, index ) { return "[" + index + "]" + names[index]; },
+//					name: function ( name, ratio, id, index ) { return x_values[0] + ' : ' + y_values[0]; },
+//					value: function ( value, ratio, id, index ) { return x_values[index + 1] + ' : ' + y_values[index + 1];  }
+//				}
+				contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
+					var ix = d[0].index;
+					var tooltip_html = '<table style="background-color:#ffffff; font-size:1.5em;">';
+					tooltip_html += '<tr><td colspan="2"  style="background-color:mistyrose;">' + names[ix] + '</td></tr>'
+					tooltip_html += '<tr><td>' + x_values[0] + '</td><td>: ' + x_values[ix + 1] + '</td></tr>'
+					tooltip_html += '<tr><td>' + y_values[0] + '</td><td>: ' + y_values[ix + 1] + '</td></tr>'
+					tooltip_html += '</table>'
+
+					return tooltip_html;
+				}
+			},
+			onclick: function ( d, element ){
+				console.log( "onclick", d, i );
+			}
+		});
+	});
+};
+
+
+// Dosplaying recipe by scatter plott
+var recipe3dsReset = function(){
+	document.getElementById( "range" ).value = 0;
+	document.getElementById( "type" ).value = 99;
+	document.getElementById( "role" ).value = 99;
+	document.getElementById( "tech" ).value = 99;
+	document.getElementById( "time" ).value = 99;
+	document.getElementById( "cost" ).value = 99;
+
+	document.getElementById( "xitem" ).value = 'ENERC';
+	document.getElementById( "yitem" ).value = 'ENERC';
+
+	document.getElementById( "zitem" ).value = 'ENERC';
+	document.getElementById( "zml" ).value = 0;
+	document.getElementById( "zrange" ).value = 0;
+};

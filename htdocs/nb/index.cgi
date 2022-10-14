@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.21b
+#Nutrition browser 2020 index page 0.22b (2022/09/17)
 
 
 #==============================================================================
@@ -98,25 +98,29 @@ def html_top( user, lp )
   login = "<a href='login.cgi' class=\"text-#{login_color}\">#{lp[60]}</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{lp[53]}</a>" if user_name == nil
 
   puts 'HTML HEAD<br>' if @debug
-  html = <<-"HTML"
-      <header class="navbar navbar-expand-lg navbar-dark bg-dark" id="header">
-        <div class="container-fluid">
-          <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{lp[54]}</a>
-          <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-          <a href='https://bacura.jp/?page_id=1154' target='manual'>#{lp[51]}</a>
-          <span class="d-flex">
-            <select class="form-select" id="qcate">
-              <option value='0'>#{lp[57]}</option>
-              <option value='1'>#{lp[58]}</option>
-              <option value='2'>#{lp[59]}</option>
-            </select>
-            <input class="form-control" type="text" maxlength="100" id="words" onchange="search()">
-            <btton class='btn btn-sm' onclick="search()">#{lp[52]}</button>
-          </span>
-        </div>
-      </header>
-HTML
 
+  ##
+##
+html = <<-"HTML"
+<header class="navbar navbar-expand-lg navbar-dark bg-dark" id="header">
+  <div class="container-fluid">
+    <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{lp[54]}</a>
+    <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
+    <a href='https://bacura.jp/?page_id=1154' target='manual'>#{lp[51]}</a>
+    <span class="d-flex">
+      <select class="form-select" id="qcate">
+        <option value='0'>#{lp[57]}</option>
+        <option value='1'>#{lp[58]}</option>
+        <option value='2'>#{lp[59]}</option>
+      </select>
+      <input class="form-control" type="text" maxlength="100" id="words" onchange="search()">
+      <btton class='btn btn-sm' onclick="search()">#{lp[52]}</button>
+    </span>
+  </div>
+</header>
+HTML
+##
+  ##
   puts html
 end
 
@@ -182,88 +186,97 @@ def html_nav( user, lp )
 
   gm_account = ''
   if user.status == 9
-    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"initAccount( 'init' )\">#{lp[34]}</button>"
+    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button master_color' onclick=\"initAccount( 'init' )\">#{lp[34]}</button>"
   end
 
-  html = <<-"HTML"
-      <nav class='container-fluid'>
-          #{g_button}
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonL1( 1 )">#{@category[1]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="summonL1( 2 )">#{@category[2]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="summonL1( 3 )">#{@category[3]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category4" onclick="summonL1( 4 )">#{@category[4]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button" id="category5" onclick="summonL1( 5 )">#{@category[5]}</button>
-          <button type="button" class="btn btn-success btn-sm nav_button" id="category6" onclick="summonL1( 6 )">#{@category[6]}</button>
-          <button type="button" class="btn btn-info btn-sm nav_button" id="category7" onclick="summonL1( 7 )">#{@category[7]}</button>
-          <button type="button" class="btn btn-success btn-sm nav_button" id="category8" onclick="summonL1( 8 )">#{@category[8]}</button>
-          <button type="button" class="btn btn-success btn-sm nav_button" id="category9" onclick="summonL1( 9 )">#{@category[9]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category10" onclick="summonL1( 10 )">#{@category[10]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category11" onclick="summonL1( 11 )">#{@category[11]}</button>
-          <button type="button" class="btn btn-danger btn-sm nav_button" id="category12" onclick="summonL1( 12 )">#{@category[12]}</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category13" onclick="summonL1( 13 )">#{@category[13]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button" id="category14" onclick="summonL1( 14 )">#{@category[14]}</button>
-          <button type="button" class="btn btn-secondary btn-sm nav_button" id="category15" onclick="summonL1( 15 )">#{@category[15]}</button>
-          <button type="button" class="btn btn-primary btn-sm nav_button" id="category16" onclick="summonL1( 16 )">#{@category[16]}</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category17" onclick="summonL1( 17 )">#{@category[17]}</button>
-          <button type="button" class="btn btn-secondary btn-sm nav_button" id="category18" onclick="summonL1( 18 )">#{@category[18]}</button>
-          #{special_button}
-          #{his_button}
-          #{sum_button}
-          #{recipe_button}
-          #{menu_button}
-          #{set_button}
-          <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{lp[28]}</button>
-          #{config_button}
-      </nav>
-      <nav class='container-fluid' id='guild_menu' style='display:none;'>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initKoyomi()">#{lp[37]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="foodRank()">#{lp[12]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="recipe3ds()">#{lp[11]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGinmi()">#{lp[40]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initPhysique()">#{lp[41]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initMomChai()">#{lp[42]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[43]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[44]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initNote()">#{lp[49]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initFCZlist()">#{lp[13]}</button>
-      </nav>
-      </nav>
-      <nav class='container-fluid' id='gs_menu' style='display:none;'>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initAccountM()">#{lp[48]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initSchool()">#{lp[47]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initToker()">#{lp[50]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="">#{lp[10]}</button>
-      </nav>
-      <nav class='container-fluid' id='gm_menu' style='display:none;'>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initUnit( 'init' )">#{lp[29]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initColor( 'init' )">#{lp[30]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initAllergen( 'init' )">#{lp[31]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initGYCV( 'init' )">#{lp[35]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initShun( 'init' )">#{lp[36]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initDic( 'init' )">#{lp[32]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initSlogf( 'init' )">#{lp[33]}</button>
-          <button type="button" class="btn btn-warning btn-sm nav_button text-warning guild_color" onclick="initMemory( 'init' )">#{lp[39]}</button>
-          #{gm_account}
-      </nav>
+  ##
+##
+html = <<-"HTML"
+<nav class='container-fluid'>
+    #{g_button}
+    <button type="button" class="btn btn-info btn-sm nav_button" id="category1" onclick="summonL1( 1 )">#{@category[1]}</button>
+    <button type="button" class="btn btn-info btn-sm nav_button" id="category2" onclick="summonL1( 2 )">#{@category[2]}</button>
+    <button type="button" class="btn btn-info btn-sm nav_button" id="category3" onclick="summonL1( 3 )">#{@category[3]}</button>
+    <button type="button" class="btn btn-danger btn-sm nav_button" id="category4" onclick="summonL1( 4 )">#{@category[4]}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button" id="category5" onclick="summonL1( 5 )">#{@category[5]}</button>
+    <button type="button" class="btn btn-success btn-sm nav_button" id="category6" onclick="summonL1( 6 )">#{@category[6]}</button>
+    <button type="button" class="btn btn-info btn-sm nav_button" id="category7" onclick="summonL1( 7 )">#{@category[7]}</button>
+    <button type="button" class="btn btn-success btn-sm nav_button" id="category8" onclick="summonL1( 8 )">#{@category[8]}</button>
+    <button type="button" class="btn btn-success btn-sm nav_button" id="category9" onclick="summonL1( 9 )">#{@category[9]}</button>
+    <button type="button" class="btn btn-danger btn-sm nav_button" id="category10" onclick="summonL1( 10 )">#{@category[10]}</button>
+    <button type="button" class="btn btn-danger btn-sm nav_button" id="category11" onclick="summonL1( 11 )">#{@category[11]}</button>
+    <button type="button" class="btn btn-danger btn-sm nav_button" id="category12" onclick="summonL1( 12 )">#{@category[12]}</button>
+    <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category13" onclick="summonL1( 13 )">#{@category[13]}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button" id="category14" onclick="summonL1( 14 )">#{@category[14]}</button>
+    <button type="button" class="btn btn-secondary btn-sm nav_button" id="category15" onclick="summonL1( 15 )">#{@category[15]}</button>
+    <button type="button" class="btn btn-primary btn-sm nav_button" id="category16" onclick="summonL1( 16 )">#{@category[16]}</button>
+    <button type="button" class="btn btn-outline-secondary btn-sm nav_button" id="category17" onclick="summonL1( 17 )">#{@category[17]}</button>
+    <button type="button" class="btn btn-secondary btn-sm nav_button" id="category18" onclick="summonL1( 18 )">#{@category[18]}</button>
+    #{special_button}
+    #{his_button}
+    #{sum_button}
+    #{recipe_button}
+    #{menu_button}
+    #{set_button}
+    <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{lp[28]}</button>
+    #{config_button}
+</nav>
+<nav class='container-fluid' id='guild_menu' style='display:none;'>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initKoyomi()">#{lp[37]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="foodRank()">#{lp[12]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initGinmi()">#{lp[40]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initPhysique()">#{lp[41]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMomChai()">#{lp[42]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="">#{lp[43]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="">#{lp[44]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initNote()">#{lp[49]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initFCZlist()">#{lp[13]}</button>
+</nav>
+</nav>
+<nav class='container-fluid' id='gs_menu' style='display:none;'>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAccountM()">#{lp[48]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="recipe3ds()">#{lp[11]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{lp[47]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{lp[50]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{lp[10]}</button>
+</nav>
+<nav class='container-fluid' id='gm_menu' style='display:none;'>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{lp[29]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initColor( 'init' )">#{lp[30]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initAllergen( 'init' )">#{lp[31]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initGYCV( 'init' )">#{lp[35]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initShun( 'init' )">#{lp[36]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initDic( 'init' )">#{lp[32]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initSlogf( 'init' )">#{lp[33]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initMemory( 'init' )">#{lp[39]}</button>
+    #{gm_account}
+</nav>
 HTML
+##
+  ##
+
   puts html
 end
 
 
 #### HTML working space
 def html_working( dummy )
-  html = <<-"HTML"
-      <div class="bw_frame" id='bw_frame' aligh="center">
-        <div class="line" id='LINE' style="display: block;"></div>
-        <div class="browse_window" id='L1' style="display: none;"></div>
-        <div class="browse_window" id='L2' style="display: none;"></div>
-        <div class="browse_window" id='L3' style="display: none;"></div>
-        <div class="browse_window" id='L4' style="display: none;"></div>
-        <div class="browse_window" id='L5' style="display: none;"></div>
-        <div class="browse_window" id='LF' style="display: none;"></div>
-        <div class="video" id='VIDEO' style="display: none;"></div>
-      </div>
+  ##
+##
+html = <<-"HTML"
+<div class="bw_frame" id='bw_frame' aligh="center">
+  <div class="line" id='LINE' style="display: none;"></div>
+  <div class="browse_window" id='L1' style="display: block;"></div>
+  <div class="browse_window" id='L2' style="display: none;"></div>
+  <div class="browse_window" id='L3' style="display: none;"></div>
+  <div class="browse_window" id='L4' style="display: none;"></div>
+  <div class="browse_window" id='L5' style="display: none;"></div>
+  <div class="browse_window" id='LF' style="display: none;"></div>
+  <div class="video" id='VIDEO' style="display: none;"></div>
+</div>
 HTML
+##
+  ##
 
   puts html
 end

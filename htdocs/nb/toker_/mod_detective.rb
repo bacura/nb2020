@@ -1,5 +1,5 @@
-#テスト
-# TokeR module for test 0.00b (2022/09/18)
+#名探偵test
+# TokeR module for detective 0.00b (2022/09/18)
 #encoding: utf-8
 
 @debug = false

@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.12b
+#Nutrition browser 2020 memory editor 0.13b (2022/09/19)
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 
 #==============================================================================
@@ -68,6 +68,7 @@ NEW
 
 	return new_html, memory_html
 end
+
 
 #### Listing pointers
 def list( category, lp )
@@ -182,7 +183,7 @@ MEMORY
 end
 
 
-#### Memory extender
+#### EXPAND memory
 def extend_linker( memory, depth )
 	depth += 1 if depth < 5
 	link_pointer = memory.scan( /\{\{[^\}\}]+\}\}/ )
@@ -412,7 +413,7 @@ when 'refer'
 		if r.first
 			puts "Finding in DB<br>" if @debug
 			pointer = ''
-			memory_html << "<span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">再検索</span><br><br>"
+			memory_html << "<span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{lp[15]}</span><br><br>"
 			r.each do |ee|
 				edit_button = ''
 				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
@@ -428,7 +429,28 @@ when 'refer'
 			unless a_pointer == ''
 				rr = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{a_pointer}';", false, @debug )
 				pointer = ''
-				memory_html << "<span class='memory_pointer'>#{a_pointer}&nbsp;??</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">再検索</span><br><br>"
+				memory_html << "<div class='row'>"
+				memory_html << "<div class='col-8'><span class='memory_pointer'>#{a_pointer}&nbsp;??</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{lp[15]}</span></div>"
+
+				if user.status >= 8
+					memory_html << "<div class='col-4' align='right'>"
+					r = mdb( "SELECT DISTINCT category from #{$MYSQL_TB_MEMORY};", false, @debug )
+					if r.first
+						memory_html << "<div class='input-group input-group-sm'>"
+						memory_html << "<label class='input-group-text'>#{lp[4]}</label>"
+						memory_html << "<select class='form-select' id='nonmatch_categoly'>"
+						r.each do |e|
+							category = e['category']
+							memory_html << "<option value='#{category}'>#{category}</option>"
+						end
+						memory_html << "</select>"
+						memory_html << "<button type='button' class='btn btn-outline-primary' onclick=\"newPMemoryNM( '#{e}', '' )\"`>#{lp[8]}</button>"
+						memory_html << "</div>"
+					end
+					memory_html << "</div>"
+				end
+
+				memory_html << "</div>"
 				rr.each do |ee|
 					edit_button = ''
 					edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.10b
+#Nutrition browser 2020 koyomi adding panel 0.11b (2022/09/16)
 
 #==============================================================================
 #LIBRARY
@@ -104,7 +104,7 @@ if @debug
 end
 
 
-#### Date & calendar config
+puts 'SET date & calendar config<br>' if @debug
 calendar = Calendar.new( user.name, yyyy, mm, dd )
 calendar.debug if @debug
 sql_ymd = "#{calendar.yyyy}-#{calendar.mm}-#{calendar.dd}"
@@ -112,7 +112,7 @@ sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 org_ymd = "#{calendar.yyyy}:#{calendar.mm}:#{calendar.dd}"
 
 
-puts 'Getting koyomi start year<br>' if @debug
+puts 'SET koyomi start year<br>' if @debug
 r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
@@ -123,7 +123,7 @@ if r.first
 end
 
 
-puts 'Getting standard meal start & time<br>' if @debug
+puts 'SET standard meal start & time<br>' if @debug
 start_time_set = []
 meal_tiems_set = []
 r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
@@ -339,19 +339,23 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-2 form-inline'>
+		<div class='col-3 form-inline'>
 			<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' #{onchange}>
 		</div>
-		<div class='col-2 form-inline'>#{tdiv_html}</div>
-		<div class='col-3 form-inline'>#{eat_time_html}</div>
+		<div class='col-3 form-inline'>#{tdiv_html}</div>
+		<div class='col-4 form-inline'>#{eat_time_html}</div>
 		<div class='col-2 form-check'>#{carry_on_html}</div>
-		<div class='col-3 form-inline'>#{rate_html}</div>
 	</div>
 	<br>
+
 	<div class='row'>
-		<div class='col-10'></div>
-		<div class='col-1 form-inline'>#{save_button}</div>
-		<div class='col-1 form-inline'>#{copy_html}</div>
+		<div class='col-4 form-inline'>#{rate_html}</div>
+	</div>
+	<br>
+
+	<div class='row'>
+		#{save_button}
+		#{copy_html}
 	</div>
 	<br>
 

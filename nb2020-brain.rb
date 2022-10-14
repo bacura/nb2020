@@ -41,6 +41,14 @@ def mdbr( query, html_opt, debug )
 end
 
 
+#### RRトークン発行
+def issue_token()
+  token = SecureRandom.base64(16)
+
+  return token
+end
+
+
 #### 食品重量の決定
 def food_weight_check( food_weight )
   fw = food_weight

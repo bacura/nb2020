@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.07b
+#Nutrition browser 2020 koyomi menu copy / move 0.08b (2022/09/16)
 
 
 #==============================================================================
@@ -249,21 +249,22 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-2 form-inline'>
+		<div class='col-3 form-inline'>
 			<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' onChange="cmmChangeKoyomi( '#{cm_mode}', '#{origin}' )">
 		</div>
-		<div class='col-2 form-inline'>
+		<div class='col-3 form-inline'>
 			#{tdiv_html}
 		</div>
-		<div class='col-3 form-inline'>
+		<div class='col-4 form-inline'>
 			#{eat_time_html}
 		</div>
-		<div class='col-3 form-inline'>
+		<div class='col-2 form-inline'>
 			#{carry_on_html}
 		</div>
-		<div class='col-1 form-inline' align="right">
-			#{save_button}
-		</div>
+	</div>
+	<br>
+	<div class='row'>
+		#{save_button}
 	</div>
 	<br>
 
