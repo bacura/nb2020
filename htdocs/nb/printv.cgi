@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.20b
+#Nutrition browser 2020 print web page 0.21b (2022/10/16)
 
 #==============================================================================
 #LIBRARY
@@ -581,6 +581,7 @@ else
 
 
 	html_foot = <<-"HTML"
+	#{adsense_printv}
 	<hr>
 	<div class='row'>
 		<div class='col-5'>

@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.11b (2022/09/17)
+#Nutrition browser 2020 soul Japanese pack 0.11b (2022/10/16)
 
 #==============================================================================
 # STATIC
@@ -120,7 +120,7 @@ def html_head( interrupt, status, sub_title )
   #{js_shun}
   #{js_master}
 
-  #{tracking()}
+  #{tracking}
 </head>
 
 <body class="body" id='top'>
@@ -152,7 +152,7 @@ end
 
 
 #==============================================================================
-# HTML Tracking code
+# HTML Tracking & adsense code
 #==============================================================================
 def tracking()
   code = <<-"CODE"
@@ -162,7 +162,7 @@ CODE
   return code
 end
 
-def adsense()
+def adsense_printv()
   code = <<-"CODE"
 
 CODE
