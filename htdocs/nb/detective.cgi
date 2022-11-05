@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Detective input 0.04b (2022/10/14)
+#Nutrition browser Detective input 0.05b (2022/10/16)
 
 #==============================================================================
 #LIBRARY
@@ -459,9 +459,6 @@ when 'reasoning'
 			end
 		end
 
-		puts "CHECK detective table in DBR<br>" if @debug
-		r = mdbr( "SHOW TABLES LIKE '#{script}';", false, @debug )
-		mdbr( "CREATE TABLE #{script} ( token VARCHAR(24) NOT NULL PRIMARY KEY, user VARCHAR(32), result TEXT );", false, @debug ) unless r.first
 		token = issue_token()
 		hints = { 'volume' => volume, 'energy' => energy, 'protein' => protein, 'fat' => fat, 'carbo' => carbo, 'salt' => salt }
 		ptime = Time.at( Time.now - @time_now ) - 60 * 60 * 9
@@ -539,6 +536,10 @@ when 'wait'
 	html = '<div class="spinner-border" role="status" align="center"><span class="visually-hidden">Loading...</span></div>'
 	message = lp[16]
 else
+	puts "CHECK detective table in DBR<br>" if @debug
+	r = mdbr( "SHOW TABLES LIKE '#{script}';", false, @debug )
+	mdbr( "CREATE TABLE #{script} ( token VARCHAR(24) NOT NULL PRIMARY KEY, user VARCHAR(32), result TEXT );", false, @debug ) unless r.first
+
 	if code != ''
 		puts "FCZ import<br>" if @debug
 		r = mdb( "SELECT origin, ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}' AND user='#{user.name}';", false, @debug )

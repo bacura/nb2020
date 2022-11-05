@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.15b (2022/09/12)
+#Nutrition browser 2020 cutting board 0.16b (2022/10/30)
 
 #==============================================================================
 #LIBRARY
@@ -258,7 +258,6 @@ puts "Loading Sum<br>" if @debug
 q = ''
 if command == 'load'
 	q = "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{recipe_user}' AND code='#{code}';"
-	
 else
 	q = "SELECT * from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
 end
@@ -312,23 +311,53 @@ when 'clear'
 
 when 'upper'
 	puts "Uppser Sum<br>" if @debug
-	if order.to_i == 0
-		t = food_list.shift
-		food_list << t
+	if food_list[order.to_i].check == '1'
+		if order.to_i == 0
+			t = food_list.shift
+			food_list << t
+		else
+			target_food = 0
+			0.upto( order.to_i - 1 ) do |c|
+				target_food = c + 1 if food_list[c].check == '1'
+			end
+
+			t = food_list.delete_at( order.to_i )
+			food_list.insert( target_food, t )
+		end
 	else
-		t = food_list.delete_at( order.to_i )
-		food_list.insert( order.to_i - 1, t )
+		if order.to_i == 0
+			t = food_list.shift
+			food_list << t
+		else
+			t = food_list.delete_at( order.to_i )
+			food_list.insert( order.to_i - 1, t )
+		end
 	end
 	update = '*'
 
 when 'lower'
 	puts "Lower Sum<br>" if @debug
-	if order.to_i == food_list.size - 1
-		t = food_list.pop
-		food_list.unshift( t )
+	if food_list[order.to_i].check == '1'
+		if order.to_i == food_list.size - 1
+			t = food_list.pop
+			food_list.unshift( t )
+		else
+			target_food = food_list.size - 1
+			( food_list.size - 1 ).downto( order.to_i + 1 ) do |c|
+				target_food = c - 1 if food_list[c].check == '1'
+			end
+
+			t = food_list.delete_at( order.to_i )
+			food_list.insert( target_food, t )
+		end
 	else
-		t = food_list.delete_at( order.to_i )
-		food_list.insert( order.to_i + 1, t )
+		if order.to_i == food_list.size - 1
+			t = food_list.pop
+			food_list.unshift( t )
+		else
+			t = food_list.delete_at( order.to_i )
+			food_list.insert( order.to_i + 1, t )
+		end
 	end
 	update = '*'
 

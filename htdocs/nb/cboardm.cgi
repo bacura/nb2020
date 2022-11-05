@@ -63,6 +63,12 @@ if user.name
 		# 履歴データ更新
 		add_his( user.name, food_no )
 	elsif mode == 'change'
+
+		sum.each do |e|
+			p e
+		end
+
+
 		sum.each do |e|
 			t = e.split( ':' )
 			if t[0] == base_fn

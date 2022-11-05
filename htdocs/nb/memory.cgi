@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.13b (2022/09/19)
+#Nutrition browser 2020 memory editor 0.14b (2022/10/29)
 
 #==============================================================================
 #LIBRARY
@@ -295,6 +295,26 @@ def alike_pointer( key )
 end
 
 
+# Add new pointer form
+def new_pointer_form( lp, user, pointer )
+	html = ''
+	if user.status >= 8
+		r = mdb( "SELECT DISTINCT category from #{$MYSQL_TB_MEMORY};", false, @debug )
+		if r.first
+			html << "<div class='input-group input-group-sm'>"
+			html << "<label class='input-group-text'>#{lp[4]}</label>"
+			html << "<select class='form-select' id='nonmatch_categoly'>"
+			r.each do |e| html << "<option value='#{e['category']}'>#{e['category']}</option>" end
+
+			html << "</select>"
+			html << "<button type='button' class='btn btn-outline-primary' onclick=\"newPMemoryNM( '#{pointer}', '' )\"`>#{lp[8]}</button>"
+			html << "</div>"
+		end
+	end
+
+	return html
+end
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -413,13 +433,20 @@ when 'refer'
 		if r.first
 			puts "Finding in DB<br>" if @debug
 			pointer = ''
-			memory_html << "<span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{lp[15]}</span><br><br>"
+			memory_html << "<div class='row'>"
+			memory_html << "<div class='col-8'><span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{lp[15]}</span></div>"
+			memory_html << "<div class='col-4' align='right'>"
+			memory_html << new_pointer_form( lp, user, e )
+			memory_html << "</div>"
+			memory_html << "</div>"
+
 			r.each do |ee|
 				edit_button = ''
 				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
 				memory_html << extend_linker( ee['memory'], depth )
 				memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
 			end
+
 			count = r.first['count'].to_i + 1
 			mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{e}';", false, @debug )
 			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='9', date='#{@datetime}';", false ,@debug )
@@ -431,26 +458,11 @@ when 'refer'
 				pointer = ''
 				memory_html << "<div class='row'>"
 				memory_html << "<div class='col-8'><span class='memory_pointer'>#{a_pointer}&nbsp;??</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{lp[15]}</span></div>"
-
-				if user.status >= 8
-					memory_html << "<div class='col-4' align='right'>"
-					r = mdb( "SELECT DISTINCT category from #{$MYSQL_TB_MEMORY};", false, @debug )
-					if r.first
-						memory_html << "<div class='input-group input-group-sm'>"
-						memory_html << "<label class='input-group-text'>#{lp[4]}</label>"
-						memory_html << "<select class='form-select' id='nonmatch_categoly'>"
-						r.each do |e|
-							category = e['category']
-							memory_html << "<option value='#{category}'>#{category}</option>"
-						end
-						memory_html << "</select>"
-						memory_html << "<button type='button' class='btn btn-outline-primary' onclick=\"newPMemoryNM( '#{e}', '' )\"`>#{lp[8]}</button>"
-						memory_html << "</div>"
-					end
-					memory_html << "</div>"
-				end
-
+				memory_html << "<div class='col-4' align='right'>"
+				memory_html << new_pointer_form( lp, user, e )
 				memory_html << "</div>"
+				memory_html << "</div>"
+
 				rr.each do |ee|
 					edit_button = ''
 					edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
@@ -469,25 +481,12 @@ when 'refer'
 		memory_html << "<div class='col'>#{lp[14]} (#{pointer})</div>"
 		memory_html << "</div>"
 		memory_html << "<br>"
-		if user.status >= 8
-			memory_html << "<div class='row'>"
-			r = mdb( "SELECT DISTINCT category from #{$MYSQL_TB_MEMORY};", false, @debug )
-			if r.first
-				memory_html << "<div class='col-6'>"
-				memory_html << "<div class='input-group input-group-sm'>"
-				memory_html << "<label class='input-group-text'>#{lp[4]}</label>"
-				memory_html << "<select class='form-select' id='nonmatch_categoly'>"
-				r.each do |e|
-					category = e['category']
-					memory_html << "<option value='#{category}'>#{category}</option>"
-				end
-				memory_html << "</select>"
-				memory_html << "<button type='button' class='btn btn-outline-primary' onclick=\"newPMemoryNM( '#{pointer}', '' )\"`>#{lp[8]}</button>"
-				memory_html << "</div>"
-				memory_html << "</div>"
-			end
-			memory_html << "</div>"
-		end
+
+		memory_html << "<div class='row'>"
+		memory_html << "<div class='col-6'>"
+		memory_html << new_pointer_form( lp, user, pointer )
+		memory_html << "</div>"
+		memory_html << "</div>"
 	end
 end
 

@@ -1,19 +1,20 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.09b (2022/09/27)
-
-#==============================================================================
-# LIBRARY
-#==============================================================================
-require './soul'
-require './brain'
-
+#Nutrition browser koyomi fix fct editer 0.10b (2022/11/03)
 
 #==============================================================================
 # STATIC
 #==============================================================================
 script = 'koyomi-fix'
 @debug = false
+
+
+#==============================================================================
+# LIBRARY
+#==============================================================================
+require './soul'
+require './brain'
+require "./language_/#{script}"
 
 
 #==============================================================================
@@ -28,8 +29,9 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
-
+lp = []
+l = language_pack( user.language )
+puts l if @debug
 
 koyomi = Calendar.new( user.name, 0, 0, 0 )
 
@@ -119,7 +121,7 @@ if command == 'save'
 		if r.first
 			a = r.first['koyomi'].split( "\t" )[order]
 			code = a.split( "~" )[0]
-			mdb( "UPDATE #{$MYSQL_TB_FCZ} SET name='#{food_name}', #{fix_set} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_FCZ} SET name='#{food_name}', date='#{yyyy}-#{mm}-#{dd}', #{fix_set} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug )
 		end
 		koyomi_update = ''
 		delimiter = "\t"
@@ -138,7 +140,7 @@ if command == 'save'
 		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
 	else
  		fix_code = generate_code( user.name, 'z' )
-		mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET base='fix', code='#{fix_code}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}', name='#{food_name}',user='#{user.name}', #{fix_set};", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET base='fix', code='#{fix_code}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}', date='#{yyyy}-#{mm}-#{dd}', name='#{food_name}',user='#{user.name}', #{fix_set};", false, @debug )
 		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
 		if r.first
 			koyomi = r.first['koyomi']
@@ -186,12 +188,24 @@ if command == 'modify' || modifyf == 1
 end
 
 
+#### history
+if command == 'history'
+	puts 'HISTORY<br>' if @debug
+	fix_his_code = @cgi['fix_his_code']
+	r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{fix_his_code}';", false, @debug )
+	if r.first
+		food_name = r.first['name']
+		@fct_min_nr.each do |e| fix_opt[e] = r.first[e].to_f end
+	end
+end
+
+
 puts 'Setting palette<br>' if @debug
 palette = Palette.new( user.name )
 palette.set_bit( palette_ )
 palette_html = ''
 palette_html << "<div class='input-group input-group-sm'>"
-palette_html << "<label class='input-group-text'>#{lp[6]}</label>"
+palette_html << "<label class='input-group-text'>#{l['palette']}</label>"
 palette_html << "<select class='form-select form-select-sm' id='palette' onChange=\"paletteKoyomi( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', #{modifyf} )\">"
 palette.sets.each_key do |k|
 	s = ''
@@ -282,7 +296,7 @@ html_fct_blocks[5] << '</table>'
 puts 'SELECT HH block<br>' if @debug
 meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
 eat_time_html = "<div class='input-group input-group-sm'>"
-eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm_fix' )\">#{lp[8]}</label>"
+eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm_fix' )\">#{l['clock']}</label>"
 eat_time_html << "<input type='time' step='60' id='hh_mm_fix' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
 eat_time_html << "<select id='meal_time_fix' class='form-select form-select-sm'>"
 meal_time_set.each do |e|
@@ -291,7 +305,7 @@ meal_time_set.each do |e|
 	eat_time_html << "	<option value='#{e}' #{s}>#{e}</option>"
 end
 eat_time_html << "</select>"
-eat_time_html << "<label class='input-group-text'>#{lp[9]}</label>"
+eat_time_html << "<label class='input-group-text'>#{l['min']}</label>"
 eat_time_html << "</div>"
 
 
@@ -302,19 +316,46 @@ if command == 'modify'
 	carry_on_disabled = 'DISABLED'
 end
 carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )} #{carry_on_disabled}>"
-carry_on_html << '<label class="form-check-label">時間継承</label>'
+carry_on_html << "<label class='form-check-label'>#{l['carry_on']}</label>"
+
+
+#### fix_his
+fix_his_html = ''
+his_today = @time_now.strftime( "%Y-%m-%d" )
+his_w1 = ( @time_now - ( 60 * 60 * 24 * 7 )).strftime( "%Y-%m-%d" )
+his_w1_ = ( @time_now - ( 60 * 60 * 24 * 8 )).strftime( "%Y-%m-%d" )
+his_m1 = ( @time_now - ( 60 * 60 * 24 * 30 )).strftime( "%Y-%m-%d" )
+
+r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_w1}' AND '#{his_today}';", false, @debug )
+rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_m1}' AND '#{his_w1_}';", false, @debug )
+fix_his_html << "<div class='input-group input-group-sm'>"
+
+fix_his_html << "<label class='input-group-text'>#{l['history']}</label>"
+fix_his_html << "<select class='form-select form-select-sm' id='fix_his_code' onchange=\"koyomiFixHis( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )\">"
+fix_his_html << "<option value='' >#{l['week']}</option>"
+r.each do |e| fix_his_html << "<option value='#{e['code']}'>#{e['name']} (#{e['origin']})</option>" end
+fix_his_html << "<option value='' >#{l['month']}</option>"
+rr.each do |e| fix_his_html << "<option value='#{e['code']}'>#{e['name']} (#{e['origin']})</option>" end
+fix_his_html << '</select>'
+fix_his_html << "</div>"
 
 
 puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
-		<div align='center' class='joystic_koyomi' onclick="koyomiFixR()">#{lp[7]}</div>
+		<div class="col-4">
+			#{fix_his_html}
+		</div>
+		<div class="col-8">
+			<div align='center' class='joystic_koyomi' onclick="koyomiFixR()">#{l['signpost']}</div>
+		</div>
 	</div>
 	<br>
 	<div class="row">
-		<div class="col">
-			<input type="text" class="form-control form-control-sm" id="food_name" placeholder="#{lp[3]}" value="#{food_name}">
+		<div class="col input-group input-group-sm">
+			<label class='input-group-text'>#{l['food_n']}</label>
+			<input type="text" class="form-control form-control-sm" id="food_name" value="#{food_name}">
 		</div>
 		<div class="col">#{eat_time_html}</div>
 		<div class="col">#{carry_on_html}</div>
@@ -324,22 +365,18 @@ html = <<-"HTML"
 	<div class="row">
 		<div class="col">#{palette_html}</div>
 		<div class="col"></div>
-		<div class="col">
-			<div class="input-group input-group-sm">
-				<div class="form-check">
-    				<input type="checkbox" class="form-check-input" id="g100_check" onChange="koyomiG100check()">
-    				<label class="form-check-label">#{lp[2]}</label>
-  				</div>
-  				&nbsp;&nbsp;&nbsp;
-				<label class="input-group-text">#{lp[5]}</label>
-				<input type="text" class="form-control form-control-sm" id="kffood_weight" placeholder="100" value="#{food_weight.to_f}" disabled>
-			</div>
+		<div class="col input-group input-group-sm">
+			<div class="form-check">
+				<input type="checkbox" class="form-check-input" id="g100_check" onChange="koyomiG100check()">
+				<label class="form-check-label">#{l['g100']}</label>
+				</div>
+				&nbsp;&nbsp;&nbsp;
+			<label class="input-group-text">#{l['weight']}</label>
+			<input type="text" class="form-control form-control-sm" id="kffood_weight" placeholder="100" value="#{food_weight.to_f}" disabled>
 		</div>
-		<div class="col">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text">#{lp[12]}</label>
-				<input type="number" min='1' class="form-control form-control-sm" id="food_number" placeholder="1">
-			</div>
+		<div class="col input-group input-group-sm">
+			<label class="input-group-text">#{l['volume']}</label>
+			<input type="number" min='1' class="form-control form-control-sm" id="food_number" placeholder="1">
 		</div>
 	</div>
 	<br>
@@ -358,7 +395,7 @@ html = <<-"HTML"
 	<br>
 
 	<div class="row">
-		<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{lp[1]}</button>
+		<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{l['save']}</button>
 	</div>
 
 </div>

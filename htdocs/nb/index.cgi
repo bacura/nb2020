@@ -227,8 +227,6 @@ html = <<-"HTML"
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initGinmi()">#{lp[40]}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initPhysique()">#{lp[41]}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMomChai()">#{lp[42]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="">#{lp[43]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="">#{lp[44]}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initNote()">#{lp[49]}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initFCZlist()">#{lp[13]}</button>
 </nav>
@@ -239,6 +237,8 @@ html = <<-"HTML"
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{lp[47]}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{lp[50]}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{lp[10]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{lp[43]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{lp[44]}</button>
 </nav>
 <nav class='container-fluid' id='gm_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{lp[29]}</button>

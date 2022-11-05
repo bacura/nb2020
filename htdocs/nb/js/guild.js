@@ -1,4 +1,4 @@
-//guild.js ver 0.32b (2022/09/17)
+//guild.js ver 0.33b (2022/11/03)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -286,6 +286,15 @@ var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
 	}
 };
 
+// Koyomi fix history
+var koyomiFixHis = function( yyyy, mm, dd, tdiv ){
+	var fix_his_code = document.getElementById( "fix_his_code" ).value;
+	if( fix_his_code != '' ){
+		$.post( "koyomi-fix.cgi", { command:"history", yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, fix_his_code:fix_his_code }, function( data ){
+			$( "#L3" ).html( data );
+		});
+	}
+};
 
 // Koyomi modify or copy panel fix
 var koyomiFixR = function(){
