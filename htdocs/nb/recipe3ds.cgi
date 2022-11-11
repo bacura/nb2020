@@ -1,12 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe 3D plotter 0.06b
-
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './soul'
+#Nutrition browser 2020 recipe 3D plotter 0.00b
 
 
 #==============================================================================
@@ -17,11 +11,18 @@ script = 'recipe3ds'
 
 
 #==============================================================================
+#LIBRARY
+#==============================================================================
+require './soul'
+require "./language_/#{script}.lp"
+
+
+#==============================================================================
 #DEFINITION
 #==============================================================================
 
 #### 表示範囲
-def range_html( range, lp )
+def range_html( range, l )
 	range_select = []
 	0.upto( 5 ) do |i|
 		if range == i
@@ -31,14 +32,14 @@ def range_html( range, lp )
 		end
 	end
 
-	html = lp[22]
+	html = l['range']
 	html << '<select class="form-select form-select-sm" id="range">'
-	html << "<option value='0' #{range_select[0]}>#{lp[23]}</option>"
-	html << "<option value='1' #{range_select[1]}>#{lp[24]}</option>"
-	html << "<option value='2' #{range_select[2]}>#{lp[25]}</option>"
-	html << "<option value='3' #{range_select[3]}>#{lp[26]}</option>"
-	html << "<option value='4' #{range_select[4]}>#{lp[27]}</option>"
-	html << "<option value='5' #{range_select[5]}>#{lp[28]}</option>"
+	html << "<option value='0' #{range_select[0]}>#{l['all']}</option>"
+	html << "<option value='1' #{range_select[1]}>#{l['draft']}</option>"
+	html << "<option value='2' #{range_select[2]}>#{l['protect']}</option>"
+	html << "<option value='3' #{range_select[3]}>#{l['public']}</option>"
+	html << "<option value='4' #{range_select[4]}>#{l['no_mark']}</option>"
+	html << "<option value='5' #{range_select[5]}>#{l['public_']}</option>"
 	html << '</select>'
 
 	return html
@@ -46,10 +47,10 @@ end
 
 
 #### 料理スタイル生成
-def type_html( type, lp )
-	html = lp[29]
+def type_html( type, l )
+	html = l['style']
 	html << '<select class="form-select form-select-sm" id="type">'
-	html << "<option value='99'>#{lp[23]}</option>"
+	html << "<option value='99'>#{l['no_def']}</option>"
 	@recipe_type.size.times do |c|
 		s = ''
 		s = 'SELECTED' if type == c
@@ -62,10 +63,10 @@ end
 
 
 #### 献立区分
-def role_html( role, lp )
-	html = lp[30]
+def role_html( role, l )
+	html = l['role']
 	html << '<select class="form-select form-select-sm" id="role">'
-	html << "<option value='99'>#{lp[23]}（調味系除く）</option>"
+	html << "<option value='99'>#{l['all_ns']}</option>"
 	@recipe_role.size.times do |c|
 		s = ''
 		s = 'SELECTED' if role == c
@@ -73,7 +74,7 @@ def role_html( role, lp )
 	end
 	s = ''
 	s = 'SELECTED' if role == 100
-	html << "<option value='100' #{s}>#{lp[19]}</option>"
+	html << "<option value='100' #{s}>#{l['chomi']}</option>"
 	html << '</select>'
 
 	return html
@@ -81,10 +82,10 @@ end
 
 
 #### 調理区分
-def tech_html( tech, lp )
-	html = lp[31]
+def tech_html( tech, l )
+	html = l['tech']
 	html << '<select class="form-select form-select-sm" id="tech">'
-	html << "<option value='99'>#{lp[23]}</option>"
+	html << "<option value='99'>#{l['no_def']}</option>"
 	@recipe_tech.size.times do |c|
 		s = ''
 		s = 'SELECTED' if tech == c
@@ -97,10 +98,10 @@ end
 
 
 #### 目安時間
-def time_html( time, lp )
-	html = lp[32]
+def time_html( time, l )
+	html = l['time']
 	html << '<select class="form-select form-select-sm" id="time">'
-	html << "<option value='99'>#{lp[23]}</option>"
+	html << "<option value='99'>#{l['no_def']}</option>"
 	@recipe_time.size.times do |c|
 		s = ''
 		s = 'SELECTED' if time == c
@@ -113,10 +114,10 @@ end
 
 
 #### 目安費用
-def cost_html( cost, lp )
-	html = lp[33]
+def cost_html( cost, l )
+	html = l['cost']
 	html << '<select class="form-select form-select-sm" id="cost">'
-	html << "<option value='99'>#{lp[23]}</option>"
+	html << "<option value='99'>#{l['no_def']}</option>"
 	@recipe_cost.size.times do |c|
 		s = ''
 		s = 'SELECTED' if cost == c
@@ -134,8 +135,9 @@ html_init( nil )
 
 user = User.new( @cgi )
 #user.debug if @debug
-lp = user.load_lp( script )
-
+lp = []
+l = language_pack( user.language )
+puts l if @debug
 
 r = mdb( "SELECT recipe3ds FROM cfg WHERE user='#{user.name}';", false, @debug )
 recipe3ds_cfg = Hash.new
@@ -171,7 +173,7 @@ when 'plott_area'
 	html = <<-"HTML"
 <div class="row">
 	<div class='col-1'>
-		プロットサイズ<br>
+		#{l['plot_size']}<br>
 		<select class="form-select form-select-sm" id="frame_size">
 			<option value='0.5'>50%</option>
 			<option value='0.7'>70%</option>
@@ -179,12 +181,12 @@ when 'plott_area'
 		</select>
 		<br>
 		<div class="form-check form-switch">
-			<label class="form-check-label">Y軸Log</label>
+			<label class="form-check-label">#{l['y_log']}</label>
 			<input class="form-check-input" type="checkbox" id="y_log">
 		</div>
 		<br>
 		<div class="form-check form-switch">
-			<label class="form-check-label">ラベル表示</label>
+			<label class="form-check-label">#{l['dsp_label']}</label>
 			<input class="form-check-input" type="checkbox" id="label_on">
 		</div>
 	</div>
@@ -271,8 +273,8 @@ else
 end
 
 sql_where << " AND recipe.tech='#{tech}'" unless tech == 99
-sql_where << " AND recipe.time>0 AND recipe.time<=#{time}" unless time == 99
-sql_where << " AND recipe.cost>0 AND recipe.cost<=#{cost}" unless cost == 99
+sql_where << " AND recipe.time='#{time}'" unless time == 99
+sql_where << " AND recipe.cost='#{cost}'" unless cost == 99
 
 
 if command == 'plott_data' || command == 'monitor'
@@ -313,7 +315,7 @@ if command == 'plott_data' || command == 'monitor'
 	x_tickv = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000] if xmax >= 1000
 	x_tickv = [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000] if xmax >= 10000
 
-	if command == 'plott_data'
+	if command == 'plott_data' || @debug
 		raw = []
 		raw[0] = xitems.unshift( @fct_name[xitem] ).join( ',' )
 		raw[1] = yitems.unshift( @fct_name[yitem] ).join( ',' )
@@ -322,14 +324,13 @@ if command == 'plott_data' || command == 'monitor'
 		raw[4] = x_tickv.join( ',' )
 		puts raw.join( ':' )
 
-		exit( 0 )
+		exit( 0 ) if command == 'plott_data'
 	end
 
 	puts "#{@fct_name[xitem]}： #{xitems.min} ～ #{xitems.max}<br>"
 	puts "#{@fct_name[yitem]}： #{yitems.min} ～ #{yitems.max}<br>"
 	puts "#{@fct_name[zitem]}： #{zitems.min} ～ #{zitems.max}<br>"
 	puts "[#{xitems.size}][#{names.size}][#{codes.size}]<br>"
-
 
 	#### 検索設定の保存
 	recipe_ = JSON.generate( { "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "xitem" => xitem, "yitem" => yitem, "zitem" => zitem, "zml" => zml, "zrange" => zrange } )
@@ -340,12 +341,12 @@ end
 
 
 #### 検索条件HTML
-html_range = range_html( range, lp )
-html_type = type_html( type, lp )
-html_role = role_html( role, lp )
-html_tech = tech_html( tech, lp )
-html_time = time_html( time, lp )
-html_cost = cost_html( cost, lp )
+html_range = range_html( range, l )
+html_type = type_html( type, l )
+html_role = role_html( role, l )
+html_tech = tech_html( tech, l )
+html_time = time_html( time, l )
+html_cost = cost_html( cost, l )
 
 
 ####
@@ -380,11 +381,10 @@ end
 zselect << '</select>'
 
 zml_select = '<select class="form-select" id="zml">'
-if zml == 1
-	zml_select << "<option value='1' SELECTED>以下</option>"
-else
-	zml_select << "<option value='0'>以上</option>"
-end
+s = []
+s[zml] = 'SELECTED'
+zml_select << "<option value='0' #{s[0]}>#{l['more']}</option>"
+zml_select << "<option value='1' #{s[1]}>#{l['less']}</option>"
 zml_select << '</select>'
 
 
@@ -403,7 +403,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-4'>
 			<div class="input-group mb-3">
-				<label class="input-group-text">X軸成分</label>
+				<label class="input-group-text">#{l['xcomp']}</label>
 				#{xselect}
 			</div>
 		</div>
@@ -411,7 +411,7 @@ html = <<-"HTML"
 		</div>
 		<div class='col-4'>
 			<div class="input-group mb-3">
-				<label class="input-group-text">補助成分</label>
+				<label class="input-group-text">#{l['zcomp']}</label>
 				#{zselect}
 			</div>
 		</div>
@@ -422,7 +422,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-4'>
 			<div class="input-group mb-3">
-				<label class="input-group-text">Y軸成分</label>
+				<label class="input-group-text">#{l['ycomp']}</label>
 				#{yselect}
 			</div>
 		</div>
@@ -440,8 +440,11 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<div class='row'>
-		<div class='col-3'><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipe3dsPlottDraw()">#{lp[13]}</button></div>
-		<div class='col-3'><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipe3dsReset()">#{lp[14]}</button></div>
+		<button class="btn btn-info btn-sm" type="button" onclick="recipe3dsPlottDraw()">#{l['plot']}</button>
+	</div>
+	<br>
+	<div class='row'>
+		<div class='col-12' align="right"><span class="badge rounded-pill npill" type="button" onclick="recipe3dsReset()">#{l['reset']}</span></div>
 	</div>
 </div>
 HTML

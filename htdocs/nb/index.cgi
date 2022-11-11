@@ -1,12 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.22b (2022/09/17)
-
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './probe'
+#Nutrition browser 2020 index page 0.23b (2022/11/07)
 
 
 #==============================================================================
@@ -17,11 +11,18 @@ script = 'index'
 
 
 #==============================================================================
+#LIBRARY
+#==============================================================================
+require './probe'
+require "./language_/#{script}.lp"
+
+
+#==============================================================================
 #DEFINITION
 #==============================================================================
 
 #### HTML top
-def html_top( user, lp )
+def html_top( user, l )
   puts 'HTML TOP<br>' if @debug
   user_name = user.name
   user_name = user.aliasu if user.aliasu != '' && user.aliasu != nil
@@ -89,13 +90,13 @@ def html_top( user, lp )
       end
     end
     login << "</SELECT>"
-    login << "&nbsp;#{lp[56]}&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{lp[55]}</a>"
+    login << "&nbsp;#{l['san']}&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{l['logout']}</a>"
     login << "</div>"
   else
     puts 'solo mode<br>' if @debug
-    login = "#{user_name}&nbsp;さん&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{lp[55]}</a>"
+    login = "#{user_name}&nbsp;#{l['san']}&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{l['logout']}</a>"
   end
-  login = "<a href='login.cgi' class=\"text-#{login_color}\">#{lp[60]}</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{lp[53]}</a>" if user_name == nil
+  login = "<a href='login.cgi' class=\"text-#{login_color}\">#{l['login']}</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{l['regist']}</a>" if user_name == nil
 
   puts 'HTML HEAD<br>' if @debug
 
@@ -104,17 +105,17 @@ def html_top( user, lp )
 html = <<-"HTML"
 <header class="navbar navbar-expand-lg navbar-dark bg-dark" id="header">
   <div class="container-fluid">
-    <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{lp[54]}</a>
+    <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{l['nb']}</a>
     <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-    <a href='https://bacura.jp/?page_id=1154' target='manual'>#{lp[51]}</a>
+    <a href='https://bacura.jp/?page_id=1154' target='manual'>#{l['help']}</a>
     <span class="d-flex">
       <select class="form-select" id="qcate">
-        <option value='0'>#{lp[57]}</option>
-        <option value='1'>#{lp[58]}</option>
-        <option value='2'>#{lp[59]}</option>
+        <option value='0'>#{l['food']}</option>
+        <option value='1'>#{l['recipe']}</option>
+        <option value='2'>#{l['memory']}</option>
       </select>
       <input class="form-control" type="text" maxlength="100" id="words" onchange="search()">
-      <btton class='btn btn-sm' onclick="search()">#{lp[52]}</button>
+      <btton class='btn btn-sm' onclick="search()">#{l['search']}</button>
     </span>
   </div>
 </header>
@@ -125,7 +126,7 @@ HTML
 end
 
 #### HTML nav
-def html_nav( user, lp )
+def html_nav( user, l )
   cb_num = ''
   meal_num = ''
   # まな板カウンター
@@ -157,36 +158,36 @@ def html_nav( user, lp )
 
   # 履歴ボタンとまな板ボタンの設定
   if user.status >= 1
-    cb = "#{lp[1]} <span class='badge rounded-pill bg-dark text-light' id='CBN'>#{cb_num}</span>"
-    mb = "#{lp[2]} <span class='badge rounded-pill bg-dark text-light' id='MBN'>#{meal_num}</span>"
+    cb = "#{l['cboard']} <span class='badge rounded-pill bg-dark text-light' id='CBN'>#{cb_num}</span>"
+    mb = "#{l['table']} <span class='badge rounded-pill bg-dark text-light' id='MBN'>#{meal_num}</span>"
     special_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' id='category0' onclick='summonL1( 0 )''>#{@category[0]}</button>"
-    his_button = "<button type='button' class='btn btn-primary btn-sm nav_button' onclick='historyInit()'>#{lp[4]}</button>"
+    his_button = "<button type='button' class='btn btn-primary btn-sm nav_button' onclick='historyInit()'>#{l['history']}</button>"
     sum_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initCB( '' )\">#{cb}</button>"
-    recipe_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{lp[5]}</button>"
+    recipe_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{l['recipel']}</button>"
     menu_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initMeal( '' )\">#{mb}</button>"
-    set_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"menuList()\">#{lp[6]}</button>"
-    config_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{lp[7]}</button>"
+    set_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"menuList()\">#{l['menul']}</button>"
+    config_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"configInit( '' )\">#{l['gear']}</button>"
   else
-    cb = "#{lp[1]} <span class='badge badge-pill badge-secondary' id='CBN'>#{cb_num}</span>"
-    mb = "#{lp[2]} <span class='badge badge-pill badge-secondary' id='MBN'>#{meal_num}</span>"
-    special_button = "<a href='login.cgi'><button type='button' class='btn-dark btn-sm nav_button text-secondary'>#{@category[0]}</button></a>"
-    his_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[4]}</button></a>"
+    cb = "#{l['cboard']} <span class='badge badge-pill badge-secondary' id='CBN'>#{cb_num}</span>"
+    mb = "#{l['table']} <span class='badge badge-pill badge-secondary' id='MBN'>#{meal_num}</span>"
+    special_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{@category[0]}</button></a>"
+    his_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{l['history']}</button></a>"
     sum_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{cb}</button></a>"
-    recipe_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[5]}</button></a>"
+    recipe_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{l['recipel']}</button></a>"
     menu_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{mb}</button></a>"
-    set_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[6]}</button></a>"
-    config_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{lp[7]}</button></a>"
+    set_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{l['menul']}</button></a>"
+    config_button = "<a href='login.cgi'><button type='button' class='btn btn-dark btn-sm nav_button text-secondary'>#{l['gear']}</button></a>"
   end
 
   if user.status >= 3
     g_button = "<button type='button' class='btn btn-warning btn-sm nav_button text-warning guild_color' onclick=\"changeMenu( '#{user.status}' )\">G</button>"
   else
-    g_button = "<button type='button' class='btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVIDEO( '#{lp[9]}' )\">G</button>"
+    g_button = "<button type='button' class='btn btn-warning btn-sm nav_button text-dark guild_color' onclick=\"displayVIDEO( '#{l['gmen']}' )\">G</button>"
   end
 
   gm_account = ''
   if user.status == 9
-    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button master_color' onclick=\"initAccount( 'init' )\">#{lp[34]}</button>"
+    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button master_color' onclick=\"initAccount( 'init' )\">#{l['nb']}</button>"
   end
 
   ##
@@ -218,37 +219,37 @@ html = <<-"HTML"
     #{recipe_button}
     #{menu_button}
     #{set_button}
-    <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{lp[28]}</button>
+    <button type="button" class="btn btn-outline-secondary btn-sm nav_button" onclick="bookOpen( 'books/books.html', 1 )">#{l['book']}</button>
     #{config_button}
 </nav>
 <nav class='container-fluid' id='guild_menu' style='display:none;'>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initKoyomi()">#{lp[37]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="foodRank()">#{lp[12]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initGinmi()">#{lp[40]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initPhysique()">#{lp[41]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMomChai()">#{lp[42]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initNote()">#{lp[49]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initFCZlist()">#{lp[13]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initKoyomi()">#{l['koyomi']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="foodRank()">#{l['foodrank']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initGinmi()">#{l['ginmi']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initPhysique()">#{l['pysique']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMomChai()">#{l['momchai']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initNote()">#{l['note']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initFCZlist()">#{l['fczl']}</button>
 </nav>
 </nav>
 <nav class='container-fluid' id='gs_menu' style='display:none;'>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAccountM()">#{lp[48]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="recipe3ds()">#{lp[11]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{lp[47]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{lp[50]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{lp[10]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{lp[43]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{lp[44]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAccountM()">#{l['accountm']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="recipe3ds()">#{l['recipe3d']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{l['school']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{l['toker']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['visionnerz']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['senior']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['condition']}</button>
 </nav>
 <nav class='container-fluid' id='gm_menu' style='display:none;'>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{lp[29]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initColor( 'init' )">#{lp[30]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initAllergen( 'init' )">#{lp[31]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initGYCV( 'init' )">#{lp[35]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initShun( 'init' )">#{lp[36]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initDic( 'init' )">#{lp[32]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initSlogf( 'init' )">#{lp[33]}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initMemory( 'init' )">#{lp[39]}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{l['unit']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initColor( 'init' )">#{l['color']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initAllergen( 'init' )">#{l['allergen']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initGYCV( 'init' )">#{l['gycv']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initShun( 'init' )">#{l['shun']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initDic( 'init' )">#{l['dic']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initSlogf( 'init' )">#{l['slog']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initMemory( 'init' )">#{l['memorya']}</button>
     #{gm_account}
 </nav>
 HTML
@@ -290,7 +291,8 @@ html_init( nil )
 user = User.new( @cgi )
 user.status = 0 unless user.name
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
+#puts l if @debug
 
 r = mdb( "SELECT ifix FROM cfg WHERE user='#{user.name}';", false, @debug )
 ifix = r.first['ifix'].to_i if r.first
@@ -299,8 +301,8 @@ html_head( nil, user.status, nil )
 
 puts "<div style='position:fixed; z-index:100; background-color:white'>" if ifix == 1
 
-html_top( user, lp )
-html_nav( user, lp )
+html_top( user, l )
+html_nav( user, l )
 
 
 if ifix == 1

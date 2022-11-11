@@ -14,7 +14,7 @@ script = 'koyomi-fix'
 #==============================================================================
 require './soul'
 require './brain'
-require "./language_/#{script}"
+require "./language_/#{script}.lp"
 
 
 #==============================================================================
@@ -29,7 +29,6 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = []
 l = language_pack( user.language )
 puts l if @debug
 
@@ -129,7 +128,6 @@ if command == 'save'
 			a = e['koyomi'].split( delimiter )
 			a.size.times do |c|
 				if c == order
-					aa = a[c].split( "~" )
 					koyomi_update << "#{delimiter}#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
 				else
 					koyomi_update << "#{a[c]}\t"

@@ -1,12 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 login 0.01b
-
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './probe'
+#Nutrition browser 2020 login 0.02b (2022/11/07)
 
 
 #==============================================================================
@@ -17,25 +11,32 @@ script = 'login'
 
 
 #==============================================================================
+#LIBRARY
+#==============================================================================
+require './probe'
+require "./language_/#{script}.lp"
+
+
+#==============================================================================
 #DEFINITION
 #==============================================================================
 
 #### HTML login
-def html_login_form( msg, lp )
+def html_login_form( msg, l )
   html = <<-"HTML"
     <div class="container">
       <div class="row">
         <div class="col-6">
           <form action="login.cgi?mode=check" method="post" class="form-signin login_form">
           #{msg}
-          <p class="msg_small">#{lp[1]}</p>
+          <p class="msg_small">#{l['message']}</p>
           <input type="text" name="id" id="inputID" class="form-control login_input" placeholder="ID" required autofocus>
-          <input type="password" name="pass" id="inputPassword" class="form-control login_input" placeholder="#{lp[2]}">
-          <input type="submit" value="#{lp[3]}" class="btn btn-primary btn-block"></input>
+          <input type="password" name="pass" id="inputPassword" class="form-control login_input" placeholder="#{l['password']}">
+          <input type="submit" value="#{l['login']}" class="btn btn-primary btn-block"></input>
           </form>
         </div>
         <div class="col-6">
-          [空き地]
+          #{l['empty']}
         </div>
       </div>
     </div>
@@ -46,37 +47,37 @@ end
 
 
 #### Language init
-def lp_init( script, language_set )
-  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
-  lp = [nil]
-  f.each do |line|
-    lp << line.chomp.force_encoding( 'UTF-8' )
-  end
-  f.close
-
-  return lp
-end
+#def lp_init( script, language_set )
+#  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
+#  lp = [nil]
+#  f.each do |line|
+#    lp << line.chomp.force_encoding( 'UTF-8' )
+#  end
+#  f.close
+#
+#  return lp
+#end
 
 
 #### HTML top
-def html_top_login( lp )
+def html_top_login( l )
   login_color = "secondary"
-  login = "<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{lp[8]}</a>"
+  login = "<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{l['regist']}</a>"
 
   html = <<-"HTML"
 <header class="navbar navbar-expand-lg navbar-dark bg-dark" id="header">
   <div class="container-fluid">
-    <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{lp[7]}</a>
+    <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{l['nb']}</a>
     <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-    <a href='https://neg.bacura.jp/?page_id=1154' target='manual'>#{lp[5]}</a>
+    <a href='https://neg.bacura.jp/?page_id=1154' target='manual'>#{l['help']}</a>
     <span class="d-flex">
       <select class="form-select" id="qcate">
-        <option value='0'>#{lp[9]}</option>
-        <option value='1'>#{lp[10]}</option>
-        <option value='2'>#{lp[11]}</option>
+        <option value='0'>#{l['food']}</option>
+        <option value='1'>#{l['recipe']}</option>
+        <option value='2'>#{l['memory']}</option>
       </select>
       <input class="form-control" type="text" maxlength="100" id="words" onchange="search()">
-      <btton class='btn btn-sm' onclick="search()">#{lp[6]}</button>
+      <btton class='btn btn-sm' onclick="search()">#{l['search']}</button>
     </span>
   </div>
 </header>
@@ -96,7 +97,10 @@ get_data = get_data()
 #### Getting POST date
 user = User.new( @cgi )
 user.debug if @debug
-lp = lp_init( script, $DEFAULT_LP )
+#lp = lp_init( script, $DEFAULT_LP )
+l = language_pack( $DEFAULT_LP )
+#puts l if @debug
+
 
 puts "#{get_data['mode']}" if @debug
 case get_data['mode']
@@ -108,14 +112,14 @@ when 'check'
       html_init( nil )
       html_head( nil, 0, nil )
       html_top_login( lp )
-      msg = "<p class='msg_small_red'>#{lp[4]}</p>"
+      msg = "<p class='msg_small_red'>#{l['error']}</p>"
       html_login_form( msg, lp )
       html_foot()
   else
     status = r.first['status'].to_i
 
     # Issuing cookies
-    uid = SecureRandom.hex(16)
+    uid = SecureRandom.hex( 16 )
     cookie = "Set-Cookie: NAME=#{@cgi['id']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
 
     # Updating user information
@@ -182,8 +186,8 @@ when 'family'
 else
   html_init( nil )
   html_head( nil, 0, nil )
-  html_top_login( lp )
-  html_login_form( nil, lp )
+  html_top_login( l )
+  html_login_form( nil, l )
   html_foot()
 end
 

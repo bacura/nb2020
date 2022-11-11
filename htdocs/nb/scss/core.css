@@ -132,6 +132,11 @@ nav {
   color: darkslateblue;
 }
 
+.npill{
+  background: orange;
+  color: lemonchiffon;
+}
+
 /*=====================*/
 /* login & regist      */
 /*=====================*/

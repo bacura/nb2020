@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.20b (2022/09/17)
+#Nutrition browser 2020 recipe list 0.21b (2022/11/06)
 
 
 #==============================================================================
@@ -505,8 +505,6 @@ recipes.each do |e|
 	recipe_html << '</tr>'
 end
 
-recipe3ds_button = ''
-recipe3ds_button = "<button class='btn btn-dark btn-sm shun_color' onclick='recipe3ds()'>#{lp[38]}</button>" if user.status > 7
 
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -524,9 +522,11 @@ html = <<-"HTML"
 		<div class='col'>#{html_cost}</div>
 	</div><br>
 	<div class='row'>
-		<div class='col-4' align="center"><button class="btn btn-outline-primary btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{lp[13]}</button></div>
-		<div class='col-4' align="center"><button class="btn btn-outline-warning btn-sm" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</button></div>
-		<div class='col-4' align="center">#{recipe3ds_button}</div>
+		<button class="btn btn-info btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{lp[13]}</button>
+	</div>
+	<br>
+	<div class='row'>
+		<div class='col' align="right"><span class="badge rounded-pill npill" type="button" onclick="recipeList( 'reset' )">#{lp[14]}</span></div>
 	</div>
 	<br>
 
