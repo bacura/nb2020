@@ -682,7 +682,7 @@ def his_init()
 	if res.first
 		puts 'his table already exists.'
 	else
-		query = 'CREATE TABLE his (user VARCHAR(32) NOT NULL PRIMARY KEY,his VARCHAR(2048));'
+		query = 'CREATE TABLE his (user VARCHAR(32) NOT NULL PRIMARY KEY,his VARCHAR(4096));'
 		$DB.query( query )
 		puts 'his table has been created.'
 	end

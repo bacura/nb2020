@@ -1,19 +1,20 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.16b (2022/10/30)
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './probe'
-require './brain'
-
+#Nutrition browser 2020 cutting board 0.17b (2022/11/11)
 
 #==============================================================================
 #STATIC
 #==============================================================================
 script = 'cboard'
 @debug = false
+
+
+#==============================================================================
+#LIBRARY
+#==============================================================================
+require './probe'
+require './brain'
+require "./language_/#{script}.lp"
 
 
 #==============================================================================
@@ -160,7 +161,7 @@ end
 
 
 #### Chomi cell
-def chomi_cell( user, lp, code, chomi_selected, chomi_code )
+def chomi_cell( user, l, code, chomi_selected, chomi_code )
 	puts 'chomi % categoty set<br>' if @debug
 	chomi_html = ''
 
@@ -174,7 +175,13 @@ def chomi_cell( user, lp, code, chomi_selected, chomi_code )
 
 	chomi_html << '<div class="input-group input-group-sm">'
 	chomi_html << "<input type=\"hidden\" value=\"#{code}\" id=\"recipe_code\">"
-	chomi_html << "<label class=\"input-group-text\" for=\"chomi\">#{lp[6]}</label>"
+
+	if chomi_selected != '' && chomi_selected != nil
+		chomi_html << "<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" onclick=\"chomiAdd()\">#{l['chomi']}</button>"
+	else
+		chomi_html << "<button type=\"button\" class=\"btn btn-secondary btn-sm\">#{l['chomi']}</button>"
+	end
+
 	chomi_html << "<select class=\"form-select\" id=\"chomi_selected\" onchange=\"chomiSelect()\">"
 	chomi_html << "<option value=\"\">-</option>"
 	chomim_categoty.each do |e|
@@ -199,13 +206,6 @@ def chomi_cell( user, lp, code, chomi_selected, chomi_code )
 		end
 	end
 	chomi_html << "</select>"
-
-	puts 'chomi % button<br>' if @debug
-	if chomi_selected != '' && chomi_selected != nil
-		chomi_html << "<button type=\"button\" class=\"btn btn-outline-primary btn-sm\" onclick=\"chomiAdd()\">#{lp[7]}</button>"
-	else
-		chomi_html << "<button type=\"button\" class=\"btn btn-outline-secondary btn-sm\">#{lp[7]}</button>"
-	end
 	chomi_html << "</div>"
 
 	return chomi_html
@@ -219,7 +219,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 #### POST
@@ -291,7 +291,7 @@ update = ''
 all_check = ''
 case command
 when 'chomi_cell'
-	chomi_html = chomi_cell( user, lp, code, chomi_selected, chomi_code )
+	chomi_html = chomi_cell( user, l, code, chomi_selected, chomi_code )
 	puts chomi_html
 	exit
 
@@ -664,83 +664,69 @@ db.close
 
 
 puts 'chomi % HTML<br>' if @debug
-chomi_html = chomi_cell( user, lp, code, chomi_selected, chomi_code )
-
-
-#### Sasshi button
-html_sasshi = ''
-html_sasshi = "<button class='btn btn-outline-light btn-sm' type='button' onclick=\"\">#{lp[28]}</button>" if user.status >= 3
+chomi_html = chomi_cell( user, l, code, chomi_selected, chomi_code )
 
 
 puts 'HTML upper part<br>' if @debug
 html = <<-"UPPER_MENU"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-10'><h5>#{lp[1]}: #{update}#{recipe_name}</h5></div>
+		<div class='col'><h5>#{l['cboard']}: #{update}#{recipe_name}</h5></div>
 	</div>
 
 	<div class='row'>
-		<div class='col-3'>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text" for="dish_num">#{lp[2]}</label>
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"dishCB( '#{code}' )\">#{l['dish']}</button>
   				<input type="number" min='1' class="form-control" id="dish_num" value="#{dish_num}" onchange=\"dishCB( '#{code}' )\">
-	        	<button class='btn btn-outline-primary' type='button' onclick=\"dishCB( '#{code}' )\">#{lp[3]}</button>
 			</div>
 		</div>
 		<div class='col-3'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text" for="food_add">#{lp[4]}</label>
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"recipeAdd( '#{code}' )\">#{l['fn']}</button>
   				<input type="text" class="form-control" maxlength='12' placeholder="00000 100" id="food_add">
-	        	<button class='btn btn-outline-primary' type='button' onclick=\"recipeAdd( '#{code}' )\">#{lp[5]}</button>
 			</div>
 		</div>
 		<div class='col-6' id='chomi_cell'></div>
 		<script language='javascript' type='text/javascript'>
 			document.getElementById( 'chomi_cell' ).innerHTML = '#{chomi_html}';
 		</script>
-		</div>
 	</div>
 	<br>
 
 	<div class='row'>
-		<div class='col-3'>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text" for="weight_ctrl">#{lp[25]}</label>
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"weightAdj( '#{code}' )\">#{l['guide_g']}</button>
   				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl.round}">
-	        	<span onclick=\"weightAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-3'>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text" for="energy_ctrl">#{lp[26]}</label>
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"energyAdj( '#{code}' )\">#{l['guide_e']}</button>
   				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl.round}">
-	        	<span onclick=\"energyAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-3'>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text" for="salt_ctrl">#{lp[35]}</label>
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"saltAdj( '#{code}' )\">#{l['guide_s']}</button>
   				<input type="number" min='1' step="0.1" class="form-control" id="salt_adj" value="#{salt_ctrl.round( 1 ).to_f}">
-	        	<span onclick=\"saltAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-		<div class='col-3'>
+		<div class='col-1'></div>
+		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text" for="energy_ctrl">#{lp[29]}</label>
+	        	<button class='btn btn-outline-primary' type='button' onclick=\"lossAdj( '#{code}' )\">#{l['waste']}</button>
   				<input type="number" min='0' class="form-control" id="loss_adj" value="0">
-	        	<span onclick=\"lossAdj( '#{code}' )\">#{lp[27]}</span>
 			</div>
 		</div>
-	</div>
-	<br>
 
-	<div class='row'>
 		<div class='col' align='right'>
 			<input type='checkbox' id='gn_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange( '#{code}' )\">#{lp[22]}</button>
+			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange( '#{code}' )\">#{l['gram']}</button>
 			&nbsp;&nbsp;&nbsp;&nbsp;
 			<input type='checkbox' id='all_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clearCB( 'all', '#{code}' )\">#{lp[8]}</button>
+			<span type='button' class='badge rounded-pill npill' onclick=\"clearCB( 'all', '#{code}' )\">#{l['reset']}</span>
 		</div>
 	</div>
 	<hr>
@@ -749,20 +735,20 @@ puts html
 
 html = <<-"ITEM_NAME"
 <div class='row cb_header'>
-	<div class='col-2'>#{lp[9]}&nbsp;&nbsp;&nbsp;<input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{lp[10]}</div>
-	<div class='col-3'>#{lp[11]}</div>
+	<div class='col-2'>#{l['operation']}&nbsp;&nbsp;&nbsp;<input type='checkbox' id='switch_all' #{all_check} onclick=\"allSwitch( '#{code}' )\">&nbsp;#{l['fn']}</div>
+	<div class='col-3'>#{l['food_name']}</div>
 	<div class='col-3'>
   		<div class='row'>
-			<div class='col-6'>#{lp[12]}</div>
-			<div class='col-3'>#{lp[13]}&nbsp;<span onclick=\"sortCB( '#{code}' )\">#{lp[36]}</span></div>
-			<div class='col-3'>#{lp[14]}</div>
+			<div class='col-6'>#{l['memo']}</div>
+			<div class='col-3'>#{l['simple_g']}&nbsp;<span onclick=\"sortCB( '#{code}' )\">#{l['sort']}</span></div>
+			<div class='col-3'>#{l['expect_g']}</div>
 		</div>
 	</div>
 	<div class='col-4'>
   		<div class='row'>
-			<div class='col-3'>#{lp[15]}</div>
-			<div class='col-4'>#{lp[16]}</div>
-			<div class='col-3'>#{lp[17]}</div>
+			<div class='col-3'>#{l['volume']}</div>
+			<div class='col-4'>#{l['unit']}</div>
+			<div class='col-3'>#{l['rrate']}</div>
 		</div>
 	</div>
 </div>
@@ -810,15 +796,17 @@ food_list.each do |e|
 
 	html = "<div class='row'>"
  	html << "	<div class='col-2'>"
- 	html << "		<span onclick=\"upperCB( '#{c}', '#{code}' )\">#{lp[31]}</span>"
- 	html << "		<span onclick=\"lowerCB( '#{c}', '#{code}' )\">#{lp[32]}</span>"
+ 	html << "		<span onclick=\"upperCB( '#{c}', '#{code}' )\">#{l['up']}</span>"
+ 	html << "		<span onclick=\"lowerCB( '#{c}', '#{code}' )\">#{l['down']}</span>"
  	if e.fn == '-'
+	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>"
 		html << "</div><div class='col-9'><hr></div>"
-		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{lp[33]}</span></div>"
+		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
  	elsif e.fn == '+'
+	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>"
 		html << "</div><div class='col-3 text-secondary cb_food_label'>( #{e.init} )</div>"
 		html << "<div class='col-6'><hr></div>"
-		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{lp[33]}</span></div>"
+		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
   	else
 
 	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>&nbsp;#{e.fn}</div>"
@@ -844,7 +832,7 @@ food_list.each do |e|
 		html << "				</select>"
 		html << "			</div>"
   		html << "			<div class='col-2'><input type='text' maxlength='3' class='form-control form-control-sm' id='food_rr_#{c}' value='#{e.rr}' onchange=\"weightCB( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
-  		html << "			<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{lp[33]}</span></div>"
+  		html << "			<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
 		html << "		</div>"
 		html << "	</div>"
 	end
@@ -858,9 +846,9 @@ end
 puts 'HTML lower menu part<br>' if @debug
 price_html = ''
 if recipe_name != '' && update == ''
-	price_html = "<div class='col-1 btn btn-light btn-sm nav_button' onclick=\"priceView( '#{code}' )\">#{lp[20]}</div>" if recipe_name != '' && update == ''
+	price_html = "<div class='col-1 btn btn-light btn-sm nav_button' onclick=\"priceView( '#{code}' )\">#{l['price']}</div>" if recipe_name != '' && update == ''
 else
-	price_html = "<div class='col-1 btn btn-secondary btn-sm nav_button'>#{lp[20]}</div>"
+	price_html = "<div class='col-1 btn btn-secondary btn-sm nav_button'>#{l['price']}</div>"
 end
 
 #### Quick Save
@@ -868,7 +856,7 @@ qsave_html =''
 if recipe_name == '' || protect == 1 || user.name != recipe_user
 	qsave_html = "<div class='col-1'></div>"
 else
-	qsave_html = "<div class='col-1'><span onclick=\"quickSave( '#{code}' )\">#{lp[23]}</span></div>"
+	qsave_html = "<div class='col-1'><span onclick=\"quickSave( '#{code}' )\">#{l['save']}</span></div>"
 end
 
 #### Quick Print
@@ -876,7 +864,7 @@ qprint_html = ''
 if recipe_name == '' || user.name != recipe_user
 	qprint_html = "<div class='col-1'></div>"
 else
-	qprint_html = "<div class='col-1'><span onclick=\"print_templateSelect( '#{code}' )\">#{lp[34]}</span></div>"
+	qprint_html = "<div class='col-1'><span onclick=\"print_templateSelect( '#{code}' )\">#{l['print']}</span></div>"
 end
 
 #### Detective
@@ -884,17 +872,17 @@ detective_html = ''
 if user.status < 7
 	detective_html = "<div class='col-1'></div>"
 else
-	detective_html = "<div class='col-1 btn btn-dark btn-sm nav_button shun_color' onclick='initDetective()'>#{lp[28]}</div>"
+	detective_html = "<div class='col-1 btn btn-dark btn-sm nav_button shun_color' onclick='initDetective()'>#{l['detective']}</div>"
 end
 
 foot_html = <<-"LOWER_MENU"
 <br>
 	<div class='row'>
-		<div class='col-1 btn btn-light btn-sm nav_button' onclick="recipeEdit( 'view', '#{code}' )" align='justify'>#{lp[18]}</div>
-		<div class='col-1 btn btn-light btn-sm nav_button' onclick="calcView( '#{code}' )">#{lp[19]}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick="recipeEdit( 'view', '#{code}' )" align='justify'>#{l['recipe']}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick="calcView( '#{code}' )">#{l['calc']}</div>
 		#{price_html}
-		<div class='col-1 btn btn-light btn-sm nav_button' onclick="luckyInput()">#{lp[21]}</div>
-		<div class='col-1 btn btn-light btn-sm nav_button' onclick='Pseudo_R2F("#{code}")'>#{lp[24]}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick="luckyInput()">#{l['lucky']}</div>
+		<div class='col-1 btn btn-light btn-sm nav_button' onclick='Pseudo_R2F("#{code}")'>#{l['foodize']}</div>
 		#{detective_html}
 		<div class='col-4'></div>
 		#{qsave_html}

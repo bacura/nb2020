@@ -1,4 +1,4 @@
-// Recipe java script for nb2020 0.11b (2022/08/25)
+// Recipe java script for nb2020 0.12b (2022/11/12)
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +69,7 @@ var clearCB = function( order, code ){
 			dl1 = true;
 			displayBW();
 		} else{
-			displayVIDEO( '(>_<)cheack!' );
+			displayVIDEO( '(>_<)check!' );
 		}
 	} else{
 		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){
@@ -290,6 +290,8 @@ var recipeBit_public = function(){
 var recipeBit_protect = function(){
 	if( document.getElementById( "protect" ).checked ){
 		document.getElementById( "draft" ).checked = false;
+	}else{
+		document.getElementById( "public" ).checked = false;
 	}
 };
 

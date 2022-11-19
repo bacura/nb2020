@@ -1,12 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.12b (2022/09/14)
-
-
-#==============================================================================
-# LIBRARY
-#==============================================================================
-require './probe'
+#Nutrition browser 2020 food square 0.13b (2022/11/19)
 
 
 #==============================================================================
@@ -14,6 +8,13 @@ require './probe'
 #==============================================================================
 script = 'square'
 @debug = false
+
+
+#==============================================================================
+# LIBRARY
+#==============================================================================
+require './soul'
+require "./language_/#{script}.lp"
 
 
 #==============================================================================
@@ -74,7 +75,8 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
+
 
 #### GET data
 get_data = get_data()
@@ -222,7 +224,7 @@ when 'fctb'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{@fg}::::', '' )\">#{lp[15]}</span>\n" if user.status > 0
+	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{@fg}::::', '' )\">#{l['plus']}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{category}.#{@category[category]}</h6>
@@ -292,7 +294,7 @@ when 'fctb_l2'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
+	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l['plus']}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -344,7 +346,7 @@ when 'fctb_l3'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
+ 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l['plus']}</span>\n" if user.status > 0
 
   html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -373,7 +375,7 @@ when 'fctb_l4'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{lp[15]}</span>\n" if user.status > 0
+ 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l['plus']}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -500,16 +502,16 @@ when 'fctb_l5'
 
 		# 追加・変更ボタン
 		if user.name && base == 'cb'
-			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{lp[1]}</span>"
+			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{l['change']}</span>"
 		elsif user.name
-			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{lp[2]}</span>"
+			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{l['cboard']}</span>"
 		else
 			add_button = ""
 		end
 
 		# Koyomi button
 		if user.status >= 2 && base != 'cb'
-			koyomi_button = "<span onclick=\"addKoyomi( '#{food_no_list[c]}', -5 )\">#{lp[3]}</span>"
+			koyomi_button = "<span onclick=\"addKoyomi( '#{food_no_list[c]}', -5 )\">#{l['calendar']}</span>"
 		else
 			koyomi_button = ''
 		end
@@ -524,16 +526,21 @@ when 'fctb_l5'
 		if user.status >= 8
 			res = mdb( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false, @debug )
 			if res.first
-				gm_unitc = "<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{lp[4]}</button>"
+				bc = 'btn-outline-secondary'
+				bc = 'btn-outline-danger' if res.first['unit'] != '{"g":1}';
+				gm_unitc = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{l['unit']}</button>"
 
-#				gm_color = "<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{lp[5]}</button>"
+#				gm_color = "<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{l['color']}</button>"
 
-#				gm_allergen = "<button type='button' class='btn btn btn-outline-danger btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{lp[6]}</button>"
+				bc = 'btn-outline-secondary'
+				bc = 'btn-outline-danger' if res.first['allergen'].to_i > 0;
+				gm_allergen = "<button type='button' class='btn btn #{bc} btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{l['allergen']}</button>"
 
-				bc = 'btn-outline-danger'
-				bc = 'btn-outline-success' if res.first['shun1s'] != 0;
-				gm_shun = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{lp[7]}</button>"
-				gm_dic = "<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"initDic( 'direct', '#{fg_key}', '#{food_name}', '#{food_no_list[c]}' )\">#{lp[18]}</button>"
+				bc = 'btn-outline-secondary'
+				bc = 'btn-outline-danger' if res.first['shun1s'] != 0;
+				gm_shun = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{l['shun']}</button>"
+
+				gm_dic = "<button type='button' class='btn btn-outline-info btn-sm' onclick=\"initDic( 'direct', '#{fg_key}', '#{food_name}', '#{food_no_list[c]}' )\">#{l['dic']}</button>"
 			end
 		end
 
@@ -547,14 +554,14 @@ when 'fctb_l5'
 	db.close
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{lp[15]}</span>\n" if user.status > 0
+ 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0
 
  	# Recipe search badge
- 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{lp[16]}</span><br><br>"
+ 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l['search']}</span><br><br>"
 
  	#
 	return_button = ''
-	return_button = "<div align='center' class='joystic_koyomi' onclick=\"returnCB( '', '' )\">#{lp[17]}</div><br>" if base == 'cb'
+	return_button = "<div align='center' class='joystic_koyomi' onclick=\"returnCB( '', '' )\">#{l['signpost']}</div><br>" if base == 'cb'
 
 
 	html = <<-"HTML"
@@ -563,17 +570,17 @@ when 'fctb_l5'
   		<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="fraction">#{lp[8]}</label>
+				<label class="input-group-text" for="fraction">#{l['fract']}</label>
 				<select class="form-select" id="fraction" onchange="changeWeight( '#{food_key}', '#{food_no}' )">
-					<option value="1"#{frct_select[1]}>#{lp[9]}</option>
-					<option value="2"#{frct_select[2]}>#{lp[10]}</option>
-					<option value="3"#{frct_select[3]}>#{lp[11]}</option>
+					<option value="1"#{frct_select[1]}>#{l['round']}</option>
+					<option value="2"#{frct_select[2]}>#{l['ceil']}</option>
+					<option value="3"#{frct_select[3]}>#{l['floor']}</option>
 				</select>
 			</div>
 		</div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="weight">#{lp[12]}</label>
+				<label class="input-group-text" for="weight">#{l['weight']}</label>
 				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}" onchange="changeWeight( '#{food_key}', '#{food_no}' )">
 				<button class="btn btn-outline-primary" type="button" onclick="changeWeight( '#{food_key}', '#{food_no}' )">g</button>
 			</div>
@@ -584,8 +591,8 @@ when 'fctb_l5'
 	<table class="table table-sm table-hover">
 		<thead>
 			<tr>
-	  			<th>#{lp[13]}</th>
-	  			<th>#{lp[14]}</th>
+	  			<th>#{l['fn']}</th>
+	  			<th>#{l['name']}</th>
 				<th></th>
 				#{fc_items_html}
     		</tr>

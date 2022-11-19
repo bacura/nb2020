@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.21b (2022/10/16)
+#Nutrition browser 2020 print web page 0.22b (2022/11/12)
 
 #==============================================================================
 #LIBRARY
@@ -553,17 +553,20 @@ if csc == ''
 	html_foot = <<-"HTML"
 	<hr>
 	<div class='row'>
-		<div class='col-7'>
-			*栄養者の慾を如意自在に同化する<br>
-			ユビキタス栄養ツール<br><br>
+		<div class='col-3'>
+			栄養者の慾を如意自在に同化するユビキタス栄養ツール<br><br>
 			<a href='https://bacura.jp/nb/' class='h4 alert alert-danger'>栄養ブラウザ</a>
 		</div>
-		<div class='col-5' align="right">#{code}<br>
+		<div class='col-7'>
+			#{adsense_printv}
+		</div>
+		<div class='col-2' align="right">#{code}<br>
 			<img src='#{$PHOTO}/#{code}-qr.png'>
 		</div>
 	</div>
 </div>
 HTML
+
 else
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_SCHOOLC} WHERE code='#{csc}';", false, @debug )
 	print_ins = ''
@@ -581,7 +584,6 @@ else
 
 
 	html_foot = <<-"HTML"
-	#{adsense_printv}
 	<hr>
 	<div class='row'>
 		<div class='col-5'>

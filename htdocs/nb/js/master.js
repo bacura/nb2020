@@ -244,7 +244,6 @@ var onAllergen = function(){
 	var allergen = 0
 	if(document.getElementById( 'ag_class1' ).checked == true ){ allergen = '1' }
 	if(document.getElementById( 'ag_class2' ).checked == true ){ allergen = '2' }
-	if(document.getElementById( 'ag_class3' ).checked == true ){ allergen = '3' }
 	$.post( "gm-allergen.cgi", { command:'on', code:code, allergen:allergen }, function( data ){ $( "#LF" ).html( data );});
 	displayVIDEO( code + ':allergen ON' );
 };

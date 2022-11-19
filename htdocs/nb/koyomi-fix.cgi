@@ -30,8 +30,6 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
-puts l if @debug
-
 koyomi = Calendar.new( user.name, 0, 0, 0 )
 
 
