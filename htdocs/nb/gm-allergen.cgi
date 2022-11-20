@@ -6,7 +6,7 @@
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 script = 'gm-allergen'
 
 
@@ -57,14 +57,14 @@ case command
 when 'on'
 	fn = code.split( ',' )
 	fn.each do |e|
-		if /\d\d\d\d\d/ =~ e
+		if /P?\d\d\d\d\d/ =~ e
 			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='#{allergen}' WHERE FN='#{e}';", false, @debug )
 		end
 	end
 when 'off'
 	fn = code.split( ',' )
 	fn.each do |e|
-		if /\d\d\d\d\d/ =~ e
+		if /P?\d\d\d\d\d/ =~ e
 			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='0' WHERE FN='#{e}';", false, @debug )
 		end
 	end
@@ -77,20 +77,24 @@ unless code == ''
 end
 
 list_html = ''
-r = mdb( "SELECT t1.*, t2.allergen FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_EXT} AS t2 ON t1.fn = t2.fn WHERE t2.allergen>='1';", false, @debug )
+r = mdb( "SELECT t1.*, t2.allergen FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_EXT} AS t2 ON t1.FN = t2.FN WHERE t2.allergen>='1' ORDER BY t1.FN;", false, @debug )
 r.each do |e|
 	list_html << "<tr>"
 	list_html << "<td>#{e['FN']}</td>"
-	list_html << "<td>#{e['name']}・#{e['tag1']} #{e['tag2']} #{e['tag3']} #{e['tag4']} #{e['tag5']}</td>"
+	list_html << "<td>#{e['name']} #{e['tag1']} #{e['tag2']} #{e['tag3']} #{e['tag4']} #{e['tag5']}</td>"
+
+	r = mdb( "SELECT COUNT(FN) FROM #{$MYSQL_TB_PAG} WHERE FN='#{e['FN']}';", false, @debug)
+	count = r.first['COUNT(FN)']
+
 	case e['allergen'].to_i
 	when 1
-		list_html << "<td align='center'>#{l['check']}</td><td></td><td></td>"
+		list_html << "<td align='center'>#{l['check']}</td><td></td><td align='center'>#{count}</td>"
 	when 2
-		list_html << "<td></td><td align='center'>#{l['check']}</td><td></td>"
+		list_html << "<td></td><td align='center'>#{l['check']}</td><td align='center'>#{count}</td>"
 	when 3
-		list_html << "<td></td><td></td><td align='right'></td>"
+		list_html << "<td></td><td></td><td align='center'>#{count}</td>"
 	end
-	list_html << "<td><span onclick=\"offAllergen( '#{e['FN']}' )\">#{l['trash']}</span></td>"
+	list_html << "<td align='right'><span onclick=\"offAllergen( '#{e['FN']}' )\">#{l['trash']}</span></td>"
 	list_html << '</tr>'
 end
 list_html << '<tr><td>no item listed.</td></tr>' if list_html == ''
@@ -103,7 +107,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-9'>
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="weight">#{l['fn']}</label>
+				<label class="input-group-text">#{l['fn']}</label>
 				<input type="text" class="form-control" id="code" value="#{code}">
 			</div>
 		</div>

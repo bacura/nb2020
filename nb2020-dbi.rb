@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.43b (2022/11/03)
+#nb2020-dbi.rb 0.50b (2022/11/20)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -804,6 +804,20 @@ def media_init()
 end
 
 
+#### Making personal allergen table.
+def pag_init()
+	query = "SHOW TABLES LIKE 'pag';"
+	res = $DB.query( query )
+	if res.first
+		puts 'pag table already exists.'
+	else
+		query = 'CREATE TABLE pag (user VARCHAR(32) NOT NULL, FN VARCHAR(6));'
+		$DB.query( query )
+		puts 'pag table has been created.'
+	end
+end
+
+
 #### Making search food log table
 def slogf_init()
 	query = "SHOW TABLES LIKE 'slogf';"
@@ -1239,6 +1253,7 @@ meal_init()
 menu_init()
 palette_init()
 media_init()
+pag_int()
 
 slogf_init()
 slogr_init()

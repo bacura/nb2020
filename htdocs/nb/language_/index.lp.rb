@@ -38,7 +38,7 @@ def language_pack( language )
 		'toker'		=> "統計(R)",\
 		'unit' 		=> "単位登録",\
 		'color' 	=> "色登録",\
-		'allergen' 	=> "アレルギー登録",\
+		'allergen' 	=> "アレルゲン登録",\
 		'dic' 		=> "辞書登録",\
 		'slog' 		=> "別リク",\
 		'user' 		=> "ユーザー管理",\
