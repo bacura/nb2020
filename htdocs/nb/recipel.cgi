@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.22b (2022/11/18)
+#Nutrition browser 2020 recipe list 0.23b (2022/11/22)
 
 
 #==============================================================================
@@ -196,7 +196,7 @@ def referencing( words, uname, sql_where_ij )
 	# Referencing recipe
 	true_query.each do |e|
 		if e =~ /\-r\-/
-			return mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}' AND ( user='#{uname} OR public='1' );", false, @debug )
+			return mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}' AND ( user='#{uname}' OR public='1' );", false, @debug )
 		else
 			return mdb( "SELECT t1.* FROM #{$MYSQL_TB_RECIPE} AS t1 INNER JOIN #{$MYSQL_TB_RECIPEI} AS t2 ON t1.code = t2.code #{sql_where_ij} AND t2.word='#{e}';", false, @debug )
 		end
@@ -493,7 +493,7 @@ recipes.each do |e|
 	end
 
 	if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
-		recipe_html << "	<span onclick=\"cp2words( '#{e.code}', '' )\">#{l['eyedrop']}</span>"
+		recipe_html << "	<span onclick=\"cp2words( '#{e.code}', '' )\">#{l['dropper']}</span>"
 	end
 	recipe_html << "</td>"
 

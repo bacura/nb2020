@@ -723,10 +723,10 @@ html = <<-"UPPER_MENU"
 
 		<div class='col' align='right'>
 			<input type='checkbox' id='gn_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"gnExchange( '#{code}' )\">#{l['gram']}</button>
+			<span onclick=\"gnExchange( '#{code}' )\">#{l['gram']}</span>
 			&nbsp;&nbsp;&nbsp;&nbsp;
 			<input type='checkbox' id='all_check'>&nbsp;
-			<span type='button' class='badge rounded-pill npill' onclick=\"clearCB( 'all', '#{code}' )\">#{l['reset']}</span>
+			<span class='badge rounded-pill npill' onclick=\"clearCB( 'all', '#{code}' )\">#{l['reset']}</span>
 		</div>
 	</div>
 	<hr>
@@ -864,7 +864,7 @@ qprint_html = ''
 if recipe_name == '' || user.name != recipe_user
 	qprint_html = "<div class='col-1'></div>"
 else
-	qprint_html = "<div class='col-1'><span onclick=\"print_templateSelect( '#{code}' )\">#{l['print']}</span></div>"
+	qprint_html = "<div class='col-1'><span onclick=\"print_templateSelect( '#{code}' )\">#{l['printer']}</span></div>"
 end
 
 #### Detective

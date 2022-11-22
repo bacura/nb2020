@@ -292,7 +292,7 @@ html_fct_blocks[5] << '</table>'
 puts 'SELECT HH block<br>' if @debug
 meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
 eat_time_html = "<div class='input-group input-group-sm'>"
-eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm_fix' )\">#{l['clock']}</label>"
+eat_time_html << "<button class='btn btn-info' onclick=\"nowKoyomi( 'hh_mm_fix' )\">#{l['clock']}</button>"
 eat_time_html << "<input type='time' step='60' id='hh_mm_fix' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
 eat_time_html << "<select id='meal_time_fix' class='form-select form-select-sm'>"
 meal_time_set.each do |e|

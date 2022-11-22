@@ -13,7 +13,7 @@ def language_pack( language )
 		'guide_e' 	=> "目安E",\
 		'guide_s' 	=> "目安塩",\
 		'waste' 	=> "残食g",\
-		'gram' 		=> "１人g",\
+		'gram' 		=> "<img src='bootstrap-dist/icons/google.svg' style='height:1.5em; width:1.5em;'>",\
 		'reset' 	=> "リセット",\
 		'operation' => "操作",\
 		'food_name' => "食品名",\

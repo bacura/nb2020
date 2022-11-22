@@ -11,4 +11,5 @@
 保存
 調理手順
 <img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>
-<img src='bootstrap-dist/icons/sticky.svg' style='height:2.4em; width:2.4em;'>
+<img src='bootstrap-dist/icons/link.svg' style='height:2.4em; width:2.4em;'>
+!…強調　@…カッコ書き　#…コメント（表示なし）　&…リンク
