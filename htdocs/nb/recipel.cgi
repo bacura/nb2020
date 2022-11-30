@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.23b (2022/11/22)
+#Nutrition browser 2020 recipe list 0.25b (2022/11/30)
 
 
 #==============================================================================
@@ -8,14 +8,14 @@
 #==============================================================================
 script = 'recipel'
 page_limit = 50
-@debug = false
+@debug = true
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './soul'
 require 'fileutils'
+require './soul'
 require "./language_/#{script}.lp"
 
 
@@ -147,6 +147,7 @@ def pageing_html( page, page_start, page_end, page_max, l )
 		active = ' active' if page == c
 		html << "<li class='page-item#{active}'><a class='page-link' onclick=\"recipeListP( #{c} )\">#{c}</a></li>"
 	end
+	html << "<li class='page-item active'><a class='page-link' onclick=\"recipeListP( 1 )\">1</a></li>" if page_end == 0
 
 	html << "<li class='page-item'><a class='page-link' onclick=\"recipeListP( '#{page_max}' )\">…#{page_max}</a></li>" unless page_end == page_max
 	if page == page_max
@@ -210,14 +211,17 @@ end
 user = User.new( @cgi )
 l = language_pack( user.language )
 
-
 r = mdb( "SELECT icache, recipe, recipel_max FROM cfg WHERE user='#{user.name}';", false, false )
-if r.first['icache'].to_i == '1'
-	html_init_cache( nil )
+if r.first
+	if r.first['icache'].to_i == '1'
+		html_init_cache( nil )
+	else
+		html_init( nil )
+	end
+	page_limit = r.first['recipel_max'].to_i if r.first['recipel_max'].to_i > 0
 else
-	html_init( nil )
+	html_init_cache( nil )
 end
-
 
 page = 1
 range = 0
@@ -227,7 +231,6 @@ tech = 99
 time = 99
 cost = 99
 words = nil
-page_limit = r.first['recipel_max'].to_i if r.first['recipel_max'].to_i > 0
 recipe_cfg = Hash.new
 begin
 	recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
@@ -328,6 +331,7 @@ when 'limit'
 	time = @cgi['time'].to_i
 	cost = @cgi['cost'].to_i
 end
+range = 5 if user.status == 0
 if @debug
 	puts "page: #{page}<br>"
 	puts "range: #{range}<br>"
@@ -424,9 +428,14 @@ end
 
 
 puts "Paging parts<br>" if @debug
-page_max = recipe_num / page_limit + 1
+page_max = recipe_num / page_limit
 page_start = 1
-page_end = page_max
+if ( recipe_num % page_limit ) == 0
+	page_end = page_max
+else
+	page_end = page_max + 1
+end
+
 if page_end > 5
 	if page > 3
 		page_start = page - 3
@@ -455,7 +464,12 @@ recipes.each do |e|
 
 	tags =''
 	e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bbg' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
-	recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
+	if user.status >= 1
+		recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
+	else
+		recipe_html << "<td><a href='login.cgi'>#{e.name}</a></td><td>#{tags}</td>"
+	end
+
 
 	recipe_html << "<td>"
 	if e.public == 1
@@ -478,7 +492,7 @@ recipes.each do |e|
 	recipe_html << "</td>"
 	recipe_html << "<td>"
 
-	if user.status >= 2 && e.user == user.name
+	if user.status >= 1 && e.user == user.name
 		recipe_html << "	<span onclick=\"addingMeal( '#{e.code}', '#{e.name}' )\">#{l['table']}</span>&nbsp;&nbsp;"
 	end
 
@@ -488,11 +502,11 @@ recipes.each do |e|
 
 	recipe_html << "	<span onclick=\"print_templateSelect( '#{e.code}' )\">#{l['printer']}</span>&nbsp;&nbsp;"
 
-	if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
+	if user.status >= 1 && e.user == user.name && ( e.root == nil || e.root == '' )
 		recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{l['diagram']}</span>"
 	end
 
-	if user.status >= 2 && e.user == user.name && ( e.root == nil || e.root == '' )
+	if user.status >= 1 && e.user == user.name && ( e.root == nil || e.root == '' )
 		recipe_html << "	<span onclick=\"cp2words( '#{e.code}', '' )\">#{l['dropper']}</span>"
 	end
 	recipe_html << "</td>"

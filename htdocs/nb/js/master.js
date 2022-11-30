@@ -1,4 +1,4 @@
-// master.js 0.04b 20220712
+// master.js 0.05b (2022/11/26)
 /////////////////////////////////////////////////////////////////////////////////
 // Unit exchange ////////////////////////////////////////////////////////////////////////
 
@@ -226,34 +226,46 @@ var newDic = function(){
 // Allergen ////////////////////////////////////////////////////////////////////////
 
 // Allergen init
-var initAllergen = function( com ){
-	if( com == 'init' ){ closeBroseWindows( 0 ); }
-	$.post( "gm-allergen.cgi", { command:com }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
+var initAllergen = function(){
+	$.post( "gm-allergen.cgi", { command:'init' }, function( data ){
+		$( "#LF" ).html( data );
+
+		flashBW();
+		dlf = true;
+		displayBW();
+	});
+};
+
+// Allergen change class
+var changeAllergen = function(){
+	var allergen = document.getElementById( 'allergen' ).value;
+	$.post( "gm-allergen.cgi", { command:'change', allergen:allergen }, function( data ){ $( "#LF" ).html( data );});
 };
 
 // Direct allergen button
 var directAllergen = function( code ){
-	$.post( "gm-allergen.cgi", { command:'init', code:code }, function( data ){ $( "#LF" ).html( data );});
-	document.getElementById( "LF" ).style.display = 'block';
+	$.post( "gm-allergen.cgi", { command:'init', code:code, allergen:1 }, function( data ){
+		$( "#LF" ).html( data );
+
+		dlf = true;
+		displayBW();
+	});
 };
 
 // Allergen ON
 var onAllergen = function(){
+	var allergen = document.getElementById( 'allergen' ).value;
 	var code = document.getElementById( 'code' ).value;
-	var allergen = 0
-	if(document.getElementById( 'ag_class1' ).checked == true ){ allergen = '1' }
-	if(document.getElementById( 'ag_class2' ).checked == true ){ allergen = '2' }
 	$.post( "gm-allergen.cgi", { command:'on', code:code, allergen:allergen }, function( data ){ $( "#LF" ).html( data );});
 	displayVIDEO( code + ':allergen ON' );
 };
 
 // Allergen OFF
 var offAllergen = function( code ){
-	$.post( "gm-allergen.cgi", { command:'off', code:code }, function( data ){ $( "#LF" ).html( data );});
+	var allergen = document.getElementById( 'allergen' ).value;
+	$.post( "gm-allergen.cgi", { command:'off', code:code, allergen:allergen }, function( data ){ $( "#LF" ).html( data );});
 	displayVIDEO( code + ':allergen OFF' );
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Green yellow color vegetable ////////////////////////////////////////////////////////////////////////

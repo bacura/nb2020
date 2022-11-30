@@ -112,30 +112,6 @@ var koyomiPhotoDel = function( code, mcode, dd ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// Koyomi calc //////////////////////////////////////////////////////////////
-
-// Koyomi calc
-var calcKoyomi = function( yyyy, mm, dd, palette ){
-	if( palette ){ var palette = document.getElementById( "palette" ).value; }
-
-	$.post( "koyomi-calc.cgi", { command:"init", yyyy:yyyy, mm:mm, dd:dd, palette:palette }, function( data ){
-		$( "#L2" ).html( data );
-
-		dl1 = false;
-		dl2 = true;
-		displayBW();
-	});
-};
-
-// Koyomi calc return
-var calcKoyomiR = function( yyyy, mm ){
-	dl1 = true;
-	dl2 = false;
-	displayBW();
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////
 // Koyomi Direct fix data //////////////////////////////////////////////////////////////
 
 // Koyomi fix
@@ -583,6 +559,34 @@ var writekoyomiex = function( file, size, msg ){
 	}else{
 		displayVIDEO( msg );
 	}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Koyomi calc //////////////////////////////////////////////////////////////
+
+// Koyomi calc
+var initKoyomiCalc = function(){
+	$.post( "koyomi-calc.cgi", { command:"init" }, function( data ){
+		$( "#L1" ).html( data );
+
+		dl1 = true;
+		displayBW();
+	});
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Koyomi composition //////////////////////////////////////////////////////////////
+
+// Koyomi composition
+var initKoyomiCompo = function(){
+	$.post( "koyomi-compo.cgi", { command:"init" }, function( data ){
+		$( "#L1" ).html( data );
+
+		dl1 = true;
+		displayBW();
+	});
 };
 
 

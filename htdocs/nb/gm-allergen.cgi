@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser GM allergen editor 0.00b (2022/11/19)
+#Nutrition browser GM allergen editor 0.00b (2022/11/26)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 script = 'gm-allergen'
 
 
@@ -41,7 +41,8 @@ end
 
 #### POST
 command = @cgi['command']
-allergen = @cgi['allergen']
+allergen = @cgi['allergen'].to_i
+allergen = 1 if allergen == 0
 code = @cgi['code']
 code.gsub!( /\s/, ',' ) unless code == ''
 code.gsub!( '　', ',' ) unless code == ''
@@ -58,14 +59,14 @@ when 'on'
 	fn = code.split( ',' )
 	fn.each do |e|
 		if /P?\d\d\d\d\d/ =~ e
-			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='#{allergen}' WHERE FN='#{e}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen#{allergen}=1 WHERE FN='#{e}';", false, @debug )
 		end
 	end
 when 'off'
 	fn = code.split( ',' )
 	fn.each do |e|
 		if /P?\d\d\d\d\d/ =~ e
-			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen='0' WHERE FN='#{e}';", false, @debug )
+			mdb( "UPDATE #{$MYSQL_TB_EXT} SET allergen#{allergen}=0 WHERE FN='#{e}';", false, @debug )
 		end
 	end
 end
@@ -77,7 +78,13 @@ unless code == ''
 end
 
 list_html = ''
-r = mdb( "SELECT t1.*, t2.allergen FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_EXT} AS t2 ON t1.FN = t2.FN WHERE t2.allergen>='1' ORDER BY t1.FN;", false, @debug )
+query = ''
+if allergen == 1 || allergen == 2
+	query = "SELECT t1.*, t2.allergen#{allergen} FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_EXT} AS t2 ON t1.FN = t2.FN WHERE t2.allergen#{allergen}='1' ORDER BY t1.FN;"
+else
+	query = "SELECT t1.* FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_PAG} AS t2 ON t1.FN = t2.FN WHERE t2.user='#{user.name}' ORDER BY t1.FN;"
+end
+r = mdb( query, false, @debug )
 r.each do |e|
 	list_html << "<tr>"
 	list_html << "<td>#{e['FN']}</td>"
@@ -86,18 +93,22 @@ r.each do |e|
 	r = mdb( "SELECT COUNT(FN) FROM #{$MYSQL_TB_PAG} WHERE FN='#{e['FN']}';", false, @debug)
 	count = r.first['COUNT(FN)']
 
-	case e['allergen'].to_i
-	when 1
-		list_html << "<td align='center'>#{l['check']}</td><td></td><td align='center'>#{count}</td>"
-	when 2
-		list_html << "<td></td><td align='center'>#{l['check']}</td><td align='center'>#{count}</td>"
-	when 3
-		list_html << "<td></td><td></td><td align='center'>#{count}</td>"
+	list_html << "<td>#{count}</td>"
+	if allergen == 1 || allergen == 2
+		list_html << "<td><span onclick=\"offAllergen( '#{e['FN']}' )\">#{l['trash']}</span></td>"
+	else
+		list_html << "<td></td>"
 	end
-	list_html << "<td align='right'><span onclick=\"offAllergen( '#{e['FN']}' )\">#{l['trash']}</span></td>"
 	list_html << '</tr>'
 end
 list_html << '<tr><td>no item listed.</td></tr>' if list_html == ''
+
+select_a1 = ['', 'SELECTED', '', '']
+select_a2 = ['', '', 'SELECTED', '']
+select_a3 = ['', '', '', 'SELECTED']
+
+regist_button = ''
+regist_button = "<button class='btn btn-sm btn-info' type='button' onclick=\"onAllergen()\">#{l['regist']}</button>" unless allergen == 3
 
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -105,37 +116,36 @@ html = <<-"HTML"
 		<div class='col'><h5>#{l['allergen']}: #{food_name}</h5></div>
 	</div>
 	<div class='row'>
+		<div class='col-3'>
+			<div class="input-group input-group-sm">
+				<label class="input-group-text">#{l['class']}</label>
+				<select class='form-select form-select-sm' id='allergen' onchange='changeAllergen()'>
+					<option value='1' #{select_a1[allergen]}>#{l['obligate']}</option>
+					<option value='2' #{select_a2[allergen]}>#{l['recommend']}</option>
+					<option value='3' #{select_a3[allergen]}>#{l['user']}</option>
+				</select>
+			</div>
+		</div>
 		<div class='col-9'>
 			<div class="input-group input-group-sm">
 				<label class="input-group-text">#{l['fn']}</label>
 				<input type="text" class="form-control" id="code" value="#{code}">
 			</div>
 		</div>
-		<div class='col-3' align='right'>
-			<div class="form-check form-check-inline">
-  				<input class="form-check-input" type="radio" name="level" id="ag_class1" CHECKED>
-				<label class="form-check-label" for="inlineRadio1">#{l['obligate']}</label>
-			</div>
-			<div class="form-check form-check-inline">
-				<input class="form-check-input" type="radio" name="level" id="ag_class2">
-				<label class="form-check-label" for="inlineRadio2">#{l['recommend']}</label>
-			</div>
-		</div>
 	</div>
 	<br>
 
 	<div class='row'>
-		<button class="btn btn-sm btn-info" type="button" onclick="onAllergen()">#{l['regist']}</button>
+		#{regist_button}
 	</div>
 	<br>
 
 	<table class='table table-sm table-striped'>
 		<thead>
-			<td>#{l['fn']}</td>
-			<td>#{l['name']}</td>
-			<td align='center'>#{l['obligate']}</td>
-			<td align='center'>#{l['recommend']}</td>
-			<td align='center'>#{l['others']}</td>
+			<td width='10%'>#{l['fn']}</td>
+			<td width='20%'>#{l['name']}</td>
+			<td width='10%'>#{l['others']}</td>
+			<td width='10%'></td>
 		</thead>
 
 		#{list_html}

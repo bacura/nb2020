@@ -5,7 +5,6 @@
 #==============================================================================
 @category = %w( 特　殊 穀　類 いも・でん粉類 砂糖・甘味類 豆　類 種実類 野菜類 果実類 きのこ類 藻　類 魚介類 肉　類 卵　類 乳　類 油脂類 菓子類 し好飲料類 調味料・香辛料類 調理・流通食品類 特　殊 )
 
-#$FCT = {'I' => @fct_item, 'N' => @fct_name, 'U' => @fct_unit, 'F' => @fct_frct }
 @fct_base = %w( FG FN SID Tagnames )
 @fct_rew = %w( REFUSE ENERC ENERC_KCAL WATER )
 @fct_ew = %w( ENERC ENERC_KCAL WATER )
@@ -26,12 +25,6 @@
 @fct_unit = {'FG'=>nil,     'FN'=>nil,        'SID'=>nil,       'Tagnames'=>nil,      'REFUSE'=>'%',     'ENERC'=>'kJ',           'ENERC_KCAL'=>'kcal',           'WATER'=>'g',   'PROTCAA'=>'g',                     'PROT'=>'g',         'PROTV'=>'g',             'FAT'=>'g',    'FATNLEA'=>'g',                    'FATV'=>'g',       'FASAT'=>'g',          'FAMS'=>'g',              'FAPU'=>'g',               'FAPUN3'=>'g',                    'FAPUN6'=>'g',                   'CHOLE'=>'mg',        'CHOCDF'=>'g',        'CHOAVLM'=>'g',                       'CHOAVL'=>'g',                       'CHOAVLDF'=>'g',                       'CHOV'=>'g',            'FIB'=>'g',           'FIBTG'=>'g',              'FIBSOL'=>'g',               'FIBINS'=>'g',                'FIBTDF'=>'g',              'FIBSDFS'=>'g',                       'FIBSDFP'=>'g',                       'FIBIDF'=>'g',                'STARES'=>'g',               'POLYL'=>'g',         'ASH'=>'g',    'NA'=>'mg',      'K'=>'mg',    'CA'=>'mg',      'MG'=>'mg',        'P'=>'mg',   'FE'=>'mg',  'ZN'=>'mg',   'CU'=>'mg', 'MN'=>'mg',    'ID'=>'μg',    'SE'=>'μg',   'CR'=>'μg',   'MO'=>'μg',      'RETOL'=>'μg',      'CARTA'=>'μg',      'CARTB'=>'μg',       'CRYPXB'=>'μg',             'CARTBEQ'=>'μg',          'VITA_RAE'=>'μg',             'VITD'=>'μg',     'TOCPHA'=>'mg',          'TOCPHB'=>'mg',          'TOCPHG'=>'mg',          'TOCPHD'=>'mg',          'VITK'=>'μg',     'THIA'=>'mg',      'RIBF'=>'mg',      'NIA'=>'mg',      'NE'=>'mg',           'VITB6A'=>'mg',      'VITB12'=>'μg',        'FOL'=>'μg',   'PANTAC'=>'mg',       'BIOT'=>'μg',    'VITC'=>'mg',     'OA'=>'g',      'ALC'=>'g',      'NACL_EQ'=>'g',          'Notice'=>nil}
 @fct_frct = {'FG'=>nil,     'FN'=>nil,        'SID'=>nil,       'Tagnames'=>nil,      'REFUSE'=>nil,     'ENERC'=>0,              'ENERC_KCAL'=>0,                'WATER'=>1,     'PROTCAA'=>1,                       'PROT'=>1,           'PROTV'=>1,               'FAT'=>1,      'FATNLEA'=>1,                      'FATV'=>1,         'FASAT'=>2,            'FAMS'=>2,                'FAPU'=>2,                 'FAPUN3'=>2,                      'FAPUN6'=>2,                     'CHOLE'=>0,           'CHOCDF'=>1,          'CHOAVLM'=>1,                         'CHOAVL'=>1,                         'CHOAVLDF'=>1,                         'CHOV'=>1,              'FIB'=>1,             'FIBTG'=>1,                'FIBSOL'=>1,                 'FIBINS'=>1,                  'FIBTDF'=>1,                'FIBSDFS'=>1,                        'FIBSDFP'=>1,                         'FIBIDF'=>1,                  'STARES'=>1,                 'POLYL'=>1,           'ASH'=>1,      'NA'=>0,         'K'=>0,       'CA'=>0,         'MG'=>0,           'P'=>0,      'FE'=>1,     'ZN'=>1,      'CU'=>2,    'MN'=>2,       'ID'=>0,       'SE'=>0,      'CR'=>0,      'MO'=>0,         'RETOL'=>0,         'CARTA'=>0,         'CARTB'=>0,          'CRYPXB'=>0,                'CARTBEQ'=>0,             'VITA_RAE'=>0,                'VITD'=>1,        'TOCPHA'=>1,             'TOCPHB'=>1,             'TOCPHG'=>1,             'TOCPHD'=>1,             'VITK'=>0,        'THIA'=>2,         'RIBF'=>2,         'NIA'=>1,         'NE'=>1,              'VITB6A'=>2,         'VITB12'=>1,           'FOL'=>0,      'PANTAC'=>2,          'BIOT'=>1,       'VITC'=>0,        'OA'=>1,        'ALC'=>1,        'NACL_EQ'=>1,            'Notice'=>nil}
 
-#@fct_default5 = %(6, 9, 10, 18, 70
-#@fct_start = 5
-#$FCT_START = { 'jp' => @fct_start }
-#@fct_end = 70
-#$FCT_END = { 'jp' => @fct_end }
-
 @palette_default_name = %w( 簡易表示用 基本の5成分 基本の12成分 基本の21成分 基本全て )
 $PALETTE_DEFAULT_NAME = { 'jp' => @palette_default_name }
 @palette_default = %w( 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000011000000000001100100000000000010000001100000000001 00000010001001000000000011000000000001110111000000000010000001101111001011 00001111111111111111111111111111111111111111111111111111111111111111111111 )
@@ -44,9 +37,6 @@ $PALETTE_DEFAULT = { 'jp' => @palette_default }
 @recipe_tech = %w( 未設定 茹でる・煮る・炊く 直火・炙る 炒める・ソテー 蒸す 揚げる 和える 生・非加熱 冷蔵・冷凍 オーブン・グリル 電子レンジ )
 @recipe_time = %w( 未設定 ～5分 ～10分 ～15分 ～20分 ～30分 ～45分 ～60分 ～120分 121分～ )
 @recipe_cost = %w( 未設定 ～50円 ～100円 ～150円 ～200円 ～300円 ～400円 ～500円 ～600円 ～800円 ～1000円 1000円～ )
-
-#         0     1    2    3       4       5     6     7       8     9       10    11    12    13    14     15       16    17
-#@unit = ['g','kcal','ml','小さじ','大さじ','カップ','合','切身・匹S','切身・匹M','切身・匹L','個・枚S','個・枚M','個・枚L','SV', '単位', '廃棄前', 'cm', '標準']
 
 #               0    1           2    3    4    5
 @sub_group = %w( '' 緑黄色野菜 普通牛乳 味噌 醤油 食塩 )

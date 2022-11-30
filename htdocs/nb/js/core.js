@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.1b 20220716
+// Nutorition Browser 2020 core.js 0.2b (2022/11/30)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -26,6 +26,9 @@ bwlf = null;
 line = null;
 video = null;
 
+help = null;
+help_tp = '1154';
+
 menu_status = 0;
 general_ = '';
 
@@ -43,6 +46,9 @@ window.onload = function(){
 		bwlf = document.getElementById( "LF" );
 		line = document.getElementById( "LINE" );
 		video = document.getElementById( "VIDEO" );
+		help = document.getElementById( "HELP" );
+
+		toHelp();
 
 		bookOpen( 'books/about.html', 1 );
 		bookOpen( 'books/information.html', 2 );
@@ -168,6 +174,15 @@ changeMenu = function( user_status ){
 	}
 }
 
+
+// changing help to
+toHelp = function( page ){
+	if( page==null ){
+		help.innerHTML = "<a href='https://bacura.jp/?page_id=" + help_tp + "' target='manual'><img src='bootstrap-dist/icons/question-circle-gray.svg' style='height:3em; width:2em;'></a>";
+	}else{
+		help.innerHTML = "<a href='https://bacura.jp/?page_id=" + page + "'' target='manual'><img src='bootstrap-dist/icons/question-circle-ndsk.svg' style='height:3em; width:2em;'></a>";
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////////
 // Account /////////////////////////////////////////////////////////////////////////

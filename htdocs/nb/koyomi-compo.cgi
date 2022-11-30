@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.13b (2022/09/27)
+#Nutrition browser 2020 koyomi compo 0.00b (2022/11/27)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'koyomi'
+script = 'koyomi-compo'
 @debug = false
 
 #==============================================================================
@@ -19,24 +19,6 @@ require "./language_/#{script}.lp"
 #==============================================================================
 #DEFINITION
 #==============================================================================
-
-####
-def sub_menu( l )
-	html = <<-"MENU"
-<div class='container-fluid'>
-	<div class='row'>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomi()">#{l['foodrec']}</span></div>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomiex()">#{l['exrec']}</span></div>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomiCalc()">#{l['calc']}</span></div>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomiCompo()">#{l['compo']}</span></div>
-		<div class='col-2'></div>
-	</div>
-</div>
-
-MENU
-	puts html
-	exit()
-end
 
 
 ####
@@ -132,7 +114,7 @@ end
 
 
 #### Sub menu
-sub_menu ( l ) if command == 'menu'
+sub_menu ( lp ) if command == 'menu'
 
 
 puts "Date & calendar config<br>" if @debug
@@ -291,7 +273,7 @@ visio_htmls = ['']
 		if pfc.size == 3
 			t << "<br><span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = "
 			t << "<span style='color:crimson'>#{pfc[0]}</span> : <span style='color:green'>#{pfc[1]}</span> : <span style='color:blue'>#{pfc[2]}</span>"
-			t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{c}' )\">#{l['visionnerz']}</span>" if user.status >= 5
+			t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{c}' )\">#{lp[28]}</span>" if user.status >= 5
 		end
 		fct_day_htmls << t
 	end
@@ -307,7 +289,7 @@ end
 puts "Day process<br>" if @debug
 date_html = ''
 week_count = calendar.wf
-weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
+weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
 1.upto( calendar.ddl ) do |c|
 	freeze_flag = false
 	koyomi_tmp = []
@@ -363,11 +345,11 @@ puts "HTML process<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><h5>#{l['koyomi']}</h5></div>
+		<div class='col-2'><h5>#{lp[8]}</h5></div>
 		<div class='col-2 form-inline'>
 			<input type='month' class='form-control form-control-sm' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomi()">
 		</div>
-		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{joystic_goto}';">#{l['return']}</div>
+		<div align='center' class='col-8 joystic_koyomi' onclick="window.location.href='#day#{joystic_goto}';">#{lp[18]}</div>
 	</div>
 	<br>
 
@@ -375,12 +357,12 @@ html = <<-"HTML"
 	<thead>
     	<tr>
      		<th align='center'></th>
-     		<th align='center' width='15%'>#{l['breakfast']}</th>
-     		<th align='center' width='15%'>#{l['lunch']}</th>
-     		<th align='center' width='15%'>#{l['dinner']}</th>
-     		<th align='center' width='15%'>#{l['supply']}</th>
-     		<th align='center'>#{l['memo']}</th>
-     		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll()" #{freeze_all_checked}>&nbsp;#{l['snow']}</th>
+     		<th align='center' width='15%'>#{lp[12]}</th>
+     		<th align='center' width='15%'>#{lp[13]}</th>
+     		<th align='center' width='15%'>#{lp[14]}</th>
+     		<th align='center' width='15%'>#{lp[15]}</th>
+     		<th align='center'>#{lp[16]}</th>
+     		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll()" #{freeze_all_checked}>&nbsp;#{lp[17]}</th>
     	</tr>
   	</thead>
 	#{date_html}

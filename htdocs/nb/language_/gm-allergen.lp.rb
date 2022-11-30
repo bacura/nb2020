@@ -8,9 +8,11 @@ def language_pack( language )
 		'allergen' 	=> "アレルゲン登録",\
 		'fn' 		=> "食品番号",\
 		'name' 		=> "食品名",\
-		'obligate'	=> "義務",\
-		'recommend'	=> "推奨",\
-		'others'	=> "ユーザー<br>登録数",\
+		'class'		=> "表示区分",\
+		'obligate'	=> "表示義務",\
+		'recommend'	=> "表示推奨",\
+		'user'		=> "ユーザー登録",\
+		'others'	=> "ユーザー登録数",\
 		'check'		=> "○",\
 		'trash' 	=> "<img src='bootstrap-dist/icons/trash.svg' style='height:1.2em; width:1.2em;'>",\
 		'regist'	=> "登　録"

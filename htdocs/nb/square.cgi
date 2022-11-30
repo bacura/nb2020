@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.13b (2022/11/19)
+#Nutrition browser 2020 food square 0.15b (2022/11/30)
 
 
 #==============================================================================
@@ -452,6 +452,7 @@ when 'fctb_l5'
  	# 簡易表示の項目
  	fc_items = []
 	fc_items_html = ''
+
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
 	if r.first
 		palette = r.first['palette']
@@ -459,7 +460,9 @@ when 'fctb_l5'
 			fc_items << @fct_item[c] if palette[c] == '1'
 		end
 	else
-		@fct_default5.each do |e| fc_items << @fct_item[e] end
+		$PALETTE_DEFAULT[user.language][0].size.times do |c|
+			fc_items << @fct_item[c] if $PALETTE_DEFAULT[user.language][0][c] == '1'
+		end
 	end
 	fc_items.each do |e| fc_items_html << "<th align='right'>#{@fct_name[e]}</th>" end
 
@@ -536,8 +539,8 @@ when 'fctb_l5'
 				bc = 'btn-outline-danger' if res.first['allergen'].to_i > 0;
 				gm_allergen = "<button type='button' class='btn btn #{bc} btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{l['allergen']}</button>"
 
-				bc = 'btn-outline-secondary'
-				bc = 'btn-outline-danger' if res.first['shun1s'] != 0;
+				bc = 'btn-outline-danger'
+				bc = 'btn-outline-secondary' if res.first['shun1s'] == 0 || res.first['shun1s'] == ''|| res.first['shun1s'] == nil;
 				gm_shun = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{l['shun']}</button>"
 
 				gm_dic = "<button type='button' class='btn btn-outline-info btn-sm' onclick=\"initDic( 'direct', '#{fg_key}', '#{food_name}', '#{food_no_list[c]}' )\">#{l['dic']}</button>"
@@ -581,7 +584,7 @@ when 'fctb_l5'
 		<div class="col-3">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="weight">#{l['weight']}</label>
-				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}" onchange="changeWeight( '#{food_key}', '#{food_no}' )">
+				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
 				<button class="btn btn-outline-primary" type="button" onclick="changeWeight( '#{food_key}', '#{food_no}' )">g</button>
 			</div>
 		</div>

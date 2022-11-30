@@ -107,7 +107,7 @@ html = <<-"HTML"
   <div class="container-fluid">
     <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{l['nb']}</a>
     <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-    <a href='https://bacura.jp/?page_id=1154' target='manual'>#{l['help']}</a>
+    <span id='HELP'></span>
     <span class="d-flex">
       <select class="form-select" id="qcate">
         <option value='0'>#{l['food']}</option>
@@ -244,7 +244,7 @@ html = <<-"HTML"
 <nav class='container-fluid' id='gm_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{l['unit']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initColor( 'init' )">#{l['color']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initAllergen( 'init' )">#{l['allergen']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initAllergen()">#{l['allergen']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initGYCV( 'init' )">#{l['gycv']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initShun( 'init' )">#{l['shun']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initDic( 'init' )">#{l['dic']}</button>
