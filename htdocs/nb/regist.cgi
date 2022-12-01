@@ -31,33 +31,11 @@ def html_top_regist( l )
     <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{l['nb']}</a>
     <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
     <a href='https://bacura.jp/?page_id=1154' target='manual'>#{l['help']}</a>
-    <span class="d-flex">
-      <select class="form-select" id="qcate">
-        <option value='0'>#{l['food']}</option>
-        <option value='1'>#{l['recipe']}</option>
-        <option value='2'>#{l['memory']}</option>
-      </select>
-      <input class="form-control" type="text" maxlength="100" id="words" onchange="search()">
-      <btton class='btn btn-sm' onclick="search()">#{l['search']}</button>
-    </span>
   </div>
 </header>
 HTML
 
   puts html
-end
-
-
-#### Language init
-def lp_init( script, language_set )
-  f = open( "#{$HTDOCS_PATH}/language_/#{script}.#{language_set}", "r" )
-  lp = [nil]
-  f.each do |line|
-    lp << line.chomp.force_encoding( 'UTF-8' )
-  end
-  f.close
-
-  return lp
 end
 
 
@@ -153,7 +131,6 @@ end
 #==============================================================================
 html_init( nil )
 
-lp = lp_init( 'regist', $DEFAULT_LP )
 l = language_pack( $DEFAULT_LP )
 #puts l if @debug
 

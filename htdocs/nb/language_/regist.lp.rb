@@ -8,10 +8,6 @@ def language_pack( language )
 		'nb'		=> "栄養ブラウザ",\
 		'login'		=> "ログイン",\
 		'help'		=> "<img src='bootstrap-dist/icons/question-circle-gray.svg' style='height:2em; width:2em;'>",\
-		'food'		=> "食品",\
-		'recipe'	=> "レシピ",\
-		'memory'	=> "記憶",\
-		'search'	=> "<img src='bootstrap-dist/icons/search-gray.svg' style='height:1.5em; width:1.5em;'>",\
 		'message' 	=> "IDとパスワードは必須です。英数字とアンダーバー(_)のみ使用可能です。ご登録前に利用規約を確認しておいてください。",\
 		'id_rule' 	=> "ID (4~30文字)",\
 		'pass_rule' => "パスワード (30文字まで)",\
