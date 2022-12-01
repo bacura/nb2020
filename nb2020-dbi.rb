@@ -696,7 +696,7 @@ def sum_init()
 	if res.first
 		puts 'sum table already exists.'
 	else
-		query = 'CREATE TABLE sum (user VARCHAR(32) NOT NULL PRIMARY KEY, code VARCHAR(32), name VARCHAR(255), sum varchar(2000), protect TINYINT(1), dish TINYINT);'
+		query = 'CREATE TABLE sum (user VARCHAR(32) NOT NULL PRIMARY KEY, code VARCHAR(32), name VARCHAR(255), sum varchar(2000), protect TINYINT(1), dish TINYINT(4));'
 		$DB.query( query )
 
 		[$GM, 'guest', 'guest2', 'guest3'].each do |e|

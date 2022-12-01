@@ -104,8 +104,7 @@ def html_head( interrupt, status, sub_title )
   <script type="text/javascript" src="c3/c3.min.js"></script>
 
   <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
- <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
-  <script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
+  <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
   #{js_guild}
   #{js_shun}
   #{js_master}

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.17b (2022/11/11)
+#Nutrition browser 2020 cutting board 0.20b (2022/12/01)
 
 #==============================================================================
 #STATIC
@@ -22,7 +22,7 @@ require "./language_/#{script}.lp"
 #==============================================================================
 
 #### Easy weight calc
-def weight_calc( food_list, dish_num )
+def weight_calc( food_list, dish_num, adjew )
 	weight = BigDecimal( '0' )
 	weight_checked = BigDecimal( '0' )
 
@@ -33,8 +33,11 @@ def weight_calc( food_list, dish_num )
 
 	food_list.each do |e|
 		unless e.fn == '-' || e.fn == '+'
-			weight += BigDecimal( e.weight.to_s )
-			weight_checked +=  BigDecimal( e.weight.to_s ) if e.check == '1' || check_all
+			rr = 1.0
+			rr = e.rr.to_f if adjew == 1
+			weight_ = BigDecimal( e.weight.to_s ) * rr
+			weight += weight_
+			weight_checked += weight_ if e.check == '1' || check_all
 		end
 	end
 
@@ -46,7 +49,7 @@ end
 
 
 #### Easy energy calc
-def energy_calc( food_list, uname, dish_num )
+def energy_calc( food_list, uname, dish_num, adjew )
 	energy = BigDecimal( '0' )
 	energy_checked = BigDecimal( '0' )
 
@@ -61,9 +64,12 @@ def energy_calc( food_list, uname, dish_num )
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
 			r = mdb( q, false, @debug )
 			if r.first
+				rr = 1.0
+				rr = e.rr.to_f if adjew == 1
+				weight_ = BigDecimal( e.weight.to_s ) * rr
 				t = BigDecimal( convert_zero( r.first['ENERC_KCAL'] ))
-				energy += ( t * BigDecimal( e.weight.to_s ) / 100 )
-				energy_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
+				energy += ( t * weight_ / 100 )
+				energy_checked += ( t * weight_ / 100 ) if e.check == '1' || check_all
 			end
 		end
 	end
@@ -75,7 +81,7 @@ end
 
 
 #### Easy salt calc
-def salt_calc( food_list, uname, dish_num )
+def salt_calc( food_list, uname, dish_num, adjew )
 	salt = BigDecimal( '0' )
 	salt_checked = BigDecimal( '0' )
 
@@ -90,9 +96,12 @@ def salt_calc( food_list, uname, dish_num )
 			q = "SELECT NACL_EQ from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
 			r = mdb( q, false, @debug )
 			if r.first
+				rr = 1.0
+				rr = e.rr.to_f if adjew == 1
+				weight_ = BigDecimal( e.weight.to_s ) * rr
 				t = BigDecimal( convert_zero( r.first['NACL_EQ'] ))
-				salt += ( t * BigDecimal( e.weight.to_s ) / 100 )
-				salt_checked += ( t * BigDecimal( e.weight.to_s ) / 100 ) if e.check == '1' || check_all
+				salt += ( t * weight_ / 100 )
+				salt_checked += ( t * weight_ / 100 ) if e.check == '1' || check_all
 			end
 		end
 	end
@@ -250,24 +259,26 @@ if @debug
 	puts "chomi_selected:#{chomi_selected}<br>"
 	puts "chomi_code:#{chomi_code}<br>"
 	puts "recipe_user:#{recipe_user}<br>"
+	puts "adjew:#{adjew}<br>"
 	puts "<hr>"
 end
 
 
 puts "Loading Sum<br>" if @debug
-q = ''
 if command == 'load'
-	q = "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{recipe_user}' AND code='#{code}';"
+	query = "SELECT * from #{$MYSQL_TB_RECIPE} WHERE user='#{recipe_user}' AND code='#{code}';"
 else
-	q = "SELECT * from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
+	query = "SELECT * from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
 end
-r = mdb( q, false, @debug )
+r = mdb( query, false, @debug )
 code = r.first['code']
 recipe_name = r.first['name']
 recipe_user = r.first['user']
 dish_num = r.first['dish'].to_i if dish_num == '' || dish_num == nil
 dish_num = 1 if dish_num == 0
 protect = r.first['protect'].to_i
+adjew = r.first['adjew'].to_i if command != 'load' && command != 'adjew'
+
 sum = r.first['sum']
 sum = '' if sum == nil
 food_list = []
@@ -284,6 +295,27 @@ if @debug
 	puts "sum:#{sum}<br>"
 	puts "food_list:#{food_list}<br>"
 	puts "<hr>"
+end
+
+
+#### adjust weight mode
+adjew_checked = [ '', 'CHECKED' ]
+r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';",false, @debug )
+if r.first && r.first['calcc'] != nil
+	a = r.first['calcc'].split( ':' )
+	palette_ = a[0]
+	adjew = a[1].to_i
+	frct_mode = a[2].to_i
+	frct_accu = a[3].to_i
+else
+	palette_ = nil
+	frct_mode = 1
+	frct_accu = 1
+end
+if command == 'adjew'
+	puts "Adjust mode<br>" if @debug
+	adjew = @cgi['adjew'].to_i
+	mdb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette_}:#{adjew}:#{frct_mode}:#{frct_accu}' WHERE user='#{user.name}';", false, @debug )
 end
 
 
@@ -400,6 +432,7 @@ when 'weight'
 	unit_value = BigDecimal( 0 )
 	food_list[order_no].unit = unit
 	food_list[order_no].init = food_init_
+	food_rr_ = 1.0 if /[^0-9.]/ =~ food_rr_
 	food_list[order_no].rr = food_rr_
 	food_weight, unit_value = food_weight_check( unitv )
 	food_list[order_no].unitv = food_weight
@@ -557,11 +590,11 @@ when 'chomis'
 	end
 	update = '*'
 
-#### Adjusting tootal food weight
+#### Adjusting total food weight
 when 'wadj'
 	weight_adj = @cgi['weight_adj'].to_i
 	puts "weight_adj:#{weight_adj}<br>" if @debug
-	weight_ctrl, weight_checked, check_all = weight_calc( food_list, dish_num )
+	weight_ctrl, weight_checked, check_all = weight_calc( food_list, dish_num, adjew )
 	wadj_rate = BigDecimal( weight_adj - ( weight_ctrl - weight_checked )) / ( weight_checked )
 	food_list.size.times do |c|
 		if ( food_list[c].check == '1' || check_all ) && food_list[c].weight != '-' && food_list[c].weight != '+'
@@ -577,7 +610,7 @@ when 'eadj'
 	puts "Adjusting tootal food energy<br>" if @debug
 	energy_adj = @cgi['energy_adj'].to_i
 	puts "energy_adj:#{energy_adj}<br>" if @debug
-	energy_ctrl, energy_checked, check_all = energy_calc( food_list, user.name, dish_num )
+	energy_ctrl, energy_checked, check_all = energy_calc( food_list, user.name, dish_num, adjew )
 	eadj_rate = BigDecimal( energy_adj - ( energy_ctrl - energy_checked )) / ( energy_checked )
 	food_list.size.times do |c|
 		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
@@ -593,7 +626,7 @@ when 'sadj'
 	puts "Adjusting tootal food salt<br>" if @debug
 	salt_adj = @cgi['salt_adj'].to_f
 	puts "salt_adj:#{salt_adj}<br>" if @debug
-	salt_ctrl, salt_checked, check_all = salt_calc( food_list, user.name, dish_num )
+	salt_ctrl, salt_checked, check_all = salt_calc( food_list, user.name, dish_num, adjew )
 	sadj_rate = BigDecimal( salt_adj - ( salt_ctrl - salt_checked )) / ( salt_checked )
 	food_list.size.times do |c|
 		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
@@ -603,7 +636,6 @@ when 'sadj'
 			food_list[c].ew = proc_wf( BigDecimal( food_list[c].ew ) * sadj_rate )
 		end
 	end
-
 	update = '*'
 
 when 'ladj'
@@ -633,9 +665,9 @@ puts "update:#{update}<br><hr>" if @debug
 
 
 puts "Getting food weight & food energy & food salt<br>" if @debug
-weight_ctrl, weight_checked = weight_calc( food_list, dish_num )
-energy_ctrl, energy_checked = energy_calc( food_list, user.name, dish_num )
-salt_ctrl, salt_checked = salt_calc( food_list, user.name, dish_num )
+weight_ctrl, weight_checked = weight_calc( food_list, dish_num, adjew )
+energy_ctrl, energy_checked = energy_calc( food_list, user.name, dish_num, adjew )
+salt_ctrl, salt_checked = salt_calc( food_list, user.name, dish_num, adjew )
 weitht_adj = weight_ctrl if weitht_adj == 0
 energy_adj = energy_ctrl if energy_adj == 0
 salt_adj = salt_ctrl if salt_adj == 0
@@ -713,7 +745,12 @@ html = <<-"UPPER_MENU"
   				<input type="number" min='1' step="0.1" class="form-control" id="salt_adj" value="#{salt_ctrl.round( 1 ).to_f}">
 			</div>
 		</div>
-		<div class='col-1'></div>
+		<div class='col-1'>
+			<div class="form-check form-switch">
+			  <input class="form-check-input" type="checkbox" id='adjew' onchange='changeAdjew()' #{adjew_checked[adjew]}>
+			  <label class="form-check-label">#{l['expect_g']}</label>
+			</div>
+		</div>
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 	        	<button class='btn btn-outline-primary' type='button' onclick=\"lossAdj( '#{code}' )\">#{l['waste']}</button>
