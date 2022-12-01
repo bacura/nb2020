@@ -1,13 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser magic calc 0.05b
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './probe'
-require './brain'
-
+#Nutrition browser magic calc 0.06b (2020/12/01)
 
 #==============================================================================
 #STATIC
@@ -16,6 +9,12 @@ fct_num = 14
 @debug = false
 script = 'calc'
 
+#==============================================================================
+#LIBRARY
+#==============================================================================
+require './probe'
+require './brain'
+require "./language_/#{script}.lp"
 
 #==============================================================================
 #DEFINITION
@@ -29,7 +28,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 r = mdb( "SELECT icalc FROM cfg WHERE user='#{user.name}';", false, @debug )
 fct_num = r.first['icalc'].to_i unless r.first['icalc'].to_i == 0
@@ -120,9 +119,9 @@ table_num.times do |c|
 
 	# 項目名
 	fct_html << '<tr>'
-	fct_html << "	<th align='center' width='6%' class='fct_item'>#{lp[13]}</th>"
-	fct_html << "	<th align='center' width='20%' class='fct_item'>#{lp[14]}</th>"
-	fct_html << "	<th align='center' width='4%' class='fct_item'>#{lp[15]}</th>"
+	fct_html << "	<th align='center' width='6%' class='fct_item'>#{l['food_no']}</th>"
+	fct_html << "	<th align='center' width='20%' class='fct_item'>#{l['food_name']}</th>"
+	fct_html << "	<th align='center' width='4%' class='fct_item'>#{l['weight']}</th>"
 	fct_num.times do |cc|
 		fct_no = ( c * fct_num ) + cc
 		unless fct.names[fct_no] == nil
@@ -158,7 +157,7 @@ table_num.times do |c|
 
 	# 合計値
 	fct_html << '<tr>'
-	fct_html << '	<td colspan="2" align="center" class="fct_sum">合計</td>'
+	fct_html << "	<td colspan='2' align='center' class='fct_sum'>#{l['total']}</td>"
 	fct_html << "	<td align='right' class='fct_sum'>#{total_weight.to_f}</td>"
 	fct_num.times do |cc|
 		fct_no = ( c * fct_num ) + cc
@@ -183,12 +182,12 @@ puts 'HTML <br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col'><h5>#{lp[1]}: #{recipe_name}</h5></div>
+		<div class='col'><h5>#{l['calc']}: #{recipe_name}</h5></div>
 	</div>
 	<div class="row">
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="palette">#{lp[2]}</label>
+				<label class="input-group-text" for="palette">#{l['palette']}</label>
 				<select class="form-select form-select-sm" id="palette" onchange="recalcView('#{code}')">
 					#{palette_html}
 				</select>
@@ -196,27 +195,27 @@ html = <<-"HTML"
 		</div>
 		<div class='col-3' align='left'>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{accu_check} onchange="recalcView('#{code}')">#{lp[3]}
+    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{accu_check} onchange="recalcView('#{code}')">#{l['precision']}
 			</div>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="recalcView('#{code}')">#{lp[4]}
+    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="recalcView('#{code}')">#{l['ew']}
 			</div>
 		</div>
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="frct_mode">#{lp[5]}</label>
+				<label class="input-group-text" for="frct_mode">#{l['fract']}</label>
 				<select class="form-select form-select-sm" id="frct_mode" onchange="recalcView('#{code}')">
-					<option value="1"#{frct_select[1]}>#{lp[6]}</option>
-					<option value="2"#{frct_select[2]}>#{lp[7]}</option>
-					<option value="3"#{frct_select[3]}>#{lp[8]}</option>
+					<option value="1"#{frct_select[1]}>#{l['round']}</option>
+					<option value="2"#{frct_select[2]}>#{l['ceil']}</option>
+					<option value="3"#{frct_select[3]}>#{l['floor']}</option>
 				</select>
-				<span onclick="recalcView('#{code}')">#{lp[9]}</span>&nbsp;
+				<span onclick="recalcView('#{code}')">#{l['recalc']}</span>&nbsp;
 			</div>
 		</div>
 
 		<div class='col-2'></div>
 		<div class='col-1'>
-			<a href='plain-calc.cgi?uname=#{user.name}&code=#{code}&palette=#{palette_}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{lp[11]}</a>
+			<a href='plain-calc.cgi?uname=#{user.name}&code=#{code}&palette=#{palette_}&ew_mode=#{ew_mode}' download='#{dl_name}.txt'>#{l['raw']}</a>
 		</div>
     </div>
 </div>
