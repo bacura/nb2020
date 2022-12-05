@@ -88,9 +88,8 @@ def html_head( interrupt, status, sub_title )
   <meta name="twitter:site" content="@ho_meow" />
   <meta name="twitter:title" content="栄養ブラウザ" />
   <meta name="twitter:description" content="栄養者のユビキタスツール" />
-  <meta name='twitter:image' content='https://bacura.jp/' />
-  <meta name="twitter:image:alt" content="ばきゅら京都Labロゴ" />
-
+  <meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/nb.png' />
+  <meta name="twitter:image:alt" content="栄養ブラウザロゴ" />
   <!-- Jquery -->
   <script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
 

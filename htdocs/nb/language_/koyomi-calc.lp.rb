@@ -5,20 +5,22 @@ def language_pack( language )
 
 	#Japanese
 	l['jp'] = {
-		'koyomi' 	=> "栄養計算",\
-		'g100' 		=> "100 g相当",\
-		'food_n' 	=> "食品名",\
-		'food_g'	=> "食品群",\
-		'weight'	=> "重量(g)",\
+		'koyomi' 	=> "こよみ栄養計算",\
 		'palette'	=> "パレット",\
 		'signpost'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>",\
-		'clock'		=> "<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>",\
-		'min'		=> "分間",\
-		'week'		=> "-- １週間以内 --",\
-		'month'		=> "-- １ヶ月以内 --",\
-		'volume'	=> "個数",\
-		'carry_on'	=> "時間継承",\
-		'history'	=> "履歴"
+		'fromto'	=> "　～　",\
+		'calc'		=> "計　算",\
+		'no_day'	=> "該当日がありません",\
+		'name'		=> "栄養成分",\
+		'unit'		=> "単位",\
+		'volume'	=> "合計",\
+		'breakfast'	=> "朝食",\
+		'lunch'		=> "昼食",\
+		'dinner'	=> "夕食",\
+		'supply'	=> "捕食・間食",\
+		'period'	=> "期間総量（",\
+		'days'		=> "日間）",\
+		'average'	=> "１日平均"
 	}
 
 	return l[language]

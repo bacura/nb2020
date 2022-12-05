@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.2b (2022/11/30)
+// Nutorition Browser 2020 core.js 0.3b (2022/12/04)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -1048,7 +1048,7 @@ var recipeProtocol = function( code ){
 function words2Protocol(){
 	var protocol = document.getElementById( 'protocol' );
 	var words = document.getElementById( 'words' ).value;
-	protocol.value = protocol.value.substr( 0, protocol.selectionStart ) + words + protocol.value.substr( protocol.selectionStart );
+	protocol.value = protocol.value.substr( 0, protocol.selectionStart ) + '&' + words + protocol.value.substr( protocol.selectionStart );
 };
 
 

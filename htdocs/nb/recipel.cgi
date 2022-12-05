@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.25b (2022/11/30)
+#Nutrition browser 2020 recipe list 0.26b (2022/12/02)
 
 
 #==============================================================================
@@ -430,11 +430,8 @@ end
 puts "Paging parts<br>" if @debug
 page_max = recipe_num / page_limit
 page_start = 1
-if ( recipe_num % page_limit ) == 0
-	page_end = page_max
-else
-	page_end = page_max + 1
-end
+page_max += 1 if ( recipe_num % page_limit ) != 0
+page_end = page_max
 
 if page_end > 5
 	if page > 3

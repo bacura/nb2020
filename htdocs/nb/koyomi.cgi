@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.13b (2022/09/27)
+#Nutrition browser 2020 koyomi 0.14b (2022/12/05)
 
 
 #==============================================================================
@@ -182,7 +182,7 @@ end
 
 puts "Palette setting<br>" if @debug
 palette = Palette.new( user.name )
-palette.set_bit( nil )
+palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 
 puts "Multi calc process<br>" if @debug

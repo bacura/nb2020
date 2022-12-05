@@ -565,7 +565,7 @@ var writekoyomiex = function( file, size, msg ){
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi calc //////////////////////////////////////////////////////////////
 
-// Koyomi calc
+// Initiation
 var initKoyomiCalc = function(){
 	$.post( "koyomi-calc.cgi", { command:"init" }, function( data ){
 		$( "#L1" ).html( data );
@@ -575,6 +575,13 @@ var initKoyomiCalc = function(){
 	});
 };
 
+// Calculation
+var calcKoyomiCalc = function(){
+	var palette = document.getElementById( "palette" ).value;
+	var yyyymmdds = document.getElementById( "yyyymmdds" ).value;
+	var yyyymmdde = document.getElementById( "yyyymmdde" ).value;
+	$.post( "koyomi-calc.cgi", { command:"calc", palette:palette, yyyymmdds:yyyymmdds, yyyymmdde:yyyymmdde }, function( data ){ $( "#L1" ).html( data ); });
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi composition //////////////////////////////////////////////////////////////

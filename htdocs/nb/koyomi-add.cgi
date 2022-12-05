@@ -1,13 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.11b (2022/09/16)
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './probe'
-require './brain'
-
+#Nutrition browser 2020 koyomi adding panel 0.12b (2022/12/05)
 
 #==============================================================================
 #STATIC
@@ -15,6 +8,12 @@ require './brain'
 script = 'koyomi-add'
 @debug = false
 
+#==============================================================================
+#LIBRARY
+#==============================================================================
+require './probe'
+require './brain'
+require "./language_/#{script}.lp"
 
 #==============================================================================
 #DEFINITION
@@ -57,6 +56,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 #### Getting POST
@@ -185,17 +185,17 @@ if command == 'save' || command == 'move'
 end
 
 copy_html = ''
-save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"saveKoyomiAdd( 'save', '#{code}', '#{origin}' )\">#{lp[12]}</button>"
+save_button = "<button class='btn btn-sm btn-info' type='button' onclick=\"saveKoyomiAdd( 'save', '#{code}', '#{origin}' )\">#{l['save']}</button>"
 
 
 ####
 if command == 'modify' || command == 'move' || command == 'move_fix'
 	copy_html << "<div class='form-group form-check'>"
     copy_html << "<input type='checkbox' class='form-check-input' id='copy' #{checked( copy )}>"
-    copy_html << "<label class='form-check-label'>#{lp[24]}</label>"
+    copy_html << "<label class='form-check-label'>#{l['copy']}</label>"
 	copy_html << "</div>"
 
-	save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"saveKoyomiAdd( 'move', '#{code}', '#{origin}' )\">#{lp[23]}</button>"
+	save_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"saveKoyomiAdd( 'move', '#{code}', '#{origin}' )\">#{l['modify']}</button>"
 end
 
 
@@ -221,7 +221,7 @@ end
 #### Date HTML
 date_html = ''
 week_count = calendar.wf
-weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
+weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 1.upto( calendar.ddl ) do |c|
 	date_html << "<tr id='day#{c}'>"
 	style = ''
@@ -264,7 +264,7 @@ end
 
 
 #### Select HTML
-tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
+tdiv_set = [ l['breakfast'], l['lunch'], l['dinner'], l['supply'] ]
 tdiv_html = ''
 tdiv_html << "<select id='tdiv' class='form-select form-select-sm'>"
 s = selected( 0, 3, tdiv )
@@ -275,7 +275,7 @@ tdiv_html << "</select>"
 puts 'SELECT HH block<br>' if @debug
 meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
 eat_time_html = "<div class='input-group input-group-sm'>"
-eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm' )\">#{lp[26]}</label>"
+eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm' )\">#{l['clock']}</label>"
 eat_time_html << "<input type='time' step='60' id='hh_mm' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
 eat_time_html << "<select id='meal_time' class='form-select form-select-sm'>"
 meal_time_set.each do |e|
@@ -286,7 +286,7 @@ meal_time_set.each do |e|
 	end
 end
 eat_time_html << "</select>"
-eat_time_html << "<label class='input-group-text'>#{lp[17]}</label>"
+eat_time_html << "<label class='input-group-text'>#{l['time']}</label>"
 eat_time_html << "</div>"
 
 
@@ -296,7 +296,7 @@ rate_html = ''
 if command != 'move_fix' && /\-f\-/ !~ code
 	rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
 	rate_html << "<div class='input-group input-group-sm'>"
-	rate_html << "	<label class='input-group-text'>#{lp[22]}</label>"
+	rate_html << "	<label class='input-group-text'>#{l['volume']}</label>"
 	rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
 	rate_html << "	<select id='eu' class='form-select form-select-sm'>"
 	if /^[UP]?\d{5}/ =~ code
@@ -313,16 +313,16 @@ end
 #### Return button
 return_joystic = ''
 if command == 'modify' || command == 'move'
-	return_joystic = "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{origin_date[0]}', '#{origin_date[1]}', '#{origin_date[2]}' )\">#{lp[28]}</div>"
-	return_joystic << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{lp[11]}</div>"
+	return_joystic = "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{origin_date[0]}', '#{origin_date[1]}', '#{origin_date[2]}' )\">#{l['return2']}</div>"
+	return_joystic << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{l['return']}</div>"
 else
-	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{lp[11]}</div>"
+	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{l['calendar']}</div>"
 end
 
 
 #### carry_on_check
 carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )}>"
-carry_on_html << '<label class="form-check-label">時間継承</label>'
+carry_on_html << "<label class='form-check-label'>#{l['inheritance']}</label>"
 
 
 onchange = "onChange=\"changeKoyomiAdd( 'init', '#{code}', '#{origin}' )\""
@@ -333,8 +333,8 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-3'><h5>#{food_name}</h5></div>
-		<div align='center' class='col-2 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[25]}</div>
-		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi()">#{lp[27]}</div>
+		<div align='center' class='col-2 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{l['joystick']}</div>
+		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi()">#{l['return']}</div>
 		#{return_joystic}
 	</div>
 	<br>
@@ -350,23 +350,22 @@ html = <<-"HTML"
 
 	<div class='row'>
 		<div class='col-4 form-inline'>#{rate_html}</div>
+		<div class='col'>#{copy_html}</div>
+
 	</div>
 	<br>
 
-	<div class='row'>
-		#{save_button}
-		#{copy_html}
-	</div>
+	<div class='row'>#{save_button}</div>
 	<br>
 
 	<table class="table table-sm table-hover">
 	<thead>
     	<tr>
      		<th align='center'></th>
-     		<th align='center'>#{lp[18]}</th>
-     		<th align='center'>#{lp[19]}</th>
-     		<th align='center'>#{lp[20]}</th>
-     		<th align='center'>#{lp[21]}</th>
+     		<th align='center'>#{l['breakfast']}</th>
+     		<th align='center'>#{l['lunch']}</th>
+     		<th align='center'>#{l['dinner']}</th>
+     		<th align='center'>#{l['supply']}</th>
     	</tr>
   	</thead>
 	#{date_html}

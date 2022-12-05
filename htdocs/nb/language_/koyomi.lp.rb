@@ -1,4 +1,4 @@
-# Language pack for  koyomi 0.13b (2022/09/27)
+# Language pack for koyomi 0.13b (2022/12/05)
 
 def language_pack( language )
 	l = Hash.new
@@ -6,7 +6,7 @@ def language_pack( language )
 	#Japanese
 	l['jp'] = {
 		'koyomi' 	=> "こよみ:食事",\
-		'sum' 		=> "日",\
+		'sun' 		=> "日",\
 		'mon' 		=> "月",\
 		'tue' 		=> "火",\
 		'wed' 		=> "水",\
