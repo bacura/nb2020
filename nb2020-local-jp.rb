@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.11b (2022/10/16)
+#Nutrition browser 2020 soul Japanese pack 0.12b (2022/12/08)
 
 #==============================================================================
 # STATIC
@@ -42,10 +42,10 @@ $PALETTE_DEFAULT = { 'jp' => @palette_default }
 @sub_group = %w( '' 緑黄色野菜 普通牛乳 味噌 醤油 食塩 )
 
 #              0 1   2   3    4   5 6   7     8    9   10   11     12        13        14   15   16 17  18  19   20  21   22   23    24  25     26    27     28
-@allergy = %w( '' えび かに 小麦 そば 卵 乳 落花生 あわび いか いくら オレンジ カシューナッツ キウイフルーツ 牛肉 くるみ ごま さけ さば 大豆 鶏肉 バナナ 豚肉 まつたけ もも やまいも りんご ゼラチン アーモンド )
+#@allergy = %w( '' えび かに 小麦 そば 卵 乳 落花生 あわび いか いくら オレンジ カシューナッツ キウイフルーツ 牛肉 くるみ ごま さけ さば 大豆 鶏肉 バナナ 豚肉 まつたけ もも やまいも りんご ゼラチン アーモンド )
 
 #             0    1   2    3    4  5  6  7  8 9  10 11
-@color = %w( 未指定 赤 ピンク オレンジ 黄 緑 青 紫 茶 白 黒 透明 )
+#@color = %w( 未指定 赤 ピンク オレンジ 黄 緑 青 紫 茶 白 黒 透明 )
 
 #             0      1   2     3      4         5      6 7   8      9
 @account = %w( 退会 一般 ギルメン guest ギルメン・萌 ギルメン・旬 娘 - サブマス ギルマス )
@@ -78,8 +78,8 @@ def html_head( interrupt, status, sub_title )
   #{refresh}
   <title>栄養ブラウザ #{sub_title}</title>
   <meta charset="UTF-8">
-  <meta name="keywords" content="栄養士,管理栄養士,無料,フリー,Webサービス,nutrition,Nutritionist,food,検索,計算,解析,評価,栄養計算">
-  <meta name="description" content="*栄養者の慾を如意自在に同化するユビキタス栄養ツール">
+  <meta name="keywords" content="栄養士,管理栄養士,無料,フリー,ダイエット,減量,Webサービス,食品成分表.献立,レシピ,検索,食事,評価,記録,栄養計算,栄養指導,フードインフォマティクス,インフォマティクス,食品情報解析,栄養情報解析,nutrition,Nutritionist,food,informatics,diet">
+  <meta name="description" content="*栄養者の慾を如意自在に同化するユビキタス栄養ツール、栄養士、管理栄養士が活動に必要な食品成分の閲覧、料理の栄養計算、レシピの管理などが無料できる">
   <meta name="robots" content="index,follow">
   <meta name="author" content="Shinji Yoshiyama@ばきゅら京都Lab">
 
@@ -122,12 +122,13 @@ end
 # HTML footer
 #==============================================================================
 def html_foot()
+    banner = "<a href='https://bacura.jp'><img src='https://bacura.jp/nb/#{$PHOTO}/BKL_banner_h125.png' alt='ばきゅら京都Lab'></a>"
     html = <<-"HTML"
       <div align='center' class='koyomi_today' onclick="window.location.href='#top';"><img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'></div>
       <br>
       <footer class="footer">
         <div align="center">
-          <a href="https://bacura.jp"><img src="https://bacura.jp/img/BKL_banner_h125.png" alt="ばきゅら京都Lab"></a>
+          #{banner}
         </div>
       </footer>
     </span>

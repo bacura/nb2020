@@ -157,9 +157,10 @@ def menu2rc( uname, code )
   return codes
 end
 
-def recipe2fns( uname, code, rate, unit )
+def recipe2fns( uname, code, rate, unit, ew_mode )
+  ew_mode = 0 if ew_mode == nil
   r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, false )
-  fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], 1 )
+  fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
 
   if unit == '%'
     fws.map! do |x|

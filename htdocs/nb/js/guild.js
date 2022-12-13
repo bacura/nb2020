@@ -1,4 +1,4 @@
-//guild.js ver 0.33b (2022/11/03)
+//guild.js ver 0.34b (2022/12/11)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -570,6 +570,8 @@ var initKoyomiCalc = function(){
 	$.post( "koyomi-calc.cgi", { command:"init" }, function( data ){
 		$( "#L1" ).html( data );
 
+		flashBW();
+		dline = true;
 		dl1 = true;
 		displayBW();
 	});
@@ -580,7 +582,8 @@ var calcKoyomiCalc = function(){
 	var palette = document.getElementById( "palette" ).value;
 	var yyyymmdds = document.getElementById( "yyyymmdds" ).value;
 	var yyyymmdde = document.getElementById( "yyyymmdde" ).value;
-	$.post( "koyomi-calc.cgi", { command:"calc", palette:palette, yyyymmdds:yyyymmdds, yyyymmdde:yyyymmdde }, function( data ){ $( "#L1" ).html( data ); });
+	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
+	$.post( "koyomi-calc.cgi", { command:"calc", palette:palette, yyyymmdds:yyyymmdds, yyyymmdde:yyyymmdde, ew_mode:ew_mode }, function( data ){ $( "#L1" ).html( data ); });
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -591,11 +594,20 @@ var initKoyomiCompo = function(){
 	$.post( "koyomi-compo.cgi", { command:"init" }, function( data ){
 		$( "#L1" ).html( data );
 
+		flashBW();
+		dline= true;
 		dl1 = true;
 		displayBW();
 	});
 };
 
+// Analysis composition
+var calcKoyomiCompo = function(){
+	var yyyymmdds = document.getElementById( "yyyymmdds" ).value;
+	var yyyymmdde = document.getElementById( "yyyymmdde" ).value;
+	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
+	$.post( "koyomi-compo.cgi", { command:"compo", yyyymmdds:yyyymmdds, yyyymmdde:yyyymmdde, ew_mode:ew_mode }, function( data ){ $( "#L1" ).html( data ); });
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Ginmi //////////////////////////////////////////////////////////////

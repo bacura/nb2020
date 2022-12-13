@@ -55,7 +55,6 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
 l = language_pack( user.language )
 
 
@@ -316,7 +315,7 @@ if command == 'modify' || command == 'move'
 	return_joystic = "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{origin_date[0]}', '#{origin_date[1]}', '#{origin_date[2]}' )\">#{l['return2']}</div>"
 	return_joystic << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{l['return']}</div>"
 else
-	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{l['calendar']}</div>"
+	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{l['return']}</div>"
 end
 
 
@@ -334,7 +333,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-3'><h5>#{food_name}</h5></div>
 		<div align='center' class='col-2 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{l['joystick']}</div>
-		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi()">#{l['return']}</div>
+		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi()">#{l['calendar']}</div>
 		#{return_joystic}
 	</div>
 	<br>

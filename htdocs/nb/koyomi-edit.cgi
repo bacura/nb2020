@@ -1,7 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.17b
+#Nutrition browser 2020 koyomi editor 0.19b (2020/12/11)
 
+
+#==============================================================================
+# STATIC
+#==============================================================================
+@debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
@@ -9,25 +15,55 @@
 require './probe'
 require './brain'
 
-
-#==============================================================================
-# STATIC
-#==============================================================================
-script = 'koyomi-edit'
-@debug = false
-
-
 #==============================================================================
 # DEFINITION
 #==============================================================================
-def meals( e, lp, user, freeze_flag )
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'breakfast' => "朝食",\
+		'lunch' 	=> "昼食",\
+		'dinner' 	=> "夕食",\
+		'supply'	=> "間食 / 補食",\
+		'control'	=> "操作",\
+		'meal'		=> "食事内容",\
+		'volume'	=> "摂取量",\
+		'start'		=> "開始時刻",\
+		'period'	=> "食事時間",\
+		'some'		=> "何か食べた",\
+		'some-'		=> "小盛",\
+		'some='		=> "並盛",\
+		'some+'		=> "大盛",\
+		'some--'	=> "微盛",\
+		'some++'	=> "特盛",\
+		'plus'		=> "＋",\
+		'copy'		=> "複製",\
+		'move'		=> "移動",\
+		'memo'		=> "メモ",\
+		'return'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
+		'visionnerz'=> "<img src='bootstrap-dist/icons/graph-up.svg' style='height:2em; width:2em;'>",\
+		'write'		=> "<img src='bootstrap-dist/icons/pencil-square.svg' style='height:3em; width:3em;'>",\
+		'recipe'	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>",\
+		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>",\
+		'trashf'	=> "<img src='bootstrap-dist/icons/trash-fill.svg' style='height:1.2em; width:1.2em;'>",\
+		'trash'		=> "<img src='bootstrap-dist/icons/trash.svg' style='height:1.2em; width:1.2em;'>"
+		}
+
+	return l[language]
+end
+
+def meals( e, l, user, freeze_flag )
 	mb_html = "<table class='table table-sm table-hover'>"
 	mb_html << "<thead>"
 	mb_html << "<tr>"
-	mb_html << "<td>#{lp[8]}</td>"
-	mb_html << "<td>#{lp[9]}</td>"
-	mb_html << "<td>#{lp[10]}</td>"
-	mb_html << "<td>#{lp[21]}</td>"
+	mb_html << "<td>#{l['meal']}</td>"
+	mb_html << "<td>#{l['volume']}</td>"
+	mb_html << "<td>#{l['start']}</td>"
+	mb_html << "<td>#{l['period']}</td>"
 	mb_html << "<td></td>"
 	mb_html << "</tr>"
 	mb_html << "</thead>"
@@ -62,7 +98,7 @@ def meals( e, lp, user, freeze_flag )
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
 				onclick = " onclick=\"modifysaveKoyomiFC( '#{code}', '#{origin}' )\"" if freeze_flag == 0
-				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\">#{lp[30]}</span>"
+				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\">#{l['move']}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
 				onclick = ''
@@ -72,7 +108,7 @@ def meals( e, lp, user, freeze_flag )
 			if rr.first
 				item_name = rr.first['name']
 				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
-				recipe_button = "<span onclick=\"initCB( 'load', '#{code}' )\">#{lp[31]}</span>"
+				recipe_button = "<span onclick=\"initCB( 'load', '#{code}' )\">#{l['recipe']}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
 			end
@@ -96,7 +132,7 @@ def meals( e, lp, user, freeze_flag )
 			mb_html << "<td#{onclick}>#{wt}&nbsp;#{unit}</td>"
 		else
 			uw = ''
-			food_weight, rate = food_weight_check( wt )
+			rate = food_weight_check( wt ).last
 			uw = "&nbsp;(#{unit_weight( rate, unit, code ).to_f} g)" if unit != 'g'
 			mb_html << "<td#{onclick}>#{wt}&nbsp;#{unit}#{uw}</td>"
 		end
@@ -114,7 +150,7 @@ def meals( e, lp, user, freeze_flag )
 			mb_html << "	</div>"
 
 			mb_html << "<div class='col-6'>"
-			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{code}', '#{c}' )\">#{lp[27]}</span>"
+			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{code}', '#{c}' )\">#{l['trash']}</span>"
 			mb_html << "</div>"
 
 			mb_html << "</div>"
@@ -162,18 +198,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
-
-
-puts 'Getting koyomi start year<br>' if @debug
-r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-if r.first
-	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
-		koyomi = JSON.parse( r.first['koyomi'] )
-		start_yesr = koyomi['start'].to_i
-		p koyomi if @debug
-	end
-end
+l = language_pack( user.language )
 
 
 puts 'Getting POST' if @debug
@@ -262,7 +287,7 @@ freeze_flag = 0
 koyomi_html = []
 
 palette = Palette.new( user.name )
-palette.set_bit( nil )
+palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 
 puts 'Updaing freeze<br>' if @debug
@@ -272,7 +297,7 @@ r.each do |e|
 	if e['tdiv'] == 4
 		koyomi_html[e['tdiv']] = e['koyomi']
 	else
-		koyomi_html[e['tdiv']] = meals( e, lp, user, freeze_flag )
+		koyomi_html[e['tdiv']] = meals( e, l, user, freeze_flag )
 		fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
 		fct.load_palette( palette.bit )
 		if freeze_flag == 1
@@ -287,7 +312,7 @@ r.each do |e|
 			a = []
 			a = e['koyomi'].split( "\t" ) if e['koyomi']
 			a.each do |ee|
-				( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( '~' )
+				koyomi_code, koyomi_rate, koyomi_unit = ee.split( '~' )[0..2]
 				code_set << koyomi_code
 				rate_set << koyomi_rate
 				unit_set << koyomi_unit
@@ -295,7 +320,7 @@ r.each do |e|
 
 			code_set.size.times do |cc|
 				code = code_set[cc]
-				z, rate = food_weight_check( rate_set[cc] )
+				rate = food_weight_check( rate_set[cc] ).last
 				unit = unit_set[cc]
 
 				if /\?/ =~ code
@@ -315,7 +340,7 @@ r.each do |e|
 					food_weights = []
 					recipe_codes.each do |e|
 						if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
-							fns, fws, z = recipe2fns( user.name, e, rate, unit )
+							fns, fws = recipe2fns( user.name, e, rate, unit )[0..1]
 							food_nos.concat( fns )
 							food_weights.concat( fws )
 						else
@@ -353,16 +378,16 @@ end
 cmm_html = [ '', '', '', '' ]
 0.upto( 3 ) do |c|
 	unless freeze_flag == 1
-		cmm_html[c]	<< "<button class='btn btn-sm btn-dark' onclick=\"fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', '#{c}' )\">#{lp[17]}</button>&nbsp;"
+		cmm_html[c]	<< "<button class='btn btn-sm btn-dark' onclick=\"fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', '#{c}' )\">#{l['plus']}</button>&nbsp;"
 	else
-		cmm_html[c]	<< "<button class='btn btn-sm btn-secondary'>#{lp[17]}</button>&nbsp;"
+		cmm_html[c]	<< "<button class='btn btn-sm btn-secondary'>#{l['plus']}</button>&nbsp;"
 	end
 	if koyomi_html[c] == nil
-		cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{lp[18]}</button>&nbsp;"
-		cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{lp[19]}</button>&nbsp;"
+		cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{l['copy']}</button>&nbsp;"
+		cmm_html[c] << "<button class='btn btn-sm btn-secondary'>#{l['move']}</button>&nbsp;"
 	else
-		cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'copy', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{lp[18]}</button>&nbsp;"
-		cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'move', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{lp[19]}</button>&nbsp;" unless freeze_flag == 1
+		cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'copy', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{l['copy']}</button>&nbsp;"
+		cmm_html[c] << "<button class='btn btn-sm btn-primary' onclick=\"cmmKoyomi( 'move', '#{yyyy}', '#{mm}', '#{dd}', #{c} )\">#{l['move']}</button>&nbsp;" unless freeze_flag == 1
 	end
 end
 
@@ -373,7 +398,7 @@ if freeze_flag == 0
 	0.upto( 2 ) do |c|
 		some_html[c] = <<-"SOME"
 		<select class='form-select form-select-sm' id='some#{c}' onchange="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', #{c}, 'some#{c}' )">
-			<option value='' selected>#{lp[20]}</option>
+			<option value='' selected>#{l['some']}</option>
 			<option value='?--'>#{@something['?--']}</option>
 			<option value='?-'>#{@something['?-']}</option>
 			<option value='?='>#{@something['?=']}</option>
@@ -393,7 +418,7 @@ disabled = 'DISABLED' if freeze_flag == 1
 0.upto( 3 ) do |c|
 	form_photo[c] = "<form method='post' enctype='multipart/form-data' id='photo_form#{c}'>"
 	form_photo[c] << '<div class="input-group input-group-sm">'
-	form_photo[c] << "<label class='input-group-text'>#{lp[26]}</label>"
+	form_photo[c] << "<label class='input-group-text'>#{l['camera']}</label>"
 	form_photo[c] << "<input type='file' class='form-control' name='photo' onchange=\"koyomiPhotoSave( '#{yyyy}-#{mm}-#{dd}-#{c}', '#photo_form#{c}', '#{dd}' )\" #{disabled}></div>"
 	form_photo[c] << '</form>'
 end
@@ -403,7 +428,7 @@ puts 'photo frame<br>' if @debug
 photo_frame = []
 disabled = ''
 disabled = 'DISABLED' if freeze_flag == 1
-0.upto( 3 ) do |c| photo_frame[c] = view_series( user, "#{yyyy}-#{mm}-#{dd}-#{c}", lp[29], 200, dd ) end
+0.upto( 3 ) do |c| photo_frame[c] = view_series( user, "#{yyyy}-#{mm}-#{dd}-#{c}", l['trashf'], 200, dd ) end
 
 
 ####
@@ -414,7 +439,7 @@ if freeze_flag == 0
 		<textarea class='form-control' id='memo' rows='2'>#{koyomi_html[4]}</textarea>
 	</div>
 	<div class='col-1'><br>
-		<span onclick="memoKoyomi( '#{yyyy}', '#{mm}', '#{dd}' )">#{lp[11]}</span>
+		<span onclick="memoKoyomi( '#{yyyy}', '#{mm}', '#{dd}' )">#{l['write']}</span>
 	</div>
 MEMO1
 else
@@ -427,21 +452,21 @@ end
 
 
 visionnerz_html = ''
-visionnerz_html = "<div align='center' class='col-1 joystic_koyomi' onclick=\"visionnerz( '#{yyyy}-#{mm}-#{dd}' )\">#{lp[22]}</div>" if user.status >= 5
+visionnerz_html = "<div align='center' class='col-1 joystic_koyomi' onclick=\"visionnerz( '#{yyyy}-#{mm}-#{dd}' )\">#{l['visionnerz']}</div>" if user.status >= 5
 
 
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-2'><h5>#{yyyy} / #{mm} / #{dd}</h5></div>
-		<div align='center' class='col-8 joystic_koyomi' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{lp[7]}</div>
+		<div align='center' class='col-8 joystic_koyomi' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{l['return']}</div>
 		<div align='center' class='col-1'></div>
 		#{visionnerz_html}
 	</div>
 	<br>
 
 	<div class='row'>
-		<h6>#{lp[1]}</h6>
+		<h6>#{l['breakfast']}</h6>
 		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[0]}
@@ -458,7 +483,7 @@ html = <<-"HTML"
 	<hr>
 
 	<div class='row'>
-		<h6>#{lp[2]}</h6>
+		<h6>#{l['lunch']}</h6>
 		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[1]}
@@ -475,7 +500,7 @@ html = <<-"HTML"
 	<hr>
 
 	<div class='row'>
-		<h6>#{lp[3]}</h6>
+		<h6>#{l['dinner']}</h6>
 		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[2]}
@@ -492,7 +517,7 @@ html = <<-"HTML"
 	<hr>
 
 	<div class='row'>
-		<h6>#{lp[4]}</h6>
+		<h6>#{l['supply']}</h6>
 		<div class='col-4'>
 			<div class="input-group">
 				#{cmm_html[3]}
@@ -509,7 +534,7 @@ html = <<-"HTML"
 	<br><br>
 
 	<div class='row'>
-		<div class='col-1'><h5>#{lp[28]}</h5></div>
+		<div class='col-1'><h5>#{l['memo']}</h5></div>
 		#{memo_html}
 	</div>
 </div>

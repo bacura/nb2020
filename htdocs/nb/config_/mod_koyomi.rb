@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for koyomiex 0.20b (2022/09/10)
+# Nutorition browser 2020 Config module for koyomiex 0.21b (2022/12/10)
 #encoding: utf-8
 
 @debug = false
@@ -53,8 +53,6 @@ def config_module( cgi, user, lp )
 		kexu.delete( kex_key )
 		kexa.delete( kex_key )
 
-#		mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{del_no}='' WHERE user='#{user.name}';", false, @debug )
-
 	when 'available'
 		kex_onoff = cgi['kex_onoff']
 		kexa[kex_key] = kex_onoff
@@ -64,7 +62,10 @@ def config_module( cgi, user, lp )
 
 	puts 'UPDATE config<br>' if @debug
 	if step != ''
-		koyomi_ = JSON.generate( { "start" => start,  "kexu" => kexu, "kexa" => kexa } )
+		koyomi['start'] = start
+		koyomi['kexu'] = kexu
+		koyomi['kexa'] = kexa
+		koyomi_ = JSON.generate( koyomi )
 		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
 	end
 

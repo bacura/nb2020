@@ -24,11 +24,11 @@ def language_pack( language )
 		'modify'	=> "変更",\
 		'copy' 		=> "複製",\
 		'inheritance'=> "時間継承",\
-		'return' 	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>",\
+		'return' 	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
 		'joystick' 	=> "<img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'>",\
 		'clock'		=> "<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>",\
 		'calendar'	=> "<img src='bootstrap-dist/icons/calendar.svg' style='height:2em; width:2em;'>",\
-		'return2'	=> "<img src='bootstrap-dist/icons/signpost-2.svg' style='height:2em; width:2em;'>"
+		'return2'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>"
 	}
 
 	return l[language]

@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.52b (2022/11/26)
+#nb2020-dbi.rb 0.53b (2022/12/07)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -715,7 +715,7 @@ def recipe_init()
 	if res.first
 		puts 'recipe table already exists.'
 	else
-		query = 'CREATE TABLE recipe (code VARCHAR(32) PRIMARY KEY, user VARCHAR(32) NOT NULL, root VARCHAR(32), branch TINYINT, public TINYINT(1), protect TINYINT(1), draft TINYINT(1), name VARCHAR(255) NOT NULL, dish TINYINT, type TINYINT, role TINYINT, tech TINYINT, time TINYINT, cost TINYINT, sum VARCHAR(2000), protocol VARCHAR(2048), date DATETIME);'
+		query = 'CREATE TABLE recipe (code VARCHAR(32) PRIMARY KEY, user VARCHAR(32) NOT NULL, root VARCHAR(32), branch TINYINT, public TINYINT(1), protect TINYINT(1), draft TINYINT(1), favorite TINYINT(1), name VARCHAR(255) NOT NULL, dish TINYINT, type TINYINT, role TINYINT, tech TINYINT, time TINYINT, cost TINYINT, sum VARCHAR(2000), protocol VARCHAR(2048), date DATETIME);'
 		$DB.query( query )
 		puts 'recipe table has been created.'
 	end

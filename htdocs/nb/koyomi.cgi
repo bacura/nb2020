@@ -6,19 +6,55 @@
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'koyomi'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
 require './brain'
-require "./language_/#{script}.lp"
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'koyomi' 	=> "こよみ:食事",\
+		'sun' 		=> "日",\
+		'mon' 		=> "月",\
+		'tue' 		=> "火",\
+		'wed' 		=> "水",\
+		'thu' 		=> "木",\
+		'fri' 		=> "金",\
+		'sat' 		=> "土",\
+		'year' 		=> "年",\
+		'breakfast' => "朝食",\
+		'lunch' 	=> "昼食",\
+		'dinner' 	=> "夕食",\
+		'supply'	=> "間食 / 補食",\
+		'memo' 		=> "メモ",\
+		'foodrec' 	=> "食事記録",\
+		'exrec'		=> "拡張記録",\
+		'calc' 		=> "栄養計算",\
+		'compo' 	=> "食品構成",\
+		'g100' 		=> "100 g相当",\
+		'food_n' 	=> "食品名",\
+		'food_g'	=> "食品群",\
+		'weight'	=> "重量(g)",\
+		'palette'	=> "パレット",\
+		'snow'		=> "<img src='bootstrap-dist/icons/snow2.svg' style='height:1.2em; width:1.2em;'>",\
+		'visionnerz'=> "<img src='bootstrap-dist/icons/graph-up.svg' style='height:2em; width:1.0em;'>",\
+		'return'	=> "<img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'>"
+	}
+
+	return l[language]
+end
 
 ####
 def sub_menu( l )
@@ -96,7 +132,6 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
 l = language_pack( user.language )
 
 #### Guild member check
@@ -187,7 +222,6 @@ palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 puts "Multi calc process<br>" if @debug
 fct_day_htmls = ['']
-visio_htmls = ['']
 1.upto( calendar.ddl ) do |c|
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
 	fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
@@ -216,7 +250,7 @@ visio_htmls = ['']
 				a = []
 				a = e['koyomi'].split( "\t" ) if e['koyomi']
 				a.each do |ee|
-					( koyomi_code, koyomi_rate, koyomi_unit, z ) = ee.split( '~' )
+					koyomi_code, koyomi_rate, koyomi_unit = ee.split( '~' )[0..2]
 					code_set << koyomi_code
 					rate_set << koyomi_rate
 					unit_set << koyomi_unit
@@ -224,7 +258,7 @@ visio_htmls = ['']
 
 				code_set.size.times do |cc|
 					code = code_set[cc]
-					z, rate = food_weight_check( rate_set[cc] )
+					rate = food_weight_check( rate_set[cc] ).last
 					unit = unit_set[cc]
 
 					if /\?/ =~ code
@@ -245,7 +279,7 @@ visio_htmls = ['']
 						food_weights = []
 						recipe_codes.each do |e|
 							if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
-								fns, fws, z = recipe2fns( user.name, e, rate, unit )
+								fns, fws = recipe2fns( user.name, e, rate, unit, 1 )[0..1]
 								food_nos.concat( fns )
 								food_weights.concat( fws )
 							else

@@ -1,25 +1,53 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi calc 0.00b (2022/11/27)
+#Nutrition browser 2020 koyomi calc 0.01b (2022/12/11)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'koyomi-calc'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
 require './brain'
-require "./language_/#{script}.lp"
+
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+#### Language_pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'koyomi' 	=> "こよみ栄養計算",\
+		'palette'	=> "パレット",\
+		'signpost'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>",\
+		'fromto'	=> "　～　",\
+		'calc'		=> "計　算",\
+		'no_day'	=> "該当日がありません",\
+		'ew'		=> "予想g",\
+		'name'		=> "栄養成分",\
+		'unit'		=> "単位",\
+		'volume'	=> "合計",\
+		'breakfast'	=> "朝食",\
+		'lunch'		=> "昼食",\
+		'dinner'	=> "夕食",\
+		'supply'	=> "捕食・間食",\
+		'period'	=> "期間総量（",\
+		'days'		=> "日間）",\
+		'average'	=> "１日平均",\
+		'ratio'		=> "割合"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -37,18 +65,34 @@ if user.status < 3
 end
 
 
-#### Getting POST
+puts "Getting POST<br>" if @debug
 command = @cgi['command']
 yyyymmdds = @cgi['yyyymmdds']
 yyyymmdde = @cgi['yyyymmdde']
-yyyymmdds = @time_now.strftime( "%Y-%m-%d" ) if yyyymmdds == ''
-yyyymmdde = @time_now.strftime( "%Y-%m-%d" ) if yyyymmdde == ''
 palette_ = @cgi['palette']
+ew_mode =  @cgi['ew_mode']
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "yyyymmdds:#{yyyymmdds}<br>\n"
 	puts "yyyymmdde:#{yyyymmdde}<br>\n"
+	puts "palette:#{palette_}<br>\n"
+	puts "ew_mode:#{ew_mode}<br>\n"
 	puts "<hr>\n"
+end
+
+
+puts 'LOAD config<br>' if @debug
+r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+if r.first
+	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
+		koyomi = JSON.parse( r.first['koyomi'] )
+		if koyomi['calc']
+			yyyymmdds = koyomi['calc']['yyyymmdds'] if yyyymmdds == '' || yyyymmdds == nil
+			yyyymmdde = koyomi['calc']['yyyymmdde'] if yyyymmdde == '' || yyyymmdde == nil
+			palette_ = koyomi['calc']['palette'] if palette_ == '' || palette_ == nil
+			ew_mode = koyomi['calc']['ew_mode'] if ew_mode  == nil
+		end
+	end
 end
 
 
@@ -59,9 +103,9 @@ dtiv1 = Hash.new
 dtiv2 = Hash.new
 dtiv3 = Hash.new
 koyomi_box = [dtiv0, dtiv1, dtiv2, dtiv3 ]
-r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date BETWEEN '#{yyyymmdds}' AND '#{yyyymmdde}';", false, @debug )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND tdiv != 4 AND date BETWEEN '#{yyyymmdds}' AND '#{yyyymmdde}';", false, @debug )
 r.each do |e|
-	if e['freeze'] == 0
+	if e['freeze'].to_i == 1
 		koyomi_box[e['tdiv'].to_i][e['date'].to_s] = e['koyomi']
 		day_list << e['date'].to_s
 	end
@@ -72,7 +116,7 @@ day_count = day_list.size
 
 puts "Palette setting<br>" if @debug
 palette = Palette.new( user.name )
-palette_ = @palette_default_name[1] if palette_ == nil || palette_ == '' || palette_ == '0'
+palette_ = @palette_default_name[0] if palette_ == nil || palette_ == '' || palette_ == '0'
 palette.set_bit( palette_ )
 
 puts 'HTMLパレットの生成 <br>' if @debug
@@ -101,7 +145,7 @@ fct_tdiv = []
 		a = []
 		a = v.split( "\t" ) if v
 		a.each do |e|
-			( koyomi_code, koyomi_rate, koyomi_unit, z ) = e.split( '~' )
+			koyomi_code, koyomi_rate, koyomi_unit = e.split( '~' )[0..2]
 			code_set << koyomi_code
 			rate_set << koyomi_rate
 			unit_set << koyomi_unit
@@ -109,7 +153,7 @@ fct_tdiv = []
 
 		code_set.size.times do |cc|
 			code = code_set[cc]
-			z, rate = food_weight_check( rate_set[cc] )
+			rate = food_weight_check( rate_set[cc] ).last
 			unit = unit_set[cc]
 
 			if /\?/ =~ code
@@ -130,7 +174,7 @@ fct_tdiv = []
 				food_weights = []
 				recipe_codes.each do |e|
 					if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
-						fns, fws, z = recipe2fns( user.name, e, rate, unit )
+						fns, fws = recipe2fns( user.name, e, rate, unit, ew_mode )[0..1]
 						food_nos.concat( fns )
 						food_weights.concat( fws )
 					else
@@ -158,18 +202,19 @@ fct_total.digit
 
 
 fct_table = ''
+fct_ave_table = ''
+fct_rate_table = ''
 if day_count >= 1
 	fct_table << '<table class="table table-sm table-striped">'
-	fct_table << "<tr><td><h5>#{l['period']}#{day_count}#{l['days']}</h5></td></tr>"
 	fct_table << '<tr>'
-	fct_table << "<th class='fct_item'>#{l['name']}</th>"
-	fct_table << "<th class='fct_item'>#{l['unit']}</th>"
-	fct_table << "<th class='fct_item'>#{l['volume']}</th>"
-	fct_table << "<th class='fct_item'>#{l['breakfast']}</th>"
-	fct_table << "<th class='fct_item'>#{l['lunch']}</th>"
-	fct_table << "<th class='fct_item'>#{l['dinner']}</th>"
-	fct_table << "<th class='fct_item'>#{l['supply']}</th>"
-	fct_table << '<tr>'
+	fct_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
+	fct_table << "<th width='10%' class='fct_item'>#{l['unit']}</th>"
+	fct_table << "<th width='10%' class='fct_item'>#{l['volume']}</th>"
+	fct_table << "<th width='10%' class='fct_item'>#{l['breakfast']}</th>"
+	fct_table << "<th width='10%' class='fct_item'>#{l['lunch']}</th>"
+	fct_table << "<th width='10%' class='fct_item'>#{l['dinner']}</th>"
+	fct_table << "<th width='10%' class='fct_item'>#{l['supply']}</th>"
+	fct_table << '</tr>'
 
 	fct_total.names.size.times do |i|
 		fct_table << '<tr>'
@@ -182,33 +227,84 @@ if day_count >= 1
 		fct_table << "<td>#{fct_tdiv[3].total[i]}</td>"
 		fct_table << '</tr>'
 	end
+	fct_table << '</table>'
 
-	fct_table << "<tr><td><h5>#{l['average']}</h5></td></tr>"
-	fct_table << '<tr>'
-	fct_table << "<th class='fct_item'>#{l['name']}</th>"
-	fct_table << "<th class='fct_item'>#{l['unit']}</th>"
-	fct_table << "<th class='fct_item'>#{l['volume']}</th>"
-	fct_table << "<th class='fct_item'>#{l['breakfast']}</th>"
-	fct_table << "<th class='fct_item'>#{l['lunch']}</th>"
-	fct_table << "<th class='fct_item'>#{l['dinner']}</th>"
-	fct_table << "<th class='fct_item'>#{l['supply']}</th>"
-	fct_table << '<tr>'
+	fct_ave_table << '<table class="table table-sm table-striped">'
+	fct_ave_table << '<tr>'
+	fct_ave_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
+	fct_ave_table << "<th width='10%' class='fct_item'>#{l['unit']}</th>"
+	fct_ave_table << "<th width='10%' class='fct_item'>#{l['volume']}</th>"
+	fct_ave_table << "<th width='10%' class='fct_item'>#{l['breakfast']}</th>"
+	fct_ave_table << "<th width='10%' class='fct_item'>#{l['lunch']}</th>"
+	fct_ave_table << "<th width='10%' class='fct_item'>#{l['dinner']}</th>"
+	fct_ave_table << "<th width='10%' class='fct_item'>#{l['supply']}</th>"
+	fct_ave_table << '</tr>'
 
 	fct_total.names.size.times do |i|
-		fct_table << '<tr>'
-		fct_table << "<td>#{fct_total.names[i]}</td>"
-		fct_table << "<td>#{fct_total.units[i]}</td>"
-		fct_table << "<td>#{( fct_total.total[i] / day_count ).round( fct_total.frcts[i] )}</td>"
-		fct_table << "<td>#{( fct_tdiv[0].total[i] / day_count ).round( fct_tdiv[0].frcts[i] )}</td>"
-		fct_table << "<td>#{( fct_tdiv[1].total[i] / day_count ).round( fct_tdiv[1].frcts[i] )}</td>"
-		fct_table << "<td>#{( fct_tdiv[2].total[i] / day_count ).round( fct_tdiv[2].frcts[i] )}</td>"
-		fct_table << "<td>#{( fct_tdiv[3].total[i] / day_count ).round( fct_tdiv[3].frcts[i] )}</td>"
-		fct_table << '<tr>'
+		fct_ave_table << '<tr>'
+		fct_ave_table << "<td>#{fct_total.names[i]}</td>"
+		fct_ave_table << "<td>#{fct_total.units[i]}</td>"
+		fct_ave_table << "<td>#{( fct_total.total[i] / day_count ).round( fct_total.frcts[i] )}</td>"
+		fct_ave_table << "<td>#{( fct_tdiv[0].total[i] / day_count ).round( fct_tdiv[0].frcts[i] )}</td>"
+		fct_ave_table << "<td>#{( fct_tdiv[1].total[i] / day_count ).round( fct_tdiv[1].frcts[i] )}</td>"
+		fct_ave_table << "<td>#{( fct_tdiv[2].total[i] / day_count ).round( fct_tdiv[2].frcts[i] )}</td>"
+		fct_ave_table << "<td>#{( fct_tdiv[3].total[i] / day_count ).round( fct_tdiv[3].frcts[i] )}</td>"
+		fct_ave_table << '</tr>'
 	end
-	fct_table << '</table>'
+	fct_ave_table << '</table>'
+
+	fct_rate_table << '<table class="table table-sm table-striped">'
+	fct_rate_table << '<tr>'
+	fct_rate_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
+	fct_rate_table << "<th width='10%' class='fct_item'>#{l['unit']}</th>"
+	fct_rate_table << "<th width='10%' class='fct_item'>#{l['volume']}</th>"
+	fct_rate_table << "<th width='10%' class='fct_item'>#{l['breakfast']}</th>"
+	fct_rate_table << "<th width='10%' class='fct_item'>#{l['lunch']}</th>"
+	fct_rate_table << "<th width='10%' class='fct_item'>#{l['dinner']}</th>"
+	fct_rate_table << "<th width='10%' class='fct_item'>#{l['supply']}</th>"
+	fct_rate_table << '</tr>'
+
+	fct_total.names.size.times do |i|
+		t = fct_total.total[i]
+		if t == 0
+			total = '-'
+			breakfast = '-'
+			lunch = '-'
+			dinner = '-'
+			supply = '-'
+		else
+			total = ( t / t * 100 ).to_f.round( 1 )
+			breakfast = ( fct_tdiv[0].total[i].to_f / t * 100 ).round( 1 )
+			lunch = ( fct_tdiv[1].total[i].to_f / t * 100 ).round( 1 )
+			dinner = ( fct_tdiv[2].total[i].to_f / t * 100 ).round( 1 )
+			supply = ( fct_tdiv[3].total[i].to_f / t * 100 ).round( 1 )
+		end
+
+
+		fct_rate_table << '<tr>'
+		fct_rate_table << "<td>#{fct_total.names[i]}</td>"
+		fct_rate_table << "<td>%</td>"
+		fct_rate_table << "<td>#{total}</td>"
+		fct_rate_table << "<td>#{breakfast}</td>"
+		fct_rate_table << "<td>#{lunch}</td>"
+		fct_rate_table << "<td>#{dinner}</td>"
+		fct_rate_table << "<td>#{supply}</td>"
+		fct_rate_table << '</tr>'
+	end
+	fct_rate_table << '</table>'
+
+	day_ave = "<h5>#{l['average']}</h5>"
+	day_ratio = "<h5>#{l['ratio']}</h5>"
 else
 	fct_table << "<h5>#{l['no_day']}</h5>"
+	day_ave = ''
+	day_ratio = ''
 end
+
+
+ew_checked = ''
+ew_checked = 'CHECKED' if ew_mode == '1'
+
 
 puts "HTML process<br>" if @debug
 html = <<-"HTML"
@@ -235,13 +331,30 @@ html = <<-"HTML"
 		<div class='col-2 form-inline'>
 			<input type='date' class='form-control form-control-sm' id='yyyymmdde' value='#{yyyymmdde}'>
 		</div>
+		<div class='col-1'></div>
+		<div class='col-1 form-check'>
+			<input class="form-check-input" type="checkbox" id="ew_mode" #{ew_checked}>
+			<label class="form-check-label">#{l['ew']}</label>
+		</div>
 	</div>
 	<br>
 	<div class='row'>
 		<button class='btn btn-sm btn-info' onclick='calcKoyomiCalc()'>#{l['calc']}</buttnon>
 	</div>
 	<br>
+	<h5>#{l['period']}#{day_count}#{l['days']}</h5>
 	#{fct_table}
+	#{day_ave}
+	#{fct_ave_table}
+	#{day_ratio}
+	#{fct_rate_table}
 HTML
 
 puts html
+
+####
+if command == 'calc'
+		koyomi['calc'] = { 'yyyymmdds' => yyyymmdds, 'yyyymmdde' => yyyymmdde, 'palette' => palette_, 'ew_mode' => ew_mode }
+		koyomi_ = JSON.generate( koyomi )
+	mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
+end

@@ -11,7 +11,7 @@ def language_pack( language )
 		'food_g'	=> "食品群",\
 		'weight'	=> "重量(g)",\
 		'palette'	=> "パレット",\
-		'signpost'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>",\
+		'signpost'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
 		'clock'		=> "<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>",\
 		'min'		=> "分間",\
 		'week'		=> "-- １週間以内 --",\
