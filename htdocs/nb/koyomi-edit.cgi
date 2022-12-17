@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.19b (2020/12/11)
+#Nutrition browser 2020 koyomi editor 0.20b (2020/12/14)
 
 
 #==============================================================================
@@ -308,7 +308,7 @@ r.each do |e|
 			rate_set = []
 			unit_set = []
 
-			puts 'Row<br>' if @debug
+			puts 'Raw<br>' if @debug
 			a = []
 			a = e['koyomi'].split( "\t" ) if e['koyomi']
 			a.each do |ee|
@@ -340,7 +340,7 @@ r.each do |e|
 					food_weights = []
 					recipe_codes.each do |e|
 						if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
-							fns, fws = recipe2fns( user.name, e, rate, unit )[0..1]
+							fns, fws = recipe2fns( user.name, e, rate, unit, 1 )[0..1]
 							food_nos.concat( fns )
 							food_weights.concat( fws )
 						else

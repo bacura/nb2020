@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.10b
+#Nutrition browser 2020 recipe editor 0.11b (2022/12/17)
 
 #==============================================================================
 #LIBRARY
@@ -13,8 +13,8 @@ require 'fileutils'
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'recipe'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 #$UDIC = '/usr/local/share/mecab/dic/ipadic/sys.dic'
 
 
@@ -22,6 +22,31 @@ script = 'recipe'
 #DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'type'	 	=> "料理スタイル",\
+		'role' 		=> "献立区分",\
+		'tech'	 	=> "調理区分",\
+		'time' 		=> "目安時間(分)",\
+		'cost'	 	=> "目安費用(円)",\
+		'name' 		=> "レシピ名",\
+		'save' 		=> "保存",\
+		'protocol' 	=> "調理手順",\
+		'favo' 		=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.0em; width:1.0em;'>お気に入り",\
+		'draft' 	=> "<img src='bootstrap-dist/icons/cone-striped.svg' style='height:1.0em; width:1.0em;'>仮組",\
+		'public' 	=> "<img src='bootstrap-dist/icons/globe.svg' style='height:1.0em; width:1.0em;'>公開",\
+		'protect' 	=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.0em; width:1.0em;'>保護",\
+		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>",\
+		'link'		=> "<img src='bootstrap-dist/icons/link.svg' style='height:2.4em; width:2.4em;'>",\
+		'spchar' 	=> "!…強調　@…カッコ書き　#…コメント（表示なし）　&…リンク"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -30,7 +55,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 #### POST
@@ -48,12 +73,14 @@ case command
 when 'view'
 	# Loading recipe from DB
 	recipe.load_db( code, true ) if code != ''
+
 when 'protocol'
 	recipe.load_db( code, true ) if code != ''
 	recipe.protocol = @cgi['protocol']
 	recipe.date = @datetime
 	recipe.update_db
 	exit
+
 when 'save'
 	recipe.load_cgi( @cgi )
 
@@ -164,11 +191,13 @@ end
 
 
 puts "HTML SELECT Recipe attribute<br>" if @debug
+check_favo = ''
 check_public = checked( recipe.public )
 check_protect = checked( recipe.protect )
 check_draft =  checked( recipe.draft )
 file_disabled = false
 if user.name != recipe.user
+	check_favo = 'DISABLED'
 	check_public = 'DISABLED'
 	check_protect = 'DISABLED'
 	check_draft = 'CHECKED DISABLED'
@@ -177,7 +206,7 @@ end
 
 
 puts "HTML SELECT Recipe type<br>" if @debug
-html_type = lp[1]
+html_type = l['type']
 html_type << '<select class="form-select form-select-sm" id="type">'
 s = selected( 0, @recipe_type.size - 1, recipe.type )
 @recipe_type.size.times do |i| html_type << "<option value='#{i}' #{s[i]}>#{@recipe_type[i]}</option>" end
@@ -185,7 +214,7 @@ html_type << '</select>'
 
 
 puts "HTML SELECT Recipe role<br>" if @debug
-html_role = lp[2]
+html_role = l['role']
 html_role << '<select class="form-select form-select-sm" id="role">'
 s = selected( 0, @recipe_role.size - 1, recipe.role )
 @recipe_role.size.times do |i| html_role << "<option value='#{i}' #{s[i]}>#{@recipe_role[i]}</option>" end
@@ -198,7 +227,7 @@ html_role << '</select>'
 
 
 puts "HTML SELECT Cooking technique<br>" if @debug
-html_tech = lp[3]
+html_tech = l['tech']
 html_tech << '<select class="form-select form-select-sm" id="tech">'
 s = selected( 0, @recipe_tech.size - 1, recipe.tech )
 @recipe_tech.size.times do |i| html_tech << "<option value='#{i}' #{s[i]}>#{@recipe_tech[i]}</option>" end
@@ -206,7 +235,7 @@ html_tech << '</select>'
 
 
 puts "HTML SELECT Cooking time<br>" if @debug
-html_time = lp[4]
+html_time = l['time']
 html_time << '<select class="form-select form-select-sm" id="time">'
 s = selected( 0, @recipe_time.size - 1, recipe.time )
 @recipe_time.size.times do |i| html_time << "<option value='#{i}' #{s[i]}>#{@recipe_time[i]}</option>" end
@@ -214,7 +243,7 @@ html_time << '</select>'
 
 
 puts "HTML SELECT Cooking cost<br>" if @debug
-html_cost = lp[5]
+html_cost = l['cost']
 html_cost << '<select class="form-select form-select-sm" id="cost">'
 s = selected( 0, @recipe_cost.size - 1, recipe.cost )
 @recipe_cost.size.times do |i| html_cost << "<option value='#{i}' #{s[i]}>#{@recipe_cost[i]}</option>" end
@@ -225,7 +254,7 @@ puts "HTML Photo upload form<br>" if @debug
 form_photo = ''
 form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
 form_photo << '<div class="input-group input-group-sm">'
-form_photo << "<label class='input-group-text'>#{lp[13]}</label>"
+form_photo << "<label class='input-group-text'>#{l['camera']}</label>"
 if recipe.code == nil || file_disabled
 	form_photo << "<input type='file' class='form-control' DISABLED>"
 else
@@ -238,33 +267,38 @@ puts "HTML FORM recipe<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><h5>#{lp[6]}</h5></div>
-		<div class='col-1'>#{lp[6]}</div>
-		<div class="col-3">
+  		<div class="col-5">
+			<div class="input-group input-group-sm">
+				<label class="input-group-text" for="recipe_name">#{l['name']}</label>
+      			<input type="text" class="form-control" id="recipe_name" value="#{recipe.name}" required>
+    		</div>
+    	</div>
+		<div class="col-1">
+    	</div>
+		<div class="col">
 			<div class="form-check form-check-inline">
   				<label class="form-check-label">
-    				<input class="form-check-input" type="checkbox" id="public" #{check_public} onchange="recipeBit_public()"> #{lp[7]}
+    				<input class="form-check-input" type="checkbox" id="favo" #{check_favo} DISABLED> #{l['favo']}
   				</label>
 			</div>
 			<div class="form-check form-check-inline">
   				<label class="form-check-label">
-    				<input class="form-check-input" type="checkbox" id="protect" #{check_protect} onchange="recipeBit_protect()"> #{lp[8]}
+    				<input class="form-check-input" type="checkbox" id="public" #{check_public} onchange="recipeBit_public()"> #{l['public']}
   				</label>
 			</div>
 			<div class="form-check form-check-inline">
   				<label class="form-check-label">
-    				<input class="form-check-input" type="checkbox" id="draft" #{check_draft} onchange="recipeBit_draft()"> #{lp[9]}
+    				<input class="form-check-input" type="checkbox" id="protect" #{check_protect} onchange="recipeBit_protect()"> #{l['protect']}
+  				</label>
+			</div>
+			<div class="form-check form-check-inline">
+  				<label class="form-check-label">
+    				<input class="form-check-input" type="checkbox" id="draft" #{check_draft} onchange="recipeBit_draft()"> #{l['draft']}
   				</label>
 			</div>
 		</div>
 		<div class="col-1">
-    	</div>
-  		<div class="col-5">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="recipe_name">#{lp[10]}</label>
-      			<input type="text" class="form-control" id="recipe_name" value="#{recipe.name}" required>
-      			<button class="btn btn-outline-primary" type="button" onclick="recipeSave( '#{recipe.code}' )">#{lp[11]}</button>
-    		</div>
+			<button class="btn btn-sm btn-outline-primary" type="button" onclick="recipeSave( '#{recipe.code}' )">#{l['save']}</button>
     	</div>
     </div>
     <br>
@@ -279,7 +313,7 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class="col form-group">
 			<div class="col">
-    			<label for="exampleFormControlTextarea1">#{lp[12]}</label>
+    			<label for="exampleFormControlTextarea1">#{l['protocol']}</label>
 				<textarea class="form-control" id="protocol" rows="10" onchange="recipeProtocol( '#{recipe.code}' )">#{recipe.protocol}</textarea>
 			</div>
   		</div>
@@ -289,7 +323,7 @@ html = <<-"HTML"
 			#{form_photo}
 		</div>
 		<div class='col'>
-			<span onclick="words2Protocol()" >#{lp[14]}</span>
+			<span onclick="words2Protocol()" >#{l['link']}</span>
 		</div>
 
 		<div align='right' class='col code'>#{recipe.code}</div>

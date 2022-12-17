@@ -175,7 +175,7 @@ fct_tdiv = []
 				fct_tdiv[c].into_zero
 			elsif /\-z\-/ =~ code
 				puts 'FIX<br>' if @debug
-				fct_tdiv[c].load_fcz( user.name, code, 'fix' )
+				#fct_tdiv[c].load_fcz( user.name, code, 'fix' )
 			else
 				puts 'Recipe<br>' if @debug
 				recipe_codes = []
@@ -221,7 +221,7 @@ end
 
 
 puts "Sub group analysis<br>" if @debug
-fch = {'01'=>0, '02'=>0, '03'=>0, '04'=>0, '05'=>0, '06'=>0, '07'=>0, '08'=>0, '09'=>0, '10'=>0, '11'=>0, '12'=>0, '13'=>0, '14'=>0, '15'=>0, '16'=>0, '17'=>0, '18'=>0 }
+fch = {'00'=>0, '01'=>0, '02'=>0, '03'=>0, '04'=>0, '05'=>0, '06'=>0, '07'=>0, '08'=>0, '09'=>0, '10'=>0, '11'=>0, '12'=>0, '13'=>0, '14'=>0, '15'=>0, '16'=>0, '17'=>0, '18'=>0 }
 wcv = 0
 gycv = 0
 milk_liquid = 0
@@ -235,9 +235,10 @@ fct_total.fns.size.times do |c|
 	fch[food_group] += fct_total.weights[c]
 
 	case food_group
+	when '00'
 	when '06'
 		puts "GYV<br>" if @debug
-		r = mdb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{pseudo_id}#{fct_total.fns[c]}';", false, @debug )
+		r = mdb( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{fct_total.fns[c]}';", false, @debug )
 		if r.first['gycv'] == 1
 			gycv += fct_total.weights[c]
 		else
@@ -300,30 +301,30 @@ if day_count > 0
 	compo_table = <<-"CT"
 <table class="table table-bordered table-sm">
 	<tbody>
-	<tr><th width="20%" rowspan='24'>#{l['fc']}</th><th width="25%">#{l['sg1']}</th><td width="15%">#{fch['01'].to_f}</td></tr>
-	<tr><th>#{l['sg2']}</th><td>#{fch['02'].to_f}</td></tr>
-	<tr><th>#{l['sg3']}</th><td>#{fch['03'].to_f}</td></tr>
-	<tr><th>#{l['sg4']}</th><td>#{fch['04'].to_f}</td></tr>
-	<tr><th>#{l['sg5']}</th><td>#{fch['05'].to_f}</td></tr>
-	<tr><th rowspan="2">#{l['sg6']}</th><td rowspan="2">#{fch['06'].to_f}</td><th width="25%">#{l['sg6gy']}</th><td>#{gycv.to_f}</td></tr>
-			<tr><th>#{l['sg6w']}</th><td>#{wcv.to_f}</td></tr>
-	<tr><th>#{l['sg7']}</th><td>#{fch['07'].to_f}</td></tr>
-	<tr><th>#{l['sg8']}</th><td>#{fch['08'].to_f}</td></tr>
-	<tr><th>#{l['sg9']}</th><td>#{fch['09'].to_f}</td></tr>
-	<tr><th>#{l['sg10']}</th><td>#{fch['10'].to_f}</td></tr>
-	<tr><th>#{l['sg11']}</th><td>#{fch['11'].to_f}</td></tr>
-	<tr><th>#{l['sg12']}</th><td>#{fch['12'].to_f}</td></tr>
-	<tr><th rowspan="2">#{l['sg13']}</th><td rowspan="2">#{fch['13'].to_f}</td><th>#{l['sg13l']}</th><td>#{milk_liquid.to_f}</td></tr>
-			<tr><th>#{l['sg13p']}</th><td>#{milk_product.to_f}</td></tr>
-	<tr><th>#{l['sg14']}</th><td>#{fch['14'].to_f}</td></tr>
-	<tr><th>#{l['sg15']}</th><td>#{fch['15'].to_f}</td></tr>
-	<tr><th>#{l['sg16']}</th><td>#{fch['16'].to_f}</td></tr>
-	<tr><th rowspan="4">#{l['sg17']}</th><td rowspan="4">#{fch['17'].to_f}</td><th>#{l['sg17mi']}</th><td>#{miso.to_f}</td></tr>
-		<tr><th>#{l['sg17ss']}</th><td>#{shoyu.to_f}</td></tr>
-		<tr><th>#{l['sg17sa']}</th><td>#{salt.to_f}</td></tr>
-		<tr><th>#{l['sg17o']}</th><td>#{seasoning.to_f}</td></tr>
-	<tr><th>#{l['sg18']}</th><td>#{fch['18'].to_f}</td></tr>
-	<tr><th>#{l['sum']}</th><td>#{fct_total.total_weight.to_f}</td></tr>
+	<tr><th width="20%" rowspan='24'>#{l['fc']}</th><th width="25%">#{l['sg1']}</th><td width="15%">#{fch['01'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg2']}</th><td>#{fch['02'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg3']}</th><td>#{fch['03'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg4']}</th><td>#{fch['04'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg5']}</th><td>#{fch['05'].round( 1 ).to_f}</td></tr>
+	<tr><th rowspan="2">#{l['sg6']}</th><td rowspan="2">#{fch['06'].round( 1 ).to_f}</td><th width="25%">#{l['sg6gy']}</th><td>#{gycv.round( 1 ).to_f}</td></tr>
+			<tr><th>#{l['sg6w']}</th><td>#{wcv.round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg7']}</th><td>#{fch['07'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg8']}</th><td>#{fch['08'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg9']}</th><td>#{fch['09'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg10']}</th><td>#{fch['10'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg11']}</th><td>#{fch['11'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg12']}</th><td>#{fch['12'].round( 1 ).to_f}</td></tr>
+	<tr><th rowspan="2">#{l['sg13']}</th><td rowspan="2">#{fch['13'].round( 1 ).to_f}</td><th>#{l['sg13l']}</th><td>#{milk_liquid.round( 1 ).to_f}</td></tr>
+			<tr><th>#{l['sg13p']}</th><td>#{milk_product.round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg14']}</th><td>#{fch['14'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg15']}</th><td>#{fch['15'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg16']}</th><td>#{fch['16'].round( 1 ).to_f}</td></tr>
+	<tr><th rowspan="4">#{l['sg17']}</th><td rowspan="4">#{fch['17'].round( 1 ).to_f}</td><th>#{l['sg17mi']}</th><td>#{miso.round( 1 ).to_f}</td></tr>
+		<tr><th>#{l['sg17ss']}</th><td>#{shoyu.round( 1 ).to_f}</td></tr>
+		<tr><th>#{l['sg17sa']}</th><td>#{salt.round( 1 ).to_f}</td></tr>
+		<tr><th>#{l['sg17o']}</th><td>#{seasoning.round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sg18']}</th><td>#{fch['18'].round( 1 ).to_f}</td></tr>
+	<tr><th>#{l['sum']}</th><td>#{fct_total.total_weight.round( 1 ).to_f}</td></tr>
 	<tr><th rowspan='3'>#{l['pfc']}</th><th>#{l['protein']}</th><td>#{pfc[0].to_f}</td></tr>
 		<th>#{l['fat']}</th><td>#{pfc[1].to_f}</td></tr>
 		<th>#{l['carbon']}</th><td>#{pfc[2].to_f}</td></tr>
@@ -350,7 +351,7 @@ CT
 	<tr><th>#{l['sg11']}</th><td>#{(fch['11'] / day_count ).round( 1 ).to_f}</td></tr>
 	<tr><th>#{l['sg12']}</th><td>#{(fch['12'] / day_count ).round( 1 ).to_f}</td></tr>
 	<tr><th rowspan="2">#{l['sg13']}</th><td rowspan="2">#{( fch['13'] / day_count ).round( 1 ).to_f}</td><th>#{l['sg13l']}</th><td>#{( milk_liquid / day_count ).round( 1 ).to_f}</td></tr>
-			<tr><th>#{l['sg13p']}</th><td>#{milk_product / day_count}</td></tr>
+			<tr><th>#{l['sg13p']}</th><td>#{( milk_product / day_count ).round( 1 ).to_f}</td></tr>
 	<tr><th>#{l['sg14']}</th><td>#{( fch['14'] / day_count ).round( 1 ).to_f}</td></tr>
 	<tr><th>#{l['sg15']}</th><td>#{( fch['15'] / day_count ).round( 1 ).to_f}</td></tr>
 	<tr><th>#{l['sg16']}</th><td>#{( fch['16'] / day_count ).round( 1 ).to_f}</td></tr>

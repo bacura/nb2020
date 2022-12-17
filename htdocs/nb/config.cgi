@@ -1,25 +1,48 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 config 0.23b (2022/11/20)
+#Nutrition browser 2020 config 0.24b (2022/12/17)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'config'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
-require "./language_/#{script}.lp"
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'account' 	=> "アカウント情報",\
+		'display' 	=> "表示",\
+		'palette'	=> "成分パレット",\
+		'history'	=> "履歴",\
+		'rsum'		=> "まな板",\
+		'convert'	=> "各種変換",\
+		'bio'		=> "生体情報",\
+		'allergen'	=> "アレルゲン",\
+		'koyomi'	=> "こよみ",\
+		'school'	=> "お教室",\
+		'release' 	=> "登録解除"
+	}
+
+	return l[language]
+end
+
+
 #### 初期画面
 def init( l, user )
 	bio = ''
@@ -54,7 +77,6 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
 l = language_pack( user.language )
 
 

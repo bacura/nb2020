@@ -1,25 +1,52 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.15b (2022/11/30)
+#Nutrition browser 2020 food square 0.16b (2022/12/17)
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
-script = 'square'
 @debug = false
-
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
 require './soul'
-require "./language_/#{script}.lp"
-
 
 #==============================================================================
 # DEFINITION
 #==============================================================================
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'search' 	=> "レシピ検索",\
+		'fract' 	=> "端数",\
+		'round'		=> "四捨五入",\
+		'ceil' 		=> "切り上げ",\
+		'floor'		=> "切り捨て",\
+		'weight' 	=> "重量",\
+		'fn' 		=> "食品番号",\
+		'name' 		=> "食品名",\
+		'change'	=> "<img src='bootstrap-dist/icons/hammer.svg' style='height:1.2em; width:1.2em;'>",\
+		'cboard' 	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>",\
+		'calendar'	=> "<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>",\
+		'unit' 		=> "単",\
+		'color' 	=> "色",\
+		'shun' 		=> "旬",\
+		'dic' 		=> "辞",\
+		'allergen' 	=> "ア",\
+		'plus' 		=> "<img src='bootstrap-dist/icons/plus-square-fill.svg' style='height:2em; width:2em;'>",\
+		'signpost'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>"
+	}
+
+	return l[language]
+end
+
 #### 名前の履歴の取得
 def get_history_name( uname, fg )
 	name_his = []

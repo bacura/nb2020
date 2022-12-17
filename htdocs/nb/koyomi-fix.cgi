@@ -1,26 +1,47 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.10b (2022/11/03)
+#Nutrition browser koyomi fix fct editer 0.11b (2022/12/17)
 
 #==============================================================================
 # STATIC
 #==============================================================================
-script = 'koyomi-fix'
 @debug = false
-
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
 require './soul'
 require './brain'
-require "./language_/#{script}.lp"
-
 
 #==============================================================================
 # DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'save' 		=> "保存",\
+		'g100' 		=> "100 g相当",\
+		'food_n' 	=> "食品名",\
+		'food_g'	=> "食品群",\
+		'weight'	=> "重量(g)",\
+		'palette'	=> "パレット",\
+		'signpost'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
+		'clock'		=> "<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>",\
+		'min'		=> "分間",\
+		'week'		=> "-- １週間以内 --",\
+		'month'		=> "-- １ヶ月以内 --",\
+		'volume'	=> "個数",\
+		'carry_on'	=> "時間継承",\
+		'history'	=> "履歴"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
