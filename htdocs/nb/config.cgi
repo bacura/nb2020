@@ -7,7 +7,7 @@
 #STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
 
 
 #==============================================================================
@@ -78,7 +78,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
-
+lp = user.load_lp( script )
 
 #### Getting POST
 mod = @cgi['mod']

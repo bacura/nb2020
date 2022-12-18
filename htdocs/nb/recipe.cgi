@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.11b (2022/12/17)
+#Nutrition browser 2020 recipe editor 0.12b (2022/12/18)
 
 #==============================================================================
 #LIBRARY
@@ -36,7 +36,7 @@ def language_pack( language )
 		'name' 		=> "レシピ名",\
 		'save' 		=> "保存",\
 		'protocol' 	=> "調理手順",\
-		'favo' 		=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.0em; width:1.0em;'>お気に入り",\
+		'favorite' 	=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.0em; width:1.0em;'>お気に入り",\
 		'draft' 	=> "<img src='bootstrap-dist/icons/cone-striped.svg' style='height:1.0em; width:1.0em;'>仮組",\
 		'public' 	=> "<img src='bootstrap-dist/icons/globe.svg' style='height:1.0em; width:1.0em;'>公開",\
 		'protect' 	=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.0em; width:1.0em;'>保護",\
@@ -110,6 +110,7 @@ when 'save'
 		if user.name != pre_recipe.user
 			copy_flag = true
 			original_user = pre_recipe.user
+			recipe.favorite = 0
 			recipe.draft = 1
 			recipe.user = user.name
 			recipe.sum = r.first['sum']
@@ -191,13 +192,13 @@ end
 
 
 puts "HTML SELECT Recipe attribute<br>" if @debug
-check_favo = ''
+check_favorite = checked( recipe.favorite )
 check_public = checked( recipe.public )
 check_protect = checked( recipe.protect )
 check_draft =  checked( recipe.draft )
 file_disabled = false
 if user.name != recipe.user
-	check_favo = 'DISABLED'
+	check_favorite = 'DISABLED'
 	check_public = 'DISABLED'
 	check_protect = 'DISABLED'
 	check_draft = 'CHECKED DISABLED'
@@ -278,7 +279,7 @@ html = <<-"HTML"
 		<div class="col">
 			<div class="form-check form-check-inline">
   				<label class="form-check-label">
-    				<input class="form-check-input" type="checkbox" id="favo" #{check_favo} DISABLED> #{l['favo']}
+    				<input class="form-check-input" type="checkbox" id="favorite" #{check_favorite}> #{l['favorite']}
   				</label>
 			</div>
 			<div class="form-check form-check-inline">

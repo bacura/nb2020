@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.7b (2022/10/29)
+#Nutrition browser 2020 soul 0.71b (2022/12/18)
 
 #==============================================================================
 # LIBRARY
@@ -516,13 +516,14 @@ end
 
 
 class Recipe
-  attr_accessor :code, :user, :branch, :root, :public, :protect, :draft, :name, :dish, :type, :role, :tech, :time, :cost, :sum, :protocol, :tags, :comment, :media, :date
+  attr_accessor :code, :user, :branch, :root, :favorite, :public, :protect, :draft, :name, :dish, :type, :role, :tech, :time, :cost, :sum, :protocol, :tags, :comment, :media, :date
 
   def initialize( user )
     @code = nil
     @user = user
     @branch = 0
     @root = ''
+    @favorite = 0
     @public = 0
     @protect = 0
     @draft = 0
@@ -543,6 +544,7 @@ class Recipe
 
   def load_cgi( cgi )
     @code = cgi['code']
+    @favorite = cgi['favorite'].to_i
     @public = cgi['public'].to_i
     @protect = cgi['protect'].to_i
     @draft = cgi['draft'].to_i
@@ -583,6 +585,7 @@ class Recipe
     @user = res['user'].to_s
     @branch = res['branch'].to_i
     @root = res['root'].to_s
+    @favorite = res['favorite'].to_i
     @public = res['public'].to_i
     @protect = res['protect'].to_i
     @draft = res['draft'].to_i
@@ -614,7 +617,7 @@ class Recipe
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    db.query( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{@code}', user='#{@user}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', draft=#{@draft}, protect=#{@protect}, public=#{@public}, name='#{@name}', type=#{@type}, role=#{@role}, tech=#{tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', date='#{@date}';" )
+    db.query( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{@code}', user='#{@user}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', favorite=#{@favorite}, draft=#{@draft}, protect=#{@protect}, public=#{@public}, name='#{@name}', type=#{@type}, role=#{@role}, tech=#{tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', date='#{@date}';" )
     db.close
   end
 
@@ -623,7 +626,7 @@ class Recipe
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    db.query( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{@name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', type=#{@type}, role=#{@role}, tech=#{@tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', public=#{@public}, protect=#{@protect}, draft=#{@draft}, date='#{@date}' WHERE user='#{@user}' and code='#{@code}';" )
+    db.query( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{@name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', type=#{@type}, role=#{@role}, tech=#{@tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', public=#{@public}, favorite=#{@favorite}, protect=#{@protect}, draft=#{@draft}, date='#{@date}' WHERE user='#{@user}' and code='#{@code}';" )
     db.close
   end
 
@@ -668,6 +671,7 @@ class Recipe
   def debug
     puts "Recipe.code:#{@code}<br>"
     puts "Recipe.name:#{@name}<br>"
+    puts "Recipe.favorite:#{@favorite}<br>"
     puts "Recipe.public:#{@public}<br>"
     puts "Recipe.protect:#{@protect}<br>"
     puts "Recipe.draft:#{@draft}<br>"

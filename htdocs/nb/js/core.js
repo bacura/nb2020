@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.3b (2022/12/04)
+// Nutorition Browser 2020 core.js 0.31b (2022/12/04)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -1018,11 +1018,12 @@ var recipeSave = function( code ){
 		var cost = document.getElementById( "cost" ).value;
 		var protocol = document.getElementById( "protocol" ).value;
 
+		if( document.getElementById( "favorite" ).checked ){ var favorite = 1 }
 		if( document.getElementById( "public" ).checked ){ var public = 1 }
 		if( document.getElementById( "protect" ).checked ){ var protect = 1 }
 		if( document.getElementById( "draft" ).checked ){ var draft = 1 }
 
-		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, public:public, protect:protect, draft:draft }, function( data ){
+		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
 			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#L3" ).html( data );});

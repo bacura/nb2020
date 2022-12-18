@@ -1,6 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.11b
+#Nutrition browser 2020 detail viewer 0.12b (2022/12/18)
+
+#==============================================================================
+# STATIC
+#==============================================================================
+@debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
@@ -8,17 +14,39 @@
 require './probe'
 require './brain'
 
-
-#==============================================================================
-# STATIC
-#==============================================================================
-@debug = false
-script = 'detail'
-
-
 #==============================================================================
 # DEFINITION
 #==============================================================================
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'login' 	=> "ログインが必要",\
+		'aliase'	=> "別名",\
+		'request'	=> "リクエスト",\
+		'fract'		=> "端数",\
+		'food_no'	=> "食品番号",\
+		'sid'		=> "索引番号",\
+		'round'		=> "四捨五入",\
+		'ceil'		=> "切り上げ",\
+		'floor'		=> "切り捨て",\
+		'volume'	=> "量",\
+		'skey'		=> "検索キー",\
+		'notice'	=> "備考：",\
+		'calendar'	=> "暦+",\
+		'cboard'	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:2em; width:2em;'>",\
+		'rev'		=> "<img src='bootstrap-dist/icons/caret-left.svg' style='height:1.5em; width:1.5em;'>",\
+		'fwd'		=> "<img src='bootstrap-dist/icons/caret-right.svg' style='height:1.5em; width:1.5em;'>",\
+		'downlord'	=> "<img src='bootstrap-dist/icons/download.svg' style='height:2em; width:2em;'>",\
+		'return'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>"
+	}
+
+	return l[language]
+end
+
 #### 検索インデックスの飛ばし処理
 def sid_skip( sid, dir )
 	r = []
@@ -40,7 +68,6 @@ def sid_skip( sid, dir )
 	return food_no
 end
 
-
 #==============================================================================
 # Main
 #==============================================================================
@@ -48,7 +75,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 puts 'POST<br>' if @debug
@@ -122,16 +149,16 @@ search_key.chop!
 alias_button = ''
 if user.status > 0
 	alias_button << '<div class="input-group input-group-sm">'
-	alias_button << "<label class='input-group-text' for='alias'>#{lp[3]}</label>"
+	alias_button << "<label class='input-group-text' for='alias'>#{l['aliase']}</label>"
 	alias_button <<	'<input type="text" class="form-control" id="alias">'
-	alias_button <<	"<div class='input-group-prepend'><button class='btn btn-outline-primary' type='button' onclick=\"aliasRequest( '#{food_no}' )\">#{lp[4]}</button></div>"
+	alias_button <<	"<div class='input-group-prepend'><button class='btn btn-outline-primary' type='button' onclick=\"aliasRequest( '#{food_no}' )\">#{l['request']}</button></div>"
 	alias_button << '</div>'
 end
 
 
 puts 'Add button<br>' if @debug
 add_button = ''
-add_button = "<spqn onclick=\"addingCB( '#{food_no}', 'detail_weight', '#{food_name}' )\">#{lp[1]}</span>" if user.name
+add_button = "<spqn onclick=\"addingCB( '#{food_no}', 'detail_weight', '#{food_name}' )\">#{l['cboard']}</span>" if user.name
 
 
 puts 'FCT table HTML<br>' if @debug
@@ -166,7 +193,7 @@ wsv_html << '</table>'
 puts 'Volume input HTML<br>' if @debug
 volume_html = ''
 volume_html << "<div class='input-group input-group-sm'>"
-volume_html << "	<label class='input-group-text'>#{lp[13]}</label>"
+volume_html << "	<label class='input-group-text'>#{l['volume']}</label>"
 volume_html << "	<input type='text' id='detail_volume' value='#{food_volume.to_f}' class='form-control' onchange=\"detailWeight( '#{food_no}' )\">"
 volume_html << "	<select id='detail_unit' class='form-select form-select-sm' onchange=\"detailWeight( '#{food_no}' )\">"
 unit_set.size.times do |c| volume_html << "<option value='#{unit_set[c]}' #{unit_select[c]}>#{unit_set[c]}</option>" end
@@ -177,11 +204,11 @@ volume_html << "</div>"
 puts 'Fract input HTML<br>' if @debug
 fract_html = ''
 fract_html << '<div class="input-group input-group-sm">'
-fract_html << "	<label class='input-group-text'>#{lp[9]}</label>"
+fract_html << "	<label class='input-group-text'>#{l['fract']}</label>"
 fract_html << "	<select class='form-select form-select-sm' id='detail_fraction' onchange=\"detailWeight( '#{food_no}' )\">"
-fract_html << "		<option value='1' #{frct_select[1]}>#{lp[10]}</option>"
-fract_html << "		<option value='2' #{frct_select[2]}>#{lp[11]}</option>"
-fract_html << "		<option value='3' #{frct_select[3]}>#{lp[12]}</option>"
+fract_html << "		<option value='1' #{frct_select[1]}>#{l['round']}</option>"
+fract_html << "		<option value='2' #{frct_select[2]}>#{l['ceil']}</option>"
+fract_html << "		<option value='3' #{frct_select[3]}>#{l['floor']}</option>"
 fract_html << '	</select>'
 fract_html << '</div>'
 
@@ -191,14 +218,14 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col-2">
-			<span class='h6'>#{lp[5]}：#{food_no}</span><br>
-			<span onclick="detailPage( 'rev', '#{sid}' )">#{lp[7]}</span>
-			#{lp[6]}：#{sid}</span>
-			<span onclick="detailPage( 'fwd', '#{sid}' )">#{lp[8]}</span>
+			<span class='h6'>#{l['food_no']}：#{food_no}</span><br>
+			<span onclick="detailPage( 'rev', '#{sid}' )">#{l['rev']}</span>
+			#{l['sid']}：#{sid}</span>
+			<span onclick="detailPage( 'fwd', '#{sid}' )">#{l['fwd']}</span>
 		</div>
 		<div class="col"><h6>#{fct_opt['Tagnames']}</h6></div>
 	  	<div class="col-1"><h6>#{food_volume.to_f} #{selectu}<br>#{food_weight.to_f} g</h6></div>
-		<div align='center' class='col joystic_koyomi' onclick="detailReturn()">#{lp[15]}</div>
+		<div align='center' class='col joystic_koyomi' onclick="detailReturn()">#{l['return']}</div>
 
 	  </div>
 	</div>
@@ -214,7 +241,7 @@ html = <<-"HTML"
 			#{add_button}
 		</div>
 		<div class="col" align="right">
-			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}&lg=#{user.language}' download='detail_#{fct_opt['FN']}.txt'><span>#{lp[14]}</span></a>
+			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}&lg=#{user.language}' download='detail_#{fct_opt['FN']}.txt'><span>#{l['downlord']}</span></a>
 		</div>
 	</div>
 </div>
@@ -225,7 +252,7 @@ html = <<-"HTML"
 		<div class="col">
 		#{energy_html}
 		<div class='notice'>
-			#{lp[17]}<br>
+			#{l['notice']}<br>
 			#{fct_opt['Notice']}
 		</div>
 		</div>
@@ -256,7 +283,7 @@ html = <<-"HTML"
 
 <div class="row">
 	<div class="col-8">
-		#{lp[16]}：#{search_key}
+		#{l['aliase']}：#{search_key}
 	</div>
 	<div class="col-4">
 		#{alias_button}

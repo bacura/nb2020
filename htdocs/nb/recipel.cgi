@@ -33,10 +33,11 @@ def language_pack( language )
 		'nextp' 	=> "次項",\
 		'range' 	=> "表示範囲",\
 		'all' 		=> "全て",\
-		'draft' 	=> "下書き",\
+		'draft' 	=> "仮組",\
 		'protect' 	=> "保護",\
 		'public' 	=> "公開",\
 		'normal' 	=> "無印",\
+		'favoriter' => "お気に入り",\
 		'publicou' 	=> "公開(他ユーザー)",\
 		'type'	 	=> "料理スタイル",\
 		'role' 		=> "献立区分",\
@@ -49,7 +50,7 @@ def language_pack( language )
 		'photo' 	=> "写真",\
 		'name' 		=> "レシピ名",\
 		'status' 	=> "ステータス",\
-		'operation' => "操作",\
+		'operation' => "<img src='bootstrap-dist/icons/dpad.svg' style='height:1.2em; width:1.2em;'>&nbsp;操作",\
 		'globe' 	=> "<img src='bootstrap-dist/icons/globe.svg' style='height:1.2em; width:1.2em;'>",\
 		'lock'		=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.2em; width:1.2em;'>",\
 		'cone' 		=> "<img src='bootstrap-dist/icons/cone-striped.svg' style='height:1.2em; width:1.2em;'>",\
@@ -60,7 +61,7 @@ def language_pack( language )
 		'dropper'	=> "<img src='bootstrap-dist/icons/eyedropper.svg' style='height:1.2em; width:1.2em;'>",\
 		'trash' 	=> "<img src='bootstrap-dist/icons/trash.svg' style='height:1.2em; width:1.2em;'>",\
 		'root' 		=> "<img src='bootstrap-dist/icons/tree.svg' style='height:1.2em; width:1.2em;'>",\
-		'favo' 		=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.2em; width:1.2em;'>",\
+		'favorite' 	=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.2em; width:1.2em;'>",\
 		'space' 	=> "　"
 	}
 
@@ -71,7 +72,7 @@ end
 #### 表示範囲
 def range_html( range, l )
 	range_select = []
-	0.upto( 5 ) do |i|
+	7.times do |i|
 		if range == i
 			range_select[i] = 'SELECTED'
 		else
@@ -82,11 +83,12 @@ def range_html( range, l )
 	html = l['range']
 	html << '<select class="form-select form-select-sm" id="range">'
 	html << "<option value='0' #{range_select[0]}>#{l['all']}</option>"
-	html << "<option value='1' #{range_select[1]}>#{l['draft']}</option>"
-	html << "<option value='2' #{range_select[2]}>#{l['protect']}</option>"
-	html << "<option value='3' #{range_select[3]}>#{l['public']}</option>"
-	html << "<option value='4' #{range_select[4]}>#{l['normal']}</option>"
-	html << "<option value='5' #{range_select[5]}>#{l['publicou']}</option>"
+	html << "<option value='0' #{range_select[1]}>#{l['favoriter']}</option>"
+	html << "<option value='1' #{range_select[2]}>#{l['draft']}</option>"
+	html << "<option value='2' #{range_select[3]}>#{l['protect']}</option>"
+	html << "<option value='3' #{range_select[4]}>#{l['public']}</option>"
+	html << "<option value='4' #{range_select[5]}>#{l['normal']}</option>"
+	html << "<option value='5' #{range_select[6]}>#{l['publicou']}</option>"
 	html << '</select>'
 
 	return html
@@ -359,6 +361,7 @@ when 'subspecies'
 
 	# Insertinbg recipe into DB
 	recipe.code = new_recipe_code
+	recipe.favorite = 0
 	recipe.public = 0
 	recipe.protect = 0
 	recipe.draft = 1
@@ -398,24 +401,28 @@ case range
 when 0
 	sql_where << " user='#{user.name}' AND name!=''"
 	sql_where_ij << " t1.user='#{user.name}' AND t1.name!=''"
-# 自分の下書き
+# 自分のお気に入り
 when 1
+	sql_where << "user='#{user.name}' AND name!='' AND favorite='1'"
+	sql_where_ij << "t1.user='#{user.name}' AND t1.name!='' AND t1.favorite='1'"
+# 自分の下書き
+when 2
 	sql_where << "user='#{user.name}' AND name!='' AND draft='1'"
 	sql_where_ij << "t1.user='#{user.name}' AND t1.name!='' AND t1.draft='1'"
 # 自分の保護
-when 2
+when 3
 	sql_where << "user='#{user.name}' AND protect='1' AND name!=''"
 	sql_where_ij << "t1.user='#{user.name}' AND t1.protect='1' AND t1.name!=''"
 # 自分の公開
-when 3
+when 4
 	sql_where << "user='#{user.name}' AND public='1' AND name!=''"
 	sql_where_ij << "t1.user='#{user.name}' AND t1.public='1' AND t1.name!=''"
 # 自分の無印
-when 4
+when 5
 	sql_where << "user='#{user.name}' AND public='0' AND draft='0' AND name!=''"
 	sql_where_ij << "t1.user='#{user.name}' AND t1.public='0' AND t1.draft='0' AND t1.name!=''"
 # 他の公開
-when 5
+when 6
 	sql_where << "public='1' AND user!='#{user.name}' AND name!=''"
 	sql_where_ij << "t1.public='1' AND t1.user!='#{user.name}' AND t1.name!=''"
 else
@@ -514,6 +521,12 @@ recipes.each do |e|
 
 
 	recipe_html << "<td>"
+	if e.favorite == 1
+		recipe_html << l['favorite']
+	else
+		recipe_html << l['space']
+	end
+
 	if e.public == 1
 		recipe_html << l['globe']
 	else
