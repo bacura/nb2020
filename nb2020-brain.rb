@@ -1,15 +1,15 @@
-#Nutrition browser 2020 brain 0.24b
+#Nutrition browser 2020 brain 0.28b (2023/01/08)
+
+#==============================================================================
+#STATIC
+#==============================================================================
+
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
 require 'bigdecimal'
 require 'time'
-
-#==============================================================================
-#STATIC
-#==============================================================================
-
 
 #==============================================================================
 #DEFINITION
@@ -398,10 +398,9 @@ class FCT
           @refuses << '0'
         end
       else
-        @fns << e
         q = ''
         qq = ''
-        if /P|U/ =~ e && uname != nil
+        if /P|C|U/ =~ e && uname != nil
           q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
           qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}' AND ( user='#{uname}' OR user='#{$GM}' );"
         else
@@ -410,6 +409,7 @@ class FCT
         end
         res = db.query( q )
         if res.first
+          @fns << e
           a = []
           @items.each do |ee|
             if ee != 'REFUSE'
@@ -577,7 +577,7 @@ class FCT
       a = []
       @items.each do |e|
         t = r.first[e]
-        t = 0 unless t
+        t = 0 if t == nil || t == ''
         a << BigDecimal( t )
       end
       @solid << Marshal.load( Marshal.dump( a ))

@@ -580,10 +580,11 @@ var initKoyomiCalc = function(){
 // Calculation
 var calcKoyomiCalc = function(){
 	var palette = document.getElementById( "palette" ).value;
+	var fcz = document.getElementById( "fcz" ).value;
 	var yyyymmdds = document.getElementById( "yyyymmdds" ).value;
 	var yyyymmdde = document.getElementById( "yyyymmdde" ).value;
 	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
-	$.post( "koyomi-calc.cgi", { command:"calc", palette:palette, yyyymmdds:yyyymmdds, yyyymmdde:yyyymmdde, ew_mode:ew_mode }, function( data ){ $( "#L1" ).html( data ); });
+	$.post( "koyomi-calc.cgi", { command:"calc", palette:palette, fcz:fcz, yyyymmdds:yyyymmdds, yyyymmdde:yyyymmdde, ew_mode:ew_mode }, function( data ){ $( "#L1" ).html( data ); });
 };
 
 /////////////////////////////////////////////////////////////////////////////////

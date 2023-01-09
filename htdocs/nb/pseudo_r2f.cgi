@@ -1,6 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.09b (20022/07/24)
+#Nutrition browser recipe to pseudo food 0.20b (20023/01/01)
+
+#==============================================================================
+# STATIC
+#==============================================================================
+@debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
@@ -8,17 +14,23 @@
 require './soul'
 require './brain'
 
-
-#==============================================================================
-# STATIC
-#==============================================================================
-script = 'pseudo_r2f'
-@debug = false
-
-
 #==============================================================================
 # DEFINITION
 #==============================================================================
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'save' 		=> "保存",\
+		'food_name'	=> "食品名",\
+		'food_group'=> "食品群"
+	}
+
+	return l[language]
+end
 
 
 #==============================================================================
@@ -28,7 +40,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 #### POSTデータの取得
@@ -87,13 +99,13 @@ if command == 'form'
 	<div class="row">
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="food_name">#{lp[1]}</label>
+				<label class="input-group-text" for="food_name">#{l['food_name']}</label>
 				<input type="text" class="form-control form-control-sm" id="r2ffood_name" value="#{food_name}">
 			</div>
 		</div>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="food_group">#{lp[2]}</label>
+				<label class="input-group-text" for="food_group">#{l['food_group']}</label>
 				<select class="form-select form-select-sm" id="r2ffood_group">
 					#{food_group_option}
 				</select>
@@ -101,7 +113,7 @@ if command == 'form'
 		</div>
 		<div class="col-3"></div>
 		<div class="col-1">
-			<button class="btn btn-outline-primary btn-sm" type="button" onclick="savePseudo_R2F( '#{code}' )">#{lp[3]}</button>
+			<button class="btn btn-outline-primary btn-sm" type="button" onclick="savePseudo_R2F( '#{code}' )">#{l['save']}</button>
 		</div>
 	</div>
 
@@ -157,18 +169,18 @@ if command == 'save'
 	fct_set << ",Notice='#{code}'"
 
 	puts 'Generating new Food number:' if @debug
-	if user.status >= 8
-		puts 'Public>' if @debug
+	if user.status >= 8 && $NBURL == $MYURL
+		puts 'Public' if @debug
 		public_bit = 1
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'P%';", false, @debug )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "P#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'P%')", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -177,9 +189,29 @@ if command == 'save'
 				puts "New:#{code}>" if @debug
 			end
 		end
+	elsif user.status >= 8 && $NBURL != $MYURL
+		puts 'Community' if @debug
+		public_bit = 1
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
+		unless r.first
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE "C%";", false, @debug )
+			if rr.first
+				code = rr.first['FN']
+				puts "Recycle:#{code}>" if @debug
+			else
+				code = "C#{food_group}001"
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'C%')", false, @debug )
+				if rrr.first
+					puts "Detect:#{rrr.first['FN']}>" if @debug
+					last_code = rrr.first['FN'][-3,3].to_i
+					code = "C#{food_group}%#03d" % ( last_code + 1 )
+				end
+				puts "New:#{code}>" if @debug
+			end
+		end
 	else
 		puts 'Private>' if @debug
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0;", false, @debug )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0 AND user='#{user.name}';", false, @debug )
 		unless r.first
 			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
 			if rr.first
@@ -187,7 +219,7 @@ if command == 'save'
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "U#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0 AND FN LIKE 'U%');", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i

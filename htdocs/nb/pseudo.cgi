@@ -1,6 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.13b (2022/07/24)
+#Nutrition browser 2020 pseudo food editer 0.20b (2023/01/01)
+
+#==============================================================================
+# STATIC
+#==============================================================================
+#script = File.basename( $0, '.cgi' )
+@debug = false
 
 #==============================================================================
 # LIBRARY
@@ -8,18 +14,25 @@
 require './soul'
 require './brain'
 
-
-#==============================================================================
-# STATIC
-#==============================================================================
-script = 'pseudo'
-@debug = false
-
-
 #==============================================================================
 # DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'save' 		=> "保存",\
+		'delete'	=> "削除",\
+		'food_name'	=> "食品名",\
+		'food_group'=> "食品群",\
+		'weight'	=> "重量"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -28,7 +41,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
@@ -165,18 +178,18 @@ if command == 'save'
 	fct_set << ",Notice='#{notice}'"
 
 	puts 'Generating new Food number:' if @debug
-	if user.status >= 8
+	if user.status >= 8 && $NBURL == $MYURL
 		puts 'Public>' if @debug
 		public_bit = 1
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3';", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE "P%";", false, @debug )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "P#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1)", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE "P%")", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -185,17 +198,37 @@ if command == 'save'
 				puts "New:#{code}>" if @debug
 			end
 		end
+	if user.status >= 8 && $NBURL != $MYURL
+		puts 'Community' if @debug
+		public_bit = 1
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
+		unless r.first
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE "C%";", false, @debug )
+			if rr.first
+				code = rr.first['FN']
+				puts "Recycle:#{code}>" if @debug
+			else
+				code = "C#{food_group}001"
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE "C%")", false, @debug )
+				if rrr.first
+					puts "Detect:#{rrr.first['FN']}>" if @debug
+					last_code = rrr.first['FN'][-3,3].to_i
+					code = "C#{food_group}%#03d" % ( last_code + 1 )
+				end
+				puts "New:#{code}>" if @debug
+			end
+		end
 	else
 		puts 'Private>' if @debug
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0;", false, @debug )
+		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0 AND user='#{user.name}' ;", false, @debug )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2';", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2' AND FN LIKE "U%";", false, @debug )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "U#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0);", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0 AND FN LIKE "U%");", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -301,12 +334,12 @@ end
 
 #### save button
 save_button = ''
-save_button = "<button class=\"btn btn-outline-primary btn-sm\" type=\"button\" onclick=\"pseudoSave( '#{code}' )\">#{lp[1]}</button>" if tag_user == user.name || code == ''
+save_button = "<button class=\"btn btn-outline-primary btn-sm\" type=\"button\" onclick=\"pseudoSave( '#{code}' )\">#{l['save']}</button>" if tag_user == user.name || code == ''
 
 
 #### delete button
 delete_button = ''
-delete_button = "<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"pseudoDelete( '#{code}' )\">#{lp[2]}</button>" if code != '' && tag_user == user.name
+delete_button = "<button class='btn btn-outline-danger btn-sm' type='button' onclick=\"pseudoDelete( '#{code}' )\">#{l['delete']}</button>" if code != '' && tag_user == user.name
 
 
 #### FG select disable option
@@ -319,11 +352,11 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col-4">
-			<input type="text" class="form-control form-control-sm" id="pfood_name" placeholder="#{lp[3]}" value="#{food_name}">
+			<input type="text" class="form-control form-control-sm" id="pfood_name" placeholder="#{l['food_name']}" value="#{food_name}">
 		</div>
 		<div class="col-4">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="food_group">#{lp[4]}</label>
+				<label class="input-group-text" for="food_group">#{l['food_group']}</label>
 				<select class="form-select" id="pfood_group" #{fg_disabled}>
 					#{food_group_option}
 				</select>
@@ -331,7 +364,7 @@ html = <<-"HTML"
 		</div>
 		<div class="col-2">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="food_weight">#{lp[5]}</label>
+				<label class="input-group-text" for="food_weight">#{l['weight']}</label>
 				<input type="text" class="form-control form-control-sm" id="pfood_weight" placeholder="100" value="#{food_weight.to_f}">&nbsp;g
 			</div>
 

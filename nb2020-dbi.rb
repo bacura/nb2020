@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.53b (2022/12/07)
+#nb2020-dbi.rb 0.55b (2023/01/03)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -29,7 +29,6 @@ def db_create_nb()
 	end
 end
 
-
 #### Creating RR databases.
 def db_create_rr()
 	query = "SHOW DATABASES LIKE '#{$MYSQL_DBR}'"
@@ -40,6 +39,19 @@ def db_create_rr()
 		query = "CREATE DATABASE #{$MYSQL_DBR};"
 		$DBA.query( query )
 		puts "#{$MYSQL_DBR} database has been created"
+	end
+end
+
+#### NB system table.
+def nb_init()
+	query = "SHOW TABLES LIKE 'nb';"
+	res = $DB.query( query )
+	if res.first
+		puts 'nb table already exists.'
+	else
+		query = 'CREATE TABLE nb (user VARCHAR(32) NOT NULL PRIMARY KEY,his VARCHAR(4096));'
+		$DB.query( query )
+		puts 'nb table has been created.'
 	end
 end
 
@@ -663,13 +675,8 @@ def cfg_init()
 	if res.first
 		puts 'cfg table already exists.'
 	else
-		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipe VARCHAR(256), recipe3ds VARCHAR(256), menul VARCHAR(32), his_sg VARCHAR(2), his_max SMALLINT(6), calcc VARCHAR(64), icalc TINYINT, koyomi VARCHAR(1000), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255), fcze VARCHAR(128), school VARCHAR(512), allergen VARCHAR(3));'
+		query = 'CREATE TABLE cfg (user VARCHAR(32) NOT NULL PRIMARY KEY, recipe VARCHAR(256), recipe3ds VARCHAR(256), menul VARCHAR(32), history VARCHAR(128), calcc VARCHAR(64), icalc TINYINT, koyomi VARCHAR(1000), icache TINYINT(1), ifix TINYINT(1), bio VARCHAR(255), fcze VARCHAR(128), school VARCHAR(512), allergen VARCHAR(3));'
 		$DB.query( query )
-
-		[$GM, 'guest', 'guest2', 'guest3'].each do |e|
-			$DB.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{e}', his_max=200;" )
-		end
-
 		puts 'cfg table has been created.'
 	end
 end
@@ -1084,26 +1091,26 @@ def ref_eer_init( ref_eer )
 end
 
 
-#### Making reference intake table for koyomi.
-def ref_intake_init( ref_intake )
-	query = "SHOW TABLES LIKE 'ref_intake';"
+#### Making reference intake standard table.
+def ref_its_init( ref_intake )
+	query = "SHOW TABLES LIKE 'ref_its';"
 	res = $DB.query( query )
 	if res.first
-		puts 'ref_intake already exists.'
+		puts 'ref_its already exists.'
 	else
-		query = 'CREATE TABLE ref_intake ( name VARCHAR(10), sex VARCHAR(1), period_class VARCHAR(1), periods VARCHAR(2), periode VARCHAR(2), EAR VARCHAR(4), RDA VARCHAR(4), AI VARCHAR(4), UL VARCHAR(4), unit VARCHAR(10), DG_min VARCHAR(4), DG_max VARCHAR(4), DG_unit VARCHAR(10));'
+		query = 'CREATE TABLE ref_its ( name VARCHAR(10), sex VARCHAR(1), period_class VARCHAR(1), periods VARCHAR(2), periode VARCHAR(3), EAR VARCHAR(5), RDA VARCHAR(5), AI VARCHAR(5), UL VARCHAR(5), unit VARCHAR(10), DG_min VARCHAR(4), DG_max VARCHAR(4), DG_unit VARCHAR(10));'
 		$DB.query( query )
 
 		ref_solid = []
-		f = open( ref_intake, 'r')
+		f = open( ref_intake, 'r' )
 		f.each_line do |e| ref_solid << e.chomp end
 		ref_solid.shift
 		ref_solid.each do |e|
 			a = e.force_encoding( 'utf-8' ).split( "\t" )
-			query = "INSERT INTO ref_intake set name='#{a[0]}', sex='#{a[1]}', period_class='#{a[2]}', periods='#{a[3]}', periode='#{a[4]}', EAR='#{a[5]}', RDA='#{a[6]}', AI='#{a[7]}', UL='#{a[8]}', unit='#{a[9]}', DG_min='#{a[10]}', DG_max='#{a[11]}', DG_unit='#{a[12]}';"
+			query = "INSERT INTO ref_its set name='#{a[0]}', sex='#{a[1]}', period_class='#{a[2]}', periods='#{a[3]}', periode='#{a[4]}', EAR='#{a[5]}', RDA='#{a[6]}', AI='#{a[7]}', UL='#{a[8]}', unit='#{a[9]}', DG_min='#{a[10]}', DG_max='#{a[11]}', DG_unit='#{a[12]}';"
 			$DB.query( query )
 		end
-		puts 'ref_intake table has been created.'
+		puts 'ref_its table has been created.'
 	end
 end
 
@@ -1159,6 +1166,8 @@ def modj_init()
 	else
 		query = 'CREATE TABLE modj ( user VARCHAR(32) NOT NULL, module VARCHAR(64), json VARCHAR(1024));'
 		$DB.query( query )
+
+		$DB.query( "INSERT modj SET user='#{$GM}', module='nb';" )
 		puts 'modj table has been created.'
 	end
 end
@@ -1253,7 +1262,7 @@ meal_init()
 menu_init()
 palette_init()
 media_init()
-pag_int()
+pag_init()
 
 slogf_init()
 slogr_init()
@@ -1277,7 +1286,7 @@ mets_init()
 ref_bmi_init( ref_bmi )
 ref_phys_init( ref_phys )
 ref_eer_init( ref_eer )
-ref_intake_init( ref_intake )
+ref_its_init( ref_intake )
 
 schoolk_init()
 schoolm_init()

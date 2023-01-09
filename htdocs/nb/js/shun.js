@@ -1,4 +1,4 @@
-//shun.js ver 0.00b (2022/09/28)
+//shun.js ver 0.00b (2023/01/08)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Cooking school //////////////////////////////////////////////////////////////
@@ -702,5 +702,33 @@ var recipe3dsPlottDraw = function(){
 				console.log( "onclick", d, i );
 			}
 		});
+	});
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// JSON edit //////////////////////////////////////////////////////////////
+
+// JSON list init
+var initJsonlist = function(){
+	$.post( "json-list.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// Media edit //////////////////////////////////////////////////////////////
+
+// Media list init
+var initMedialist = function(){
+	$.post( "media-list.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
 	});
 };

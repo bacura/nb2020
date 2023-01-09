@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.31b (2022/12/04)
+// Nutorition Browser 2020 core.js 0.40b (2023/01/08)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -1069,12 +1069,6 @@ var recipeList = function( com ){
 };
 
 
-// Refreshing list
-var fxRLR = function( command, range, type, role, tech, time, cost, page ){
-	$.post( "recipel.cgi", { command:command, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
 // Dosplaying recipe list with narrow down
 var recipeListP = function( page ){
 	var range = document.getElementById( "range" ).value;
@@ -1083,7 +1077,8 @@ var recipeListP = function( page ){
 	var tech = document.getElementById( "tech" ).value;
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
-	fxRLR( 'limit', range, type, role, tech, time, cost, page );
+	var words = document.getElementById( "words" ).value;
+	$.post( "recipel.cgi", { command:command, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, words:words }, function( data ){ $( "#L1" ).html( data );});
 };
 
 
@@ -1098,8 +1093,10 @@ var recipeDelete = function( code, page ){
 
 	if( document.getElementById( code ).checked ){
 		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){
-			fxRLR( 'limit', range, type, role, tech, time, cost, page );
-			displayVIDEO( 'Removed' );
+			$.post( "recipel.cgi", { command:command, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){
+				$( "#L1" ).html( data );
+				displayVIDEO( 'Removed' );
+			});
 		});
 	} else{
 		displayVIDEO( 'Check! (>_<)' );
@@ -1593,4 +1590,104 @@ var menuReAnalysis = function( code ){
 		$( "#L2" ).html( data );
 		displayVIDEO( 'Reanalysis' );
 	});
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ref instake //////////////////////////////////////////////////////////////
+
+// Ref instake init
+var initRefIntake = function(){
+	$.post( "ref-intake.cgi", { command:'menu' }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dl2 = true;
+		displayBW();
+	});
+};
+
+// Ref instake init
+var viewRefIntake = function(){
+	var rits_item = document.getElementById( "rits_item" ).value;
+	$.post( "ref-intake.cgi", { command:'view_item', rits_item:rits_item }, function( data ){
+		$( "#L3" ).html( data );
+
+		dl3 = true;
+		displayBW();
+	});
+};
+
+
+// Ref instake personal
+var viewRefIntakeP = function(){
+	var ritp_age = document.getElementById( "ritp_age" ).value;
+	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
+	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
+	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
+	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
+	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
+	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
+	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
+	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
+
+	$.post( "ref-intake.cgi", { command:'personal', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c }, function( data ){
+		$( "#L3" ).html( data );
+
+		dl3 = true;
+		displayBW();
+	});
+};
+
+// Ref instake personal
+var saveRefIntake = function(){
+	var ritp_age = document.getElementById( "ritp_age" ).value;
+	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
+	var fcz_name = document.getElementById( "fcz_name" ).value;
+	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
+	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
+	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
+	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
+	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
+	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
+	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
+
+	if( fcz_name != '' ){
+		$.post( "ref-intake.cgi", { command:'save', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c, fcz_name:fcz_name }, function( data ){
+//			$( "#L4" ).html( data );
+
+//			dl4 = true;
+//			displayBW();
+			displayVIDEO( 'Saved FCZ' );
+		});
+	}else{
+		displayVIDEO( 'FCZ name!(>_<)' );
+	}
+};
+
+// Ref instake init
+var changeRISex = function( sex ){
+	if( sex == 0 ){
+		document.getElementById( 'ff_non' ).checked = true;
+		document.getElementById( 'ff_m' ).checked = false;
+		document.getElementById( 'ff_m' ).disabled = true;
+		document.getElementById( 'ff_non' ).disabled = true;
+		document.getElementById( 'ff_p1' ).disabled = true;
+		document.getElementById( 'ff_p2' ).disabled = true;
+		document.getElementById( 'ff_p3' ).disabled = true;
+		document.getElementById( 'ff_l' ).disabled = true;
+	}else{
+		document.getElementById( 'ff_m' ).disabled = false;
+		document.getElementById( 'ff_non' ).disabled = false;
+		document.getElementById( 'ff_p1' ).disabled = false;
+		document.getElementById( 'ff_p2' ).disabled = false;
+		document.getElementById( 'ff_p3' ).disabled = false;
+		document.getElementById( 'ff_l' ).disabled = false;
+	}
+};
+
+
+var changeRIP = function(){
+		document.getElementById( 'ff_m' ).checked = false;
 };

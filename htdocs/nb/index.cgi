@@ -12,7 +12,7 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 #==============================================================================
 #DEFINITION
@@ -47,9 +47,11 @@ def language_pack( language )
     'ginmi'   => "アセスメント",\
     'pysique'   => "体格管理",\
     'momchai'   => "母子管理",\
-    'note'    => "管理ノート",\
+    'note'     => "管理ノート",\
     'foodrank'  => "食品栄養ランク",\
     'fczl'    => "FCZエディタ",\
+    'mjl'     => "JSONエディタ",\
+    'medial'    => "メディアエディタ",\
     'accountm'  => "娘アカウント管理",\
     'visionnerz'=> "VISIONNERZ",\
     'recipe3d'  => "3Dレシピ検索",\
@@ -61,10 +63,11 @@ def language_pack( language )
     'dic'     => "辞書登録",\
     'slog'    => "別リク",\
     'user'    => "ユーザー管理",\
+    'bond'    => "絆管理",\
     'gycv'    => "緑黄色野菜登録",\
     'shun'    => "旬登録",\
     'memorya'   => "記憶管理",\
-    'senior'  => "終焉管理",\
+    'senior'  => "黄昏管理",\
     'condition' => "状態管理",\
   }
 
@@ -237,7 +240,9 @@ def html_nav( user, l )
 
   gm_account = ''
   if user.status == 9
-    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button master_color' onclick=\"initAccount( 'init' )\">#{l['nb']}</button>"
+    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button master_color' onclick=\"initAccount( 'init' )\">#{l['user']}</button>"
+    gm_account << "<button type='button' class='btn btn-dark btn-sm nav_button master_color' onclick=\"initBond( 'init' )\">#{l['bond']}</button>"
+
   end
 
   ##
@@ -281,15 +286,15 @@ html = <<-"HTML"
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initNote()">#{l['note']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initFCZlist()">#{l['fczl']}</button>
 </nav>
-</nav>
 <nav class='container-fluid' id='gs_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAccountM()">#{l['accountm']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="recipe3ds()">#{l['recipe3d']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{l['school']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{l['toker']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['visionnerz']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['senior']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['condition']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['mjl']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['medial']}</button>
 </nav>
 <nav class='container-fluid' id='gm_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{l['unit']}</button>

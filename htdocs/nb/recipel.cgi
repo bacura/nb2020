@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.26b (2022/12/02)
+#Nutrition browser 2020 recipe list 0.27b (2022/12/20)
 
 
 #==============================================================================
@@ -83,12 +83,12 @@ def range_html( range, l )
 	html = l['range']
 	html << '<select class="form-select form-select-sm" id="range">'
 	html << "<option value='0' #{range_select[0]}>#{l['all']}</option>"
-	html << "<option value='0' #{range_select[1]}>#{l['favoriter']}</option>"
-	html << "<option value='1' #{range_select[2]}>#{l['draft']}</option>"
-	html << "<option value='2' #{range_select[3]}>#{l['protect']}</option>"
-	html << "<option value='3' #{range_select[4]}>#{l['public']}</option>"
-	html << "<option value='4' #{range_select[5]}>#{l['normal']}</option>"
-	html << "<option value='5' #{range_select[6]}>#{l['publicou']}</option>"
+	html << "<option value='1' #{range_select[1]}>#{l['favoriter']}</option>"
+	html << "<option value='2' #{range_select[2]}>#{l['draft']}</option>"
+	html << "<option value='3' #{range_select[3]}>#{l['protect']}</option>"
+	html << "<option value='4' #{range_select[4]}>#{l['public']}</option>"
+	html << "<option value='5' #{range_select[5]}>#{l['normal']}</option>"
+	html << "<option value='6' #{range_select[6]}>#{l['publicou']}</option>"
 	html << '</select>'
 
 	return html
@@ -317,10 +317,17 @@ when 'reset'
 	time = 99
 	cost = 99
 	words = nil
+
 when 'refer'
+	page = 1
+	range = 0
+	type = 99
+	role = 99
+	tech = 99
+	time = 99
+	cost = 99
 	words = @cgi['words']
 	puts "words: #{words}<br>" if @debug
-	page = 1
 
 when 'delete'
 	puts "Deleting photos<br>" if @debug
@@ -378,6 +385,7 @@ when 'limit'
 	tech = @cgi['tech'].to_i
 	time = @cgi['time'].to_i
 	cost = @cgi['cost'].to_i
+	words = @cgi['words']
 end
 range = 5 if user.status == 0
 if @debug

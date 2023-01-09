@@ -27,8 +27,6 @@ def language_pack( language )
 	#Japanese
 	l['jp'] = {
 		'koyomi' 	=> "こよみ栄養計算",\
-		'palette'	=> "パレット",\
-		'signpost'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>",\
 		'fromto'	=> "　～　",\
 		'calc'		=> "計　算",\
 		'no_day'	=> "該当日がありません",\
@@ -43,7 +41,11 @@ def language_pack( language )
 		'period'	=> "期間総量（",\
 		'days'		=> "日間）",\
 		'average'	=> "１日平均",\
-		'ratio'		=> "割合"
+		'ratio'		=> "割合",
+		'fillr'		=> "充足率(%)",
+		'reference'	=> "<img src='bootstrap-dist/icons/boxes.svg' style='height:1.2em; width:1.2em;'>参考値",
+		'fcz'		=> "<img src='bootstrap-dist/icons/boxes.svg' style='height:1.5em; width:1.5em;'>",\
+		'palette'	=> "<img src='bootstrap-dist/icons/palette.svg' style='height:1.5em; width:1.5em;'>"
 	}
 
 	return l[language]
@@ -71,6 +73,7 @@ yyyymmdds = @cgi['yyyymmdds']
 yyyymmdde = @cgi['yyyymmdde']
 palette_ = @cgi['palette']
 ew_mode =  @cgi['ew_mode']
+fcz = @cgi['fcz']
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "yyyymmdds:#{yyyymmdds}<br>\n"
@@ -90,6 +93,7 @@ if r.first
 			yyyymmdds = koyomi['calc']['yyyymmdds'] if yyyymmdds == '' || yyyymmdds == nil
 			yyyymmdde = koyomi['calc']['yyyymmdde'] if yyyymmdde == '' || yyyymmdde == nil
 			palette_ = koyomi['calc']['palette'] if palette_ == '' || palette_ == nil
+			fcz = koyomi['calc']['fcz'] if fcz == '' || fcz == nil
 			ew_mode = koyomi['calc']['ew_mode'] if ew_mode  == nil
 		end
 	end
@@ -126,6 +130,18 @@ palette.sets.each_key do |k|
 	s = 'SELECTED' if palette_ == k
 	palette_html << "<option value='#{k}' #{s}>#{k}</option>"
 end
+
+
+puts 'HTML FCZの生成 <br>' if @debug
+fcz_html = ''
+r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='ref_intake';", false, @debug )
+r.each do |e|
+	s = ''
+	s = 'SELECTED' if fcz == e['code']
+	fcz_html << "<option value='#{e['code']}' #{s}>#{e['name']}</option>"
+end
+r_fcz = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='ref_intake' AND code='#{fcz}';", false, @debug )
+
 
 
 fct_total = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
@@ -204,7 +220,9 @@ fct_total.digit
 fct_table = ''
 fct_ave_table = ''
 fct_rate_table = ''
+fct_fillr_table = ''
 if day_count >= 1
+	# Sum
 	fct_table << '<table class="table table-sm table-striped">'
 	fct_table << '<tr>'
 	fct_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
@@ -229,6 +247,7 @@ if day_count >= 1
 	end
 	fct_table << '</table>'
 
+	# Average
 	fct_ave_table << '<table class="table table-sm table-striped">'
 	fct_ave_table << '<tr>'
 	fct_ave_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
@@ -253,6 +272,7 @@ if day_count >= 1
 	end
 	fct_ave_table << '</table>'
 
+	# Ratio
 	fct_rate_table << '<table class="table table-sm table-striped">'
 	fct_rate_table << '<tr>'
 	fct_rate_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
@@ -293,12 +313,58 @@ if day_count >= 1
 	end
 	fct_rate_table << '</table>'
 
+	# Fill rate
+	fct_fillr_table << '<table class="table table-sm table-striped">'
+	fct_fillr_table << '<tr>'
+	fct_fillr_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
+	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['unit']}</th>"
+	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['fillr']}</th>"
+	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['volume']}</th>"
+	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['reference']}</th>"
+	fct_fillr_table << "<th width='10%' class='fct_item'></th>"
+	fct_fillr_table << "<th width='10%' class='fct_item'></th>"
+	fct_fillr_table << '</tr>'
+
+	fct_total.names.size.times do |i|
+		t = fct_total.total[i]
+		if t == 0 || r_fcz.first == nil
+			total = '-'
+			fillr = '-'
+			reference = '-'
+		else
+			total = ( fct_total.total[i] / day_count ).round( fct_total.frcts[i] )
+			reference = r_fcz.first[fct_total.items[i]]
+			if reference != nil && reference != ''
+				fillr = ( total / reference.to_f * 100 ).round( 1 )
+			else
+				reference = '-'
+				fillr = '-'
+			end
+
+			fct_fillr_table << '<tr>'
+			fct_fillr_table << "<td>#{fct_total.names[i]}</td>"
+			fct_fillr_table << "<td>#{fct_total.units[i]}</td>"
+			fct_fillr_table << "<td>#{fillr}</td>"
+			fct_fillr_table << "<td>#{total}</td>"
+			fct_fillr_table << "<td>#{reference}</td>"
+			fct_fillr_table << "<td></td>"
+			fct_fillr_table << "<td></td>"
+			fct_fillr_table << '</tr>'
+		end
+	end
+	fct_fillr_table << '</table>'
+
+
+
+
 	day_ave = "<h5>#{l['average']}</h5>"
 	day_ratio = "<h5>#{l['ratio']}</h5>"
+	day_fillr = "<h5>#{l['fillr']}</h5>"
 else
 	fct_table << "<h5>#{l['no_day']}</h5>"
 	day_ave = ''
 	day_ratio = ''
+	day_fillr = ''
 end
 
 
@@ -313,15 +379,6 @@ html = <<-"HTML"
 		<div class='col-2'><h5>#{l['koyomi']}</h5></div>
 	</div>
 	<div class='row'>
-		<div class='col-3'>
-			<div class="input-group input-group-sm">
-				<label class="input-group-text">#{l['palette']}</label>
-				<select class="form-select form-select-sm" id="palette">
-					#{palette_html}
-				</select>
-			</div>
-
-		</div>
 		<div class='col-2 form-inline'>
 			<input type='date' class='form-control form-control-sm' id='yyyymmdds' value='#{yyyymmdds}'>
 		</div>
@@ -338,6 +395,28 @@ html = <<-"HTML"
 		</div>
 	</div>
 	<br>
+
+	<div class='row'>
+		<div class='col-3'>
+			<div class="input-group input-group-sm">
+				<label class="input-group-text">#{l['palette']}</label>
+				<select class="form-select form-select-sm" id="palette">
+					#{palette_html}
+				</select>
+			</div>
+		</div>
+		<div class='col-4'>
+			<div class="input-group input-group-sm">
+				<label class="input-group-text">#{l['fcz']}</label>
+				<select class="form-select form-select-sm" id="fcz">
+					#{fcz_html}
+				</select>
+			</div>
+
+		</div>
+	</div>
+	<br>
+
 	<div class='row'>
 		<button class='btn btn-sm btn-info' onclick='calcKoyomiCalc()'>#{l['calc']}</buttnon>
 	</div>
@@ -348,13 +427,15 @@ html = <<-"HTML"
 	#{fct_ave_table}
 	#{day_ratio}
 	#{fct_rate_table}
+	#{day_fillr}
+	#{fct_fillr_table}
 HTML
 
 puts html
 
 ####
 if command == 'calc'
-		koyomi['calc'] = { 'yyyymmdds' => yyyymmdds, 'yyyymmdde' => yyyymmdde, 'palette' => palette_, 'ew_mode' => ew_mode }
+		koyomi['calc'] = { 'yyyymmdds' => yyyymmdds, 'yyyymmdde' => yyyymmdde, 'palette' => palette_, 'fcz' => fcz, 'ew_mode' => ew_mode }
 		koyomi_ = JSON.generate( koyomi )
 	mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
 end

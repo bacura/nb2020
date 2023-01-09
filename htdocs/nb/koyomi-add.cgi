@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.13b (2022/12/17)
+#Nutrition browser 2020 koyomi adding panel 0.24b (2022/12/21)
 
 #==============================================================================
 #STATIC
@@ -338,6 +338,7 @@ if command != 'move_fix' && /\-f\-/ !~ code
 	else
 		rate_html << "		<option value='%'>%</option>"
 		rate_html << "		<option value='g' #{rate_selected}>g</option>"
+		rate_html << "		<option value='kcal'>kcal</option>"
 	end
 	rate_html << "	</select>"
 	rate_html << "</div>"

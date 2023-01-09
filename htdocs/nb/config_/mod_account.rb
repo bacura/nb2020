@@ -1,8 +1,9 @@
-# Nutorition browser 2020 Config module for acount 0.01b
+# Nutorition browser 2020 Config module for acount 0.02b (2022/12/24)
 #encoding: utf-8
 
 def config_module( cgi, user, lp )
 	module_js()
+	l = language_pack( user.language )
 
 	step = cgi['step']
 
@@ -30,7 +31,7 @@ def config_module( cgi, user, lp )
 			# Updating acount information
 			mdb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}', language='#{language}' WHERE user='#{user.name}' AND cookie='#{user.uid}';", false, false )
 		else
-			puts "<span class='msg_small_red'>#{lp[12]}</span><br>"
+			puts "<span class='msg_small_red'>#{l['no_save']}</span><br>"
 		end
 	end
 
@@ -40,27 +41,27 @@ def config_module( cgi, user, lp )
 	html = <<-"HTML"
     <div class="container">
     	<div class='row'>
-	    	<div class='col-2'>#{lp[13]}</div>
+	    	<div class='col-2'>#{l['aliase']}</div>
 			<div class='col-4'><input type="text" maxlength="60" id="new_aliasu" class="form-control login_input" value="#{aliasu}"></div>
 		</div>
 
     	<div class='row'>
-	    	<div class='col-2'>#{lp[14]}</div>
+	    	<div class='col-2'>#{l['mail']}</div>
 			<div class='col-4'><input type="email" maxlength="60" id="new_mail" class="form-control login_input" value="#{mail}"></div>
 		</div>
 
     	<div class='row'>
-	    	<div class='col-2'>#{lp[15]}</div>
-			<div class='col-4'><input type="text" maxlength="30" id="new_password1" class="form-control login_input" placeholder="#{lp[16]}"></div>
+	    	<div class='col-2'>#{l['new_pw']}</div>
+			<div class='col-4'><input type="text" maxlength="30" id="new_password1" class="form-control login_input" placeholder="#{l['char30']}"></div>
 		</div>
 
     	<div class='row'>
-	    	<div class='col-2'>#{lp[15]}</div>
-			<div class='col-4'><input type="text" maxlength="30" id="new_password2" class="form-control login_input" placeholder="#{lp[17]}"></div>
+	    	<div class='col-2'>#{l['new_pw']}</div>
+			<div class='col-4'><input type="text" maxlength="30" id="new_password2" class="form-control login_input" placeholder="#{l['confirm']}"></div>
 		</div>
 
     	<div class='row'>
-	    	<div class='col-2'>#{lp[76]}</div>
+	    	<div class='col-2'>#{l['language']}</div>
 	    	<div class='col-2'>
         		<select id="language" class="form-select">
         		#{option_language}
@@ -70,13 +71,13 @@ def config_module( cgi, user, lp )
 		<hr>
 
     	<div class='row'>
-	    	<div class='col-2'>#{lp[18]}</div>
+	    	<div class='col-2'>#{l['password']}</div>
 			<div class='col-4'><input type="password" id="old_password" class="form-control login_input" required></div>
 		</div>
 
     	<div class='row'>
 	    	<div class='col-2'></div>
-			<div class='col-4'><button type="button" class="btn btn-warning btn-sm nav_button" onclick="account_cfg( 'change' )">#{lp[19]}</button></div>
+			<div class='col-4'><button type="button" class="btn btn-warning btn-sm nav_button" onclick="account_cfg( 'change' )">#{l['save']}</button></div>
 		</div>
 	</div>
 HTML
@@ -114,4 +115,25 @@ var account_cfg = function( step ){
 </script>
 JS
 	puts js
+end
+
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'aliase'	=> "二つ名",\
+		'mail'		=> "メールアドレス",\
+		'new_pw'	=> "新しいパスワード",\
+		'char30'	=> "30文字まで",\
+		'confirm'	=> "(確認)",\
+		'language'	=> "言語",\
+		'password'	=> "現在のパスワード",\
+		'save'		=> "保存",\
+		'no_save'	=> "現在のパスワードが違うので、保存されませんでした。"
+	}
+
+	return l[language]
 end

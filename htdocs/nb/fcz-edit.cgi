@@ -1,6 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 fcz editer 0.00b
+#Nutrition browser 2020 fcz editer 0.01b (2023/01/08)
+
+#==============================================================================
+# STATIC
+#==============================================================================
+@debug = false
+reserves = %W( fix freeze recipe )
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
@@ -8,19 +15,25 @@
 require './soul'
 require './brain'
 
-
-#==============================================================================
-# STATIC
-#==============================================================================
-script = 'fcz-edit'
-@debug = false
-reserves = %W( fix freeze recipe )
-
-
 #==============================================================================
 # DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'base'		=> "base",\
+		'name'		=> "名前",\
+		'origin'	=> "起源",\
+		'save'		=> "保存",\
+		'return'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -29,7 +42,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
@@ -51,12 +64,10 @@ if command == 'init' && fcz_code != 'new'
 	if r.first
 		fcz_name = r.first['name']
 		origin = r.first['origin']
-
 		fct.load_fcz( user.name, fcz_code, base )
 		fct.calc
 	end
 end
-
 
 reserve_flag = false
 reserves.each do |e|
@@ -121,13 +132,13 @@ fct_block[5] << "<tr><td><hr></td></tr>"
 @fct_as.each do |e|
 	t = nil
 	t = fct.pickt( e ) if fct.pickt( e ) == nil || fct.pickt( e ) == ''
-	fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='z#{e}' value=\"#{fct.pickt(e)}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
+	fct_block[5] << "<tr><td>#{@fct_name[e]}</td><td align='right' width='20%''><input type='text' class='form-control form-control-sm' id='z#{e}' value=\"#{fct.pickt(e).to_f}\" #{disabled_option}></td><td>#{@fct_unit[e]}</td></tr>"
 end
 
 
 puts "Save button<br>" if @debug
 save_button = ''
-save_button = "<button class=\"btn btn-outline-primary btn-sm\" type=\"button\" onclick=\"saveFCZedit( '#{fcz_code}' )\">#{lp[4]}</button>" unless reserve_flag
+save_button = "<button class=\"btn btn-outline-primary btn-sm\" type=\"button\" onclick=\"saveFCZedit( '#{fcz_code}' )\">#{l['save']}</button>" unless reserve_flag
 
 
 puts "HTML<br>" if @debug
@@ -135,7 +146,7 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
 		<div class="col"><h5>#{fcz_code}</h5></div>
-		<div align='center' class='col joystic_koyomi' onclick="fczlReturn()">#{lp[5]}</div>
+		<div align='center' class='col joystic_koyomi' onclick="fczlReturn()">#{l['return']}</div>
 		<div class="col-1" align="right">#{save_button}</div>
 	</div>
 	<br>
@@ -143,19 +154,19 @@ html = <<-"HTML"
 	<div class="row">
 		<div class="col-2">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text">#{lp[1]}</label>
+				<label class="input-group-text">#{l['base']}</label>
 				<input type="text" class="form-control form-control-sm" max='16' id="base" value="#{base}">
 			</div>
 		</div>
 		<div class="col-5">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text">#{lp[2]}</label>
+				<label class="input-group-text">#{l['name']}</label>
 				<input type="text" class="form-control form-control-sm" max='64' id="fcz_name" value="#{fcz_name}">
 			</div>
 		</div>
 		<div class="col-5">
 			<div class="input-group input-group-sm">
-				<label class="input-group-text">#{lp[3]}</label>
+				<label class="input-group-text">#{l['origin']}</label>
 				<input type="text" class="form-control form-control-sm" max='64' id="origin" value="#{origin}">
 			</div>
 

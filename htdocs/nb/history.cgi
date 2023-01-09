@@ -178,6 +178,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+history = Hash.new
 
 
 puts 'POST<br>' if @debug
@@ -195,12 +196,15 @@ sub_menu( l ) if command == 'menu'
 
 
 #### Sub group
+sub_fg = 1
 if sub_fg == 'init'
-	r = mdb( "SELECT his_sg FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	puts "LOAD config<br>" if @debug
+	r = mdb( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first
-		sub_fg = r.first['his_sg']
-	else
-		sub_fg = 1
+		if r.first['history'] != nil && r.first['history'] != ''
+			history = JSON.parse( r.first['history'] )
+			sub_fg = history['sub_fg'] if history['sub_fg']
+		end
 	end
 end
 
@@ -250,9 +254,7 @@ HTML
 
 puts html
 
-r = mdb( "SELECT user FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
-if r.first
-	mdb( "UPDATE #{$MYSQL_TB_CFG} SET his_sg='#{sub_fg}' WHERE user='#{user.name}';", false, @debug )
-else
-	mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET his_sg='#{sub_fg}' ,user='#{user.name}';", false, @debug )
-end
+#Update config
+history['sub_fg'] = sub_fg
+history_ = JSON.generate( history )
+mdb( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", false, @debug )

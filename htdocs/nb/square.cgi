@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.16b (2022/12/17)
+#Nutrition browser 2020 food square 0.17b (2023/01/01)
 
 
 #==============================================================================
@@ -500,10 +500,10 @@ when 'fctb_l5'
 	food_no_list.size.times do |c|
 		pseudo_flag = false
 		# 栄養素の一部を取得
-		if /^U/ =~ food_no_list[c]
+		if /U/ =~ food_no_list[c]
 			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';"
 			pseudo_flag = true
-		elsif /^P/ =~ food_no_list[c]
+		elsif /P|C/ =~ food_no_list[c]
 			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}';"
 			pseudo_flag = true
 		else

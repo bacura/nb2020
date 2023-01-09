@@ -493,43 +493,26 @@ var deletePMemory = function( category, pointer, post_process ){
 };
 
 /////////////////////////////////////////////////////////////////////////////////
-// DB table export ////////////////////////////////////////////////////////////////////////
+// Bomd James bond ////////////////////////////////////////////////////////////////////////
 
-var initExport = function(){
-	closeBroseWindows( 1 );
-	$.post( "gm-export.cgi", { command:'init' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+var initBond = function(){
+	$.post( "gm-bond.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
 };
 
-/////////////////////////////////////////////////////////////////////////////////
-// DB table import ////////////////////////////////////////////////////////////////////////
+var crossBond = function(){
+	var urls = document.getElementById( 'urls' ).value;
+	if( document.getElementById( 'open_nb' ).checked ){ var open_nb = 1; }else{var open_nb = 0; }
 
-var initImport = function(){
-	closeBroseWindows( 1 );
-	$.post( "gm-import.cgi", { command:'init' }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	$.post( "gm-bond.cgi", { command:'cross', urls:urls, open_nb:open_nb }, function( data ){
+		$( "#L2" ).html( data );
+		dl2 = true;
+		displayBW();
+	});
 };
 
-var confirmImport = function(){
-	var mode = 0;
-	if( document.getElementById( 'mode' ).checked ){ mode = 1; }
-
-	form_data = new FormData( $( '#import_form' )[0] );
-	form_data.append( 'command', 'confirm' );
-	form_data.append( 'mode', mode );
-	$.ajax( "gm-import.cgi",
-		{
-			type: 'post',
-			processData: false,
-			contentType: false,
-			data: form_data,
-			dataype: 'html',
-			success: function( data ){ $( '#L2' ).html( data ); }
-		}
-	);
-	document.getElementById( "L2" ).style.display = 'block';
-};
-
-var updateImport = function( tf_name, mode ){
-	$.post( "gm-import.cgi", { command:'update', tf_name:tf_name, mode:mode }, function( data ){ $( "#L2" ).html( data );});
-};

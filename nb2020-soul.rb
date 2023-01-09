@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.71b (2022/12/18)
+#Nutrition browser 2020 soul 0.73b (2023/01/03)
 
 #==============================================================================
 # LIBRARY
@@ -18,6 +18,8 @@ $GM = 'gm'
 $SERVER_PATH = '/var/www'
 $HTDOCS_PATH = "#{$SERVER_PATH}/htdocs/nb"
 $TMP_PATH = '/tmp'
+$NBURL = 'http://localhost/nb/'
+$MYURL = 'http://localhost/nb/'
 
 $COOKIE_UID = 'UID2020'
 
@@ -51,6 +53,7 @@ $MYSQL_TB_PRICE = 'price'
 $MYSQL_TB_PRICEM = 'pricem'
 $MYSQL_TB_RECIPE = 'recipe'
 $MYSQL_TB_RECIPEI = 'recipei'
+$MYSQL_TB_REFITS = 'ref_its'
 $MYSQL_TB_SCHOOLK = 'schoolk'
 $MYSQL_TB_SCHOOLM = 'schoolm'
 $MYSQL_TB_SCHOOLC = 'schoolc'
@@ -194,11 +197,10 @@ end
 
 #### コードの生成
 def generate_code( uname, c )
-  require 'securerandom'
   skip = false
   code = uname[0, 2]
   10.times do
-    code = "#{code}-#{c}-#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}#{SecureRandom.hex( 2 )}"
+    code = "#{code}-#{c}-#{SecureRandom.hex( 10 )}"
     query = ''
     case c
     when 'm'
