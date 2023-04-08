@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.73b (2023/01/03)
+#Nutrition browser 2020 soul 0.75b (2023/04/08)
 
 #==============================================================================
 # LIBRARY
@@ -557,6 +557,7 @@ class Recipe
     @time = cgi['time'].to_i
     @cost = cgi['cost'].to_i
     @protocol = cgi['protocol']
+    @root = cgi['root']
 
     # excepting for tags
     @protocol.gsub!( '<', '&lt;')
@@ -564,7 +565,7 @@ class Recipe
     @protocol.gsub!( ';', '；')
   end
 
-  def load_db( code, mode )
+  def load_db( code, mode ) # mode = ture -> from DB directly, mode = false -> from DB res object
     res = nil
     if mode
       @code = code
@@ -685,6 +686,7 @@ class Recipe
     puts "Recipe.cost:#{@cost}<br>"
     puts "Recipe.sum:#{@sum}<br>"
     puts "Recipe.protocol:#{@protocol}<br>"
+    puts "Recipe.root:#{@root}<br>"
     puts "Recipe.date:#{@date}<br>"
     puts "Recipe.media:#{@media}<br>"
   end

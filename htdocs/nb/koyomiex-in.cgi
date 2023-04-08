@@ -1,26 +1,53 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 file into koyomi extra 0.21b (2022/09/12)
+#Nutrition browser 2020 file into koyomi extra 0.30b (2023/01/21)
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'koyomiex-in'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'msg_err' 	=> "このタイプのファイルは受け付けておりません。",\
+		'file_name' => "ファイル名：",\
+		'file_type'	=> "ファイルタイプ：",\
+		'file_size'	=> "ファイルサイズ：",\
+		'line1'		=> "1行目",\
+		'line2'		=> "2行目",\
+		'field'		=> "項目設定",\
+		'nd'		=> "未設定",\
+		'ignore1'	=> "1行目を無視",\
+		'ow'		=> "上書き",\
+		'record'	=> "記録する",\
+		'date'		=> "日付",\
+		'msg_err1'	=> "日付の選択は必須! (>_<)",\
+		'msg_err2'	=> "日付項目が読み込めない形式です。",\
+		'msg_res1'	=> "1行目のデータを無視しました。",\
+		'msg_res2'	=> "全項目を更新しました。",\
+		'msg_res3'	=> "空白の項目のみ更新しました。"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -29,7 +56,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 html = []
 
 
@@ -58,6 +85,7 @@ kexa = Hash.new
 kexc = Hash.new
 skip_line1 = nil
 overwrite = nil
+selecteds = ''
 
 r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 if r.first
@@ -82,15 +110,16 @@ when 'upload'
 	unless kexin == nil
 		overwrite = kexin['overwrite']
 		skip_line1 = kexin['skip_line1']
+		selecteds = kexin['selecteds']
 	end
 
 	####
 ####
 html[10] = <<-"HTML10"
 <table class='table'>
-	<tr><td>#{lp[2]}</td><td>#{file_origin}</td></tr>
-	<tr><td>#{lp[3]}</td><td>#{file_type}</td></tr>
-	<tr><td>#{lp[4]}</td><td>#{file_size}</td></tr>
+	<tr><td>#{l['file_name']}</td><td>#{file_origin}</td></tr>
+	<tr><td>#{l['file_type']}</td><td>#{file_type}</td></tr>
+	<tr><td>#{l['file_size']}</td><td>#{file_size}</td></tr>
 </table>
 HTML10
 ####
@@ -123,13 +152,33 @@ HTML10
 
 		line_select = ''
 		line1.size.times do |c|
-			line_select << "<td>"
-			line_select << "<SELECT class='form-select form-select-sm' id='item#{c}'>"
-			line_select << "<OPTION value='ND'>ND</OPTION>"
-			line_select << "<OPTION value='date'>#{lp[12]}</OPTION>"
-			kexu.each do |k, v| line_select << "<OPTION value='#{k}'>#{k}</OPTION>" end
-			line_select << "/<SELECT>"
-			line_select << "</td>"
+			if selecteds
+				sc = selecteds[c, 1].to_i
+				line_select << "<td>"
+				line_select << "<SELECT class='form-select form-select-sm' id='item#{c}'>"
+				line_select << "<OPTION value='ND'>#{l['nd']}</OPTION>"
+				s = ''
+				s = 'SELECTED' if sc == 1
+				line_select << "<OPTION value='date' #{s}>#{l['date']}</OPTION>"
+
+				kexa.each.with_index( 2 ) do |( k, v ), i|
+					s = ''
+					s = 'SELECTED' if sc == i
+					line_select << "<OPTION value='#{k}' #{s}>#{k}</OPTION>" if v == '1'
+				end
+				line_select << "/<SELECT>"
+				line_select << "</td>"
+			else
+				line_select << "<td>"
+				line_select << "<SELECT class='form-select form-select-sm' id='item#{c}'>"
+				line_select << "<OPTION value='ND'>#{l['nd']}</OPTION>"
+				line_select << "<OPTION value='date'>#{l['date']}</OPTION>"
+				kexa.each do |k, v|
+					line_select << "<OPTION value='#{k}'>#{k}</OPTION>" if v == '1'
+				end
+				line_select << "/<SELECT>"
+				line_select << "</td>"
+			end
 		end
 
 
@@ -150,17 +199,17 @@ html[20] = <<-"HTML20"
 	</tr>
 
 	<tr>
-	<th>#{lp[5]}</th>
+	<th>#{l['line1']}</th>
 		#{line1_html}
 	</tr>
 
 	<tr>
-		<th>#{lp[6]}</th>
+		<th>#{l['line2']}</th>
 		#{line2_html}
 	</tr>
 
 	<tr>
-		<th>#{lp[7]}</th>
+		<th>#{l['field']}</th>
 		#{line_select}
 	</tr>
 </table>
@@ -169,25 +218,25 @@ html[20] = <<-"HTML20"
 	<div class='col-2'>
 		<div class='form-check'>
 			<input class='form-check-input' type='checkbox' id='skip_line1' #{skip_line1_checked}>
-			<label class='form-check-label'>#{lp[9]}</label>
+			<label class='form-check-label'>#{l['ignore1']}</label>
 		</div>
 	</div>
 	<div class='col-2'>
 		<div class='form-check'>
 			<input class='form-check-input' type='checkbox' id='overwrite'  #{overwrite_checked}>
-			<label class='form-check-label'>#{lp[10]}</label>
+			<label class='form-check-label'>#{l['ow']}</label>
 		</div>
 	</div>
 </div>
 <div class='row'>
-	<button type='button' class='btn btn-sm btn-warning' onclick=\"writekoyomiex( '#{tmp_file}', '#{line1.size}', '#{lp[13]}' )\">#{lp[11]}</button>
+	<button type='button' class='btn btn-sm btn-warning' onclick=\"writekoyomiex( '#{tmp_file}', '#{line1.size}', '#{l['msg_err1']}' )\">#{l['record']}</button>
 </div>
 HTML20
 ########
 		########
 
 	else
-		puts lp[1]
+		puts l['msg_err']
 		exit
 	end
 
@@ -210,11 +259,9 @@ when 'update'
 	puts 'Detevting item column<br>' if @debug
 	kex_key = item_solid.split( ':' )
 	kex_posi = Hash.new
-	c = 0
-	kex_key.each do |e|
-		kex_posi['date'] = c if e == 'date'
-		kex_posi[e] = c if e != nil && e != '' && e != 'ND'
-		c += 1
+	kex_key.each.with_index( 0 ) do |e, i|
+		kex_posi['date'] = i if e == 'date'
+		kex_posi[e] = i if e != nil && e != '' && e != 'ND'
 	end
 
 
@@ -258,18 +305,18 @@ when 'update'
 				count += 1
 			end
 		else
-			puts lp[15]
+			puts l['msg_err2']
 			exit
 		end
 	end
 
 	puts "Infom result<br>" if @debug
 	html[30] = ''
-	html[30] << "#{lp[17]}<br>" if skip_line1 == '1'
+	html[30] << "#{l['msg_res1']}<br>" if skip_line1 == '1'
 	if overwrite == '1'
-		html[30] << "#{lp[18]} (#{count}/#{matrix.size})<br>"
+		html[30] << "#{l['msg_res2']} (#{count}/#{matrix.size})<br>"
 	else
-		html[30] << "#{lp[19]} (#{count}/#{matrix.size})<br>"
+		html[30] << "#{l['msg_res3']} (#{count}/#{matrix.size})<br>"
 	end
 end
 
@@ -278,8 +325,21 @@ puts html.join
 
 if command == 'update'
 	puts 'UPDATE config<br>' if @debug
+	selecteds_ = ''
+	a = item_solid.split( ':' )
+	a.each do |e|
+		if e == 'ND'
+			selecteds_ << '0'
+		elsif e == 'date'
+			selecteds_ << '1'
+		else
+			kexu.each.with_index( 2 ) do |( k, v ), i|
+				selecteds_ << i.to_s if e == k
+			end
+		end
+	end
 
-	kexin = { 'skip_line1'=>skip_line1, 'overwrite'=>overwrite }
+	kexin = { 'skip_line1'=>skip_line1, 'overwrite'=>overwrite, 'selecteds'=>selecteds_ }
 	koyomi_ = JSON.generate( { "start"=>start,  "kexu"=>kexu, "kexa"=>kexa, "kexin"=>kexin } )
 	mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
 end

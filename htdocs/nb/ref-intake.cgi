@@ -579,3 +579,38 @@ else
 end
 
 puts html
+
+
+####
+if command == 'init'
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// Ref instake init
+var changeRISex = function( sex ){
+	if( sex == 0 ){
+		document.getElementById( 'ff_non' ).checked = true;
+		document.getElementById( 'ff_m' ).checked = false;
+		document.getElementById( 'ff_m' ).disabled = true;
+		document.getElementById( 'ff_non' ).disabled = true;
+		document.getElementById( 'ff_p1' ).disabled = true;
+		document.getElementById( 'ff_p2' ).disabled = true;
+		document.getElementById( 'ff_p3' ).disabled = true;
+		document.getElementById( 'ff_l' ).disabled = true;
+	}else{
+		document.getElementById( 'ff_m' ).disabled = false;
+		document.getElementById( 'ff_non' ).disabled = false;
+		document.getElementById( 'ff_p1' ).disabled = false;
+		document.getElementById( 'ff_p2' ).disabled = false;
+		document.getElementById( 'ff_p3' ).disabled = false;
+		document.getElementById( 'ff_l' ).disabled = false;
+	}
+};
+
+var changeRIP = function(){
+		document.getElementById( 'ff_m' ).checked = false;
+};
+</script>
+JS
+	puts js
+end

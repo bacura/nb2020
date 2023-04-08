@@ -319,7 +319,7 @@ if day_count >= 1
 	fct_fillr_table << "<th width='30%' class='fct_item'>#{l['name']}</th>"
 	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['unit']}</th>"
 	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['fillr']}</th>"
-	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['volume']}</th>"
+	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['average']}</th>"
 	fct_fillr_table << "<th width='10%' class='fct_item'>#{l['reference']}</th>"
 	fct_fillr_table << "<th width='10%' class='fct_item'></th>"
 	fct_fillr_table << "<th width='10%' class='fct_item'></th>"

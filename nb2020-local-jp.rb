@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.13b (2022/12/26)
+#Nutrition browser 2020 soul Japanese pack 0.15b (2023/04/08)
 
 #==============================================================================
 # STATIC
@@ -27,7 +27,7 @@
 
 @palette_default_name = %w( 簡易表示用 基本の5成分 基本の12成分 基本の21成分 基本全て )
 $PALETTE_DEFAULT_NAME = { 'jp' => @palette_default_name }
-@palette_default = %w( 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000011000000000001100100000000000010000001100000000001 00000010001001000000000011000000000001110111000000000010000001101111001011 00001111111111111111111111111111111111111111111111111111111111111111111111 )
+@palette_default = %w( 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000011000000000001100100000000000001000001100000000001 00000010001001000000000011000000000001110111000000000001000001101111001011 00001111111111111111111111111111111111111111111111111111111111111111111111 )
 
 $PALETTE_DEFAULT = { 'jp' => @palette_default }
 @palette_bit_all = [0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ]
@@ -61,13 +61,14 @@ def html_head( interrupt, status, sub_title )
   refresh = '<meta http-equiv="refresh" content="0; url=index.cgi">' if interrupt == 'refresh'
 
   js_guild = ''
-  js_guild = "<script type='text/javascript' src='#{$JS_PATH}/guild.js'></script>" if status >= 3
+  js_guild = "<script type='text/javascript' src='#{$JS_PATH}/guild.js'></script>" if status >= 2
 
   js_shun = ''
   js_shun = "<script type='text/javascript' src='#{$JS_PATH}/shun.js'></script>" if status >= 5
 
   js_master = ''
   js_master = "<script type='text/javascript' src='#{$JS_PATH}/master.js'></script>" if status >= 8
+
 
   html = <<-"HTML"
 <!DOCTYPE html>

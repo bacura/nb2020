@@ -1,13 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.12b (2022/12/18)
+#Nutrition browser 2020 recipe editor 0.13b (2023/04/08)
 
 #==============================================================================
-#LIBRARY
+#COMMON LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
-require 'fileutils'
 
 
 #==============================================================================
@@ -36,12 +35,16 @@ def language_pack( language )
 		'name' 		=> "レシピ名",\
 		'save' 		=> "保存",\
 		'protocol' 	=> "調理手順",\
+		'special' 	=> "【行頭特殊記号】　![文字]:強調、@[文字]:ただし書き（薄カッコ表示）、#[文字]:コメント（非表示）、&[レシピコード]:参照レシピ",\
+		'root' 		=> "母",\
+		'branch' 	=> "娘",\
 		'favorite' 	=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.0em; width:1.0em;'>お気に入り",\
 		'draft' 	=> "<img src='bootstrap-dist/icons/cone-striped.svg' style='height:1.0em; width:1.0em;'>仮組",\
 		'public' 	=> "<img src='bootstrap-dist/icons/globe.svg' style='height:1.0em; width:1.0em;'>公開",\
 		'protect' 	=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.0em; width:1.0em;'>保護",\
 		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>",\
-		'link'		=> "<img src='bootstrap-dist/icons/link.svg' style='height:2.4em; width:2.4em;'>",\
+		'link'		=> "<img src='bootstrap-dist/icons/paperclip.svg' style='height:2.4em; width:2.4em;'>",\
+		'mdm'		=> "<img src='bootstrap-dist/icons/diagram-3.svg' style='height:2.4em; width:2.4em;'>",\
 		'spchar' 	=> "!…強調　@…カッコ書き　#…コメント（表示なし）　&…リンク"
 	}
 
@@ -61,9 +64,11 @@ l = language_pack( user.language )
 #### POST
 command = @cgi['command']
 code = @cgi['code']
+root = @cgi['root']
 if @debug
 	puts "commnad:#{command}<br>"
 	puts "code:#{code}<br>"
+	puts "root:#{code}<br>"
 end
 
 recipe = Recipe.new( user.name )
@@ -82,7 +87,10 @@ when 'protocol'
 	exit
 
 when 'save'
+	require 'fileutils'
 	recipe.load_cgi( @cgi )
+
+	p recipe.root
 
 	# excepting for tags
 	recipe.protocol = wash( recipe.protocol )
@@ -264,6 +272,39 @@ end
 form_photo << '</form></div>'
 
 
+puts "branche parts<br>" if @debug
+branche = "<div class='col' id='tree' style='visibility:hidden;'>"
+r = mdb( "SELECT name, code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.code}';", false, @debug )
+if r.first
+    branche	<< '<ul class="list-group">'
+	r.each do |e|
+		branche << "<li class='list-group-item list-group-item-action' onclick='initCB( \"load\", \"#{e['code']}\", \"#{user.name}\" )'>#{e['name']}&nbsp;(#{e['code']})</li>"
+	end
+    branche	<< '</ul>'
+    branche	<< "<input type='hidden' class='form-control' id='root' value='' >"
+else
+	branche	<< '<div class="input-group input-group-sm">'
+	root_recipe_id = ''
+	root_recipe_name = ''
+	root_button = "<button class='btn btn-sm btn-secondary'>#{l['root']}</button>"
+
+	if recipe.root != ""
+		rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.root}';", false, @debug )
+		if rr.first
+			root_button = "<button class='btn btn-sm btn-info' onclick='initCB( \"load\", \"#{recipe.root}\", \"#{user.name}\" )'>#{l['root']}</button>"
+			root_recipe_id = recipe.root
+			root_recipe_name = rr.first['name']
+		end
+	end
+
+	branche << root_button
+    branche	<< "<input type='text' class='form-control' id='root' value='#{root_recipe_id}' >"
+    branche	<< "<input type='text' class='form-control' id='root_name' value='#{root_recipe_name}' DISABLED>"
+    branche	<< '</div>'
+end
+branche << '</div>'
+
+
 puts "HTML FORM recipe<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -319,22 +360,37 @@ html = <<-"HTML"
 			</div>
   		</div>
 	</div>
+
 	<div class='row'>
-		<div class='col'>
+		<div class='col' align='right'>#{l['special']}</div>
+	</div>
+	<br>
+
+	<div class='row'>
+		<div class='col-4'>
 			#{form_photo}
 		</div>
-		<div class='col'>
+		<div class='col-1'>
 			<span onclick="words2Protocol()" >#{l['link']}</span>
 		</div>
-
-		<div align='right' class='col code'>#{recipe.code}</div>
+		<div class='col-1'>
+			<span onclick="open_tree()" >#{l['mdm']}</span>
 		</div>
+		#{branche}
+	</div>
+
+	<div class='row'>
+		<div align='right' class='col code'>#{recipe.code}</div>
 	</div>
 
 </div>
 HTML
 
 puts html
+
+#==============================================================================
+#POST PROCESS
+#==============================================================================
 
 if command == 'save'
 	puts "Save fcz<br>" if @debug
@@ -424,4 +480,54 @@ if command == 'save'
 		mdb( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{e}';", false, @debug ) unless r.first
 	end
 end
-puts "(^q^)<br>" if @debug
+
+
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
+
+if command == 'view'
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// Public button
+var recipeBit_public = function(){
+	if( document.getElementById( "public" ).checked ){
+		document.getElementById( "protect" ).checked = true;
+		document.getElementById( "draft" ).checked = false;
+	}
+};
+
+// Protect button
+var recipeBit_protect = function(){
+	if( document.getElementById( "protect" ).checked ){
+		document.getElementById( "draft" ).checked = false;
+	}else{
+		document.getElementById( "public" ).checked = false;
+	}
+};
+
+// Draft button
+var recipeBit_draft = function(){
+	if( document.getElementById( "draft" ).checked ){
+		document.getElementById( "protect" ).checked = false;
+		document.getElementById( "public" ).checked = false;
+	}
+};
+
+// Tree button
+var open_tree = function(){
+	document.getElementById( "tree" ).style.visibility = '';
+};
+
+// words paste button
+var words2Protocol = function(){
+	var protocol = document.getElementById( 'protocol' );
+	var words = document.getElementById( 'words' ).value;
+	protocol.value = protocol.value.substr( 0, protocol.selectionStart ) + words + protocol.value.substr( protocol.selectionStart );
+};
+
+</script>
+JS
+	puts js
+end

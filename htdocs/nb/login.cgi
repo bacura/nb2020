@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 login 0.03b (2022/12/17)
+#Nutrition browser 2020 login 0.03b (2023/01/11)
 
 
 #==============================================================================
@@ -28,7 +28,7 @@ def language_pack( language )
     'password'  => "パスワード",\
     'login'   => "ログイン",\
     'error'   => "IDとパスワードが一致しませんでした。<br>パスワードを忘れた方は再登録してください。",\
-    'help'  => "<img src='bootstrap-dist/icons/question-circle-gray.svg' style='height:3em; width:2em;'>",\
+    'help'  => "<img src='bootstrap-dist/icons/question-circle-ndsk.svg' style='height:3em; width:2em;'>",\
     'nb'    => "栄養ブラウザ",\
     'regist'  => "登録",\
     'empty'   => "[空き地]"
@@ -73,7 +73,7 @@ def html_top_login( l )
   <div class="container-fluid">
     <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{l['nb']}</a>
     <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-    <a href='https://neg.bacura.jp/?page_id=1154' target='manual'>#{l['help']}</a>
+    <a href='https://bacura.jp/?page_id=543' target='manual'>#{l['help']}</a>
   </div>
 </header>
 HTML

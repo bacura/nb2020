@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser history 0.21b (2022/12/17)
+#Nutritoin browser history 0.22b (2023/01/14)
 
 #==============================================================================
 # STATIC
@@ -12,7 +12,7 @@ $ALL_LIMIT = 100
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 #==============================================================================
 # DEFINITION
@@ -196,9 +196,9 @@ sub_menu( l ) if command == 'menu'
 
 
 #### Sub group
-sub_fg = 1
 if sub_fg == 'init'
 	puts "LOAD config<br>" if @debug
+	sub_fg = 1
 	r = mdb( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 	if r.first
 		if r.first['history'] != nil && r.first['history'] != ''

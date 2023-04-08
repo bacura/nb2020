@@ -1,21 +1,21 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.24b (2022/12/21)
+#Nutrition browser 2020 koyomi adding panel 0.25b (2023/04/08)
 
 #==============================================================================
-#STATIC
+# STATIC
 #==============================================================================
 @debug = false
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
-#LIBRARY
+# LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 #==============================================================================
-#DEFINITION
+# DEFINITION
 #==============================================================================
 
 # Language pack
@@ -260,7 +260,8 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 	date_html << "<tr id='day#{c}'>"
 	style = ''
 	style = 'color:red;' if week_count == 0
-	date_html << "<td style='#{style}'>#{c} (#{weeks[week_count]})</td>"
+	onclick = "onclick=\"editKoyomi2( 'init', '#{c}' )\""
+	date_html << "<td style='#{style}' #{onclick}>#{c} (#{weeks[week_count]})</td>"
 
 	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND freeze='1';", false, @debug )
 	unless r.first
@@ -407,6 +408,10 @@ html = <<-"HTML"
 	</table>
 HTML
 puts html
+
+#==============================================================================
+# POST PROCESS
+#==============================================================================
 
 #### Adding history
 add_his( user.name, code ) if /^[UP]?\d{5}/ =~ code

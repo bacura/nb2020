@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 regist 0.07b (2022/12/17)
+#Nutrition browser 2020 regist 0.08b (2023/01/11)
 
 #==============================================================================
 #STATIC
@@ -25,7 +25,7 @@ def language_pack( language )
   l['jp'] = {
     'nb'    => "栄養ブラウザ",\
     'login'   => "ログイン",\
-    'help'    => "<img src='bootstrap-dist/icons/question-circle-gray.svg' style='height:2em; width:2em;'>",\
+    'help'    => "<img src='bootstrap-dist/icons/question-circle-ndsk.svg' style='height:2em; width:2em;'>",\
     'message'   => "IDとパスワードは必須です。英数字とアンダーバー(_)のみ使用可能です。ご登録前に利用規約を確認しておいてください。",\
     'id_rule'   => "ID (4~30文字)",\
     'pass_rule' => "パスワード (30文字まで)",\
@@ -61,7 +61,7 @@ def html_top_regist( l )
   <div class="container-fluid">
     <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{l['nb']}</a>
     <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-    <a href='https://bacura.jp/?page_id=1154' target='manual'>#{l['help']}</a>
+    <a href='https://bacura.jp/?page_id=543' target='manual'>#{l['help']}</a>
   </div>
 </header>
 HTML

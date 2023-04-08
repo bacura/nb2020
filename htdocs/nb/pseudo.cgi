@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.20b (2023/01/01)
+#Nutrition browser 2020 pseudo food editer 0.21b (2023/01/14)
 
 #==============================================================================
 # STATIC
@@ -183,13 +183,13 @@ if command == 'save'
 		public_bit = 1
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE "P%";", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'P%';", false, @debug )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "P#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE "P%")", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'P%');", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -198,18 +198,18 @@ if command == 'save'
 				puts "New:#{code}>" if @debug
 			end
 		end
-	if user.status >= 8 && $NBURL != $MYURL
+	elsif user.status >= 8 && $NBURL != $MYURL
 		puts 'Community' if @debug
 		public_bit = 1
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE "C%";", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'C%';", false, @debug )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "C#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE "C%")", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'C%');", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -222,13 +222,13 @@ if command == 'save'
 		puts 'Private>' if @debug
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0 AND user='#{user.name}' ;", false, @debug )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2' AND FN LIKE "U%";", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2' AND FN LIKE 'U%';", false, @debug )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "U#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0 AND FN LIKE "U%");", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0 AND FN LIKE 'U%');", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i

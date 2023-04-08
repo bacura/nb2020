@@ -218,7 +218,7 @@ unless yyyy_mm_dd == ''
 	a = yyyy_mm_dd.split( '-' )
 	yyyy = a[0].to_i
 	mm = a[1].to_i
-	dd = a[2].to_i
+	dd = a[2].to_i if dd == 0
 end
 
 tdiv = @cgi['tdiv'].to_i

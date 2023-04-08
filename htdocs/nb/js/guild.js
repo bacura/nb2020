@@ -1,4 +1,4 @@
-//guild.js ver 0.34b (2022/12/11)
+//guild.js ver 0.35b (2023/04/08)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi //////////////////////////////////////////////////////////////
@@ -42,6 +42,18 @@ var freezeKoyomiAll = function(){
 var editKoyomi = function( com, dd ){
 	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
 	$.post( "koyomi-edit.cgi", { command:com, yyyy_mm:yyyy_mm, dd:dd }, function( data ){
+		$( "#L2" ).html( data );
+		flashBW();
+		dl2 = true;
+		dline = true;
+		displayBW();
+	});
+};
+
+// Koyomi edit 2 with yy_mm_dd
+var editKoyomi2 = function( com, dd ){
+	var yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
+	$.post( "koyomi-edit.cgi", { command:com, yyyy_mm_dd:yyyy_mm_dd, dd:dd }, function( data ){
 		$( "#L2" ).html( data );
 		flashBW();
 		dl2 = true;

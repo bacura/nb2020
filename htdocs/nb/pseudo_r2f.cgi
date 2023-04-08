@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser recipe to pseudo food 0.20b (20023/01/01)
+#Nutrition browser recipe to pseudo food 0.21b (20023/01/14)
 
 #==============================================================================
 # STATIC
@@ -82,7 +82,7 @@ r = mdb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.
 food_name = r.first['name'] if food_name == ''
 code = r.first['code']
 dish_num = r.first['dish'].to_i
-food_no, food_weight, total_weight = extract_sum( r.first['sum'], dish_num, 0 )
+food_no, food_weight = extract_sum( r.first['sum'], dish_num, 0 )[0..1]
 
 
 if command == 'form'
@@ -180,7 +180,7 @@ if command == 'save'
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "P#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'P%')", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'P%');", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -194,13 +194,13 @@ if command == 'save'
 		public_bit = 1
 		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE "C%";", false, @debug )
+			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'C%';", false, @debug )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "C#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'C%')", false, @debug )
+				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'C%');", false, @debug )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i

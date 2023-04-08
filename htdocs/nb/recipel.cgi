@@ -1,23 +1,23 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.27b (2022/12/20)
+#Nutrition browser 2020 recipe list 0.30b (2023/04/08)
 
 
 #==============================================================================
-#STATIC
+# STATIC
 #==============================================================================
 @debug = false
 #script = File.basename( $0, '.cgi' )
 page_limit = 50
 
 #==============================================================================
-#LIBRARY
+# LIBRARY
 #==============================================================================
 require 'fileutils'
 require './soul'
 
 #==============================================================================
-#DEFINITION
+# DEFINITION
 #==============================================================================
 
 # Language pack
@@ -50,6 +50,7 @@ def language_pack( language )
 		'photo' 	=> "写真",\
 		'name' 		=> "レシピ名",\
 		'status' 	=> "ステータス",\
+		'family' 	=> "親子集合",\
 		'operation' => "<img src='bootstrap-dist/icons/dpad.svg' style='height:1.2em; width:1.2em;'>&nbsp;操作",\
 		'globe' 	=> "<img src='bootstrap-dist/icons/globe.svg' style='height:1.2em; width:1.2em;'>",\
 		'lock'		=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.2em; width:1.2em;'>",\
@@ -57,10 +58,10 @@ def language_pack( language )
 		'table' 	=> "<img src='bootstrap-dist/icons/motherboard.svg' style='height:1.2em; width:1.2em;'>",\
 		'calendar' 	=> "<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>",\
 		'printer' 	=> "<img src='bootstrap-dist/icons/printer.svg' style='height:1.2em; width:1.2em;'>",\
-		'diagram' 	=> "<img src='bootstrap-dist/icons/diagram-2.svg' style='height:1.2em; width:1.2em;'>",\
+		'diagram' 	=> "<img src='bootstrap-dist/icons/diagram-3.svg' style='height:1.2em; width:1.2em;'>",\
 		'dropper'	=> "<img src='bootstrap-dist/icons/eyedropper.svg' style='height:1.2em; width:1.2em;'>",\
 		'trash' 	=> "<img src='bootstrap-dist/icons/trash.svg' style='height:1.2em; width:1.2em;'>",\
-		'root' 		=> "<img src='bootstrap-dist/icons/tree.svg' style='height:1.2em; width:1.2em;'>",\
+		'root' 		=> "<img src='bootstrap-dist/icons/person-circle.svg' style='height:1.2em; width:1.2em;'>",\
 		'favorite' 	=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.2em; width:1.2em;'>",\
 		'space' 	=> "　"
 	}
@@ -251,6 +252,84 @@ def referencing( words, uname, sql_where_ij )
 	end
 end
 
+
+def recipe_line( recipe, user, page, color, l )
+	html = "<tr style='font-size:medium; background-color:#{color};'>"
+
+	if recipe.media[0] != nil
+		html << "<td><a href='#{$PHOTO}/#{recipe.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{recipe.media[0]}-tns.jpg'></a></td>"
+	else
+		html << "<td>-</td>"
+	end
+
+	tags =''
+	recipe.tag().each do |e| tags << "&nbsp;<span class='list_tag badge bbg' onclick=\"searchDR( '#{e}' )\">#{e}</span>" end
+	if user.status >= 1
+		html << "<td onclick=\"initCB( 'load', '#{recipe.code}', '#{recipe.user}' )\">#{recipe.name}</td><td>#{tags}</td>"
+	else
+		html << "<td><a href='login.cgi'>#{recipe.name}</a></td><td>#{tags}</td>"
+	end
+
+	html << "<td>"
+	if recipe.favorite == 1
+		html << l['favorite']
+	else
+		html << l['space']
+	end
+
+	if recipe.public == 1
+		html << l['globe']
+	else
+		html << l['space']
+	end
+
+	if recipe.protect == 1
+		html << l['lock']
+	else
+		html << l['space']
+	end
+
+	if recipe.draft == 1
+		html << l['cone']
+	else
+		html << l['space']
+	end
+	html << "</td>"
+	html << "<td>"
+
+	if user.status >= 1 && recipe.user == user.name
+		html << "&nbsp;<span onclick=\"addingMeal( '#{recipe.code}', '#{recipe.name}' )\">#{l['table']}</span>&nbsp;&nbsp;"
+	end
+
+	if user.status >= 2 && recipe.user == user.name
+		html << "&nbsp;<span onclick=\"addKoyomi( '#{recipe.code}' )\">#{l['calendar']}</span>&nbsp;&nbsp;"
+	end
+
+	html << "&nbsp;<span onclick=\"print_templateSelect( '#{recipe.code}' )\">#{l['printer']}</span>&nbsp;&nbsp;"
+	if user.status >= 1 && recipe.user == user.name && ( recipe.root == nil || recipe.root == '' )
+		html << "&nbsp;<span onclick=\"recipeImport( 'subspecies', '#{recipe.code}', '#{page}' )\">#{l['diagram']}</span>"
+	elsif user.status >= 1 && recipe.user == user.name
+		html << "&nbsp;<span onclick=\"initCB( 'load', '#{recipe.root}', '#{recipe.user}' )\">#{l['root']}</span>"
+	end
+
+	if user.status >= 1 && recipe.user == user.name
+		html << "&nbsp;<span onclick=\"cp2words( '#{recipe.code}', '' )\">#{l['dropper']}</span>"
+	end
+	html << "</td>"
+
+	if recipe.user == user.name
+		if recipe.protect == 0
+			html << "<td><input type='checkbox' id='#{recipe.code}'>&nbsp;<span onclick=\"recipeDelete( '#{recipe.code}', #{page} )\">#{l['trash']}</span></td>"
+		else
+			html << "<td></td>"
+		end
+	end
+
+	html << "</tr>"
+
+	return html
+end
+
 #==============================================================================
 # Main
 #==============================================================================
@@ -277,10 +356,12 @@ role = 99
 tech = 99
 time = 99
 cost = 99
+family = 0
 words = nil
 recipe_cfg = Hash.new
 begin
 	recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
+	p recipe_cfg if @debug
 	page = recipe_cfg['page'].to_i
 	page = 1 if page == 0
 	range = recipe_cfg['range'].to_i
@@ -289,6 +370,7 @@ begin
 	tech = recipe_cfg['tech'].to_i
 	time = recipe_cfg['time'].to_i
 	cost = recipe_cfg['cost'].to_i
+	family = recipe_cfg['family'].to_i
 	words = recipe_cfg['words']
 rescue
 end
@@ -316,6 +398,7 @@ when 'reset'
 	tech = 99
 	time = 99
 	cost = 99
+	family = 0
 	words = nil
 
 when 'refer'
@@ -326,6 +409,7 @@ when 'refer'
 	tech = 99
 	time = 99
 	cost = 99
+	family = 0
 	words = @cgi['words']
 	puts "words: #{words}<br>" if @debug
 
@@ -367,13 +451,14 @@ when 'subspecies'
 	end
 
 	# Insertinbg recipe into DB
+	recipe.user = user.name
 	recipe.code = new_recipe_code
 	recipe.favorite = 0
 	recipe.public = 0
 	recipe.protect = 0
 	recipe.draft = 1
 	recipe.date = @datetime
-	recipe.root = code if command == 'subspecies'
+	recipe.root = code
 	recipe.insert_db
 
 when 'limit'
@@ -385,6 +470,7 @@ when 'limit'
 	tech = @cgi['tech'].to_i
 	time = @cgi['time'].to_i
 	cost = @cgi['cost'].to_i
+	family = @cgi['family'].to_i
 	words = @cgi['words']
 end
 range = 5 if user.status == 0
@@ -397,6 +483,7 @@ if @debug
 	puts "time: #{time}<br>"
 	puts "cost: #{cost}<br>"
 	puts "recipe_code_list: #{recipe_code_list}<br>"
+	puts "family: #{family}<br>"
 	puts "<hr>"
 end
 
@@ -510,78 +597,43 @@ end
 html_paging = pageing_html( page, page_start, page_end, page_max, l )
 
 
-recipe_html = ''
-recipes.each do |e|
-	recipe_html << '<tr style="font-size:medium;">'
-	if e.media[0] != nil
-		recipe_html << "<td><a href='#{$PHOTO}/#{e.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{e.media[0]}-tns.jpg'></a></td>"
-	else
-		recipe_html << "<td>-</td>"
-	end
+family_pair = Hash.new
+family_recipes = Hash.new
+if family == 1
+	recipes.each do |e|
+		r = mdb( "SELECT code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and root='#{e.code}' ORDER BY name;", false, @debug )
+		daughters = []
+		daughter_recipes = []
+		r.each do |ee|
+			daughters << ee['code']
 
-	tags =''
-	e.tag().each do |ee| tags << "&nbsp;<span class='list_tag badge bbg' onclick=\"searchDR( '#{ee}' )\">#{ee}</span>" end
-	if user.status >= 1
-		recipe_html << "<td onclick=\"initCB( 'load', '#{e.code}', '#{e.user}' )\">#{e.name}</td><td>#{tags}</td>"
-	else
-		recipe_html << "<td><a href='login.cgi'>#{e.name}</a></td><td>#{tags}</td>"
-	end
-
-
-	recipe_html << "<td>"
-	if e.favorite == 1
-		recipe_html << l['favorite']
-	else
-		recipe_html << l['space']
-	end
-
-	if e.public == 1
-		recipe_html << l['globe']
-	else
-		recipe_html << l['space']
-	end
-
-	if e.protect == 1
-		recipe_html << l['lock']
-	else
-		recipe_html << l['space']
-	end
-
-	if e.draft == 1
-		recipe_html << l['cone']
-	else
-		recipe_html << l['space']
-	end
-	recipe_html << "</td>"
-	recipe_html << "<td>"
-
-	if user.status >= 1 && e.user == user.name
-		recipe_html << "	<span onclick=\"addingMeal( '#{e.code}', '#{e.name}' )\">#{l['table']}</span>&nbsp;&nbsp;"
-	end
-
-	if user.status >= 2 && e.user == user.name
-		recipe_html << "&nbsp;<span onclick=\"addKoyomi( '#{e.code}' )\">#{l['calendar']}</span>&nbsp;&nbsp;"
-	end
-
-	recipe_html << "	<span onclick=\"print_templateSelect( '#{e.code}' )\">#{l['printer']}</span>&nbsp;&nbsp;"
-
-	if user.status >= 1 && e.user == user.name && ( e.root == nil || e.root == '' )
-		recipe_html << "	<span onclick=\"recipeImport( 'subspecies', '#{e.code}', '#{page}' )\">#{l['diagram']}</span>"
-	end
-
-	if user.status >= 1 && e.user == user.name && ( e.root == nil || e.root == '' )
-		recipe_html << "	<span onclick=\"cp2words( '#{e.code}', '' )\">#{l['dropper']}</span>"
-	end
-	recipe_html << "</td>"
-
-	if e.user == user.name
-		if e.protect == 0
-			recipe_html << "<td><input type='checkbox' id='#{e.code}'>&nbsp;<span onclick=\"recipeDelete( '#{e.code}', #{page} )\">#{l['trash']}</span></td>"
-		else
-			recipe_html << "<td></td>"
+			ro = Recipe.new( user.name )
+      		ro.load_db( ee['code'], true )
+			daughter_recipes << ro
+		end
+		if daughters.size > 0
+			family_pair[e.code] = daughters
+			family_recipes[e.code] = daughter_recipes
 		end
 	end
-	recipe_html << '</tr>'
+end
+
+recipe_html = ''
+recipes.each do |e|
+	if family == 1
+		if e.root == '' && family_pair[e.code] == nil
+			recipe_html << recipe_line( e, user, page, 'aliceblue', l )
+
+		elsif family_pair.key?( e.code )
+			recipe_html << recipe_line( e, user, page, 'lavender', l )
+
+			family_recipes[e.code].each do |ee|
+				recipe_html << recipe_line( ee, user, page, 'snow', l )
+			end
+		end
+	else
+		recipe_html << recipe_line( e, user, page, 'aliceblue', l )
+	end
 end
 
 
@@ -605,23 +657,28 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
+		<div class='col-6'>
+			<div class="form-check">
+  				<input class="form-check-input" type="checkbox" id="family" #{checked( family )}>
+  				<label class='form-check-label'>#{l['family']}</label>
+			</div>
+		</div>
 		<div class='col' align="right"><span class="badge rounded-pill npill" type="button" onclick="recipeList( 'reset' )">#{l['reset']}</span></div>
 	</div>
 	<br>
 
 	<table class="table table-sm table-hover">
-	<thead>
-		<tr>
-			<td>#{l['photo']}</td>
-			<td>#{l['name']}</td>
-			<td></td>
-			<td>#{l['status']}</td>
-			<td>#{l['operation']}</td>
-			<td></td>
-		</tr>
-	</thead>
-
-		#{recipe_html}
+		<thead>
+			<tr>
+				<td>#{l['photo']}</td>
+				<td>#{l['name']}</td>
+				<td></td>
+				<td>#{l['status']}</td>
+				<td>#{l['operation']}</td>
+				<td></td>
+			</tr>
+		</thead>
+			#{recipe_html}
 	</table>
 
 	<div class='row'>
@@ -633,7 +690,12 @@ HTML
 
 puts html
 
+
+#==============================================================================
+# POST PROCESS
+#==============================================================================
+
 #### 検索設定の保存
 #words = nil if recipe_code_list.size == 0
-recipe_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "words" => words } )
+recipe_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "family" => family, "words" => words } )
 mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )

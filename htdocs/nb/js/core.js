@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.40b (2023/01/08)
+// Nutorition Browser 2020 core.js 0.42b (2023/04/08)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -978,32 +978,6 @@ var recipeEdit = function( com, code ){
 };
 
 
-// レシピ編集の公開ボタンを押して
-var recipeBit_public = function(){
-	if( document.getElementById( "public" ).checked ){
-		document.getElementById( "protect" ).checked = true;
-		document.getElementById( "draft" ).checked = false;
-	}
-};
-
-// レシピ編集の保護ボタンを押して
-var recipeBit_protect = function(){
-	if( document.getElementById( "protect" ).checked ){
-		document.getElementById( "draft" ).checked = false;
-	}else{
-		document.getElementById( "public" ).checked = false;
-	}
-};
-
-// レシピ編集の仮組ボタンを押して
-var recipeBit_draft = function(){
-	if( document.getElementById( "draft" ).checked ){
-		document.getElementById( "protect" ).checked = false;
-		document.getElementById( "public" ).checked = false;
-	}
-};
-
-
 // レシピ編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
 var recipeSave = function( code ){
 	var recipe_name = document.getElementById( "recipe_name" ).value;
@@ -1017,13 +991,14 @@ var recipeSave = function( code ){
 		var time = document.getElementById( "time" ).value;
 		var cost = document.getElementById( "cost" ).value;
 		var protocol = document.getElementById( "protocol" ).value;
+		var root = document.getElementById( "root" ).value;
 
 		if( document.getElementById( "favorite" ).checked ){ var favorite = 1 }
 		if( document.getElementById( "public" ).checked ){ var public = 1 }
 		if( document.getElementById( "protect" ).checked ){ var protect = 1 }
 		if( document.getElementById( "draft" ).checked ){ var draft = 1 }
 
-		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
+		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
 			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#L3" ).html( data );});
@@ -1042,14 +1017,6 @@ var recipeProtocol = function( code ){
 			displayVIDEO( '●' );
 		});
 	}
-};
-
-
-// レシピ編集エリアのカーソル位置にwordsをペーストする。
-function words2Protocol(){
-	var protocol = document.getElementById( 'protocol' );
-	var words = document.getElementById( 'words' ).value;
-	protocol.value = protocol.value.substr( 0, protocol.selectionStart ) + '&' + words + protocol.value.substr( protocol.selectionStart );
 };
 
 
@@ -1078,7 +1045,9 @@ var recipeListP = function( page ){
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
 	var words = document.getElementById( "words" ).value;
-	$.post( "recipel.cgi", { command:command, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, words:words }, function( data ){ $( "#L1" ).html( data );});
+	if( document.getElementById( "family" ).checked ){ var family = 1; }else{ var family = 0; }
+
+	$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, words:words, family:family }, function( data ){ $( "#L1" ).html( data );});
 };
 
 
@@ -1090,10 +1059,11 @@ var recipeDelete = function( code, page ){
 	var tech = document.getElementById( "tech" ).value;
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
+	if( document.getElementById( "family" ).checked ){ var family = 1; }else{ var family = 0; }
 
 	if( document.getElementById( code ).checked ){
-		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){
-			$.post( "recipel.cgi", { command:command, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){
+		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family }, function( data ){
+			$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family }, function( data ){
 				$( "#L1" ).html( data );
 				displayVIDEO( 'Removed' );
 			});
@@ -1112,10 +1082,14 @@ var recipeImport = function( com, code, page ){
 	var tech = document.getElementById( "tech" ).value;
 	var time = document.getElementById( "time" ).value;
 	var cost = document.getElementById( "cost" ).value;
+	if( document.getElementById( "family" ).checked ){ var family = 1; }else{ var family = 0; }
 
-	$.post( "recipel.cgi", { command:com, code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page }, function( data ){
+	$.post( "recipel.cgi", { command:com, code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family }, function( data ){
 		$( "#L1" ).html( data );
-		displayVIDEO( '+recipe' );
+		displayVIDEO( 'Recipe has branched' );
+
+//		var code_user = data.split( ':' );
+//		initCB( 'view', code_user[0], code_user[1] );
 	});
 };
 
@@ -1664,30 +1638,4 @@ var saveRefIntake = function(){
 	}else{
 		displayVIDEO( 'FCZ name!(>_<)' );
 	}
-};
-
-// Ref instake init
-var changeRISex = function( sex ){
-	if( sex == 0 ){
-		document.getElementById( 'ff_non' ).checked = true;
-		document.getElementById( 'ff_m' ).checked = false;
-		document.getElementById( 'ff_m' ).disabled = true;
-		document.getElementById( 'ff_non' ).disabled = true;
-		document.getElementById( 'ff_p1' ).disabled = true;
-		document.getElementById( 'ff_p2' ).disabled = true;
-		document.getElementById( 'ff_p3' ).disabled = true;
-		document.getElementById( 'ff_l' ).disabled = true;
-	}else{
-		document.getElementById( 'ff_m' ).disabled = false;
-		document.getElementById( 'ff_non' ).disabled = false;
-		document.getElementById( 'ff_p1' ).disabled = false;
-		document.getElementById( 'ff_p2' ).disabled = false;
-		document.getElementById( 'ff_p3' ).disabled = false;
-		document.getElementById( 'ff_l' ).disabled = false;
-	}
-};
-
-
-var changeRIP = function(){
-		document.getElementById( 'ff_m' ).checked = false;
 };

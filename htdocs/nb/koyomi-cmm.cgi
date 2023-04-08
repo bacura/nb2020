@@ -1,26 +1,55 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.08b (2022/09/16)
+#Nutrition browser 2020 koyomi menu copy / move 0.09b (2023/04/09)
 
 
 #==============================================================================
-#LIBRARY
+# STATIC
 #==============================================================================
-require './probe'
+@debug = false
+#script = File.basename( $0, '.cgi' )
+
+#==============================================================================
+# LIBRARY
+#==============================================================================
+require './soul'
 require './brain'
 
-
 #==============================================================================
-#STATIC
-#==============================================================================
-script = 'koyomi-cmm'
-@debug = false
-
-
-#==============================================================================
-#DEFINITION
+# DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'sun' 		=> "日",\
+		'mon' 		=> "月",\
+		'tue' 		=> "火",\
+		'wed' 		=> "水",\
+		'thu' 		=> "木",\
+		'fri' 		=> "金",\
+		'sat' 		=> "土",\
+		'year' 		=> "年",\
+		'breakfast' => "朝食",\
+		'lunch' 	=> "昼食",\
+		'dinner' 	=> "夕食",\
+		'supply'	=> "間食 / 補食",\
+		'time'		=> "分間",\
+		'copy' 		=> "複　製",\
+		'move' 		=> "移　動",\
+		'inheritance'=> "時間継承",\
+		'return' 	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
+		'joystick' 	=> "<img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'>",\
+		'clock'		=> "<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>",\
+		'calendar'	=> "<img src='bootstrap-dist/icons/calendar.svg' style='height:2em; width:2em;'>",\
+		'return2'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -29,7 +58,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 #### Getting POST
@@ -157,22 +186,21 @@ end
 
 
 puts 'Save button<br>' if @debug
-save_button_txt = lp[12]
-save_button_txt = lp[8] if cm_mode == 'move'
+save_button_txt = l['copy']
+save_button_txt = l['move'] if cm_mode == 'move'
 save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{origin}' )\">#{save_button_txt}</button>"
 
 
 puts 'Date HTML<br>' if @debug
 date_html = ''
 week_count = calendar.wf
-weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
+weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 1.upto( calendar.ddl ) do |c|
 	date_html << "<tr id='day#{c}'>"
-	if week_count == 0
-		date_html << "<td style='color:red;'>#{c} (#{weeks[week_count]})</td>"
-	else
-		date_html << "<td>#{c} (#{weeks[week_count]})</td>"
-	end
+	style = ''
+	style = 'color:red;' if week_count == 0
+	onclick = "onclick=\"editKoyomi2( 'init', '#{c}' )\""
+	date_html << "<td style='#{style}' #{onclick}>#{c} (#{weeks[week_count]})</td>"
 
 	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false, @debug )
 	unless r.first
@@ -207,7 +235,7 @@ end
 
 puts 'tdiv HTML<br>' if @debug
 tdiv_html = ''
-tdiv_set = [ lp[13], lp[14], lp[15], lp[16] ]
+tdiv_set = [ l['breakfast'], l['lunch'], l['dinner'], l['supply'] ]
 tdiv_html << "<select id='tdiv_cmm' class='form-select form-select-sm'>"
 0.upto( 3 ) do |c| tdiv_html << "<option value='#{c}' #{$SELECT[tdiv == c]}>#{tdiv_set[c]}</option>" end
 tdiv_html << "</select>"
@@ -216,12 +244,12 @@ tdiv_html << "</select>"
 puts 'SELECT HH block<br>' if @debug
 meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
 eat_time_html = "<div class='input-group input-group-sm'>"
-eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm_cmm' )\">#{lp[18]}</label>"
+eat_time_html << "<label class='input-group-text btn-info' onclick=\"nowKoyomi( 'hh_mm_cmm' )\">#{l['clock']}</label>"
 eat_time_html << "<input type='time' step='60' id='hh_mm_cmm' value='#{hh_mm}' class='form-control' style='min-width:100px;'>"
 eat_time_html << "<select id='meal_time_cmm' class='form-select form-select-sm'>"
 meal_time_set.each do |e| eat_time_html << "<option value='#{e}' #{$SELECT[meal_time == e]}>#{e}</option>" end
 eat_time_html << "</select>"
-eat_time_html << "<label class='input-group-text'>#{lp[19]}</label>"
+eat_time_html << "<label class='input-group-text'>#{l['time']}</label>"
 eat_time_html << "</div>"
 
 
@@ -232,10 +260,10 @@ carry_on_html << '<label class="form-check-label">時間継承</label>'
 
 return_button = ''
 if yyyy_ == nil
-	return_button << "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[17]}</div>"
+	return_button << "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{l['return']}</div>"
 else
-	return_button << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy_}', '#{mm_}', '#{dd_}' )\">#{lp[21]}</div>"
-	return_button << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{lp[17]}</div>"
+	return_button << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy_}', '#{mm_}', '#{dd_}' )\">#{l['return']}</div>"
+	return_button << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{yyyy}', '#{mm}', '#{dd}' )\">#{l['return2']}</div>"
 end
 
 
@@ -243,8 +271,8 @@ html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col-3'><h5>#{yyyy} / #{mm} / #{dd} (#{tdiv_set[tdiv]})</h5></div>
-		<div align='center' class='col-2 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{lp[11]}</div>
-		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi();">#{lp[20]}</div>
+		<div align='center' class='col-2 joystic_koyomi' onclick="window.location.href='#day#{calendar.dd}';">#{l['joystick']}</div>
+		<div align='center' class='col-3 joystic_koyomi' onclick="initKoyomi();">#{l['calendar']}</div>
 		#{return_button}
 	</div>
 	<br>
@@ -272,10 +300,10 @@ html = <<-"HTML"
 	<thead>
     	<tr>
      		<th align='center'></th>
-     		<th align='center'>#{lp[13]}</th>
-     		<th align='center'>#{lp[14]}</th>
-     		<th align='center'>#{lp[15]}</th>
-     		<th align='center'>#{lp[16]}</th>
+     		<th align='center'>#{l['breakfast']}</th>
+     		<th align='center'>#{l['lunch']}</th>
+     		<th align='center'>#{l['dinner']}</th>
+     		<th align='center'>#{l['supply']}</th>
     	</tr>
   	</thead>
 	#{date_html}
