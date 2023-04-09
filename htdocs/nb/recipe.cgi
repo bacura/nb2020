@@ -275,7 +275,7 @@ form_photo << '</form></div>'
 puts "branche parts<br>" if @debug
 branche = "<div class='col' id='tree' style='visibility:hidden;'>"
 r = mdb( "SELECT name, code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.code}';", false, @debug )
-if r.first
+if r.first && recipe.code != nil
     branche	<< '<ul class="list-group">'
 	r.each do |e|
 		branche << "<li class='list-group-item list-group-item-action' onclick='initCB( \"load\", \"#{e['code']}\", \"#{user.name}\" )'>#{e['name']}&nbsp;(#{e['code']})</li>"
@@ -286,7 +286,7 @@ else
 	branche	<< '<div class="input-group input-group-sm">'
 	root_recipe_id = ''
 	root_recipe_name = ''
-	root_button = "<button class='btn btn-sm btn-secondary'>#{l['root']}</button>"
+	root_button = "<button class='btn btn-sm btn-secondary' onclick='words2Root()'>#{l['root']}</button>"
 
 	if recipe.root != ""
 		rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.root}';", false, @debug )
@@ -520,11 +520,16 @@ var open_tree = function(){
 	document.getElementById( "tree" ).style.visibility = '';
 };
 
-// words paste button
+// words paste to protocol button
 var words2Protocol = function(){
 	var protocol = document.getElementById( 'protocol' );
 	var words = document.getElementById( 'words' ).value;
 	protocol.value = protocol.value.substr( 0, protocol.selectionStart ) + words + protocol.value.substr( protocol.selectionStart );
+};
+
+// words paste to mother button
+var words2Root = function(){
+	document.getElementById( 'root' ).value = document.getElementById( 'words' ).value;
 };
 
 </script>

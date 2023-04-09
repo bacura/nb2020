@@ -374,6 +374,8 @@ when 'clear'
 		recipe_name = ''
 		code = ''
 		dish_num = 1
+
+
 	# 1つずつ削除
 	else
 		food_list.delete_at( order.to_i )
