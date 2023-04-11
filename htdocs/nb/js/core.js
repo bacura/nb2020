@@ -979,7 +979,7 @@ var recipeEdit = function( com, code ){
 
 
 // レシピ編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
-var recipeSave = function( code ){
+var recipeSave = function( com, code ){
 	var recipe_name = document.getElementById( "recipe_name" ).value;
 	if( recipe_name == '' ){
 		displayVIDEO( 'Recipe name! (>_<)');
@@ -998,7 +998,7 @@ var recipeSave = function( code ){
 		if( document.getElementById( "protect" ).checked ){ var protect = 1 }
 		if( document.getElementById( "draft" ).checked ){ var draft = 1 }
 
-		$.post( "recipe.cgi", { command:'save', code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
+		$.post( "recipe.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
 			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#L3" ).html( data );});

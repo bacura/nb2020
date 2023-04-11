@@ -35,7 +35,7 @@ def language_pack( language )
 		'name' 		=> "レシピ名",\
 		'save' 		=> "保存",\
 		'protocol' 	=> "調理手順",\
-		'special' 	=> "【行頭特殊記号】　![文字]:強調、@[文字]:ただし書き（薄カッコ表示）、#[文字]:コメント（非表示）、&[レシピコード]:参照レシピ",\
+		'special' 	=> "【行頭特殊記号】　<b>!</b>[文字]:強調、<b>@</b>[文字]:ただし書き（薄カッコ表示）、<b>#</b>[文字]:コメント（非表示）、<b>&</b>[レシピコード]:参照レシピ",\
 		'root' 		=> "母",\
 		'branch' 	=> "娘",\
 		'favorite' 	=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.0em; width:1.0em;'>お気に入り",\
@@ -44,8 +44,8 @@ def language_pack( language )
 		'protect' 	=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.0em; width:1.0em;'>保護",\
 		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>",\
 		'link'		=> "<img src='bootstrap-dist/icons/paperclip.svg' style='height:2.4em; width:2.4em;'>",\
+		'division'	=> "<img src='bootstrap-dist/icons/virus-p.svg' style='height:1.2em; width:1.2em;'>",\
 		'mdm'		=> "<img src='bootstrap-dist/icons/diagram-3.svg' style='height:2.4em; width:2.4em;'>",\
-		'spchar' 	=> "!…強調　@…カッコ書き　#…コメント（表示なし）　&…リンク"
 	}
 
 	return l[language]
@@ -86,11 +86,12 @@ when 'protocol'
 	recipe.update_db
 	exit
 
-when 'save'
+when 'save', 'division'
 	require 'fileutils'
 	recipe.load_cgi( @cgi )
 
-	p recipe.root
+	# Avoiding loop
+	 recipe.root = '' if recipe.root == recipe.code
 
 	# excepting for tags
 	recipe.protocol = wash( recipe.protocol )
@@ -138,6 +139,8 @@ when 'save'
 			recipe.public = 0
 			recipe.update_db
 
+			copy_flag = true if command == 'division'
+
 		# Normal mode
 		elsif recipe.draft == 0 && recipe.protect == 0
 			if recipe.name == pre_recipe.name
@@ -162,7 +165,7 @@ when 'save'
 			recipe.code = generate_code( user.name, 'r' )
 
 			# Copying name
-			if recipe.name == pre_recipe.name && user.name == pre_recipe.user
+			if recipe.name == pre_recipe.name && user.name == pre_recipe.user && command != 'division'
 				t = pre_recipe.name.match( /\((\d+)\)$/ )
 				sn = 1
 				sn = t[1].to_i + 1 if t != nil
@@ -271,6 +274,9 @@ else
 end
 form_photo << '</form></div>'
 
+division = ''
+division = "<span onclick=\"recipeSave( 'division', '#{recipe.code}' )\">#{l['division']}</span>" if recipe.draft == 1
+
 
 puts "branche parts<br>" if @debug
 branche = "<div class='col' id='tree' style='visibility:hidden;'>"
@@ -300,6 +306,7 @@ else
 	branche << root_button
     branche	<< "<input type='text' class='form-control' id='root' value='#{root_recipe_id}' >"
     branche	<< "<input type='text' class='form-control' id='root_name' value='#{root_recipe_name}' DISABLED>"
+    branche	<< "&nbsp;&nbsp;#{division}"
     branche	<< '</div>'
 end
 branche << '</div>'
@@ -340,7 +347,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class="col-1">
-			<button class="btn btn-sm btn-outline-primary" type="button" onclick="recipeSave( '#{recipe.code}' )">#{l['save']}</button>
+			<button class="btn btn-sm btn-outline-primary" type="button" onclick="recipeSave( 'save', '#{recipe.code}' )">#{l['save']}</button>
     	</div>
     </div>
     <br>
@@ -353,16 +360,11 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<div class="col form-group">
-			<div class="col">
-    			<label for="exampleFormControlTextarea1">#{l['protocol']}</label>
-				<textarea class="form-control" id="protocol" rows="10" onchange="recipeProtocol( '#{recipe.code}' )">#{recipe.protocol}</textarea>
-			</div>
-  		</div>
+		<div class="col-2">#{l['protocol']}</div>
+		<div class="col-10" align='right'>#{l['special']}</div>
 	</div>
-
 	<div class='row'>
-		<div class='col' align='right'>#{l['special']}</div>
+		<textarea class="form-control" id="protocol" rows="10" onchange="recipeProtocol( '#{recipe.code}' )">#{recipe.protocol}</textarea>
 	</div>
 	<br>
 
