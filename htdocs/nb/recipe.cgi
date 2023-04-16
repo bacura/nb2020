@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.13b (2023/04/08)
+#Nutrition browser 2020 recipe editor 0.14b (2023/04/15)
 
 #==============================================================================
 #COMMON LIBRARY
@@ -279,7 +279,7 @@ division = "<span onclick=\"recipeSave( 'division', '#{recipe.code}' )\">#{l['di
 
 
 puts "branche parts<br>" if @debug
-branche = "<div class='col' id='tree' style='visibility:hidden;'>"
+branche = "<div class='col' id='tree' style='display:none;'>"
 r = mdb( "SELECT name, code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.code}';", false, @debug )
 if r.first && recipe.code != nil
     branche	<< '<ul class="list-group">'
@@ -519,7 +519,11 @@ var recipeBit_draft = function(){
 
 // Tree button
 var open_tree = function(){
-	document.getElementById( "tree" ).style.visibility = '';
+	if( document.getElementById( "tree" ).style.display == 'none' ){
+		document.getElementById( "tree" ).style.display = 'block';
+	}else{
+		document.getElementById( "tree" ).style.display = 'none';
+	}
 };
 
 // words paste to protocol button

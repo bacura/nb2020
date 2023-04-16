@@ -979,24 +979,30 @@ var recipeEdit = function( com, code ){
 
 
 // レシピ編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
-var recipeSave = function( com, code ){
-	var recipe_name = document.getElementById( "recipe_name" ).value;
+const recipeSave = function( com, code ){
+	const recipe_name = document.getElementById( "recipe_name" ).value;
 	if( recipe_name == '' ){
 		displayVIDEO( 'Recipe name! (>_<)');
 	}
 	else{
-		var type = document.getElementById( "type" ).value;
-		var role = document.getElementById( "role" ).value;
-		var tech = document.getElementById( "tech" ).value;
-		var time = document.getElementById( "time" ).value;
-		var cost = document.getElementById( "cost" ).value;
-		var protocol = document.getElementById( "protocol" ).value;
-		var root = document.getElementById( "root" ).value;
+		const type = document.getElementById( "type" ).value;
+		const role = document.getElementById( "role" ).value;
+		const tech = document.getElementById( "tech" ).value;
+		const time = document.getElementById( "time" ).value;
+		const cost = document.getElementById( "cost" ).value;
+		const protocol = document.getElementById( "protocol" ).value;
 
-		if( document.getElementById( "favorite" ).checked ){ var favorite = 1 }
-		if( document.getElementById( "public" ).checked ){ var public = 1 }
-		if( document.getElementById( "protect" ).checked ){ var protect = 1 }
-		if( document.getElementById( "draft" ).checked ){ var draft = 1 }
+		let favorite = 0;
+		let public = 0;
+		let protect = 0;
+		let draft = 0;
+		if( document.getElementById( "favorite" ).checked ){ favorite = 1; }
+		if( document.getElementById( "public" ).checked ){ public = 1; }
+		if( document.getElementById( "protect" ).checked ){ protect = 1; }
+		if( document.getElementById( "draft" ).checked ){ draft = 1; }
+
+		let root = '';
+		if( document.getElementById( "root" ) !== null ){ root = document.getElementById( "root" ).value; }
 
 		$.post( "recipe.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );

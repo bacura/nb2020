@@ -1,17 +1,9 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.22b (2022/11/12)
+#Nutrition browser 2020 print web page 0.23b (2023/04/15)
 
 #==============================================================================
-#LIBRARY
-#==============================================================================
-require './soul'
-require './brain'
-require 'rqrcode'
-
-
-#==============================================================================
-#STATIC
+# STATIC
 #==============================================================================
 @debug = false
 fct_num = 14
@@ -19,9 +11,15 @@ frct_select = %w( 四捨五入 四捨五入 切り上げ 切り捨て )
 accu_check = %w( 通常合計 精密合計 )
 ew_check = %w( 単純g 予想g )
 
+#==============================================================================
+# LIBRARY
+#==============================================================================
+require './soul'
+require './brain'
+require 'rqrcode'
 
 #==============================================================================
-#DEFINITION
+# DEFINITION
 #==============================================================================
 
 #### html_header for printv
@@ -118,9 +116,9 @@ def extract_foods( recipe, dish, template, ew_mode )
 		few = fw if few == nil
 
 		if fn == '-'
-			return_foods << "<tr><td></td></tr>\n"
+			return_foods << "<tr style='line-height:0.1em; background-color:whitesmoke;'><td></td><td>&nbsp;</td><td></td></tr>\n"
 		elsif fn == '+'
-			return_foods << "<tr><td class='print_subtitle'>#{fi}</td></tr>\n"
+			return_foods << "<tr style='line-height:0.5em; background-color:lemonchiffon;'><td></td><td>(#{fi})</td><td></td></tr>\n"
 		else
 			# 人数分調整
 			z, fuv = food_weight_check( fuv ) if /\// =~ fuv

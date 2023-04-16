@@ -12,7 +12,7 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 #==============================================================================
@@ -107,7 +107,7 @@ def meals( e, l, user, freeze_flag )
 			rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}';", false, @debug )
 			if rr.first
 				item_name = rr.first['name']
-				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
+				onclick = " onclick=\"modifyKoyomi( 'modify', '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
 				recipe_button = "<span onclick=\"initCB( 'load', '#{code}' )\">#{l['recipe']}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
@@ -118,7 +118,11 @@ def meals( e, l, user, freeze_flag )
 			rr = mdb( q, false, @debug )
 			if rr.first
 				item_name = rr.first['name']
-				onclick = " onclick=\"modifyKoyomi( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\"" if freeze_flag == 0
+ 				if freeze_flag == 0
+ 					onclick = " onclick=\"modifyKoyomi( 'modify', '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\""
+ 				else
+ 					onclick = " onclick=\"modifyKoyomi( 'fzc_mode', '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{wt}', '#{unit}', '#{c}' )\""
+ 				end
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
 			end
@@ -452,7 +456,7 @@ end
 
 
 visionnerz_html = ''
-visionnerz_html = "<div align='center' class='col-1 joystic_koyomi' onclick=\"visionnerz( '#{yyyy}-#{mm}-#{dd}' )\">#{l['visionnerz']}</div>" if user.status >= 5
+visionnerz_html = "<div align='center' class='col-1' onclick=\"visionnerz( '#{yyyy}-#{mm}-#{dd}' )\">#{l['visionnerz']}</div>" if user.status >= 5
 
 
 html = <<-"HTML"

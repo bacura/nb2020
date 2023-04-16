@@ -40,8 +40,8 @@ def language_pack( language )
 		'save' 		=> "登　録",\
 		'volume' 	=> "量",\
 		'time'		=> "分間",\
-		'modify'	=> "変更",\
-		'copy' 		=> "複製",\
+		'modify'	=> "変　更",\
+		'copy' 		=> "複　製",\
 		'inheritance'=> "時間継承",\
 		'return' 	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
 		'joystick' 	=> "<img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'>",\
@@ -120,7 +120,7 @@ origin = @cgi['origin']
 dd = 1 if dd == 0
 ev = 100 if ev == 0 || ev == '' || ev == nil
 origin_date = origin.split( ':' )
-origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{order}" if command == 'modify' && origin == ''
+origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{order}" if ( command == 'modify' || command == 'fzcopy' ) && origin == ''
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "code:#{code}<br>\n"
@@ -192,7 +192,7 @@ if command == 'move' && copy != 1
 end
 
 
-if command == 'save' || command == 'move'
+if command == 'save' || command == 'move' || command == 'fzcopy'
 	puts 'Save food<br>' if @debug
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
 	if r.first
@@ -229,7 +229,13 @@ if command == 'modify' || command == 'move' || command == 'move_fix'
     copy_html << "<label class='form-check-label'>#{l['copy']}</label>"
 	copy_html << "</div>"
 
-	save_button = "<button class='btn btn-sm btn-success' type='button' onclick=\"saveKoyomiAdd( 'move', '#{code}', '#{origin}' )\">#{l['modify']}</button>"
+	save_button = "<button class='btn btn-sm btn-info' type='button' onclick=\"saveKoyomiAdd( 'move', '#{code}', '#{origin}' )\">#{l['modify']}</button>"
+elsif command == 'fzc_mode' || command == 'fzcopy'
+	copy_html << "<div class='form-group form-check'>"
+    copy_html << "<input type='checkbox' class='form-check-input' id='copy' CHECKED DISABLED>"
+    copy_html << "<label class='form-check-label'>#{l['copy']}</label>"
+	copy_html << "</div>"
+	save_button = ""
 end
 
 
@@ -270,7 +276,9 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, @debug )
 			onclick = ''
 			if command == 'modify' || command == 'move' || command == 'move_fix'
-				onclick = "onclick=\"modifysaveKoyomi_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
+				onclick = "onclick=\"k2Koyomi_direct( 'move', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
+			elsif command == 'fzc_mode' || command == 'fzcopy'
+				onclick = "onclick=\"k2Koyomi_direct( 'fzcopy', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			else
 				onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
 			end
@@ -348,7 +356,7 @@ end
 
 #### Return button
 return_joystic = ''
-if command == 'modify' || command == 'move'
+if command == 'modify' || command == 'move' || command == 'fzc_mode' || command == 'fzcopy'
 	return_joystic = "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{origin_date[0]}', '#{origin_date[1]}', '#{origin_date[2]}' )\">#{l['return2']}</div>"
 	return_joystic << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{l['return']}</div>"
 else

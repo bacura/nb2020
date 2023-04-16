@@ -877,12 +877,12 @@ food_list.each do |e|
  	html << "		<span onclick=\"upperCB( '#{c}', '#{code}' )\">#{l['up']}</span>"
  	html << "		<span onclick=\"lowerCB( '#{c}', '#{code}' )\">#{l['down']}</span>"
  	if e.fn == '-'
-	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>"
-		html << "</div><div class='col-9'><hr></div>"
+	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}></div>"
+		html << "<div class='col-9'><hr></div>"
 		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
  	elsif e.fn == '+'
-	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>"
-		html << "</div><div class='col-3 text-secondary cb_food_label'>( #{e.init} )</div>"
+	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}></div>"
+		html << "<div class='col-3 text-secondary cb_food_label' align='right'>( #{e.init} )</div>"
 		html << "<div class='col-6'><hr></div>"
 		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
   	else
