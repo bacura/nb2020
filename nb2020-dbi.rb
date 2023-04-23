@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.55b (2023/01/03)
+#nb2020-dbi.rb 0.60b (2023/4/22)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -435,7 +435,7 @@ def ext_init( gycv_file, shun_file, unit_file )
 			unith = {}
 			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 			food_no = a[0]
-			unit[a[1]] = a[2]
+			unith[a[1]] = a[2]
 			query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit}' WHERE FN='#{food_no}';"
 			$DB.query( query )
 		end
@@ -452,7 +452,7 @@ def dic_init()
 	if res.first
 		puts 'dic table already exists.'
 	else
-		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), default VARCHAR(8), user VARCHAR(32), def_fn VARCHAR(16));'
+		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), user VARCHAR(32), def_fn VARCHAR(16));'
 		$DB.query( query )
 		puts 'dic table has been created.'
 
@@ -736,7 +736,7 @@ def recipei_init()
 	if res.first
 		puts 'recipei table already exists.'
 	else
-		query = 'CREATE TABLE recipei (user VARCHAR(32), word VARCHAR(64), code VARCHAR(32), public TINYINT(1), count SMALLINT UNSIGNED;'
+		query = 'CREATE TABLE recipei (user VARCHAR(32), word VARCHAR(64), code VARCHAR(32), public TINYINT(1), count SMALLINT UNSIGNED);'
 		$DB.query( query )
 		puts 'recipei table has been created.'
 	end
@@ -804,7 +804,7 @@ def media_init()
 	if res.first
 		puts 'media table already exists.'
 	else
-		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(64), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, z UNSIGNED TINYINT );'
+		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(64), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, zidx TINYINT UNSIGNED);'
 		$DB.query( query )
 		puts 'media table has been created.'
 	end
@@ -1237,12 +1237,14 @@ admin_user = gets.chop
 print 'DB Administrator password？'
 admin_pass = gets.chop
 
-$DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+#==============================================================================
 $DBA = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{admin_user}", :password => "#{admin_pass}", :encoding => "utf8" )
 
-#==============================================================================
 db_create_nb()
 db_create_rr()
+
+#==============================================================================
+$DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
 fcts_init( base_file, sub_files )
 fct_init( base_file, plus_fct )
