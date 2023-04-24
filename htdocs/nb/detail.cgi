@@ -1,17 +1,17 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.12b (2022/12/18)
+#Nutrition browser 2020 detail viewer 0.13b (2023/4/23)
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 #==============================================================================
@@ -103,6 +103,7 @@ unit_select = []
 selectu = 'g' if selectu == ''
 uk = BigDecimal( '1' )
 r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false, @debug )
+p r.first
 if r.first
 	unith = JSON.parse( r.first['unit'] )
 	unith.each do |k, v|

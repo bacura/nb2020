@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.42b (2023/04/08)
+// Nutorition Browser 2020 core.js 0.43b (2023/04/23)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -250,10 +250,13 @@ var summonL4 = function( key, direct ){
 };
 
 
+//////////////////////////////////////////////////////////////////////////////////
+// Browsing nutritional Information subset ///////////////////////////////////////////////////////////////////////
+
 // Display foods on BWL5
-var summonL5 = function( key, direct ){
+var viewDetailSub = function( com, key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
-	$.get( "square.cgi", { channel:"fctb_l5", food_key:key }, function( data ){ $( "#L5" ).html( data );});
+	$.post( "detail-sub.cgi", { command:com, food_key:key }, function( data ){ $( "#L5" ).html( data );});
 	dl5 = true;
 	dlf = false;
 	displayBW();
@@ -261,10 +264,10 @@ var summonL5 = function( key, direct ){
 
 
 // Changing weight of food
-var changeWeight = function( key, fn ){
+var changeDSWeight = function( com, key, fn ){
 	var fraction_mode = document.getElementById( "fraction" ).value;
 	var weight = document.getElementById( "weight" ).value;
-	$.get( "square.cgi", { channel:"fctb_l5", food_key:key, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#L5" ).html( data );});
+	$.post( "detail-sub.cgi", { command:com, food_key:key, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#L5" ).html( data );});
 };
 
 
