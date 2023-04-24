@@ -37,7 +37,7 @@ when 'unit'
 when 'gycv'
 	export = ''
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, false )
-	r.each do |e| export << "#{e['FN']}\t#{e['gycv']}\n" end
+	r.each do |e| export << "#{e['FN']}\n" end
 	puts "NB2020 [gycv] data\n"
 	puts export.force_encoding( 'UTF-8' )
 
