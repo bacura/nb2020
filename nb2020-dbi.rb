@@ -333,51 +333,87 @@ end
 
 #### Updating food extra tag table.
 def ext_update( gycv_file, shun_file, unit_file )
-	query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
-	res = $DB.query( query )
-	res.each do |e|
-		query = "UPDATE #{$MYSQL_TB_EXT} SET color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{e['FN']}';"
-		$DB.query( query )
-	end
+#	query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
+#	res = $DB.query( query )
+#	res.each do |e|
+#		query = "UPDATE #{$MYSQL_TB_EXT} SET color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{e['FN']}';"
+#		$DB.query( query )
+#	end
 
 	# Green/Yellow color vegitable
 	f = open( gycv_file, 'r' )
+	gycv_flag = false
 	f.each_line do |e|
-		food_no = e.chomp
-		query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
-#		$DB.query( query )
+		if e == "NB2020 [gycv] data\n"
+			gycv_flag = true
+		elsif gycv_flag == true
+			food_no = e.chomp
+
+			query = "SELECT FN #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			res = $DB.query( query )
+			if res.first
+				query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
+			else
+				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', gycv='1';"
+			end
+			$DB.query( query )
+		end
 	end
+	puts 'Green/Yellow color vegitable in ext has been updated.' if gycv_flag == true
 	f.close
-#	puts 'Green/Yellow color vegitable in ext has been updated.'
 
 	# Shun
 	f = open( shun_file, 'r' )
+	shun_flag = false
 	f.each_line do |e|
-		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-		food_no = a[0]
-		shun1s = a[2]
-		shun1e = a[3]
-		shun2s = a[4]
-		shun2e = a[5]
-		shun1s = 0 if shun1s == nil || shun1s == ''
-		shun1e = 0 if shun1e == nil || shun1e == ''
-		shun2s = 0 if shun2s == nil || shun2s == ''
-		shun2e = 0 if shun2e == nil || shun2e == ''
-		query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
-#		$DB.query( query )
+		if e == "NB2020 [shun] data\n"
+			shun_flag = true
+		elsif shun_flag == true
+			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+			food_no = a[0]
+			shun1s = a[2]
+			shun1e = a[3]
+			shun2s = a[4]
+			shun2e = a[5]
+			shun1s = 0 if shun1s == nil || shun1s == ''
+			shun1e = 0 if shun1e == nil || shun1e == ''
+			shun2s = 0 if shun2s == nil || shun2s == ''
+			shun2e = 0 if shun2e == nil || shun2e == ''
+
+			query = "SELECT FN #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			res = $DB.query( query )
+			if res.first
+				query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
+			else
+				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e};"
+			end
+			$DB.query( query )
+		end
 	end
 	f.close
-#	puts 'Shun in ext has been updated.'
+	puts 'Shun in ext has been updated.' if shun_flag == true
 
 	# Unit
 	f = open( unit_file, 'r' )
+	unit_flag = false
 	f.each_line do |e|
-		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-		query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
-#		$DB.query( query )
+		if e == "NB2020 [unit] data\n"
+			unit_flag = true
+		elsif unit_flag == true
+			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+
+			query = "SELECT FN #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			res = $DB.query( query )
+			if res.first
+				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+			else
+				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+			end
+			$DB.query( query )
+		end
 	end
 	f.close
-#	puts 'Unit in ext has been updated.'
+	puts 'Unit in ext has been updated.' if unit_flag == true
 end
 
 
@@ -391,56 +427,7 @@ def ext_init( gycv_file, shun_file, unit_file )
 	else
 		query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen1 TINYINT(1), allergen2 TINYINT(1), unit VARCHAR(1000), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
 		$DB.query( query )
-
-		query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
-		res = $DB.query( query )
-		res.each do |e|
-			query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{e['FN']}', color1='0', color2='0', color1h='0', color2h='0';"
-			$DB.query( query )
-		end
-		puts 'ext table has been created.'
-
-		# Green/Yellow color vegitable
-		f = open( gycv_file, 'r' )
-		f.each_line do |e|
-			food_no = e.chomp
-			query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN=#{food_no};"
-			$DB.query( query )
-		end
-		f.close
-		puts 'Green/Yellow color vegitable in ext has been updated.'
-
-		# Shun
-		f = open( shun_file, 'r' )
-		f.each_line do |e|
-			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-			food_no = a[0]
-			shun1s = a[2]
-			shun1e = a[3]
-			shun2s = a[4]
-			shun2e = a[5]
-			shun1s = 0 if shun1s == nil || shun1s == ''
-			shun1e = 0 if shun1e == nil || shun1e == ''
-			shun2s = 0 if shun2s == nil || shun2s == ''
-			shun2e = 0 if shun2e == nil || shun2e == ''
-			query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
-			$DB.query( query )
-		end
-		f.close
-		puts 'Shun in ext has been updated.'
-
-		# Unit
-		f = open( unit_file, 'r' )
-		f.each_line do |e|
-			unith = {}
-			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-			food_no = a[0]
-			unith[a[1]] = a[2]
-			query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit}' WHERE FN='#{food_no}';"
-			$DB.query( query )
-		end
-		f.close
-		puts 'Unit in ext has been updated.'
+		ext_update( gycv_file, shun_file, unit_file )
 	end
 end
 

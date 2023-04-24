@@ -28,6 +28,7 @@ script = 'gm-export'
 case ARGV[0]
 when 'unit'
 	export = ''
+	puts "SELECT * FROM #{$MYSQL_TB_EXT};"
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, false )
 	r.each do |e| export << "#{e['FN']}\t#{e['unit']}\n" end
 	puts "NB2020 [unit] data\n"
@@ -50,7 +51,7 @@ when 'shun'
 when 'allergen'
 	export = ''
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_EXT};", false, false )
-	r.each do |e| export << "#{e['FN']}\t#{e['allergen']}\n" end
+	r.each do |e| export << "#{e['FN']}\t#{e['allergen1']}t#{e['allergen2']}\n" end
 	puts "NB2020 [allergen] data\n"
 	puts export.force_encoding( 'UTF-8' )
 
