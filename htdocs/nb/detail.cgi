@@ -5,7 +5,7 @@
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = true
+@debug = false
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -103,7 +103,6 @@ unit_select = []
 selectu = 'g' if selectu == ''
 uk = BigDecimal( '1' )
 r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false, @debug )
-p r.first
 if r.first
 	unith = JSON.parse( r.first['unit'] )
 	unith.each do |k, v|

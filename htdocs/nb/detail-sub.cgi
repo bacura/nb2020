@@ -6,7 +6,7 @@
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = true
+@debug = false
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -111,7 +111,7 @@ pseudo_button = ''
 
 
 case command
-when 'init'
+when 'init', 'weight'
 	puts 'L5 final page<br>' if @debug
 	require './brain'
 
@@ -300,7 +300,7 @@ when 'init'
 		<div class="col-3">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="fraction">#{l['fract']}</label>
-				<select class="form-select" id="fraction" onchange="changeWeight( '#{food_key}', '#{food_no}' )">
+				<select class="form-select" id="fraction" onchange="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">
 					<option value="1"#{frct_select[1]}>#{l['round']}</option>
 					<option value="2"#{frct_select[2]}>#{l['ceil']}</option>
 					<option value="3"#{frct_select[3]}>#{l['floor']}</option>
@@ -311,7 +311,7 @@ when 'init'
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="weight">#{l['weight']}</label>
 				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
-				<button class="btn btn-outline-primary" type="button" onclick="changeWeight( '#{food_key}', '#{food_no}' )">g</button>
+				<button class="btn btn-outline-primary" type="button" onclick="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">g</button>
 			</div>
 		</div>
 	</div></div>

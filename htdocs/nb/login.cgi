@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 login 0.03b (2023/01/11)
+#Nutrition browser 2020 login 0.04b (2023/4/24)
 
 
 #==============================================================================
@@ -104,6 +104,7 @@ when 'check'
   unless r.first
       html_init( nil )
       html_head( nil, 0, nil )
+      html_head( nil, 0, nil )
       html_top_login( lp )
       msg = "<p class='msg_small_red'>#{l['error']}</p>"
       html_login_form( msg, lp )
@@ -132,10 +133,6 @@ when 'check'
     # Checking & repairing meal table
     r = mdb( "SELECT user FROM #{$MYSQL_TB_MEAL} WHERE user='#{@cgi['id']}';", false, @debug )
     mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", false, @debug ) unless r.first
-
-    # Checking & repairing config table
-    r = mdb( "SELECT user FROM #{$MYSQL_TB_CFG} WHERE user='#{@cgi['id']}';", false, @debug )
-    mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', recipel='1:0:0:0:0:0:0';", false, @debug ) unless r.first
   end
 
 when 'logout'

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM export 0.01b
+#Nutrition browser 2020 export 0.01b (2023/4/24)
 
 #==============================================================================
 #LIBRARY
@@ -58,7 +58,7 @@ when 'allergen'
 when 'dic'
 	export = ''
 	r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC};", false, false )
-	r.each do |e| export << "#{e['FG']}\t#{e['org_name']}\t#{e['alias']}\t#{e['user']}\t#{e['def_fn']}\n" end
+	r.each do |e| export << "#{e['FG']}\t#{e['org_name']}\t#{e['alias'].gsub( '<br>', ',' )}\t#{e['user']}\t#{e['def_fn']}\n" end
 	puts "NB2020 [dic] data\n"
 	puts export.force_encoding( 'UTF-8' )
 

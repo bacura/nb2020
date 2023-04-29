@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.60b (2023/4/22)
+#nb2020-dbi.rb 0.61b (2023/4/24)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -346,10 +346,11 @@ def ext_update( gycv_file, shun_file, unit_file )
 	f.each_line do |e|
 		if e == "NB2020 [gycv] data\n"
 			gycv_flag = true
+			next
 		elsif gycv_flag == true
 			food_no = e.chomp
 
-			query = "SELECT FN #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
 			res = $DB.query( query )
 			if res.first
 				query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
@@ -368,6 +369,7 @@ def ext_update( gycv_file, shun_file, unit_file )
 	f.each_line do |e|
 		if e == "NB2020 [shun] data\n"
 			shun_flag = true
+			next
 		elsif shun_flag == true
 			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 			food_no = a[0]
@@ -380,7 +382,7 @@ def ext_update( gycv_file, shun_file, unit_file )
 			shun2s = 0 if shun2s == nil || shun2s == ''
 			shun2e = 0 if shun2e == nil || shun2e == ''
 
-			query = "SELECT FN #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
 			res = $DB.query( query )
 			if res.first
 				query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
@@ -399,10 +401,11 @@ def ext_update( gycv_file, shun_file, unit_file )
 	f.each_line do |e|
 		if e == "NB2020 [unit] data\n"
 			unit_flag = true
+			next
 		elsif unit_flag == true
 			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 
-			query = "SELECT FN #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{a[0]}';"
 			res = $DB.query( query )
 			if res.first
 				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
