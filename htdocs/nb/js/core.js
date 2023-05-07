@@ -994,7 +994,6 @@ const recipeSave = function( com, code ){
 		const time = document.getElementById( "time" ).value;
 		const cost = document.getElementById( "cost" ).value;
 		const protocol = document.getElementById( "protocol" ).value;
-		const page_limit = document.getElementById( "page_limit" ).value;
 
 		let favorite = 0;
 		let public = 0;
