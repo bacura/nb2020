@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.43b (2023/04/23)
+// Nutorition Browser 2020 core.js 0.44b (2023/05/07)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -966,8 +966,8 @@ var chomiAdd =  function(){
 ////////////////////////////////////////////////////////////////////////////////
 // Recipe ////////////////////////////////////////////////////////////////////////
 
-// レシピ編集のレシピボタンを押してL2にレシピを表示
-var recipeEdit = function( com, code ){
+// Recipe init
+const recipeEdit = function( com, code ){
 	$.post( "recipe.cgi", { command:com, code:code }, function( data ){
 		$( "#L2" ).html( data );
 		dl2 = true;
@@ -981,7 +981,7 @@ var recipeEdit = function( com, code ){
 };
 
 
-// レシピ編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
+// Recipe save
 const recipeSave = function( com, code ){
 	const recipe_name = document.getElementById( "recipe_name" ).value;
 	if( recipe_name == '' ){
@@ -994,6 +994,7 @@ const recipeSave = function( com, code ){
 		const time = document.getElementById( "time" ).value;
 		const cost = document.getElementById( "cost" ).value;
 		const protocol = document.getElementById( "protocol" ).value;
+		const page_limit = document.getElementById( "page_limit" ).value;
 
 		let favorite = 0;
 		let public = 0;
@@ -1007,7 +1008,7 @@ const recipeSave = function( com, code ){
 		let root = '';
 		if( document.getElementById( "root" ) !== null ){ root = document.getElementById( "root" ).value; }
 
-		$.post( "recipe.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
+		$.post( "recipe.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft, page_limit:page_limit }, function( data ){
 			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
 			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#L3" ).html( data );});
@@ -1017,11 +1018,13 @@ const recipeSave = function( com, code ){
 };
 
 
-// レシピ編集の保存ボタンを押してレシピを保存、そしてL2にリストを再表示
-var recipeProtocol = function( code ){
-	if( document.getElementById( "protect" ).checked ){ var protect = 1; }
+// Recipe protocol moving save
+const recipeProtocol = function( code ){
+	let protect = 0;
+	if( document.getElementById( "protect" ).checked ){ protect = 1; }
+
 	if( code != '' && protect != 1 ){
-		var protocol = document.getElementById( "protocol" ).value;
+		const protocol = document.getElementById( "protocol" ).value;
 		$.post( "recipe.cgi", { command:'protocol', code:code, protocol:protocol }, function( data ){
 			displayVIDEO( '●' );
 		});
@@ -1033,7 +1036,7 @@ var recipeProtocol = function( code ){
 // Recipe list ////////////////////////////////////////////////////////////////////////
 
 // Dosplaying recipe list with reset
-var recipeList = function( com ){
+const recipeList = function( com ){
 	$.post( "recipel.cgi", { command:com }, function( data ){
 		$( "#L1" ).html( data );
 		if( com == 'reset'){ document.getElementById( "words" ).value = ''; }
@@ -1045,34 +1048,40 @@ var recipeList = function( com ){
 };
 
 
-// Dosplaying recipe list with narrow down
-var recipeListP = function( page ){
-	var range = document.getElementById( "range" ).value;
-	var type = document.getElementById( "type" ).value;
-	var role = document.getElementById( "role" ).value;
-	var tech = document.getElementById( "tech" ).value;
-	var time = document.getElementById( "time" ).value;
-	var cost = document.getElementById( "cost" ).value;
-	var words = document.getElementById( "words" ).value;
-	if( document.getElementById( "family" ).checked ){ var family = 1; }else{ var family = 0; }
+// Displaying recipe list with narrow down
+const recipeListP = function( page ){
+	const range = document.getElementById( "range" ).value;
+	const type = document.getElementById( "type" ).value;
+	const role = document.getElementById( "role" ).value;
+	const tech = document.getElementById( "tech" ).value;
+	const time = document.getElementById( "time" ).value;
+	const cost = document.getElementById( "cost" ).value;
+	const words = document.getElementById( "words" ).value;
+	const page_limit = document.getElementById( "page_limit" ).value;
 
-	$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, words:words, family:family }, function( data ){ $( "#L1" ).html( data );});
+	let family = 0;
+	if( document.getElementById( "family" ).checked ){ family = 1; }
+
+	$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, words:words, family:family, page_limit:page_limit }, function( data ){ $( "#L1" ).html( data );});
 };
 
 
 // Displaying recipe list after delete
-var recipeDelete = function( code, page ){
-	var range = document.getElementById( "range" ).value;
-	var type = document.getElementById( "type" ).value;
-	var role = document.getElementById( "role" ).value;
-	var tech = document.getElementById( "tech" ).value;
-	var time = document.getElementById( "time" ).value;
-	var cost = document.getElementById( "cost" ).value;
-	if( document.getElementById( "family" ).checked ){ var family = 1; }else{ var family = 0; }
+const recipeDelete = function( code, page ){
+	const range = document.getElementById( "range" ).value;
+	const type = document.getElementById( "type" ).value;
+	const role = document.getElementById( "role" ).value;
+	const tech = document.getElementById( "tech" ).value;
+	const time = document.getElementById( "time" ).value;
+	const cost = document.getElementById( "cost" ).value;
+	const page_limit = document.getElementById( "page_limit" ).value;
+
+	let family = 0;
+	if( document.getElementById( "family" ).checked ){ family = 1; }
 
 	if( document.getElementById( code ).checked ){
-		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family }, function( data ){
-			$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family }, function( data ){
+		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family, page_limit:page_limit }, function( data ){
+			$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family, page_limit:page_limit }, function( data ){
 				$( "#L1" ).html( data );
 				displayVIDEO( 'Removed' );
 			});
@@ -1084,16 +1093,19 @@ var recipeDelete = function( code, page ){
 
 
 // Generationg subSpecies
-var recipeImport = function( com, code, page ){
-	var range = document.getElementById( "range" ).value;
-	var type = document.getElementById( "type" ).value;
-	var role = document.getElementById( "role" ).value;
-	var tech = document.getElementById( "tech" ).value;
-	var time = document.getElementById( "time" ).value;
-	var cost = document.getElementById( "cost" ).value;
-	if( document.getElementById( "family" ).checked ){ var family = 1; }else{ var family = 0; }
+const recipeImport = function( com, code, page ){
+	const range = document.getElementById( "range" ).value;
+	const type = document.getElementById( "type" ).value;
+	const role = document.getElementById( "role" ).value;
+	const tech = document.getElementById( "tech" ).value;
+	const time = document.getElementById( "time" ).value;
+	const cost = document.getElementById( "cost" ).value;
+	const page_limit = document.getElementById( "page_limit" ).value;
 
-	$.post( "recipel.cgi", { command:com, code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family }, function( data ){
+	let family = 0;
+	if( document.getElementById( "family" ).checked ){ family = 1; }
+
+	$.post( "recipel.cgi", { command:com, code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family, page_limit:page_limit }, function( data ){
 		$( "#L1" ).html( data );
 		displayVIDEO( 'Recipe has branched' );
 

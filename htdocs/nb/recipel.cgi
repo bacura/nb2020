@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.30b (2023/04/08)
+#Nutrition browser 2020 recipe list 0.31b (2023/5/7)
 
 
 #==============================================================================
@@ -8,7 +8,6 @@
 #==============================================================================
 @debug = false
 #script = File.basename( $0, '.cgi' )
-page_limit = 50
 
 #==============================================================================
 # LIBRARY
@@ -51,6 +50,7 @@ def language_pack( language )
 		'name' 		=> "レシピ名",\
 		'status' 	=> "ステータス",\
 		'family' 	=> "親子集合",\
+		'display'	=> "表示数",\
 		'operation' => "<img src='bootstrap-dist/icons/dpad.svg' style='height:1.2em; width:1.2em;'>&nbsp;操作",\
 		'globe' 	=> "<img src='bootstrap-dist/icons/globe.svg' style='height:1.2em; width:1.2em;'>",\
 		'lock'		=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.2em; width:1.2em;'>",\
@@ -337,19 +337,19 @@ end
 user = User.new( @cgi )
 l = language_pack( user.language )
 
-r = mdb( "SELECT icache, recipe, recipel_max FROM cfg WHERE user='#{user.name}';", false, false )
+r = mdb( "SELECT icache, recipe FROM cfg WHERE user='#{user.name}';", false, false )
 if r.first
 	if r.first['icache'].to_i == '1'
 		html_init_cache( nil )
 	else
 		html_init( nil )
 	end
-	page_limit = r.first['recipel_max'].to_i if r.first['recipel_max'].to_i > 0
 else
 	html_init_cache( nil )
 end
 
 page = 1
+page_limit = 50
 range = 0
 type = 99
 role = 99
@@ -359,11 +359,14 @@ cost = 99
 family = 0
 words = nil
 recipe_cfg = Hash.new
+
 begin
 	recipe_cfg = JSON.parse( r.first['recipe'] ) if r.first['recipe'] != nil && r.first['recipe'] != ''
 	p recipe_cfg if @debug
 	page = recipe_cfg['page'].to_i
 	page = 1 if page == 0
+	page_limit = recipe_cfg['page_limit'].to_i
+	page_limit = 50 if page_limit == 0
 	range = recipe_cfg['range'].to_i
 	type = recipe_cfg['type'].to_i
 	role = recipe_cfg['role'].to_i
@@ -464,6 +467,7 @@ when 'subspecies'
 when 'limit'
 	page = @cgi['page'].to_i
 	page = 1 if page == 0
+	page_limit = @cgi['page_limit'].to_i
 	range = @cgi['range'].to_i
 	type = @cgi['type'].to_i
 	role = @cgi['role'].to_i
@@ -597,6 +601,7 @@ end
 html_paging = pageing_html( page, page_start, page_end, page_max, l )
 
 
+puts "families<br>" if @debug
 family_pair = Hash.new
 family_recipes = Hash.new
 if family == 1
@@ -618,6 +623,8 @@ if family == 1
 	end
 end
 
+
+puts "Recipe HTML parts<br>" if @debug
 recipe_html = ''
 recipes.each do |e|
 	if family == 1
@@ -634,6 +641,14 @@ recipes.each do |e|
 	else
 		recipe_html << recipe_line( e, user, page, 'aliceblue', l )
 	end
+end
+
+
+puts "Page limit HTML parts<br>" if @debug
+page_limit_html = ''
+nums = [25, 50, 75, 100, 150, 200]
+nums.each do |e|
+	page_limit_html << "<option value='#{e}' #{$SELECT[ e == page_limit]}>#{e}</option>"
 end
 
 
@@ -682,7 +697,16 @@ html = <<-"HTML"
 	</table>
 
 	<div class='row'>
-		<div class='col-7'></div>
+		<div class='col-2'>
+			<div class="input-group">
+				<label class="input-group-text" for="page_limit">#{l['display']}</label>
+				<select class="form-select form-select-sm" id='page_limit'>
+					#{page_limit_html}
+				</select>
+			</div>
+		</div>
+		<div class='col-5'>
+		</div>
 		<div class='col-5'>#{html_paging}</div>
 	</div>
 </div>
@@ -697,5 +721,10 @@ puts html
 
 #### 検索設定の保存
 #words = nil if recipe_code_list.size == 0
-recipe_ = JSON.generate( { "page" => page, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "family" => family, "words" => words } )
-mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )
+recipe_ = JSON.generate( { "page" => page, "page_limit" => page_limit, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "family" => family, "words" => words } )
+r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+if r.first
+	mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )
+else
+	mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', recipe='#{recipe_}';", false, @debug )
+end

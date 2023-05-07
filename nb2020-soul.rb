@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.75b (2023/04/08)
+#Nutrition browser 2020 soul 0.81b (2023/05/07)
 
 #==============================================================================
 # LIBRARY
@@ -76,8 +76,10 @@ $CSS_PATH = 'scss'
 $BOOK_PATH = 'books'
 
 $SELECT = { true => 'SELECTED', false => ''}
-$CHECK = { true => 'CHESCKED', false => ''}
+$CHECK = { true => 'CHECKED', false => ''}
 $DISABLE = { true => 'DISABLED', false => ''}
+
+$DEBUG = false
 
 #==============================================================================
 # CORE LANGAGE & CGI
@@ -179,9 +181,14 @@ def add_his( user, code )
     current_his = []
   end
 
-  #
-  r = mdb( "SELECT his_max FROM #{$MYSQL_TB_CFG} WHERE user='#{user}';", false, $DEBUG )
-  his_max = r.first['his_max'].to_i  if r.first
+  his_max = 200
+  r = mdb( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user}';", false, $DEBUG )
+  if r.first
+    if r.first['history'] != nil && r.first['history'] != ''
+      history = JSON.parse( r.first['history'] )
+      his_max = history['his_max'].to_i if history['his_max']
+    end
+  end
   his_max = 200 if his_max < 200 || his_max > 500
 
   new_his = "#{code}\t"
@@ -374,6 +381,43 @@ end
 #==============================================================================
 # CLASS
 #==============================================================================
+
+class Db
+  def initialize()
+    @db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+  end
+
+  def query( query )
+    q = query.gsub( ';', '' ) << ';'
+    res = @db.query( q )
+
+    return res
+  end
+
+  def query_safe( query, html_opt, debug )
+    puts "<span class='dbq'>[mdb]#{query}</span><br>" if debug
+    begin
+      t = query.chop
+      if /[\;\#\$]/ =~ t
+          puts "<span class='error'>[mdb]ERROR!!</span><br>"
+          exit( 9 )
+      end
+      res = @db.query( query )
+
+    rescue
+      if html_opt
+        html_init( nil )
+        html_head( nil )
+      end
+        puts "<span class='error'>[mdb]ERROR!!</span><br>"
+    end
+  end
+
+  def close()
+    @db.close
+  end
+end
+
 
 class User
   attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :switch, :language, :pass, :mail, :reg_date
