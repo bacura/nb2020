@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.44b (2023/05/07)
+// Nutorition Browser 2020 core.js 0.44b (2023/05/13)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -928,12 +928,24 @@ var gnExchange = function( code ){
 
 
 // まな板からでL5閲覧ウインドウを表示する。
-var cb_summon = function( key, weight, base_fn ){
-	$.get( "square.cgi", { channel:"fctb_l5", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
-		$( "#L5" ).html( data );
+var cb_detail_sub = function( key, weight, base_fn ){
+	$.get( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
+		$( "#L2" ).html( data );
 
 		flashBW();
-		dl5 = true;
+		dl2 = true;
+		displayBW();
+	});
+};
+
+
+// まな板からでL5閲覧ウインドウを表示する。
+var cb_detail_para = function( key, weight, base_fn ){
+	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
+		$( "#L3" ).html( data );
+
+		flashBW();
+		dl3 = true;
 		displayBW();
 	});
 };

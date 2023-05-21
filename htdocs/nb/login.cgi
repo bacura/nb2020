@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 login 0.04b (2023/4/24)
+#Nutrition browser 2020 login 0.05b (2023/05/16)
 
 
 #==============================================================================
@@ -12,7 +12,7 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 #==============================================================================
 #DEFINITION
@@ -104,10 +104,10 @@ when 'check'
   unless r.first
       html_init( nil )
       html_head( nil, 0, nil )
-      html_head( nil, 0, nil )
-      html_top_login( lp )
+#      html_head( nil, 0, nil )
+      html_top_login( l )
       msg = "<p class='msg_small_red'>#{l['error']}</p>"
-      html_login_form( msg, lp )
+      html_login_form( msg, l )
       html_foot()
   else
     status = r.first['status'].to_i

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.14b (2022/12/05)
+#Nutrition browser 2020 koyomi 0.15b (2023/05/19)
 
 
 #==============================================================================
@@ -287,7 +287,6 @@ fct_day_htmls = ['']
 								food_weights << unit_weight( rate, unit, code )
 							end
 						end
-
 						puts 'Foods<br>' if @debug
 						fct_tdiv.set_food( user.name, food_nos, food_weights, false )
 					end

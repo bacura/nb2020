@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.28b (2023/01/08)
+#Nutrition browser 2020 brain 0.29b (2023/05/19)
 
 #==============================================================================
 #STATIC
@@ -150,25 +150,34 @@ end
 
 def menu2rc( uname, code )
   codes = []
+
   r = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, false )
-  a = r.first['meal'].split( "\t" )
-  a.each do |e| codes << e end
+  if r.first
+    a = r.first['meal'].split( "\t" )
+    a.each do |e| codes << e end
+  end
 
   return codes
 end
 
 def recipe2fns( uname, code, rate, unit, ew_mode )
   ew_mode = 0 if ew_mode == nil
-  r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, false )
-  fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
+  fns = []
+  fws = []
+  tw = []
 
-  if unit == '%'
-    fws.map! do |x|
-      x * rate / 100 if x != '-' && x != '+'
-    end
-  else
-    fws.map! do |x|
-      x * rate / tw if x != '-' && x != '+'
+  r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, false )
+  if r.first
+    fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
+
+    if unit == '%'
+      fws.map! do |x|
+        x * rate / 100 if x != '-' && x != '+'
+      end
+    else
+      fws.map! do |x|
+        x * rate / tw if x != '-' && x != '+'
+      end
     end
   end
 

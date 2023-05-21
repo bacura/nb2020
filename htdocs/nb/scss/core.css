@@ -276,27 +276,33 @@ nav {
 }
 
 /*===============*/
-/* ジョイスティック */
+/* ジョイスティック & */
 /*===============*/
 
 .joystic_top{
   border: none;
   border-width: 1px;
-  border-color: paleturquoise;
   background-color: white;
   border-radius: 6px;
 }
+
+.joystic_active{
+  border: none;
+  border-width: 1px;
+  background-color: aquamarine;
+  border-radius: 6px;
+}
+
 .joystic_rerutn{
   border: none;
   border-width: 1px;
-  border-color: paleturquoise;
+  background-color: white;
   border-radius: 6px;
 }
 
 .joystic_koyomi{
   border: none;
   border-width: 1px;
-  border-color: white;
   background-color: white;
   border-radius: 6px;
 }

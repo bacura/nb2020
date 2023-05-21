@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.81b (2023/05/07)
+#Nutrition browser 2020 soul 0.82b (2023/05/21)
 
 #==============================================================================
 # LIBRARY
@@ -389,9 +389,8 @@ class Db
 
   def query( query )
     q = query.gsub( ';', '' ) << ';'
-    res = @db.query( q )
+    return @db.query( q )
 
-    return res
   end
 
   def query_safe( query, html_opt, debug )
@@ -402,7 +401,7 @@ class Db
           puts "<span class='error'>[mdb]ERROR!!</span><br>"
           exit( 9 )
       end
-      res = @db.query( query )
+      return @db.query( query )
 
     rescue
       if html_opt

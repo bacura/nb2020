@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail sub 0.01b (2023/05/13)
+#Nutrition browser 2020 food detail parallel 0.00b (2023/05/14)
 
 
 #==============================================================================
@@ -24,23 +24,10 @@ def language_pack( language )
 
 	#Japanese
 	l['jp'] = {
-		'search' 	=> "レシピ検索",\
-		'fract' 	=> "端数",\
-		'round'		=> "四捨五入",\
-		'ceil' 		=> "切り上げ",\
-		'floor'		=> "切り捨て",\
 		'weight' 	=> "重量",\
 		'fn' 		=> "食品番号",\
 		'name' 		=> "食品名",\
 		'change'	=> "<img src='bootstrap-dist/icons/hammer.svg' style='height:1.2em; width:1.2em;'>",\
-		'cboard' 	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>",\
-		'calendar'	=> "<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>",\
-		'unit' 		=> "単",\
-		'color' 	=> "色",\
-		'shun' 		=> "旬",\
-		'dic' 		=> "辞",\
-		'allergen' 	=> "ア",\
-		'plus' 		=> "<img src='bootstrap-dist/icons/plus-square-fill.svg' style='height:2em; width:2em;'>",\
 		'signpost'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",
 		'parallel'	=> "<img src='bootstrap-dist/icons/wrench-adjustable.svg' style='height:2em; width:2em;'>"
 	}
@@ -108,7 +95,6 @@ end
 
 #### 閲覧選択
 html = ''
-pseudo_button = ''
 
 
 case command
@@ -117,7 +103,6 @@ when 'init', 'weight', 'cb', 'cbp'
 	require './brain'
 
 	food_weight = BigDecimal( food_weight_check( food_weight ).first )
-	frct_select = selected( 0, 2, frct_mode )
 
 	query = ''
 	food_no_list = []
@@ -177,20 +162,8 @@ when 'init', 'weight', 'cb', 'cbp'
 	end
 
  	# 簡易表示の項目
- 	fc_items = []
 	fc_items_html = ''
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
-	if r.first
-		palette = r.first['palette']
-		palette.size.times do |c|
-			fc_items << @fct_item[c] if palette[c] == '1'
-		end
-	else
-		$PALETTE_DEFAULT[user.language][0].size.times do |c|
-			fc_items << @fct_item[c] if $PALETTE_DEFAULT[user.language][0][c] == '1'
-		end
-	end
+ 	fc_items = %w( ENERC_KCAL WATER PROTV FATV FASAT CHOV FIB NACL_EQ )
 	fc_items.each do |e| fc_items_html << "<th align='right'>#{@fct_name[e]}</th>" end
 
 
@@ -239,55 +212,15 @@ when 'init', 'weight', 'cb', 'cbp'
 			add_button = ""
 		end
 
-		# Koyomi button
-		if user.status >= 2 && base != 'cb'
-			koyomi_button = "<span onclick=\"addKoyomi( '#{food_no_list[c]}', -5 )\">#{l['calendar']}</span>"
-		else
-			koyomi_button = ''
-		end
-
-		# GM/SGM専用単位変換ボタン
-		gm_unitc = ''
-		gm_color = ''
-		gm_allergen = ''
-		gm_shun = ''
-		gm_dic = ''
-
-		if user.status >= 8
-			res = mdb( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false, @debug )
-			if res.first
-				bc = 'btn-outline-secondary'
-				bc = 'btn-outline-danger' if res.first['unit'] != '{"g":1}';
-				gm_unitc = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{l['unit']}</button>"
-
-#				gm_color = "<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{l['color']}</button>"
-
-				bc = 'btn-outline-secondary'
-				bc = 'btn-outline-danger' if res.first['allergen'].to_i > 0;
-				gm_allergen = "<button type='button' class='btn btn #{bc} btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{l['allergen']}</button>"
-
-				bc = 'btn-outline-danger'
-				bc = 'btn-outline-secondary' if res.first['shun1s'] == 0 || res.first['shun1s'] == ''|| res.first['shun1s'] == nil;
-				gm_shun = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{l['shun']}</button>"
-
-				gm_dic = "<button type='button' class='btn btn-outline-info btn-sm' onclick=\"initDic( 'direct', '#{fg_key}', '#{food_name}', '#{food_no_list[c]}' )\">#{l['dic']}</button>"
-			end
-		end
-
 		tags = "<span class='tag1'>#{tag1_list[c]}</span> <span class='tag2'>#{tag2_list[c]}</span> <span class='tag3'>#{tag3_list[c]}</span> <span class='tag4'>#{tag4_list[c]}</span> <span class='tag5'>#{tag5_list[c]}</span>"
 		if pseudo_flag
-			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}&nbsp;&nbsp;#{gm_unitc}&nbsp;#{gm_allergen}&nbsp;#{gm_shun}&nbsp;#{gm_dic}</td>#{sub_components}</tr>\n"
+			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}</td>#{sub_components}</tr>\n"
 		else
-			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}&nbsp;&nbsp;#{gm_unitc}&nbsp;#{gm_allergen}&nbsp;#{gm_shun}&nbsp;#{gm_dic}</td>#{sub_components}</tr>\n"
+			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}</td>#{sub_components}</tr>\n"
 		end
 	end
 	db.close
 
-	# 擬似食品ボタンの作成
- 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0
-
- 	# Recipe search badge
- 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l['search']}</span><br><br>"
 
  	#
 	return_button = ''
@@ -295,7 +228,7 @@ when 'init', 'weight', 'cb', 'cbp'
 
 
 	parallel_button = ''
-	parallel_button = "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{food_no}' )\">#{l['parallel']}</div><br>" if base == 'cb'
+	parallel_button = "<div align='center' class='joystic_active' onclick=\"cb_detail_sub( '#{food_key}', '#{food_weight}', '#{food_no}' )\">#{l['parallel']}</div><br>" if base == 'cb'
 
 	html = <<-"HTML"
 	<div class='container-fluid'>
@@ -304,18 +237,8 @@ when 'init', 'weight', 'cb', 'cbp'
 			<div class="col-1">#{parallel_button}</div>
 		</div>
 		<div class="row">
-  		<div class="col-3"><span class='h5'>#{food_name}</span>#{recipe_search}</div>
+  		<div class="col-3"><span class='h5'>#{food_name}</span></div>
   		<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
-		<div class="col-3">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="fraction">#{l['fract']}</label>
-				<select class="form-select" id="fraction" onchange="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">
-					<option value="1"#{frct_select[1]}>#{l['round']}</option>
-					<option value="2"#{frct_select[2]}>#{l['ceil']}</option>
-					<option value="3"#{frct_select[3]}>#{l['floor']}</option>
-				</select>
-			</div>
-		</div>
 		<div class="col-3">
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="weight">#{l['weight']}</label>
@@ -338,7 +261,6 @@ when 'init', 'weight', 'cb', 'cbp'
 
 		#{food_html}
 	</table>
-	#{pseudo_button}
 HTML
 
 end

@@ -888,7 +888,7 @@ food_list.each do |e|
   	else
 
 	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>&nbsp;#{e.fn}</div>"
-  		html << "	<div class='col-3 fct_value' onclick=\"cb_summon( '#{food_key}', '#{e.weight}', '#{e.fn}' )\">#{food_tag[c]}</div>"
+  		html << "	<div class='col-3 fct_value' onclick=\"cb_detail_sub( '#{food_key}', '#{e.weight}', '#{e.fn}' )\">#{food_tag[c]}</div>"
   		html << "	<div class='col-3'>"
   		html << "		<div class='row cb_form'>"
   		html << "			<div class='col-6'><input type='text'  maxlength='20' class='form-control form-control-sm' id='food_init_#{c}' value='#{e.init}' onchange=\"initCB_SS( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"

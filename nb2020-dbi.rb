@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.61b (2023/4/24)
+#nb2020-dbi.rb 0.62b (2023/5/13)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -16,22 +16,39 @@ require './nb2020-soul'
 #DEFINITION
 #==============================================================================
 
-#### Creating NB databases.
+#### Creating NB database.
 def db_create_nb()
-	query = "SHOW DATABASES LIKE '#{$MYSQL_DB}'"
-	res = $DBA.query( query )
+	res = $DBA.query( "SHOW DATABASES LIKE '#{$MYSQL_DB}';" )
 	if res.first
 		puts "#{$MYSQL_DB} database already exists."
 	else
-		query = "CREATE DATABASE #{$MYSQL_DB};"
-		$DBA.query( query )
+		$DBA.query( "CREATE DATABASE #{$MYSQL_DB};" )
 		puts "#{$MYSQL_DB} database has been created"
 	end
 end
 
-#### Creating RR databases.
+
+#### Creating NB database user.
+def db_create_nb_user()
+	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USER}';"
+	res = $DBA.query( query )
+	if res.first
+		puts "#{$MYSQL_USER} already exists."
+	else
+		query = "CREATE USER '#{$MYSQL_USER}'@'#{$MYSQL_HOST}' IDENTIFIED BY '#{$MYSQL_PW}';"
+		$DBA.query( query )
+		query = "GRANT ALL ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		puts "#{$MYSQL_USER} has been created."
+	end
+end
+
+
+#### Creating RR database user.
 def db_create_rr()
-	query = "SHOW DATABASES LIKE '#{$MYSQL_DBR}'"
+	query = "SHOW DATABASES LIKE '#{$MYSQL_DBR}';"
 	res = $DBA.query( query )
 	if res.first
 		puts "#{$MYSQL_DBR} database already exists."
@@ -39,6 +56,32 @@ def db_create_rr()
 		query = "CREATE DATABASE #{$MYSQL_DBR};"
 		$DBA.query( query )
 		puts "#{$MYSQL_DBR} database has been created"
+	end
+end
+
+
+#### Creating RR database user.
+def db_create_rr_user()
+	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USERR}';"
+	res = $DBA.query( query )
+	if res.first
+		puts "#{$MYSQL_USERR} already exists."
+	else
+		query = "CREATE USER '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_TAG} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_DIC} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPE} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT, INSERT, UPDATE, DELETE ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPEI} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT, UPDATE ON #{$MYSQL_DB}.#{$MYSQL_TB_MEMORY} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		puts "#{$MYSQL_USER} has been created."
 	end
 end
 
@@ -1163,46 +1206,7 @@ def modj_init()
 end
 
 
-def db_create_nb_user()
-	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USER}';"
-	res = $DBA.query( query )
-	if res.first
-		puts "#{$MYSQL_USER} already exists."
-	else
-		query = "CREATE USER '#{$MYSQL_USER}'@'#{$MYSQL_HOST}' IDENTIFIED BY '#{$MYSQL_PW}';"
-		$DBA.query( query )
-		query = "GRANT ALL ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		puts "#{$MYSQL_USER} has been created."
-	end
-end
 
-
-def db_create_rr_user()
-	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USERR}';"
-	res = $DBA.query( query )
-	if res.first
-		puts "#{$MYSQL_USERR} already exists."
-	else
-		query = "CREATE USER '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_TAG} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_DIC} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPE} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT, INSERT, UPDATE, DELETE ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPEI} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT, UPDATE ON #{$MYSQL_DB}.#{$MYSQL_TB_MEMORY} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		puts "#{$MYSQL_USER} has been created."
-	end
-end
 
 #==============================================================================
 base_file = '20201225-mxt_kagsei-mext_01110_012-m20211228_clean.txt'
@@ -1232,6 +1236,8 @@ $DBA = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{admin_user}
 
 db_create_nb()
 db_create_rr()
+db_create_nb_user()
+db_create_rr_user()
 
 #==============================================================================
 $DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -1284,8 +1290,6 @@ schoolk_init()
 schoolm_init()
 schoolc_init()
 
-db_create_nb_user()
-db_create_rr_user()
 
 $DBA.query( "FLUSH PRIVILEGES;" )
 $DBA.close
