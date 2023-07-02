@@ -173,9 +173,8 @@ RESULT_HTML
 		puts "</div>"
 
 
-
 		if command == 'result'
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{user.name}' AND name='history';", false, false)
+			r = mdb( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{user.name}' AND name='history';", false, false )
 			if r.first
 				a = r.first['mets'].split( "\t" )
 				a.unshift( active ).uniq!
@@ -192,30 +191,31 @@ RESULT_HTML
 			end
 		end
 		exit( 0 )
+
 	when 'reset'
 		mdb( "delete from #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
 		exit( 0 )
+
 	when 'kexout'
 		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
 		if r.first
 			if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 				koyomi = JSON.parse( r.first['koyomi'] )
-				kex_select = koyomi['kex_select']
+				kex_unit = koyomi['kexu']
+				kex_active = koyomi['kexa']
 			end
 		end
-		a = kex_select.values
-		mets_no = a.index( 'METs' )
-		denergy_no = a.index( 'dENERGY' )
 
-		r = mdb( "SELECT date FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
-		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{mets_no}='#{mets}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if mets_no != nil
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{denergy_no}='#{denergy}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if denergy_no != nil
-		elsif r.first == nil && ( mets_no != nil || denergy_no != nil )
-			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', date='#{yyyy_mm_dd}';", false, false )
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{mets_no}='#{mets}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if mets_no != nil
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET item#{denergy_no}='#{denergy}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false ) if denergy_no != nil
-		end
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
+		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', date='#{yyyy_mm_dd}';", false, false ) unless r.first
+
+		cell = Hash.new
+		cell = JSON.parse( r.first['cell'] ) if r.first['cell'] != nil
+		cell[l['mets']] = mets if kex_active[l['mets']] == '1'
+		cell[l['denergy']] = denergy if kex_active[l['denergy']] == '1'
+
+		cell_ = JSON.generate( cell )
+		mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
 		exit( 0 )
 	end
 
@@ -359,7 +359,7 @@ RESULT_HTML
 	</div>
 	<br>
 	<div class='row'>
-		<button class='btn btn-sm btn-info' onclick="ginmiEnergyMETsres()">追加 / 表示</button>
+		<button class='btn btn-sm btn-info' onclick="ginmiEnergyMETsres()">#{l['add']}</button>
 	</div>
 HTML
 
@@ -381,14 +381,17 @@ var ginmiEnergyMETskex = function(){
 };
 
 var ginmiEnergyMETs = function( select ){
-	var weight = document.getElementById( "weight" ).value;
-	var heading = document.getElementById( "heading" ).value;
+	const weight = document.getElementById( "weight" ).value;
+	const heading = document.getElementById( "heading" ).value;
+	let sub_heading = '';
+	let active = '';
+
 	if( select == 'sub_heading'){
-		var sub_heading = document.getElementById( "sub_heading" ).value;
+		sub_heading = document.getElementById( "sub_heading" ).value;
 		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading }, function( data ){ $( "#L1" ).html( data );});
 	} else if( select == 'active'){
-		var sub_heading = document.getElementById( "sub_heading" ).value;
-		var active = document.getElementById( "active" ).value;
+		sub_heading = document.getElementById( "sub_heading" ).value;
+		active = document.getElementById( "active" ).value;
 		displayVIDEO( active );
 		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading, active:active }, function( data ){ $( "#L1" ).html( data );});
 	} else{
@@ -397,11 +400,11 @@ var ginmiEnergyMETs = function( select ){
 };
 
 var ginmiEnergyMETsres = function(){
-	var weight = document.getElementById( "weight" ).value;
-	var active = document.getElementById( "active" ).value;
-	var hh = document.getElementById( "hh" ).value;
-	var mm = document.getElementById( "mm" ).value;
-	var history = document.getElementById( "history" ).value;
+	const weight = document.getElementById( "weight" ).value;
+	const active = document.getElementById( "active" ).value;
+	const hh = document.getElementById( "hh" ).value;
+	const mm = document.getElementById( "mm" ).value;
+	const history = document.getElementById( "history" ).value;
 
 	if( weight != '' && weight != '0'){
 		if( hh == '0' && mm == '0'){
@@ -427,8 +430,12 @@ var ginmiEnergyMETsreset = function(){
 };
 
 var ginmiKEXout = function( mets, denergy ){
-	var yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
+	const yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
 	$.post( "ginmi.cgi", { mod:"energy-mets", command:'kexout', mets:mets, denergy:denergy, yyyy_mm_dd:yyyy_mm_dd}, function( data ){
+//		$( "#L3" ).html( data );
+//		dl3 = true;
+//		displayBW();
+
 		displayVIDEO( 'KoyomiEX' );
 	});
 };
@@ -445,7 +452,10 @@ def module_lp( language )
 		'age' => "年齢",\
 		'height' => "身長(m)",\
 		'weight' => "体重(kg)",\
-		'calc' => "計算"
+		'calc' => "計算",\
+		'add' => "追加 / 表示",\
+		'mets' => "METs",\
+		'denergy' => "Δエネルギー"
 	}
 
 	return l[language]

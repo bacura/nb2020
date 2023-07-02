@@ -32,8 +32,8 @@ def language_pack( language )
 		'guide_e' 	=> "目安E",\
 		'guide_s' 	=> "目安塩",\
 		'waste' 	=> "残食g",\
-		'gram' 		=> "<img src='bootstrap-dist/icons/google.svg' style='height:1.5em; width:1.5em;'>",\
-		'reset' 	=> "リセット",\
+		'gram' 		=> "g/人",\
+		'reset' 	=> "お片付け",\
 		'operation' => "操作",\
 		'food_name' => "食品名",\
 		'memo' 		=> "一言メモ",\
@@ -801,7 +801,7 @@ html = <<-"UPPER_MENU"
 
 		<div class='col' align='right'>
 			<input type='checkbox' id='gn_check'>&nbsp;
-			<span onclick=\"gnExchange( '#{code}' )\">#{l['gram']}</span>
+			<span class='badge rounded-pill npill' onclick=\"gnExchange( '#{code}' )\">#{l['gram']}</span>
 			&nbsp;&nbsp;&nbsp;&nbsp;
 			<input type='checkbox' id='all_check'>&nbsp;
 			<span class='badge rounded-pill npill' onclick=\"clearCB( 'all', '#{code}' )\">#{l['reset']}</span>
@@ -888,7 +888,7 @@ food_list.each do |e|
   	else
 
 	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>&nbsp;#{e.fn}</div>"
-  		html << "	<div class='col-3 fct_value' onclick=\"cb_summon( '#{food_key}', '#{e.weight}', '#{e.fn}' )\">#{food_tag[c]}</div>"
+  		html << "	<div class='col-3 fct_value' onclick=\"cb_detail_sub( '#{food_key}', '#{e.weight}', '#{e.fn}' )\">#{food_tag[c]}</div>"
   		html << "	<div class='col-3'>"
   		html << "		<div class='row cb_form'>"
   		html << "			<div class='col-6'><input type='text'  maxlength='20' class='form-control form-control-sm' id='food_init_#{c}' value='#{e.init}' onchange=\"initCB_SS( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"

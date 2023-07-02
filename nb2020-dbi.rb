@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.55b (2023/01/03)
+#nb2020-dbi.rb 0.62b (2023/5/13)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -16,22 +16,39 @@ require './nb2020-soul'
 #DEFINITION
 #==============================================================================
 
-#### Creating NB databases.
+#### Creating NB database.
 def db_create_nb()
-	query = "SHOW DATABASES LIKE '#{$MYSQL_DB}'"
-	res = $DBA.query( query )
+	res = $DBA.query( "SHOW DATABASES LIKE '#{$MYSQL_DB}';" )
 	if res.first
 		puts "#{$MYSQL_DB} database already exists."
 	else
-		query = "CREATE DATABASE #{$MYSQL_DB};"
-		$DBA.query( query )
+		$DBA.query( "CREATE DATABASE #{$MYSQL_DB};" )
 		puts "#{$MYSQL_DB} database has been created"
 	end
 end
 
-#### Creating RR databases.
+
+#### Creating NB database user.
+def db_create_nb_user()
+	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USER}';"
+	res = $DBA.query( query )
+	if res.first
+		puts "#{$MYSQL_USER} already exists."
+	else
+		query = "CREATE USER '#{$MYSQL_USER}'@'#{$MYSQL_HOST}' IDENTIFIED BY '#{$MYSQL_PW}';"
+		$DBA.query( query )
+		query = "GRANT ALL ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		puts "#{$MYSQL_USER} has been created."
+	end
+end
+
+
+#### Creating RR database user.
 def db_create_rr()
-	query = "SHOW DATABASES LIKE '#{$MYSQL_DBR}'"
+	query = "SHOW DATABASES LIKE '#{$MYSQL_DBR}';"
 	res = $DBA.query( query )
 	if res.first
 		puts "#{$MYSQL_DBR} database already exists."
@@ -39,6 +56,32 @@ def db_create_rr()
 		query = "CREATE DATABASE #{$MYSQL_DBR};"
 		$DBA.query( query )
 		puts "#{$MYSQL_DBR} database has been created"
+	end
+end
+
+
+#### Creating RR database user.
+def db_create_rr_user()
+	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USERR}';"
+	res = $DBA.query( query )
+	if res.first
+		puts "#{$MYSQL_USERR} already exists."
+	else
+		query = "CREATE USER '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_TAG} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_DIC} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPE} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT, INSERT, UPDATE, DELETE ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPEI} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		query = "GRANT SELECT, UPDATE ON #{$MYSQL_DB}.#{$MYSQL_TB_MEMORY} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
+		$DBA.query( query )
+		puts "#{$MYSQL_USER} has been created."
 	end
 end
 
@@ -333,51 +376,90 @@ end
 
 #### Updating food extra tag table.
 def ext_update( gycv_file, shun_file, unit_file )
-	query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
-	res = $DB.query( query )
-	res.each do |e|
-		query = "UPDATE #{$MYSQL_TB_EXT} SET color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{e['FN']}';"
-		$DB.query( query )
-	end
+#	query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
+#	res = $DB.query( query )
+#	res.each do |e|
+#		query = "UPDATE #{$MYSQL_TB_EXT} SET color1='0', color2='0', color1h='0', color2h='0' WHERE FN='#{e['FN']}';"
+#		$DB.query( query )
+#	end
 
 	# Green/Yellow color vegitable
 	f = open( gycv_file, 'r' )
+	gycv_flag = false
 	f.each_line do |e|
-		food_no = e.chomp
-		query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
-#		$DB.query( query )
+		if e == "NB2020 [gycv] data\n"
+			gycv_flag = true
+			next
+		elsif gycv_flag == true
+			food_no = e.chomp
+
+			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			res = $DB.query( query )
+			if res.first
+				query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
+			else
+				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', gycv='1';"
+			end
+			$DB.query( query )
+		end
 	end
+	puts 'Green/Yellow color vegitable in ext has been updated.' if gycv_flag == true
 	f.close
-#	puts 'Green/Yellow color vegitable in ext has been updated.'
 
 	# Shun
 	f = open( shun_file, 'r' )
+	shun_flag = false
 	f.each_line do |e|
-		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-		food_no = a[0]
-		shun1s = a[2]
-		shun1e = a[3]
-		shun2s = a[4]
-		shun2e = a[5]
-		shun1s = 0 if shun1s == nil || shun1s == ''
-		shun1e = 0 if shun1e == nil || shun1e == ''
-		shun2s = 0 if shun2s == nil || shun2s == ''
-		shun2e = 0 if shun2e == nil || shun2e == ''
-		query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
-#		$DB.query( query )
+		if e == "NB2020 [shun] data\n"
+			shun_flag = true
+			next
+		elsif shun_flag == true
+			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+			food_no = a[0]
+			shun1s = a[2]
+			shun1e = a[3]
+			shun2s = a[4]
+			shun2e = a[5]
+			shun1s = 0 if shun1s == nil || shun1s == ''
+			shun1e = 0 if shun1e == nil || shun1e == ''
+			shun2s = 0 if shun2s == nil || shun2s == ''
+			shun2e = 0 if shun2e == nil || shun2e == ''
+
+			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
+			res = $DB.query( query )
+			if res.first
+				query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
+			else
+				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e};"
+			end
+			$DB.query( query )
+		end
 	end
 	f.close
-#	puts 'Shun in ext has been updated.'
+	puts 'Shun in ext has been updated.' if shun_flag == true
 
 	# Unit
 	f = open( unit_file, 'r' )
+	unit_flag = false
 	f.each_line do |e|
-		a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-		query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
-#		$DB.query( query )
+		if e == "NB2020 [unit] data\n"
+			unit_flag = true
+			next
+		elsif unit_flag == true
+			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+
+			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{a[0]}';"
+			res = $DB.query( query )
+			if res.first
+				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+			else
+				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+			end
+			$DB.query( query )
+		end
 	end
 	f.close
-#	puts 'Unit in ext has been updated.'
+	puts 'Unit in ext has been updated.' if unit_flag == true
 end
 
 
@@ -391,56 +473,7 @@ def ext_init( gycv_file, shun_file, unit_file )
 	else
 		query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen1 TINYINT(1), allergen2 TINYINT(1), unit VARCHAR(1000), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
 		$DB.query( query )
-
-		query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
-		res = $DB.query( query )
-		res.each do |e|
-			query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{e['FN']}', color1='0', color2='0', color1h='0', color2h='0';"
-			$DB.query( query )
-		end
-		puts 'ext table has been created.'
-
-		# Green/Yellow color vegitable
-		f = open( gycv_file, 'r' )
-		f.each_line do |e|
-			food_no = e.chomp
-			query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN=#{food_no};"
-			$DB.query( query )
-		end
-		f.close
-		puts 'Green/Yellow color vegitable in ext has been updated.'
-
-		# Shun
-		f = open( shun_file, 'r' )
-		f.each_line do |e|
-			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-			food_no = a[0]
-			shun1s = a[2]
-			shun1e = a[3]
-			shun2s = a[4]
-			shun2e = a[5]
-			shun1s = 0 if shun1s == nil || shun1s == ''
-			shun1e = 0 if shun1e == nil || shun1e == ''
-			shun2s = 0 if shun2s == nil || shun2s == ''
-			shun2e = 0 if shun2e == nil || shun2e == ''
-			query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
-			$DB.query( query )
-		end
-		f.close
-		puts 'Shun in ext has been updated.'
-
-		# Unit
-		f = open( unit_file, 'r' )
-		f.each_line do |e|
-			unith = {}
-			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-			food_no = a[0]
-			unit[a[1]] = a[2]
-			query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit}' WHERE FN='#{food_no}';"
-			$DB.query( query )
-		end
-		f.close
-		puts 'Unit in ext has been updated.'
+		ext_update( gycv_file, shun_file, unit_file )
 	end
 end
 
@@ -452,7 +485,7 @@ def dic_init()
 	if res.first
 		puts 'dic table already exists.'
 	else
-		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), default VARCHAR(8), user VARCHAR(32), def_fn VARCHAR(16));'
+		query = 'CREATE TABLE dic ( FG VARCHAR(2), org_name VARCHAR(64), alias VARCHAR(128), user VARCHAR(32), def_fn VARCHAR(16));'
 		$DB.query( query )
 		puts 'dic table has been created.'
 
@@ -736,7 +769,7 @@ def recipei_init()
 	if res.first
 		puts 'recipei table already exists.'
 	else
-		query = 'CREATE TABLE recipei (user VARCHAR(32), word VARCHAR(64), code VARCHAR(32), public TINYINT(1), count SMALLINT UNSIGNED;'
+		query = 'CREATE TABLE recipei (user VARCHAR(32), word VARCHAR(64), code VARCHAR(32), public TINYINT(1), count SMALLINT UNSIGNED);'
 		$DB.query( query )
 		puts 'recipei table has been created.'
 	end
@@ -804,7 +837,7 @@ def media_init()
 	if res.first
 		puts 'media table already exists.'
 	else
-		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(64), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, z UNSIGNED TINYINT );'
+		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(64), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, zidx TINYINT UNSIGNED);'
 		$DB.query( query )
 		puts 'media table has been created.'
 	end
@@ -1173,46 +1206,7 @@ def modj_init()
 end
 
 
-def db_create_nb_user()
-	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USER}';"
-	res = $DBA.query( query )
-	if res.first
-		puts "#{$MYSQL_USER} already exists."
-	else
-		query = "CREATE USER '#{$MYSQL_USER}'@'#{$MYSQL_HOST}' IDENTIFIED BY '#{$MYSQL_PW}';"
-		$DBA.query( query )
-		query = "GRANT ALL ON #{$MYSQL_DB}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USER}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		puts "#{$MYSQL_USER} has been created."
-	end
-end
 
-
-def db_create_rr_user()
-	query = "SELECT * FROM mysql.user WHERE user='#{$MYSQL_USERR}';"
-	res = $DBA.query( query )
-	if res.first
-		puts "#{$MYSQL_USERR} already exists."
-	else
-		query = "CREATE USER '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT ALL ON #{$MYSQL_DBR}.* TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_TAG} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_DIC} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPE} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT, INSERT, UPDATE, DELETE ON #{$MYSQL_DB}.#{$MYSQL_TB_RECIPEI} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		query = "GRANT SELECT, UPDATE ON #{$MYSQL_DB}.#{$MYSQL_TB_MEMORY} TO '#{$MYSQL_USERR}'@'#{$MYSQL_HOST}';"
-		$DBA.query( query )
-		puts "#{$MYSQL_USER} has been created."
-	end
-end
 
 #==============================================================================
 base_file = '20201225-mxt_kagsei-mext_01110_012-m20211228_clean.txt'
@@ -1237,12 +1231,16 @@ admin_user = gets.chop
 print 'DB Administrator password？'
 admin_pass = gets.chop
 
-$DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+#==============================================================================
 $DBA = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{admin_user}", :password => "#{admin_pass}", :encoding => "utf8" )
 
-#==============================================================================
 db_create_nb()
 db_create_rr()
+db_create_nb_user()
+db_create_rr_user()
+
+#==============================================================================
+$DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
 fcts_init( base_file, sub_files )
 fct_init( base_file, plus_fct )
@@ -1292,8 +1290,6 @@ schoolk_init()
 schoolm_init()
 schoolc_init()
 
-db_create_nb_user()
-db_create_rr_user()
 
 $DBA.query( "FLUSH PRIVILEGES;" )
 $DBA.close

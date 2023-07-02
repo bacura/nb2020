@@ -629,7 +629,7 @@ var calcKoyomiCompo = function(){
 // Ginmi //////////////////////////////////////////////////////////////
 
 // Ginmi init
-var initGinmi = function(){
+const initGinmi = function(){
 	flashBW();
 	$.post( "ginmi.cgi", { mod:'line' }, function( data ){
 		$( "#LINE" ).html( data );
@@ -644,7 +644,7 @@ var initGinmi = function(){
 	});
 };
 
-var ginmiForm = function( mod ){
+const ginmiForm = function( mod ){
 	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){
 		$( "#L1" ).html( data );
 

@@ -1,7 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi extra 0.20b (2022/09/10)
+#Nutrition browser 2020 koyomi extra 0.21b (2023/05/21)
 
+
+#==============================================================================
+#STATIC
+#==============================================================================
+@debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 #LIBRARY
@@ -9,18 +15,34 @@
 require './soul'
 require './brain'
 
-
-#==============================================================================
-#STATIC
-#==============================================================================
-script = 'koyomiex'
-@debug = false
-
-
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'koyomi' 	=> "こよみ:拡張",\
+		'sun' 		=> "日",\
+		'mon' 		=> "月",\
+		'tue' 		=> "火",\
+		'wed' 		=> "水",\
+		'thu' 		=> "木",\
+		'fri' 		=> "金",\
+		'sat' 		=> "土",\
+		'year' 		=> "年",\
+		'month' 	=> "月",\
+		'day' 		=> "日",\
+		'basic' 	=> "基本",\
+		'geo'		=> "<img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'>",\
+		'table'	=> "<img src='bootstrap-dist/icons/table.svg' style='height:1.5em; width:1.5em;'>"
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -29,7 +51,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language)
 html = []
 
 puts 'CHECK membership<br>' if @debug
@@ -110,13 +132,14 @@ th_html << '</tr></thead>'
 
 puts "LOAD date cell<br>" if @debug
 cells_day = []
-r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", false, @debug )
+db = Db.new
+r = db.query_safe( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", false, @debug )
 r.each do |e|
 	if e['cell'] != nil && e['cell'] != ''
 		cells_day[e['date'].day] = JSON.parse( e['cell'] )
 	end
 end
-
+db.close
 
 if command == 'update'
 	puts "UPDATE cell<br>" if @debug
@@ -139,7 +162,7 @@ end
 puts "HTML Cell<br>" if @debug
 week_count = calendar.wf
 date_html = ''
-weeks = [lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], lp[7]]
+weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 1.upto( calendar.ddl ) do |c|
 	style = ''
 	style = "style='color:red;'" if week_count == 0
@@ -164,19 +187,19 @@ puts "HTML10<br>" if @debug
 html[10] = <<-"HTML10"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-2'><h5>#{lp[8]}</h5></div>
+		<div class='col-2'><h5>#{l['koyomi']}</h5></div>
 		<div class='col-2 form-inline'>
 			<input type='month' class='form-control form-control-sm' id='yyyy_mm' min='#{calendar.yyyyf}-01' max='#{calendar.yyyy + 2}-01' value='#{calendar.yyyy}-#{calendar.mms}' onChange="changeKoyomiex()">
 		</div>
 		<div class='col-4'>
 			<form method='post' enctype='multipart/form-data' id='table_form'>
 			<div class='input-group input-group-sm'>
-				<label class="input-group-text">#{lp[14]}</label>
+				<label class="input-group-text">#{l['table']}</label>
 				<input type='file' class='form-control' name='extable' onchange="importkoyomiex()">
 			</div>
 			</form>
 		</div>
-		<div align='center' class='col-4 joystic_koyomi' onclick="window.location.href='#day#{date.day}';">#{lp[13]}</div>
+		<div align='center' class='col-4 joystic_koyomi' onclick="window.location.href='#day#{date.day}';">#{l['geo']}</div>
 	</div>
 	<div class='row'>
 		<div class='col'></div>

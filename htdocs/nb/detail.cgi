@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.12b (2022/12/18)
+#Nutrition browser 2020 detail viewer 0.14b (2023/05/07)
 
 #==============================================================================
 # STATIC
@@ -11,7 +11,7 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 #==============================================================================
@@ -41,7 +41,7 @@ def language_pack( language )
 		'rev'		=> "<img src='bootstrap-dist/icons/caret-left.svg' style='height:1.5em; width:1.5em;'>",\
 		'fwd'		=> "<img src='bootstrap-dist/icons/caret-right.svg' style='height:1.5em; width:1.5em;'>",\
 		'downlord'	=> "<img src='bootstrap-dist/icons/download.svg' style='height:2em; width:2em;'>",\
-		'return'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>"
+		'return'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>"
 	}
 
 	return l[language]
@@ -84,7 +84,8 @@ food_weight = @cgi['food_weight']
 food_no = @cgi['food_no']
 dir = @cgi['dir']
 sid = @cgi['sid']
-sid_flag = true if sid
+sid_flag = false
+sid_flag = true if sid != ''
 selectu = @cgi['selectu'].to_s
 if @debug
 	puts "frct_mode: #{frct_mode}<br>"
@@ -154,11 +155,6 @@ if user.status > 0
 	alias_button <<	"<div class='input-group-prepend'><button class='btn btn-outline-primary' type='button' onclick=\"aliasRequest( '#{food_no}' )\">#{l['request']}</button></div>"
 	alias_button << '</div>'
 end
-
-
-puts 'Add button<br>' if @debug
-add_button = ''
-add_button = "<spqn onclick=\"addingCB( '#{food_no}', 'detail_weight', '#{food_name}' )\">#{l['cboard']}</span>" if user.name
 
 
 puts 'FCT table HTML<br>' if @debug
@@ -238,9 +234,6 @@ html = <<-"HTML"
 			#{fract_html}
 		</div>
 		<div class="col" align="right">
-			#{add_button}
-		</div>
-		<div class="col" align="right">
 			<a href='plain-text.cgi?food_no=#{food_no}&food_weight=#{food_weight}&frct_mode=#{frct_mode}&lg=#{user.language}' download='detail_#{fct_opt['FN']}.txt'><span>#{l['downlord']}</span></a>
 		</div>
 	</div>
@@ -294,4 +287,6 @@ puts html
 
 
 #### 登録ユーザーで直接参照の場合は履歴に追加
-add_his( user.name, food_no ) unless sid_flag || user.status == 0
+p 'cc'
+add_his( user.name, food_no ) if sid_flag == false && user.status != 0
+p 'zz'

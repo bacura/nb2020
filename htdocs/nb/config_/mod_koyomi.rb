@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for koyomiex 0.21b (2022/12/10)
+# Nutorition browser 2020 Config module for koyomiex 0.22b (2023/5/7)
 #encoding: utf-8
 
 @debug = false
@@ -8,6 +8,7 @@ def config_module( cgi, user, lp )
 	l = module_lp( user.language )
 	module_js()
 
+	koyomi = Hash.new
 	start = Time.new.year
 	kexu = Hash.new
 	kexa = Hash.new
@@ -188,22 +189,22 @@ def module_js()
 <script type='text/javascript'>
 
 var ksChange = function(){
-	let kstart = document.getElementById( 'kstart' ).value;
-		$.post( "config.cgi", { mod:'koyomi', step:'kstart', kstart:kstart }, function( data ){
-			$( "#L1" ).html( data );
-		});
+	const kstart = document.getElementById( 'kstart' ).value;
+	$.post( "config.cgi", { mod:'koyomi', step:'kstart', kstart:kstart }, function( data ){
+		$( "#L1" ).html( data );
+	});
 };
 
 var kexAdd = function(){
-	let kex_add_select = document.getElementById( 'kex_add_select' ).value;
-		$.post( "config.cgi", { mod:'koyomi', step:'select', kex_add_select:kex_add_select }, function( data ){
-			$( "#L1" ).html( data );
-		});
+	const kex_add_select = document.getElementById( 'kex_add_select' ).value;
+	$.post( "config.cgi", { mod:'koyomi', step:'select', kex_add_select:kex_add_select }, function( data ){
+		$( "#L1" ).html( data );
+	});
 };
 
 var kexNew = function(){
-	let kex_add_key = document.getElementById( 'kex_add_key' ).value;
-	let kex_add_unit = document.getElementById( 'kex_add_unit' ).value;
+	const kex_add_key = document.getElementById( 'kex_add_key' ).value;
+	const kex_add_unit = document.getElementById( 'kex_add_unit' ).value;
 
 	if( kex_add_key != '' ){
 		$.post( "config.cgi", { mod:'koyomi', step:'new', kex_add_key:kex_add_key, kex_add_unit:kex_add_unit }, function( data ){
@@ -213,7 +214,8 @@ var kexNew = function(){
 };
 
 var kexOnOff = function( kex_key ){
-	if( document.getElementById( 'kex_onoff' + kex_key ).checked ){ var kex_onoff = 1; }else{ var kex_onoff = 0; }
+	let kex_onoff = 0;
+	if( document.getElementById( 'kex_onoff' + kex_key ).checked ){ kex_onoff = 1; }
 	$.post( "config.cgi", { mod:'koyomi', step:'available', kex_key:kex_key, kex_onoff:kex_onoff }, function( data ){
 		$( "#L1" ).html( data );
 	});
@@ -228,8 +230,6 @@ var kexDel = function( kex_key ){
 		displayVIDEO( "Check!(>_<)" );
 	}
 };
-
-
 </script>
 JS
 	puts js
