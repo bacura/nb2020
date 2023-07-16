@@ -1,12 +1,13 @@
-# Nutorition browser 2020 Config module for koyomiex 0.22b (2023/5/7)
+# Nutorition browser 2020 Config module for koyomiex 0.23b (2023/07/13)
 #encoding: utf-8
 
 @debug = false
 @kex_max = 10
 
-def config_module( cgi, user, lp )
-	l = module_lp( user.language )
+def config_module( cgi, user )
 	module_js()
+	l = module_lp( user.language )
+	db = Db.new( user, @debug )
 
 	koyomi = Hash.new
 	start = Time.new.year
@@ -26,7 +27,7 @@ def config_module( cgi, user, lp )
 
 
 	puts 'LOAD config<br>' if @debug
-	r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 	if r.first
 		if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 			koyomi = JSON.parse( r.first['koyomi'] )
@@ -67,7 +68,7 @@ def config_module( cgi, user, lp )
 		koyomi['kexu'] = kexu
 		koyomi['kexa'] = kexa
 		koyomi_ = JSON.generate( koyomi )
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", true, false )
 	end
 
 
@@ -80,6 +81,7 @@ def config_module( cgi, user, lp )
 	end
   	start_select << "</select>"
 
+  	db.close
 
 	####
 ####

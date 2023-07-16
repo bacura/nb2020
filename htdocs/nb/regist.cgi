@@ -5,7 +5,7 @@
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = false
+@debug = true
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -228,7 +228,7 @@ when 'finish'
   mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", false, @debug )
 
   # Inserting new config
-  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', his_max=200;", false, @debug )
+#  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', his_max=200;", false, @debug )
 
   html_regist_finish( l )
 

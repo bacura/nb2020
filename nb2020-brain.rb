@@ -235,7 +235,12 @@ def unit_value( iv )
 end
 
 
-
+#Extra liberally for plot
+def exlib_plot()
+  puts '<link rel="stylesheet" href="c3/c3.min.css">'
+  puts '<script type="text/javascript" src="d3/d3.min.js"></script>'
+  puts '<script type="text/javascript" src="c3/c3.min.js"></script>'
+end
 
 #==============================================================================
 # CLASS

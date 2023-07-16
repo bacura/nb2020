@@ -111,6 +111,12 @@ nav {
   font-weight: bold;
 }
 
+.ref_error{
+  background: tomato;
+  color: black;
+  font-weight: bold;
+}
+
 .dbq{
   background: palegreen;
   color: black;

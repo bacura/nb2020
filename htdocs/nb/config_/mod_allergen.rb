@@ -1,14 +1,12 @@
-# Nutorition browser 2020 Config module for Allergen 0.00b
+# Nutorition browser 2020 Config module for Allergen 0.00b (2023/07/13)
 #encoding: utf-8
 
-#### mod debug mode
 @degug = true
 
-
-def config_module( cgi, user, lp )
-	l = module_lp( user.language )
+def config_module( cgi, user )
 	module_js()
-
+	l = module_lp( user.language )
+	db = Db.new( user, @debug )
 
 	step = cgi['step']
 	code = cgi['code']
@@ -23,25 +21,25 @@ def config_module( cgi, user, lp )
 	when 'on'
 		fn.each do |e|
 			if /P|U?\d\d\d\d\d/ =~ e
-				mdb( "INSERT INTO #{$MYSQL_TB_PAG} SET user='#{user.name}', FN='#{e}';", false, @debug )
+				db.query( "INSERT INTO #{$MYSQL_TB_PAG} SET user='#{user.name}', FN='#{e}';", true, false )
 			end
 		end
 	when 'off'
 		fn.each do |e|
 			if /P|U?\d\d\d\d\d/ =~ e
-				mdb( "DELETE FROM #{$MYSQL_TB_PAG} WHERE user='#{user.name}' AND FN='#{e}';", false, @debug )
+				db.query( "DELETE FROM #{$MYSQL_TB_PAG} WHERE user='#{user.name}' AND FN='#{e}';", true, false )
 			end
 		end
 	when 'warning'
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET allergen='#{warning}' WHERE user='#{user.name}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET allergen='#{warning}' WHERE user='#{user.name}';", true, false )
 	else
-		r = mdb( "SELECT allergen FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT allergen FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 		warning = r.first['allergen'] if r.first
 		warning = '000' if warning == nil || warning == ''
 	end
 
 	list_html = ''
-	r = mdb( "SELECT t1.* FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_PAG} AS t2 ON t1.FN = t2.FN WHERE t2.user='#{user.name}' ORDER BY t1.FN;", false, @debug )
+	r = db.query( "SELECT t1.* FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_PAG} AS t2 ON t1.FN = t2.FN WHERE t2.user='#{user.name}' ORDER BY t1.FN;", false, false )
 	r.each do |e|
 		list_html << "<tr>"
 		list_html << "<td>#{e['FN']}</td>"
@@ -51,7 +49,6 @@ def config_module( cgi, user, lp )
 	end
 	list_html << '<tr><td>no item listed.</td></tr>' if list_html == ''
 
-
 	checked1 = ''
 	checked2 = ''
 	checked3 = ''
@@ -59,6 +56,7 @@ def config_module( cgi, user, lp )
 	checked2 = 'CHECKED' if warning[1] == '1'
 	checked3 = 'CHECKED' if warning[2] == '1'
 
+	db.close
 
 	####
 ####
@@ -124,7 +122,7 @@ def module_js()
 <script type='text/javascript'>
 var allergen_cfg = function( step, code ){
 	if( step == 'on' ){
-		var code = document.getElementById( 'code' ).value;
+		const code = document.getElementById( 'code' ).value;
 		$.post( "config.cgi", { mod:'allergen', step:step, code:code }, function( data ){
 			$( "#L1" ).html( data );
 			displayVIDEO( code + ':allergen ON' );
@@ -139,10 +137,15 @@ var allergen_cfg = function( step, code ){
 	}
 
 	if( step == 'warning' ){
-		if( document.getElementById( 'obligate' ).checked ){ var warn1 = '1'; }else{ var warn1 = '0'; }
-		if( document.getElementById( 'recommend' ).checked ){ var warn2 = '1'; }else{ var warn2 = '0'; }
-		if( document.getElementById( 'user' ).checked ){ var warn3 = '1'; }else{ var warn3 = '0'; }
-		var warning = warn1 + warn2 + warn3;
+		let warn1 = '0';
+		let warn2 = '0';
+		let warn3 = '0';
+
+		if( document.getElementById( 'obligate' ).checked ){ warn1 = '1'; }
+		if( document.getElementById( 'recommend' ).checked ){ warn2 = '1'; }
+		if( document.getElementById( 'user' ).checked ){ warn3 = '1'; }
+
+		const warning = warn1 + warn2 + warn3;
 		$.post( "config.cgi", { mod:'allergen', step:step, warning:warning }, function( data ){ $( "#L1" ).html( data ); });
 	}
 

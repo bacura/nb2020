@@ -1,13 +1,11 @@
 # Nutorition browser 2020 Config module for Palette 0.20b
 #encoding: utf-8
 
-#### mod debug mode
 @degug = true
 
-
 #### displying palette
-def listing( uname, l )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
+def listing( uname, l, db )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
 	list_body = ''
 	r.each do |e|
 		count = e['palette'].count( '1' )
@@ -47,20 +45,21 @@ HTML
 end
 
 
-def config_module( cgi, user, lp )
-	l = module_lp( user.language )
+def config_module( cgi, user )
 	module_js()
+	l = module_lp( user.language )
+	db = Db.new( user, @debug )
 
 	step = cgi['step']
 	html = ''
 
 	case step
 	when ''
-		html = listing( user.name, l )
+		html = listing( user.name, l, db )
 	when 'new_palette', 'edit_palette'
 		checked = Hash.new
 		if step == 'edit_palette'
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='#{cgi['palette_name']}';", false, @debug )
+			r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='#{cgi['palette_name']}';", false, false )
 			palette = r.first['palette']
 			palette.size.times do |c|
 				checked[@fct_item[c]] = 'checked' if palette[c] == '1'
@@ -109,27 +108,29 @@ HTML
 		palette_name = cgi['palette_name']
 
 		@fct_min.each do |e| fct_bits << cgi[e].to_i.to_s end
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{user.name}';", false, false )
 		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}' WHERE name='#{palette_name}' AND user='#{user.name}';", false, @debug )
+			db.query( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}' WHERE name='#{palette_name}' AND user='#{user.name}';", true, false )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{user.name}', palette='#{fct_bits}';", false, @debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{user.name}', palette='#{fct_bits}';", true, false )
 		end
 
-		html = listing( user.name, l )
+		html = listing( user.name, l, db )
 
 	when 'delete_palette'
-		mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{user.name}';", false, @debug )
+		db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{user.name}';", true, false )
 
-		html = listing( user.name, l )
+		html = listing( user.name, l, db )
 
 	when 'reset_palette'
-		mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, @debug )
+		db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", true, false )
 		0.upto( @palette_default.size - 1 ) do |c|
-			mdb( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{$PALETTE_DEFAULT_NAME['jp'][c]}', palette='#{$PALETTE_DEFAULT['jp'][c]}';", false, @debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{$PALETTE_DEFAULT_NAME['jp'][c]}', palette='#{$PALETTE_DEFAULT['jp'][c]}';", true, false )
 		end
-		html = listing( user.name, l )
+		html = listing( user.name, l, db )
 	end
+
+	db.close
 
 	return html
 end
@@ -154,9 +155,8 @@ var palette_cfg = function( step, id ){
 	if( step == 'new_palette' ){
 		$.post( "config.cgi", { mod:'palette', step:step }, function( data ){
 			$( "#L2" ).html( data );
-		});
-
 			dl2 = true;
+		});
 	}
 
 	if( step == 'reset_palette' ){
@@ -167,7 +167,7 @@ var palette_cfg = function( step, id ){
 	}
 
 	if( step == 'regist' ){
-		var palette_name = document.getElementById( "palette_name" ).value;
+		const palette_name = document.getElementById( "palette_name" ).value;
 
 		if( palette_name != '' ){
 			#{js_fc_set}
@@ -176,7 +176,7 @@ var palette_cfg = function( step, id ){
 				$( "#L1" ).html( data );
 				displayVIDEO( palette_name );
 			});
-		} else{
+		}else{
 			displayVIDEO( 'Palette name!(>_<)' );
 		}
 	}
@@ -185,8 +185,8 @@ var palette_cfg = function( step, id ){
 	if( step == 'edit_palette' ){
 		$.post( "config.cgi", { mod:'palette', step:step, palette_name:id }, function( data ){
 			$( "#L2" ).html( data );
-		});
 			dl2 = true;
+		});
 	}
 
 	// Deleting FC palette
@@ -195,7 +195,7 @@ var palette_cfg = function( step, id ){
 			$.post( "config.cgi", { mod:'palette', step:step, palette_name:id }, function( data ){
 				$( "#L1" ).html( data );
 			});
-		} else{
+		}else{
 			displayVIDEO( 'Check!(>_<)' );
 		}
 	}

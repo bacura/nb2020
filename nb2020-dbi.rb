@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.62b (2023/5/13)
+#nb2020-dbi.rb 0.63b (2023/7/12)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -686,14 +686,14 @@ def user_init()
 	if res.first
 		puts 'user table already exists.'
 	else
-		query = 'CREATE TABLE user (user VARCHAR(32) NOT NULL PRIMARY KEY, pass VARCHAR(32), cookie VARCHAR(32), cookie_m VARCHAR(32), mail VARCHAR(64), aliasu VARCHAR(64), status TINYINT, reg_date DATETIME, language VARCHAR(2), mom VARCHAR(32), switch TINYINT(1));'
+		query = 'CREATE TABLE user (user VARCHAR(32) NOT NULL PRIMARY KEY, pass VARCHAR(32), cookie VARCHAR(32), cookie_m VARCHAR(32), mail VARCHAR(64), aliasu VARCHAR(64), status TINYINT, reg_date DATETIME, language VARCHAR(2), mom VARCHAR(32), switch TINYINT(1), astral TINYINT(1));'
 		$DB.query( query )
 		puts 'user in ext has been created.'
 
-		$DB.query( "INSERT INTO user SET user='#{$GM}', pass='', status='9', language='#{$DEFAULT_LP}';" )
+		$DB.query( "INSERT INTO user SET user='#{$GM}', pass='', status='9', language='#{$DEFAULT_LP}', ref=0;" )
 
 		['guest', 'guest2', 'guest3'].each do |e|
-			$DB.query( "INSERT INTO user SET user='#{e}', pass='', status='3', language='#{$DEFAULT_LP}';" )
+			$DB.query( "INSERT INTO user SET user='#{e}', pass='', status='3', language='#{$DEFAULT_LP}', ref=0;" )
 		end
 
 		puts 'GM & guests have been registed.'
@@ -1236,8 +1236,8 @@ $DBA = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{admin_user}
 
 db_create_nb()
 db_create_rr()
-db_create_nb_user()
-db_create_rr_user()
+
+$DBA.close
 
 #==============================================================================
 $DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
@@ -1290,7 +1290,13 @@ schoolk_init()
 schoolm_init()
 schoolc_init()
 
+$DB.close
+
+#==============================================================================
+$DBA = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{admin_user}", :password => "#{admin_pass}", :encoding => "utf8" )
+
+db_create_nb_user()
+db_create_rr_user()
 
 $DBA.query( "FLUSH PRIVILEGES;" )
 $DBA.close
-$DB.close

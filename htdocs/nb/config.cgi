@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 config 0.24b (2022/12/17)
+#Nutrition browser 2020 config 0.30b (2023/07/12)
 
 
 #==============================================================================
@@ -78,7 +78,6 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
-lp = user.load_lp( script )
 
 #### Getting POST
 mod = @cgi['mod']
@@ -88,12 +87,16 @@ mod = @cgi['mod']
 html = ''
 if mod == ''
 	puts 'INIT<br>' if @debug
-	html = init( l, user )
+	unless user.status == 7
+		html = init( l, user )
+	else
+		html = "<span class='ref_error'>[config]Astral user limit!</span><br>"
+	end
 else
 	require "#{$HTDOCS_PATH}/config_/mod_#{mod}.rb"
 
 	puts "MOD (#{mod})<br>" if @debug
-	html = config_module( @cgi, user, lp )
+	html = config_module( @cgi, user ) unless user.status == 7
 end
 
 

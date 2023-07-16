@@ -1,30 +1,42 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition mother & child tools 0.00b
-
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './probe'
-require 'json'
+#Nutrition browser 2020 nutrition mother & child tools 0.00b (2023/07/05)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'momchai'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 
+#==============================================================================
+#LIBRARY
+#==============================================================================
+require './soul'
+require './brain'
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'momchai' 	=> "母子管理モジュール",\
+		'growth' 	=> "成長曲線"
+	}
+
+	return l[language]
+end
+
+
 #### line menu
-def line( lp )
+def line( l )
 	html = <<-"HTML"
-	<div align='center' class='badge rounded-pill bg-info text-dark' onclick="MomChaiForm( 'growth-curve' )">#{lp[1]}</div>
+	<div align='center' class='badge rounded-pill bg-info text-dark' onclick="MomChaiForm( 'growth-curve' )">#{l['growth']}</div>
 HTML
 
 	return html
@@ -32,8 +44,8 @@ end
 
 
 ####
-def init( lp )
-	html = puts lp[2]
+def init( l )
+	html = "<div align='center'>#{l['momchai']}</div>"
 
 	return html
 end
@@ -44,7 +56,7 @@ end
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 #### Getting POST
@@ -61,9 +73,10 @@ end
 ####
 html = "<div class='container-fluid'>"
 if mod == 'line'
-	html = line( lp )
+	exlib_plot()
+	html = line( l )
 elsif mod == ''
-	html = init( lp )
+	html = init( l )
 else
 	require "#{$HTDOCS_PATH}/momchai_/mod_#{mod}.rb"
 	html = momchai_module( @cgi, user, @debug )

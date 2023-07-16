@@ -1,11 +1,13 @@
-# Nutorition browser 2020 Config module for release 0.01b
+# Nutorition browser 2020 Config module for release 0.02b (23/07/14)
 #encoding: utf-8
 
 #mod debug
 @debug = false
 
-def config_module( cgi, user, lp )
+def config_module( cgi, user )
 	module_js()
+	l = language_pack( user.language )
+	db = Db.new( user, false )
 
 	step = cgi['step']
 	password = cgi['password']
@@ -19,13 +21,11 @@ def config_module( cgi, user, lp )
 		html = <<-"HTML"
       	<div class="container">
       		<div class='row'>
-	    		#{lp[34]}<br>
-    			#{lp[35]}<br>
-				#{lp[36]}<br>
+	    		#{l['msg']}<br>
 			</div><br>
       		<div class='row'>
-				<div class='col-4'><input type="password" id="password" class="form-control login_input" placeholder="#{lp[37]}" required></div>
-				<div class='col-4'><button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="release_cfg()">#{lp[38]}</button></div>
+				<div class='col-4'><input type="password" id="password" class="form-control form-control-sm login_input" placeholder="#{l['password']}" required></div>
+				<div class='col-4'><button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="release_cfg()">#{l['release']}</button></div>
 			</div>
 		</div>
 HTML
@@ -35,34 +35,37 @@ HTML
 			html = <<-"HTML"
       		<div class="container">
       			<div class='row'>
-	    			#{lp[39]}
+	    			#{l['thanks']}
 				</div>
 			</div>
 HTML
 
 			# Updating user table
-			mdb( "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{user.name}' AND cookie='#{user.uid}';", false, false )
+			db.query( "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{user.name}' AND cookie='#{user.uid}';", true, false )
 
 			# Deleting indivisual data
-			mdb( "DELETE FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';", false, false )
-			mdb( "DELETE FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, false )
-			mdb( "DELETE FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
-			mdb( "DELETE FROM #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, false )
-			mdb( "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE user='#{user.name}';", false, false )
-			mdb( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", false, false )
+			db.query( "DELETE FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';", true, false )
+			db.query( "DELETE FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", true, false )
+			db.query( "DELETE FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", true, false )
+			db.query( "DELETE FROM #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", true, false )
+			db.query( "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE user='#{user.name}';", true, false )
+			db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", true, false )
 		else
 			puts 'release step ROM<br>' if @debug
 			html = <<-"HTML"
       		<div class="container">
       			<div class='row'>
-	    			#{lp[40]}
+	    			#{l['nguser']}
 				</div>
 			</div>
 HTML
 		end
-
-		return html
 	end
+
+	db.close
+
+	return html
+
 end
 
 
@@ -71,15 +74,36 @@ def module_js()
 <script type='text/javascript'>
 
 var release_cfg = function(){
-	var password = document.getElementById( "password" ).value;
-	closeBroseWindows( 1 );
-	displayLINE( 'on' );
+	const password = document.getElementById( "password" ).value;
 
-	$.post( "config.cgi", { mod:'release', step:'release', password:password }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
+	$.post( "config.cgi", { mod:'release', step:'release', password:password }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		dline = true;
+		displayBW();
+	});
 };
 
 </script>
 JS
 	puts js
 end
+
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	l['jp'] = {
+		'msg' => "ユーザー登録を解除する場合は、パスワードを入力し登録解除ボタンを押してください。",\
+		'password' => "パスワード",\
+		'release' => "登録解除",\
+		'thanks' => "ユーザー登録を解除しました。ご利用ありがとうございました。",\
+		'nguser' => "特殊アカウントは登録解除できません。"
+	}
+
+	return l[language]
+end
+

@@ -1,15 +1,16 @@
-# Nutorition browser 2020 Config module for bio 0.21b
+# Nutorition browser 2020 Config module for bio 0.22b (2023/07/14)
 #encoding: utf-8
 
 
-def config_module( cgi, user, lp )
-	l = module_lp( user.language )
+def config_module( cgi, user )
 	module_js()
+	l = module_lp( user.language )
+	db = Db.new( user, @debug )
 
 	time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120]
 
 	step = cgi['step']
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+	r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -48,8 +49,10 @@ def config_module( cgi, user, lp )
 
 		# Updating bio information
 		bio_ = JSON.generate( { "sex" => sex, "age" => age, "birth" => birth, "height" => height, "weight" => weight, "kexow" => kexow, "pgene" => pgene, "bst" => bst, "lst" => lst , "dst" => dst, "bti" => bti , "lti" => lti , "dti" => dti } )
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET bio='#{bio_}' WHERE user='#{user.name}';", false, false )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET bio='#{bio_}' WHERE user='#{user.name}';", true, false )
 	end
+
+	db.close
 
 	male_check = ''
 	female_check = ''
@@ -195,33 +198,33 @@ def module_js()
 
 // Updating bio information
 var bio_cfg = function( step ){
-	var sex = 0;
-	var age = '';
-	var height = '';
-	var weight = '';
-	var kexow = 0;
-	var pgene = 0;
-	var bst = '07:00';
-	var lst = '12:00';
-	var dst = '19:00';
-	var bti = 15;
-	var lti = 15;
-	var dti = 15;
+	let age = '';
+	let height = '';
+	let weight = '';
+	let bst = '07:00';
+	let lst = '12:00';
+	let dst = '19:00';
+	let bti = 15;
+	let lti = 15;
+	let dti = 15;
+	let sex = 0;
+	let kexow = 0;
+	let pgene = 0;
 
 	if( step == 'change' ){
-		if( document.getElementById( "female" ).checked ){ sex = 1; }
 		age = document.getElementById( "age" ).value;
 		birth = document.getElementById( "birth" ).value;
 		height = document.getElementById( "height" ).value;
 		weight = document.getElementById( "weight" ).value;
-		if( document.getElementById( "kexow" ).checked ){ kexow = 1; }
-		if( document.getElementById( "pgene" ).checked ){ pgene = 1; }
 		bst = document.getElementById( "bst" ).value;
 		lst = document.getElementById( "lst" ).value;
 		dst = document.getElementById( "dst" ).value;
 		bti = document.getElementById( "bti" ).value;
 		lti = document.getElementById( "lti" ).value;
 		dti = document.getElementById( "dti" ).value;
+		if( document.getElementById( "female" ).checked ){ sex = 1; }
+		if( document.getElementById( "kexow" ).checked ){ kexow = 1; }
+		if( document.getElementById( "pgene" ).checked ){ pgene = 1; }
 	}
 	$.post( "config.cgi", { mod:'bio', step:step, sex:sex, age:age, birth:birth, height:height, weight:weight, kexow:kexow, pgene:pgene, bst:bst, lst:lst, dst:dst, bti:bti, lti:lti, dti:dti }, function( data ){ $( "#L1" ).html( data );});
 

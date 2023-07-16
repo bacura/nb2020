@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for code converter 0.10b (2022/09/17)
+# Nutorition browser 2020 Config module for code converter 0.11b (2023/07/13)
 #encoding: utf-8
 
 @debug = false
@@ -51,9 +51,11 @@ HTML_ER
 end
 
 
-def config_module( cgi, user, lp )
-	l = module_lp( user.language )
+def config_module( cgi, user )
 	module_js()
+	l = module_lp( user.language )
+	db = Db.new( user, @debug )
+
 	from_fn = cgi['from_fn'].to_s
 	into_fn = cgi['into_fn'].to_s
 	ignore_p = cgi['ignore_p']
@@ -64,14 +66,14 @@ def config_module( cgi, user, lp )
 	html = ''
 	case cgi['step']
 	when 'confirm-fn'
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{into_fn}';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{into_fn}';", false, false )
 		if r.first
-			rr = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{from_fn}';", false, @debug )
+			rr = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{from_fn}';", false, false )
 			if rr.first
 				count = 0
 				protect = ''
 				protect = ' AND protect!="1"' if ignore_p == 'off'
-				rrr = mdb( "SELECT sum FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, @debug )
+				rrr = db.query( "SELECT sum FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, false )
 				rrr.each do |e|
 					hit_flag = false
 					a = e['sum'].split( "\t" )
@@ -96,7 +98,7 @@ def config_module( cgi, user, lp )
 		count = 0
 		protect = ''
 		protect = ' AND protect!="1"' if ignore_p == 'off'
-		r = mdb( "SELECT sum, code, user FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, @debug )
+		r = db.query( "SELECT sum, code, user FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, false )
 		r.each do |e|
 			sums = []
 			a = e['sum'].split( "\t" )
@@ -115,7 +117,7 @@ def config_module( cgi, user, lp )
 			sum_post = sums.join( "\t" )
 
 			if e['sum'] != sum_post
-				mdb( "UPDATE #{$MYSQL_TB_RECIPE} set sum='#{sum_post}' WHERE user='#{user.name}' AND code='#{e['code']}';", false, @debug )
+				db.query( "UPDATE #{$MYSQL_TB_RECIPE} set sum='#{sum_post}' WHERE user='#{user.name}' AND code='#{e['code']}';", true, false )
 				count += 1
 			end
 		end
@@ -127,7 +129,7 @@ def config_module( cgi, user, lp )
 		protect = ''
 		protect = ' AND protect!="1"' if ignore_tagp == 'off'
 
-		r = mdb( "SELECT code, protocol FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, @debug )
+		r = db.query( "SELECT code, protocol FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, false )
 		r.each do |e|
 			a = e['protocol'].split( "\n" )
 			if /^\#/ =~ a[0]
@@ -143,7 +145,7 @@ def config_module( cgi, user, lp )
 		protect = ' AND protect!="1"' if ignore_p == 'off'
 
 		recipe = Recipe.new( user.name )
-		r = mdb( "SELECT code, protocol FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, @debug )
+		r = db.query( "SELECT code, protocol FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}'#{protect};", false, false )
 		r.each do |e|
 			recipe.load_db( e['code'], true )
 			a = recipe.protocol.split( "\n" )
@@ -208,6 +210,8 @@ HTML
 		####
 	end
 
+	db.close
+
 	return html
 end
 
@@ -218,17 +222,22 @@ def module_js()
 
 // Food number converter init
 var convert_fn = function( step ){
-	var from_fn = document.getElementById( "from_fn" ).value;
-	var into_fn = document.getElementById( "into_fn" ).value;
-	if( document.getElementById( "ignore_p" ).checked ){var ignore_p = 'on'; }else{ var ignore_p = 'off'; }
+	const from_fn = document.getElementById( "from_fn" ).value;
+	const into_fn = document.getElementById( "into_fn" ).value;
+	let ignore_p = 'off';
+
+	if( document.getElementById( "ignore_p" ).checked ){ ignore_p = 'on'; }
 	if( from_fn != '' && into_fn != '' ){
 		if( into_fn != from_fn ){
-			$.post( "config.cgi", { mod:'convert', step:step, from_fn:from_fn, into_fn:into_fn, ignore_p:ignore_p }, function( data ){ $( "#L2" ).html( data );});
-			flashBW();
-			dl1 = true;
-			dl2 = true;
-			dline = true;
-			displayBW();
+			$.post( "config.cgi", { mod:'convert', step:step, from_fn:from_fn, into_fn:into_fn, ignore_p:ignore_p }, function( data ){
+				$( "#L2" ).html( data );
+
+				flashBW();
+				dl1 = true;
+				dl2 = true;
+				dline = true;
+				displayBW();
+			});
 		}else{
 			displayVIDEO( 'Same!(>_<)');
 		}
@@ -239,20 +248,26 @@ var convert_fn = function( step ){
 
 // Recipe tag converter init
 var convert_tag = function( step ){
-	var from_tag = document.getElementById( "from_tag" ).value;
-	var into_tag = document.getElementById( "into_tag" ).value;
-	if( document.getElementById( "ignore_tagp" ).checked ){var ignore_tagp = 'on'; }else{ var ignore_tagp = 'off'; }
+	const from_tag = document.getElementById( "from_tag" ).value;
+	const into_tag = document.getElementById( "into_tag" ).value;
+	let ignore_tagp = 'off';
+
+	if( document.getElementById( "ignore_tagp" ).checked ){ ignore_tagp = 'on'; }
 	if( into_fn != from_tag && from_tag != '' ){
-		$.post( "config.cgi", { mod:'convert', step:step, from_tag:from_tag, into_tag:into_tag, ignore_tagp:ignore_tagp }, function( data ){ $( "#L2" ).html( data );});
-		flashBW();
-		dl1 = true;
-		dl2 = true;
-		dline = true;
-		displayBW();
+		$.post( "config.cgi", { mod:'convert', step:step, from_tag:from_tag, into_tag:into_tag, ignore_tagp:ignore_tagp }, function( data ){
+			$( "#L2" ).html( data );
+
+			flashBW();
+			dl1 = true;
+			dl2 = true;
+			dline = true;
+			displayBW();
+		});
 	}else{
 		displayVIDEO( 'Same!(>_<)');
 	}
 };
+
 
 // Food number converter exchange
 var convert_fn2 = function( step, from_fn, into_fn, ignore_p ){

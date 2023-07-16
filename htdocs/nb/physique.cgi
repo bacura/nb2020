@@ -1,7 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition physical tools 0.03b (2022/09/18)
+#Nutrition browser 2020 nutrition physical tools 0.04b (2023/07/06)
 
+
+#==============================================================================
+#STATIC
+#==============================================================================
+@debug = true
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 #LIBRARY
@@ -9,24 +15,32 @@
 require './soul'
 require './brain'
 
-
-#==============================================================================
-#STATIC
-#==============================================================================
-script = 'physique'
-@debug = false
-
-
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'physique' 	=> "体格管理モジュール",\
+		'loss' 	=> "減量チャート",\
+		'keep' 	=> "維持チャート",\
+		'build' => "増量チャート"
+	}
+
+	return l[language]
+end
+
+
 #### line menu
-def line( lp )
+def line( l )
 	html = <<-"HTML"
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-loss' )">#{lp[1]}</span>
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-keep' )">#{lp[3]}</span>
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-gain' )">#{lp[4]}</span>
+	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-loss' )">#{l['loss']}</span>
+	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-keep' )">#{l['keep']}</span>
+	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-gain' )">#{l['build']}</span>
 HTML
 
 	return html
@@ -34,8 +48,8 @@ end
 
 
 ####
-def init( lp )
-	html = "<div align='center'>#{lp[2]}</div>"
+def init( l )
+	html = "<div align='center'>#{l['physique']}</div>"
 
 	return html
 end
@@ -46,7 +60,7 @@ end
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
 
 
 #### Getting POST
@@ -63,9 +77,10 @@ end
 ####
 html = "<div class='container-fluid'>"
 if mod == 'line'
-	html = line( lp )
+	exlib_plot()
+	html = line( l )
 elsif mod == ''
-	html = init( lp )
+	html = init( l )
 else
 	require "#{$HTDOCS_PATH}/physique_/mod_#{mod}.rb"
 	html = physique_module( @cgi, user )

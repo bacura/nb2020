@@ -287,6 +287,4 @@ puts html
 
 
 #### 登録ユーザーで直接参照の場合は履歴に追加
-p 'cc'
-add_his( user.name, food_no ) if sid_flag == false && user.status != 0
-p 'zz'
+add_his( user, food_no ) if sid_flag == false && user.status != 0

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.24b (2022/12/17)
+#Nutrition browser 2020 index page 0.25b (2023/07/15)
 
 
 #==============================================================================
@@ -43,6 +43,7 @@ def language_pack( language )
     'menul'   => "<img src='bootstrap-dist/icons/journals.svg' style='height:1.2em; width:1.2em;'>&nbsp;献立帳",\
     'book'    => "<img src='bootstrap-dist/icons/book.svg' style='height:1.2em; width:1.2em;'>",\
     'gear'    => "<img src='bootstrap-dist/icons/gear-fill.svg' style='height:1.2em; width:1.2em;'>",\
+    'fire'    => "<img src='bootstrap-dist/icons/fire-blue.svg' style='height:0.8em; width:1.2em;'>",\
     'koyomi'  => "こよみ",\
     'ginmi'   => "アセスメント",\
     'pysique'   => "体格管理",\
@@ -53,6 +54,7 @@ def language_pack( language )
     'mjl'     => "JSONエディタ",\
     'medial'    => "メディアエディタ",\
     'accountm'  => "娘アカウント管理",\
+    'astral'  => "幽体管理",\
     'visionnerz'=> "VISIONNERZ",\
     'recipe3d'  => "3Dレシピ検索",\
     'school'  => "お料理教室",\
@@ -75,7 +77,7 @@ def language_pack( language )
 end
 
 #### HTML top
-def html_top( user, l )
+def html_top( user, l, db )
   puts 'HTML TOP<br>' if @debug
   user_name = user.name
   user_name = user.aliasu if user.aliasu != '' && user.aliasu != nil
@@ -91,15 +93,17 @@ def html_top( user, l )
     login_color = "success"
   when 8, 9
     login_color = "danger"
+  when 7
+    login_color = "light"
   else
     login_color = "secondary"
   end
-  login_color = "light"
+  login_color = "light" if user.name == 'gm'
 
   family = []
   family_a = []
 
-  r = mdb( "SELECT * FROM user WHERE mom='#{user.name}' AND status='6' AND switch=1;", false, false )
+  r = db.query( "SELECT * FROM user WHERE mom='#{user.name}' AND status='6' AND switch=1;", false, false )
   # Dose user have doughters?
   if r.first
     puts 'MOM with family<br>' if @debug
@@ -112,7 +116,7 @@ def html_top( user, l )
       family_a << e['aliasu'].to_s
     end
   else
-    rr = mdb( "SELECT * FROM user WHERE cookie='#{user.mid}' AND ( status='5' OR status>='8' );", false, false )
+    rr = db.query( "SELECT * FROM user WHERE cookie='#{user.mid}' AND ( status='5' OR status>='8' );", false, false )
     if rr.first
       puts 'One of family<br>' if @debug
       family << rr.first['user']
@@ -120,7 +124,7 @@ def html_top( user, l )
       t = rr.first['user'] if t == '' || t == nil
       family_a << t
 
-      rrr = mdb( "SELECT * FROM user WHERE mom='#{rr.first['user']}' AND status='6' AND switch=1;", false, false )
+      rrr = db.query( "SELECT * FROM user WHERE mom='#{rr.first['user']}' AND status='6' AND switch=1;", false, false )
       rrr.each do |e|
         family << e['user']
         family_a << e['aliasu'].to_s
@@ -147,6 +151,7 @@ def html_top( user, l )
     login << "</div>"
   else
     puts 'solo mode<br>' if @debug
+    user_name = l['fire'] + user_name + l['fire'] if user.status == 7
     login = "#{user_name}&nbsp;#{l['san']}&nbsp;|&nbsp;<a href=\"login.cgi?mode=logout\" class=\"text-#{login_color}\">#{l['logout']}</a>"
   end
   login = "<a href='login.cgi' class=\"text-#{login_color}\">#{l['login']}</a>&nbsp;|&nbsp;<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{l['regist']}</a>" if user_name == nil
@@ -179,29 +184,29 @@ HTML
 end
 
 #### HTML nav
-def html_nav( user, l )
+def html_nav( user, l, db )
   cb_num = ''
   meal_num = ''
   # まな板カウンター
   if user.name
-    r = mdb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
+    r = db.query( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
     if r.first
       t = []
       t = r.first['sum'].split( "\t" ) if r.first['sum']
       cb_num = t.size
     else
-      mdb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{user.name}';", false, @debug )
+      db.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{user.name}';", false, @debug )
       cb_num = 0
     end
     # 献立カウンター
 
-    r = mdb( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
+    r = db.query( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
     if r.first
       t = []
       t = r.first['meal'].split( "\t" ) if r.first['meal']
       meal_num = t.size
     else
-      mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}';", false, @debug )
+      db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}';", false, @debug )
       meal_num = 0
     end
   else
@@ -288,6 +293,7 @@ html = <<-"HTML"
 </nav>
 <nav class='container-fluid' id='gs_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAccountM()">#{l['accountm']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAstral()">#{l['astral']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="recipe3ds()">#{l['recipe3d']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{l['school']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{l['toker']}</button>
@@ -347,18 +353,18 @@ user = User.new( @cgi )
 user.status = 0 unless user.name
 user.debug if @debug
 l = language_pack( user.language )
-#puts l if @debug
+db = Db.new( user, false )
 
-r = mdb( "SELECT ifix FROM cfg WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT ifix FROM cfg WHERE user='#{user.name}';", false, false )
 ifix = r.first['ifix'].to_i if r.first
 
 html_head( nil, user.status, nil )
 
 puts "<div style='position:fixed; z-index:100; background-color:white'>" if ifix == 1
 
-html_top( user, l )
-html_nav( user, l )
-
+html_top( user, l, db )
+html_nav( user, l, db )
+db.close
 
 if ifix == 1
   puts '</div>'

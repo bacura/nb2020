@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.82b (2023/05/21)
+#Nutrition browser 2020 soul 0.9b (2023/07/12)
 
 #==============================================================================
 # LIBRARY
@@ -75,9 +75,9 @@ $JS_PATH = 'js'
 $CSS_PATH = 'scss'
 $BOOK_PATH = 'books'
 
-$SELECT = { true => 'SELECTED', false => ''}
-$CHECK = { true => 'CHECKED', false => ''}
-$DISABLE = { true => 'DISABLED', false => ''}
+$SELECT = { true => 'SELECTED', false => '', 1 => 'SELECTED', 0 => '', '1' => 'SELECTED', '0' => ''}
+$CHECK = { true => 'CHECKED', false => '', 1 => 'CHECKED', 0 => '', '1' => 'CHECKED', '0' => ''}
+$DISABLE = { true => 'DISABLED', false => '', 1 => 'DISABLED', 0 => '', '1' => 'DISABLED', '0' => ''}
 
 $DEBUG = false
 
@@ -99,6 +99,7 @@ if uname != nil && uid != nil
 
   soul_language = res.first['language'] if res.first
 end
+soul_language = $DEFAULT_LP if soul_language == nil
 
 require "#{$SERVER_PATH}/nb2020-local-#{soul_language}"
 
@@ -148,6 +149,7 @@ end
 
 
 #### DB process
+#### Obsolete in the future
 def mdb( query, html_opt, debug )
   puts "<span class='dbq'>[mdb]#{query}</span><br>" if debug
   begin
@@ -172,24 +174,28 @@ end
 
 #### 履歴追加
 def add_his( user, code )
-  r = mdb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user}';", true, $DEBUG )
+  return if user.status == 7
+
+  db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+  r = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';" )
+
   if r.first
     current_his = r.first['his'].split( "\t" )
   else
     # 新規追加
-    mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{user}', his='';", true, $DEBUG )
+    db.query( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{user.name}', his='';" )
     current_his = []
   end
 
   his_max = 200
-  r = mdb( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user}';", false, $DEBUG )
+  r = db.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';" )
   if r.first
     if r.first['history'] != nil && r.first['history'] != ''
       history = JSON.parse( r.first['history'] )
       his_max = history['his_max'].to_i if history['his_max']
     end
   end
-  his_max = 200 if his_max < 200 || his_max > 500
+  his_max = 200 if his_max < 200 || his_max > 1000
 
   new_his = "#{code}\t"
   0.upto( his_max - 1 ) do |c|
@@ -198,7 +204,8 @@ def add_his( user, code )
   new_his.chop!
 
   # 履歴の更新
-  mdb( "UPDATE #{$MYSQL_TB_HIS} SET his='#{new_his}' WHERE user='#{user}';", true, $DEBUG )
+  db.query( "UPDATE #{$MYSQL_TB_HIS} SET his='#{new_his}' WHERE user='#{user.name}';" )
+  db.close
 end
 
 
@@ -206,6 +213,8 @@ end
 def generate_code( uname, c )
   skip = false
   code = uname[0, 2]
+  db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+
   10.times do
     code = "#{code}-#{c}-#{SecureRandom.hex( 10 )}"
     query = ''
@@ -226,10 +235,12 @@ def generate_code( uname, c )
     end
 
     unless skip
-      r = mdb( query, false, false )
+      r = db.query( query )
       break unless r.first
     end
   end
+
+  db.close
 
   return code
 end
@@ -331,12 +342,16 @@ def wash( txt )
   txt.gsub!( "\t", '' )
   txt.gsub!( '<', '&lt;' )
   txt.gsub!( '>', '&gt;' )
+  txt.gsub!( '&', '&amp;' )
+  txt.gsub!( '"', '&quot;' )
+  txt.gsub!( "'", '&#39;' )
 
   return txt
 end
 
 
 #### for checkbox
+#### Obsolete in the future
 def checked( bit )
   s = ''
   s = 'CHECKED' if bit == 1
@@ -346,6 +361,7 @@ end
 
 
 #### for select
+#### Obsolete in the future
 def selected( s, e, n )
   a = []
   s.upto( e ) do |c|
@@ -360,45 +376,33 @@ def selected( s, e, n )
 end
 
 
-#### Photos
-def photos( user, code, del_icon, tn_size )
-  r = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
-
-  html = "<div class='row'>"
-  r.each do |e|
-    html << "<div class='col'>"
-    html << "<span onclick=\"photoDel( '#{code}', '#{e}' )\">#{del_icon}</span><br>"
-    html << "<img src='#{$PHOTO}/#{e}-tn.jpg' width='#{tn_size}px' class='img-thumbnail'>"
-    html << "</div>"
-  end
-  html << "</div>"
-  html = 'No photo' if r.size == 0
-
-  return html
-end
-
-
 #==============================================================================
 # CLASS
 #==============================================================================
 
 class Db
-  def initialize()
+  def initialize( user, debug )
     @db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+    @user = user
+    @debug = debug
   end
 
-  def query( query )
+  def qq( query )
     q = query.gsub( ';', '' ) << ';'
     return @db.query( q )
-
   end
 
-  def query_safe( query, html_opt, debug )
-    puts "<span class='dbq'>[mdb]#{query}</span><br>" if debug
+  def query( query, astral, html_opt )
+    puts "<span class='dbq'>[db]#{query}</span><br>" if @debug
     begin
+      if @user.status == 7 && astral
+          puts "<span class='ref_error'>[db]Astral user limit!</span><br>"
+          exit( 9 )
+      end
+
       t = query.chop
       if /[\;\#\$]/ =~ t
-          puts "<span class='error'>[mdb]ERROR!!</span><br>"
+          puts "<span class='error'>[db]ERROR!!</span><br>"
           exit( 9 )
       end
       return @db.query( query )
@@ -408,18 +412,18 @@ class Db
         html_init( nil )
         html_head( nil )
       end
-        puts "<span class='error'>[mdb]ERROR!!</span><br>"
+        puts "<span class='error'>[db]ERROR!!</span><br>"
     end
   end
 
   def close()
     @db.close
   end
+
 end
 
-
 class User
-  attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :switch, :language, :pass, :mail, :reg_date
+  attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :switch, :language, :pass, :mail, :astral, :reg_date
 
   def initialize( cgi )
     @name = cgi.cookies['NAME'].first
@@ -432,14 +436,48 @@ class User
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     res = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{@name}' and cookie='#{@uid}' and status>0;" )
     db.close
+
     if res.first
-      @status = res.first['status'].to_i
-      @aliasu = res.first['aliasu']
-      @aliasu = nil if @aliasu == ''
-      @mom = res.first['mom']
-      @mid = res.first['cookie_m']
-      @switch = res.first['switch'].to_i
-      @language = res.first['language']
+      if res.first['status'].to_i == 7
+        entity_name = @name.sub( '~', '' )
+
+        db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+        res2 = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{entity_name}' and astral=1 and status>0;" )
+        db.close
+
+        if res2.first
+          @name = entity_name
+          @mid = nil
+          @uid = nil
+          @mom = nil
+          @mid = nil
+          @status = 7
+          @aliasu = nil
+          @switch = 0
+          @astral = 0
+          @language = res.first['language']
+        else
+          @name = nil
+          @uid = nil
+          @mom = nil
+          @mid = nil
+          @status = 0
+          @aliasu = nil
+          @switch = 0
+          @astral = 0
+          @language = $DEFAULT_LP
+        end
+      else
+        @status = res.first['status'].to_i
+        @aliasu = res.first['aliasu']
+        @aliasu = nil if @aliasu == ''
+        @mom = res.first['mom']
+        @mid = res.first['cookie_m']
+        @switch = res.first['switch'].to_i
+        @astral = res.first['astral'].to_i
+        @language = res.first['language']
+        @language = $DEFAULT_LP if @language == nil
+      end
     else
       @name = nil
       @uid = nil
@@ -448,6 +486,7 @@ class User
       @status = 0
       @aliasu = nil
       @switch = 0
+      @astral = 0
       @language = $DEFAULT_LP
     end
   end
@@ -477,7 +516,8 @@ end
 class Sum
   attr_accessor :code, :name, :dish, :protect, :fn, :weight, :unit, :unitv, :check, :init, :rr, :ew
 
-  def initialize()
+  def initialize( user )
+    @user = user
     @code = nil
     @name = nil
     @dish = 1
@@ -544,6 +584,8 @@ class Sum
   end
 
   def update_db()
+    return if @user.status == 7
+
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     db.query( "UPDATE #{$MYSQL_TB_SUM} set code='#{@code}', name='#{@name}', dish='#{@dish}', meal='#{@meal}', protect='#{@protect}', fn='#{@fn}', weight='#{@weight}', unit='#{@unit}', unitv='#{@unitv}', check='#{@check}', init='#{@init}', rr='#{@rr}', ew='#{@ew}' WHERE user='#{@user}';" )
     db.close
@@ -659,6 +701,8 @@ class Recipe
   end
 
   def insert_db()
+    return if @user.status == 7
+
     @name.gsub!( ';', '' )
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
@@ -668,6 +712,8 @@ class Recipe
   end
 
   def update_db()
+    return if @user.status == 7
+
     @name.gsub!( ';', '' )
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
@@ -685,6 +731,8 @@ class Recipe
   end
 
   def delete_db()
+    return if @user.status == 7
+
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     db.query( "DELETE FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@user}' and code='#{@code}';" )
     db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" )
@@ -764,6 +812,8 @@ class Meal
   end
 
   def update_db()
+    return if @user.status == 7
+
     @name.gsub!( ';', '' )
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     db.query( "UPDATE #{$MYSQL_TB_MEAL} set code='#{@code}', name='#{@name}', meal='#{@meal}', protect='#{@protect}' WHERE user='#{@user}';" )
@@ -846,18 +896,24 @@ class Menu
   end
 
   def insert_db()
+    return if @user.status == 7
+
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     db.query( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{@code}', user='#{@user}',public='#{@public}',protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', memo='#{@memo}';" )
     db.close
   end
 
   def update_db()
+    return if @user.status == 7
+
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     db.query( "UPDATE #{$MYSQL_TB_MENU} SET public='#{@public}', protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', memo='#{@memo}' WHERE user='#{@user}' and code='#{@code}';" )
     db.close
   end
 
   def delete_db()
+    return if @user.status == 7
+
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     db.query( "DELETE FROM #{$MYSQL_TB_MENU} WHERE user='#{@user}' and code='#{@code}';" )
     db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" )
@@ -883,7 +939,7 @@ class Media
 
   def initialize( user )
     @code = nil
-    @user = user.name
+    @user = user
     @mcode = nil
     @muser = nil
     @origin = nil
@@ -912,14 +968,18 @@ class Media
   end
 
   def save_db()
+    return if @user.status == 7
+
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', type='#{@type}', date='#{@date}'" )
+    db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user.name}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', type='#{@type}', date='#{@date}'" )
     db.close
   end
 
   def delete_db()
+    return if @user.status == 7
+
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and mcode='#{@mcode}';" )
+    db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and mcode='#{@mcode}';" )
     db.close
   end
 
@@ -936,15 +996,17 @@ class Media
   end
 
   def delete_series()
+    return if @user.status == 7
+
     if code != nil
       db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-      db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" )
+      db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" )
       db.close
     end
   end
 
   def debug()
-    puts "user:#{@user}<br>"
+    puts "user:#{@user.name}<br>"
     puts "code:#{@code}<br>"
     puts "mcode:#{@mcode}<br>"
     puts "origin:#{@origin}<br>"

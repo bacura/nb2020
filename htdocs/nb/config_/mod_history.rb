@@ -1,14 +1,15 @@
-# Nutorition browser 2020 Config module for history 0.02b (2020/12/24)
+# Nutorition browser 2020 Config module for history 0.03b (2023/7/13)
 #encoding: utf-8
 
-def config_module( cgi, user, lp )
+def config_module( cgi, user )
 	module_js()
 	l = language_pack( user.language )
+	db = Db.new( user, @debug )
 	history = Hash.new
 	his_max = 200
 
 	puts "LOAD config<br>" if @debug
-	r = mdb( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 	if r.first
 		if r.first['history'] != nil && r.first['history'] != ''
 			history = JSON.parse( r.first['history'] )
@@ -24,12 +25,14 @@ def config_module( cgi, user, lp )
 
 		history['his_max'] = his_max
 		history_ = JSON.generate( history )
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", true, false )
 
 	when 'clear'
 		puts "CLEAR history<br>" if @debug
-		mdb( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{user.name}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{user.name}';", true, false )
 	end
+
+	db.close
 
 	html = <<-"HTML"
      <div class="container">
@@ -66,11 +69,15 @@ def module_js()
 
 // History initialisation
 var history_cfg = function( step ){
-	var his_max = document.getElementById( "his_max" ).value;
-	closeBroseWindows( 1 );
-	$.post( "config.cgi", { mod:'history', step:step, his_max:his_max }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
+	const his_max = document.getElementById( "his_max" ).value;
+	$.post( "config.cgi", { mod:'history', step:step, his_max:his_max }, function( data ){
+			$( "#L1" ).html( data );
+
+			flashBW();
+			dl1 = true;
+			dline = true;
+			displayBW();
+	});
 
 	if( step == 'clear' ){
 		displayVIDEO( 'Initialized' );
@@ -79,7 +86,6 @@ var history_cfg = function( step ){
 		displayVIDEO( 'History max -> '+ his_max );
 	}
 };
-
 
 </script>
 JS

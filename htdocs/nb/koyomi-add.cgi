@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.25b (2023/04/08)
+#Nutrition browser 2020 koyomi adding panel 0.26b (2023/07/16)
 
 #==============================================================================
 # STATIC
@@ -55,12 +55,12 @@ end
 
 
 #### unit select
-def unit_select_html( code, selectu )
+def unit_select_html( code, selectu, db )
 	# 単位の生成と選択
 	unit_select_html = ''
 	unit_set = []
 	unit_select = []
-	r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, @debug )
+	r = db.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{code}';", false, false )
 	if r.first
 		unith = JSON.parse( r.first['unit'] )
 		unith.each do |k, v|
@@ -91,6 +91,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, false )
 
 
 #### Getting POST
@@ -147,7 +148,7 @@ org_ymd = "#{calendar.yyyy}:#{calendar.mm}:#{calendar.dd}"
 
 
 puts 'SET koyomi start year<br>' if @debug
-r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+r = db.query(( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 		koyomi_cfg = JSON.parse( r.first['koyomi'] )
@@ -160,7 +161,7 @@ end
 puts 'SET standard meal start & time<br>' if @debug
 start_time_set = []
 meal_tiems_set = []
-r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+r = db.query(( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
 if r.first
 	if r.first['bio'] != nil && r.first['bio'] != ''
 		bio = JSON.parse( r.first['bio'] )
@@ -179,7 +180,7 @@ new_solid = ''
 if command == 'move' && copy != 1
 	puts 'Move food (deleting origin )<br>' if @debug
 	a = origin.split( ':' )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug  )
+	r = db.query(( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, false  )
 	if r.first['koyomi']
 		t = r.first['koyomi']
 		aa = t.split( "\t" )
@@ -188,13 +189,13 @@ if command == 'move' && copy != 1
 		end
 		new_solid.chop! unless new_solid == ''
 	end
-	mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false, @debug )
+	db.query(( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", true, false )
 end
 
 
 if command == 'save' || command == 'move' || command == 'fzcopy'
 	puts 'Save food<br>' if @debug
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
+	r = db.query(( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, false )
 	if r.first
 		koyomi = r.first['koyomi']
 		delimiter = ''
@@ -209,11 +210,11 @@ if command == 'save' || command == 'move' || command == 'fzcopy'
 		end
 		koyomi << "#{delimiter}#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
 
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false, @debug )
+		db.query(( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", true, false )
 		origin = "#{org_ymd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
 	else
 		koyomi = "#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
-		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{sql_ymd}', tdiv='#{tdiv}';", false, @debug )
+		db.query(( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{sql_ymd}', tdiv='#{tdiv}';", true, false )
 		origin = "#{org_ymd}:#{tdiv}:0" if command == 'move'
 	end
 end
@@ -242,18 +243,18 @@ end
 ####
 food_name = code
 if /\-m\-/ =~ code
-	r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
+	r = db.query(( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}' and user='#{user.name}';", false, false )
 	food_name = r.first['name']
 elsif /\-f\-/ =~ code
-	r = mdb( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
+	r = db.query(( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{code}' and user='#{user.name}';", false, false )
 	food_name = r.first['name']
 elsif /\-/ =~ code
-	r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}' and user='#{user.name}';", false, @debug )
+	r = db.query(( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}' and user='#{user.name}';", false, false )
 	food_name = r.first['name']
 else
 	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}';"
 	q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';" if /^U\d{5}/ =~ code
-	r = mdb( q, false, @debug )
+	r = db.query(( q, false, false )
 	food_name = r.first['name']
 end
 
@@ -269,11 +270,11 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 	onclick = "onclick=\"editKoyomi2( 'init', '#{c}' )\""
 	date_html << "<td style='#{style}' #{onclick}>#{c} (#{weeks[week_count]})</td>"
 
-	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND freeze='1';", false, @debug )
+	r = db.query(( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND freeze='1';", false, false )
 	unless r.first
 		0.upto( 3 ) do |cc|
 			koyomi_c = '-'
-			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, @debug )
+			rr = db.query(( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false, false )
 			onclick = ''
 			if command == 'modify' || command == 'move' || command == 'move_fix'
 				onclick = "onclick=\"k2Koyomi_direct( 'move', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
@@ -343,7 +344,7 @@ if command != 'move_fix' && /\-f\-/ !~ code
 	rate_html << "	<input type='text' id='ev' value='#{ev}' class='form-control'>"
 	rate_html << "	<select id='eu' class='form-select form-select-sm'>"
 	if /^[UP]?\d{5}/ =~ code
-		rate_html << unit_select_html( code, eu )
+		rate_html << unit_select_html( code, eu, db )
 	else
 		rate_html << "		<option value='%'>%</option>"
 		rate_html << "		<option value='g' #{rate_selected}>g</option>"
@@ -422,4 +423,4 @@ puts html
 #==============================================================================
 
 #### Adding history
-add_his( user.name, code ) if /^[UP]?\d{5}/ =~ code
+add_his( user, code ) if /^[UP]?\d{5}/ =~ code
