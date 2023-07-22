@@ -4,12 +4,12 @@
 @module = 'weight-keep'
 @debug = false
 
-def physique_module( cgi, user )
-	l = module_lp( user.language )
+def physique_module( cgi, db )
+	l = module_lp( db.user.language )
 	today_p = Time.parse( @datetime )
 
 	puts "LOAD bio config<br>" if @debug
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -34,7 +34,7 @@ def physique_module( cgi, user )
 		start_date = $DATE
 		pal = 1.50
 
-		res = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, @debug )
+		res = db.query( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' and module='#{@module}';", false )
 		if res.first
 			mod_cfg_h = JSON.parse( res.first['json'] )
 			start_date = mod_cfg_h[@module]['start_date']
@@ -83,11 +83,11 @@ HTML
 		pal = cgi['pal'].to_f
 
 		json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal }} )
-		res = mdb( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
+		res = db.query( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' AND module='#{@module}';", false )
 		if res.first
-			mdb( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
+			db.query( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{db.user.name}' AND module='#{@module}';", true )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, @debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{db.user.name}', module='#{@module}';", true )
 		end
 		start_date_p = Time.parse( start_date )
 		p start_date if @debug
@@ -106,7 +106,7 @@ HTML
 		recent_weight = 0.0
 		start_date_p = Time.parse( start_date )
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date>='#{start_date}';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND date>='#{start_date}';", false )
 		r.each do |e|
 			if e['cell'] != nil
 				kexc = JSON.parse( e['cell'] )
@@ -370,7 +370,9 @@ end
 
 def module_lp( language )
 	l = Hash.new
-	l['jp'] = { 'male' => "男性",\
+	l['jp'] = {
+		'mod_name' => "維持チャート",\
+		'male' => "男性",\
 		'female' => "女性",\
 		'chart_name' => "維持チャート",\
 		'sex' => "代謝的性別",\

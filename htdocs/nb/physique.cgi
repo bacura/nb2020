@@ -6,8 +6,9 @@
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
+@debug = false
 #script = File.basename( $0, '.cgi' )
+$mod_path = 'physique_'
 
 #==============================================================================
 #LIBRARY
@@ -19,40 +20,25 @@ require './brain'
 #DEFINITION
 #==============================================================================
 
-# Language pack
-def language_pack( language )
-	l = Hash.new
+#### Menu no line
+def menu( user )
+	mods = Dir.glob( "#{$HTDOCS_PATH}/#{$mod_path}/mod_*" )
+	mods.map! do |x|
+		x = File.basename( x )
+		x = x.sub( 'mod_', '' )
+		x = x.sub( '.rb', '' )
+	end
 
-	#Japanese
-	l['jp'] = {
-		'physique' 	=> "体格管理モジュール",\
-		'loss' 	=> "減量チャート",\
-		'keep' 	=> "維持チャート",\
-		'build' => "増量チャート"
-	}
-
-	return l[language]
-end
-
-
-#### line menu
-def line( l )
-	html = <<-"HTML"
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-loss' )">#{l['loss']}</span>
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-keep' )">#{l['keep']}</span>
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-gain' )">#{l['build']}</span>
-HTML
+	html = ''
+	mods.each.with_index( 1 ) do |e, i|
+		require "#{$HTDOCS_PATH}/#{$mod_path}/mod_#{e}.rb"
+		ml = module_lp( user.language )
+		html << "<span class='btn badge rounded-pill ppill' onclick='PhysiqueForm( \"#{e}\" )'>#{ml['mod_name']}</span>"
+	end
 
 	return html
 end
 
-
-####
-def init( l )
-	html = "<div align='center'>#{l['physique']}</div>"
-
-	return html
-end
 
 #==============================================================================
 # Main
@@ -60,7 +46,7 @@ end
 
 user = User.new( @cgi )
 user.debug if @debug
-l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST
@@ -78,12 +64,12 @@ end
 html = "<div class='container-fluid'>"
 if mod == 'line'
 	exlib_plot()
-	html = line( l )
+	html = menu( user )
 elsif mod == ''
-	html = init( l )
+	html =  "<div align='center'>Physique</div>"
 else
 	require "#{$HTDOCS_PATH}/physique_/mod_#{mod}.rb"
-	html = physique_module( @cgi, user )
+	html = physique_module( @cgi, db )
 end
 html << "</div>"
 

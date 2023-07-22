@@ -56,6 +56,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### POST
@@ -139,9 +140,9 @@ when 'init', 'weight', 'cb', 'cbp'
 
 	# 正規食品
 	if class_no.to_i == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false )
 	else
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false )
 	end
 	if r.first
 		r.each do |e|
@@ -163,7 +164,7 @@ when 'init', 'weight', 'cb', 'cbp'
 		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
 	end
 	puts "#{query}<br>" if @debug
-	r = mdb( query, false, @debug )
+	r = db.query( query, false )
 	if r.first
 		r.each do |e|
 			food_no_list << e['FN']
@@ -180,7 +181,7 @@ when 'init', 'weight', 'cb', 'cbp'
  	fc_items = []
 	fc_items_html = ''
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false )
 	if r.first
 		palette = r.first['palette']
 		palette.size.times do |c|
@@ -196,7 +197,6 @@ when 'init', 'weight', 'cb', 'cbp'
 
 	# 食品ラインの生成
 	food_html = ''
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 	food_no_list.size.times do |c|
 		pseudo_flag = false
 		# 栄養素の一部を取得
@@ -211,12 +211,12 @@ when 'init', 'weight', 'cb', 'cbp'
 		end
 		p query if @debug
 
-		res = db.query( query )
+		res = db.query( query, false )
 		unless res.first
 			puts "<span class='error'>[FCTP load]ERROR!!<br>"
 			puts "code:#{food_no_list[c]}</span><br>"
-			db.query( "DELETE FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
-			db.query( "DELETE FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
+			db.query( "DELETE FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';", true )
+			db.query( "DELETE FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';", true )
 			exit()
 		end
 
@@ -254,7 +254,7 @@ when 'init', 'weight', 'cb', 'cbp'
 		gm_dic = ''
 
 		if user.status >= 8
-			res = mdb( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false, @debug )
+			res = db.query( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false )
 			if res.first
 				bc = 'btn-outline-secondary'
 				bc = 'btn-outline-danger' if res.first['unit'] != '{"g":1}';
@@ -281,13 +281,13 @@ when 'init', 'weight', 'cb', 'cbp'
 			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}&nbsp;&nbsp;#{gm_unitc}&nbsp;#{gm_allergen}&nbsp;#{gm_shun}&nbsp;#{gm_dic}</td>#{sub_components}</tr>\n"
 		end
 	end
-	db.close
 
 	# 擬似食品ボタンの作成
  	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0
 
  	# Recipe search badge
- 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l['search']}</span><br><br>"
+ 	recipe_search = ''
+ 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l['search']}</span><br><br>" unless user.status == 0
 
  	#
 	return_button = ''
@@ -296,7 +296,7 @@ when 'init', 'weight', 'cb', 'cbp'
 
 	parallel_button = ''
 	parallel_button = "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{food_no}' )\">#{l['parallel']}</div><br>" if base == 'cb'
-
+ 
 	html = <<-"HTML"
 	<div class='container-fluid'>
 		<div class="row">

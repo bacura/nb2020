@@ -1281,6 +1281,8 @@ note_init()
 metst_init( mets_file )
 mets_init()
 
+modj_init()
+
 ref_bmi_init( ref_bmi )
 ref_phys_init( ref_phys )
 ref_eer_init( ref_eer )
