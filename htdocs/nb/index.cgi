@@ -103,7 +103,7 @@ def html_top( user, l, db )
   family = []
   family_a = []
 
-  r = db.query( "SELECT * FROM user WHERE mom='#{user.name}' AND status='6' AND switch=1;", false, false )
+  r = db.query( "SELECT * FROM user WHERE mom='#{user.name}' AND status='6' AND switch=1;", false )
   # Dose user have doughters?
   if r.first
     puts 'MOM with family<br>' if @debug
@@ -116,7 +116,7 @@ def html_top( user, l, db )
       family_a << e['aliasu'].to_s
     end
   else
-    rr = db.query( "SELECT * FROM user WHERE cookie='#{user.mid}' AND ( status='5' OR status>='8' );", false, false )
+    rr = db.query( "SELECT * FROM user WHERE cookie='#{user.mid}' AND ( status='5' OR status>='8' );", false )
     if rr.first
       puts 'One of family<br>' if @debug
       family << rr.first['user']
@@ -124,7 +124,7 @@ def html_top( user, l, db )
       t = rr.first['user'] if t == '' || t == nil
       family_a << t
 
-      rrr = db.query( "SELECT * FROM user WHERE mom='#{rr.first['user']}' AND status='6' AND switch=1;", false, false )
+      rrr = db.query( "SELECT * FROM user WHERE mom='#{rr.first['user']}' AND status='6' AND switch=1;", false )
       rrr.each do |e|
         family << e['user']
         family_a << e['aliasu'].to_s
@@ -189,24 +189,24 @@ def html_nav( user, l, db )
   meal_num = ''
   # まな板カウンター
   if user.name
-    r = db.query( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
+    r = db.query( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
     if r.first
       t = []
       t = r.first['sum'].split( "\t" ) if r.first['sum']
       cb_num = t.size
     else
-      db.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{user.name}';", false, @debug )
+      db.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{user.name}';", false )
       cb_num = 0
     end
     # 献立カウンター
 
-    r = db.query( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false, @debug )
+    r = db.query( "SELECT meal from #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", false )
     if r.first
       t = []
       t = r.first['meal'].split( "\t" ) if r.first['meal']
       meal_num = t.size
     else
-      db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}';", false, @debug )
+      db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}';", false )
       meal_num = 0
     end
   else
@@ -353,9 +353,9 @@ user = User.new( @cgi )
 user.status = 0 unless user.name
 user.debug if @debug
 l = language_pack( user.language )
-db = Db.new( user, false )
+db = Db.new( user, @debug, false )
 
-r = db.query( "SELECT ifix FROM cfg WHERE user='#{user.name}';", false, false )
+r = db.query( "SELECT ifix FROM cfg WHERE user='#{user.name}';", false )
 ifix = r.first['ifix'].to_i if r.first
 
 html_head( nil, user.status, nil )
@@ -364,7 +364,7 @@ puts "<div style='position:fixed; z-index:100; background-color:white'>" if ifix
 
 html_top( user, l, db )
 html_nav( user, l, db )
-db.close
+
 
 if ifix == 1
   puts '</div>'

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.20b (2023/4/23)
+#Nutrition browser 2020 food square 0.20b (2023/7/18)
 
 
 #==============================================================================
@@ -32,17 +32,17 @@ def language_pack( language )
 end
 
 #### 名前の履歴の取得
-def get_history_name( uname, fg )
+def get_history_name( fg, db )
 	name_his = []
-	if uname
-		r = mdb( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{uname}';", false, @debug )
+	if db.user.name
+		r = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{db.user.name}';", false )
 		if r.first
 			his = r.first['his'].split( "\t" )
 ########## 応急処置
 			his.each do |e|
 				unless e == ''
 					if ( /P|U/ =~ e && e[1..2].to_i == fg.to_i ) || e[0..1].to_i == fg.to_i
-						rr = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false, @debug )
+						rr = db.query( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
 						name_his << rr.first['name'] if rr.first
 					end
 				end
@@ -87,7 +87,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
-
+db = Db.new( user, @debug, false )
 
 #### GET data
 get_data = get_data()
@@ -122,7 +122,7 @@ puts "@fg: #{@fg}<br>" if @debug
 
 
 #### 名前の履歴の取得
-name_his = get_history_name( user.name, @fg )
+name_his = get_history_name( @fg, db )
 #puts "name_his: #{name_his}<br>" if @debug
 
 
@@ -174,7 +174,7 @@ case channel
 when 'fctb'
 
 	# 正規食品
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND public='9';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND public='9';", false )
 	r.each do |e|
 		if e['class1'] != ''
 			class1_group << e['class1']
@@ -204,7 +204,7 @@ when 'fctb'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false )
 		r.each do |e|
 			if e['class1'] != ''
 				class1_group_p << e['class1']
@@ -247,7 +247,7 @@ HTML
 #### 第２層閲覧選択ページ
 when 'fctb_l2'
 	# 正規食品
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false , @debug)
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
 	r.each do |e|
 		if e['class1'] != '' && e['class2'] != ''
 			class2_group << e['class2']
@@ -277,7 +277,7 @@ when 'fctb_l2'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false )
 		r.each do |e|
 			if e['class1'] != '' && e['class2'] != ''
 				class2_group_p << e['class2']
@@ -317,7 +317,7 @@ HTML
 #### 第３層閲覧選択ページ
 when 'fctb_l3'
 	# 正規食品
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
 	r.each do |e|
 		if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 			class3_group << e['class3']
@@ -337,7 +337,7 @@ when 'fctb_l3'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false )
 		r.each do |e|
 			if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 				class3_group_p << e['class3']
@@ -370,7 +370,7 @@ HTML
 #### 第４層閲覧選択ページ
 when 'fctb_l4'
 	# 正規食品
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
 	r.each do |e| direct_group << e['name'] end
 
 	# ダイレクトグループの作成
@@ -378,7 +378,7 @@ when 'fctb_l4'
 
 	# 擬似食品
 	unless user.status == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false )
 		r.each do |e| direct_group_p << e['name'] end
 
 		# ダイレクトグループの作成

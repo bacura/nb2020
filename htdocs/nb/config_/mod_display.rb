@@ -3,10 +3,9 @@
 
 @debug = false
 
-def config_module( cgi, user )
+def config_module( cgi, db )
 	module_js()
-	l = language_pack( user.language )
-	db = Db.new( user, @debug )
+	l = module_lp( db.user.language )
 
 	step = cgi['step']
 
@@ -19,16 +18,14 @@ def config_module( cgi, user )
 		icalc = cgi['icalc'].to_i
 
 		# Updating bio information
-		db.query( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}', ifix='#{ifix}', icalc='#{icalc}' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}', ifix='#{ifix}', icalc='#{icalc}' WHERE user='#{db.user.name}';", true )
 	else
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false,  false )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 
 		icache = r.first['icache'].to_i
 		ifix = r.first['ifix'].to_i
 		icalc = r.first['icalc'].to_i
 	end
-
-	db.close
 
 	icalc = 14 if icalc == 0
 
@@ -92,10 +89,11 @@ end
 
 
 # Language pack
-def language_pack( language )
+def module_lp( language )
 	l = Hash.new
 
 	l['jp'] = {
+		'mod_name' => "表示",\
 		'cache' => "画像キャッシュ",\
 		'fix' => "メニューの固定:",\
 		'reload' => "※更新後、リロードが必要です",\

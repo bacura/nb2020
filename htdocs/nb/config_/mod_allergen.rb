@@ -3,10 +3,9 @@
 
 @degug = true
 
-def config_module( cgi, user )
+def config_module( cgi, db )
 	module_js()
-	l = module_lp( user.language )
-	db = Db.new( user, @debug )
+	l = module_lp( db.user.language )
 
 	step = cgi['step']
 	code = cgi['code']
@@ -21,25 +20,25 @@ def config_module( cgi, user )
 	when 'on'
 		fn.each do |e|
 			if /P|U?\d\d\d\d\d/ =~ e
-				db.query( "INSERT INTO #{$MYSQL_TB_PAG} SET user='#{user.name}', FN='#{e}';", true, false )
+				db.query( "INSERT INTO #{$MYSQL_TB_PAG} SET user='#{db.user.name}', FN='#{e}';", true )
 			end
 		end
 	when 'off'
 		fn.each do |e|
 			if /P|U?\d\d\d\d\d/ =~ e
-				db.query( "DELETE FROM #{$MYSQL_TB_PAG} WHERE user='#{user.name}' AND FN='#{e}';", true, false )
+				db.query( "DELETE FROM #{$MYSQL_TB_PAG} WHERE user='#{db.user.name}' AND FN='#{e}';", true )
 			end
 		end
 	when 'warning'
-		db.query( "UPDATE #{$MYSQL_TB_CFG} SET allergen='#{warning}' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET allergen='#{warning}' WHERE user='#{db.user.name}';", true )
 	else
-		r = db.query( "SELECT allergen FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+		r = db.query( "SELECT allergen FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		warning = r.first['allergen'] if r.first
 		warning = '000' if warning == nil || warning == ''
 	end
 
 	list_html = ''
-	r = db.query( "SELECT t1.* FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_PAG} AS t2 ON t1.FN = t2.FN WHERE t2.user='#{user.name}' ORDER BY t1.FN;", false, false )
+	r = db.query( "SELECT t1.* FROM #{$MYSQL_TB_TAG} AS t1 INNER JOIN #{$MYSQL_TB_PAG} AS t2 ON t1.FN = t2.FN WHERE t2.user='#{db.user.name}' ORDER BY t1.FN;", false )
 	r.each do |e|
 		list_html << "<tr>"
 		list_html << "<td>#{e['FN']}</td>"
@@ -55,8 +54,6 @@ def config_module( cgi, user )
 	checked1 = 'CHECKED' if warning[0] == '1'
 	checked2 = 'CHECKED' if warning[1] == '1'
 	checked3 = 'CHECKED' if warning[2] == '1'
-
-	db.close
 
 	####
 ####
@@ -164,6 +161,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name' => "アレルゲン",\
 		'warning' => "警報区分",\
 		'obligate' => "義務７品",\
 		'recommend' => "推奨２０品",\

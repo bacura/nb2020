@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.29b (2023/05/19)
+#Nutrition browser 2020 brain 0.30b (2023/07/19)
 
 #==============================================================================
 #STATIC
@@ -101,9 +101,32 @@ end
 
 
 #### from unit volume to weight
+#### 将来的に廃止
 def unit_weight( vol, uc, fn )
   w = 0.0
   r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
+  if r.first
+    if r.first['unit'] != nil && r.first['unit'] != ''
+      unith = JSON.parse( r.first['unit'] )
+      begin
+        w = ( BigDecimal( unith[uc].to_s ) * vol ).round( 1 )
+      rescue
+        puts "<span class='error'>[unit_weight]ERROR!!<br>"
+        puts "vol:#{vol}<br>"
+        puts "uc:#{uc}<br>"
+        puts "fn:#{fn}</span><br>"
+      end
+    end
+  end
+
+  return w
+end
+
+
+#### from unit volume to weight DB
+def unit_weight_( vol, uc, fn, db )
+  w = 0.0
+  r = db.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false )
   if r.first
     if r.first['unit'] != nil && r.first['unit'] != ''
       unith = JSON.parse( r.first['unit'] )
@@ -148,6 +171,7 @@ def extract_sum( sum, dish, ew_mode )
   return fns, fws, tw
 end
 
+#将来的に廃止予定
 def menu2rc( uname, code )
   codes = []
 
@@ -160,6 +184,19 @@ def menu2rc( uname, code )
   return codes
 end
 
+def menu2rc_( db, code )
+  codes = []
+
+  r = db.query( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{db.user.name}' AND code='#{code}';", false )
+  if r.first
+    a = r.first['meal'].split( "\t" )
+    a.each do |e| codes << e end
+  end
+
+  return codes
+end
+
+#将来的に廃止予定
 def recipe2fns( uname, code, rate, unit, ew_mode )
   ew_mode = 0 if ew_mode == nil
   fns = []
@@ -167,6 +204,30 @@ def recipe2fns( uname, code, rate, unit, ew_mode )
   tw = []
 
   r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, false )
+  if r.first
+    fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
+
+    if unit == '%'
+      fws.map! do |x|
+        x * rate / 100 if x != '-' && x != '+'
+      end
+    else
+      fws.map! do |x|
+        x * rate / tw if x != '-' && x != '+'
+      end
+    end
+  end
+
+  return fns, fws, tw
+end
+
+def recipe2fns_( db, code, rate, unit, ew_mode )
+  ew_mode = 0 if ew_mode == nil
+  fns = []
+  fws = []
+  tw = []
+
+  r = db.query( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' AND code='#{code}';", false )
   if r.first
     fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
 
@@ -246,6 +307,7 @@ end
 # CLASS
 #==============================================================================
 
+#将来的に廃止予定
 class Palette
   attr_accessor :sets, :bit
 
@@ -254,6 +316,30 @@ class Palette
     @bit = []
     if uname
       r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, false )
+      r.each do |e| @sets[e['name']] = e['palette'] end
+    else
+      $PALETTE_DEFAULT_NAME[$DEFAULT_LP].size.times do |c|
+        @sets[$PALETTE_DEFAULT_NAME[$DEFAULT_LP][c]] = $PALETTE_DEFAULT[$DEFAULT_LP][c]
+      end
+    end
+  end
+
+  def set_bit( palette )
+    palette = $PALETTE_DEFAULT_NAME[$DEFAULT_LP][1] if palette == '' || palette == nil
+    @bit = @sets[palette].split( '' )
+    @bit.map! do |x| x.to_i end
+  end
+end
+
+class Palette_
+  attr_accessor :sets, :bit
+
+  def initialize( db )
+    @db = db
+    @sets = Hash.new
+    @bit = []
+    if @db.user.name
+      r = @db.query( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{@db.user.name}';", false )
       r.each do |e| @sets[e['name']] = e['palette'] end
     else
       $PALETTE_DEFAULT_NAME[$DEFAULT_LP].size.times do |c|
@@ -343,6 +429,79 @@ class Calendar
 end
 
 
+####
+class Calendar_
+  attr_accessor :yyyy, :yyyyf, :mm, :mms, :dd, :dds, :ddl, :wd, :wf, :wl
+
+  def initialize( db, yyyy, mm, dd )
+    @db = db
+    @yyyy = yyyy
+    @mm = mm
+    @dd = dd
+
+    if @yyyy == 0
+      d = Date.today
+    else
+      d = Date.new( @yyyy, @mm, @dd )
+    end
+    @wd = Date.new( d.year, d.month, d.day ).wday
+    @wf = Date.new( d.year, d.month, 1 ).wday
+    @ddl = Date.new( d.year, d.month, -1 ).day
+    @wl = Date.new( d.year, d.month, @ddl ).wday
+
+    if @yyyy == 0
+      @yyyy = d.year
+      @mm = d.month
+      @dd = d.day
+    end
+
+    @yyyyf = Time.now.year
+    res = @db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';", false )
+
+    if res.first
+       if res.first['koyomi'] != nil && res.first['koyomi'] != ''
+        koyomi = JSON.parse( res.first['koyomi'] )
+        @yyyyf = koyomi['start']
+      end
+    end
+
+    @mms = @mm
+    @mms = "0#{mms}" if @mm < 10
+    @dds = @dd
+    @dds = "0#{dds}" if @dd < 10
+  end
+
+  def move_mm( mm )
+    @mm += mm
+    if @mm > 12
+      @yyyy += 1
+      @mm = 1
+    end
+
+    if @mm < 1
+      @yyyy -= 1
+      @mm = 12
+    end
+
+    d = Date.new( @yyyy, @mm, @dd )
+    @wf = Date.new( d.year, d.month, 1 ).wday
+    @ddl = Date.new( d.year, d.month, -1 ).day
+    @wl = Date.new( d.year, d.month, @ddl ).wday
+  end
+
+  def debug()
+    puts "calender.yyyy:#{@yyyy}<br>"
+    puts "calender.yyyyf:#{@yyyyf}<br>"
+    puts "calender.mm:#{@mm}<br>"
+    puts "calender.dd:#{@dd}<br>"
+    puts "calender.ddl:#{@ddl}<br>"
+    puts "calender.wf:#{@wf}<br>"
+    puts "calender.wl:#{@wl}<br>"
+  end
+end
+
+
+#将来的に廃止予定
 class FCT
   attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights, :refuses, :total_weight
 
@@ -673,6 +832,337 @@ class FCT
 end
 
 
+class FCT_
+  attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights, :refuses, :total_weight
+
+  def initialize( db, item_, name_, unit_, frct_, frct_accu, frct_mode )
+    @db = db
+    @item = item_
+    @name = name_
+    @unit = unit_
+    @frct = frct_
+    @items = []
+    @names = []
+    @units = []
+    @frcts = []
+    @fns = []
+    @foods = []
+    @weights = []
+    @refuses = []
+    @solid = []
+    @total = []
+    @total_weight = BigDecimal( '0' )
+    @frct_accu = frct_accu
+    @frct_accu = 1 if @frct_accu == nil
+    @frct_mode = frct_mode
+    @frct_mode = 0 if @frct_mode == nil
+  end
+
+  def load_palette( palette )
+    @items = []
+    @names = []
+    @units = []
+    @frcts = []
+    @item.size.times do |c|
+      if palette[c] == 1 && @item[c] != 'REFUSE'
+        @items << @item[c]
+        @names << @name[@item[c]]
+        @units << @unit[@item[c]]
+        @frcts << @frct[@item[c]]
+      end
+    end
+  end
+
+  def set_food( food_no, food_weight, non_food )
+    c = 0
+    food_no.each do |e|
+      if e == '-'
+        if non_food
+          @fns << '-'
+          @solid << '-'
+          @foods << '-'
+          @weights << '-'
+          @refuses << '-'
+        end
+      elsif e == '+'
+        if non_food
+          @fns << '+'
+          @solid << '+'
+          @foods << '+'
+          @weights << '+'
+          @refuses << '+'
+        end
+      elsif e == '00000'
+        if non_food
+          @fns << '0'
+          @solid << '0'
+          @foods << '0'
+          @weights << '0'
+          @refuses << '0'
+        end
+      else
+        q = ''
+        qq = ''
+        if /P|C|U/ =~ e && db.user.name != nil
+          q = "SELECT * from #{$MYSQL_TB_FCTP} WHERE FN='#{e}' AND ( user='#{@db.user.name}' OR user='#{$GM}' );"
+          qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}' AND ( user='#{@db.user.name}' OR user='#{$GM}' );"
+        else
+          q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
+          qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
+        end
+        res = @db.query( q, false )
+        if res.first
+          @fns << e
+          a = []
+          @items.each do |ee|
+            if ee != 'REFUSE'
+              a << res.first[ee]
+            else
+              @refuses << res.first[ee]
+            end
+          end
+          @solid << Marshal.load( Marshal.dump( a ))
+          res2 = db.query( qq )
+          @foods << bind_tags( res2 )
+          @weights << food_weight[c]
+        else
+          c -= 1
+        end
+      end
+      c += 1
+    end
+    db.close
+  end
+
+  def calc()
+    @total = []
+    @items.size.times do |c| @total << BigDecimal( 0 ) end
+    @total_weight = 0.0
+    @foods.size.times do |f|
+      @items.size.times do |i|
+        if @weights[f] == 0
+          @solid[f][i] = 0
+        else
+          t = @solid[f][i]
+          t = 0 if t == nil
+          t.to_s.sub!( '(', '' )
+          t.to_s.sub!( ')', '' )
+          t = 0 if t == 'Tr'
+          t = 0 if t == '-'
+          t = 0 if t == ''
+          t = 0 if t == '*'
+          t = ( BigDecimal( t.to_s ) * @weights[f] / 100 )
+
+          if @frct_accu == 0
+          case @frct_mode.to_i
+            when 0, 1  # 四捨五入
+              t = t.round( @frcts[i] )
+            when 2  # 切り上げ
+              t = t.ceil( @frcts[i] )
+            when 3  # 切り捨て
+              t = t.floor( @frcts[i] )
+            end
+          end
+          @solid[f][i] = t
+          @total[i] += t
+        end
+      end
+      @total_weight += @weights[f]
+    end
+  end
+
+  def digit()
+    @foods.size.times do |f|
+      @items.size.times do |i|
+        if @frct_accu == 1
+          case @frct_mode.to_i
+          when 2  # 切り上げ
+            @solid[f][i] = @solid[f][i].ceil( @frcts[i] )
+          when 3  # 切り捨て
+            @solid[f][i] = @solid[f][i].floor( @frcts[i] )
+          else  # 四捨五入
+            @solid[f][i] = @solid[f][i].round( @frcts[i] )
+          end
+        end
+
+        if @frcts[i] == 0
+          @solid[f][i] = @solid[f][i].to_i
+        else
+          @solid[f][i] = @solid[f][i].to_f
+        end
+      end
+    end
+
+    @items.size.times do |i|
+      case @frct_mode.to_i
+      when 2  # 切り上げ
+        @total[i] = @total[i].ceil( @frcts[i] )
+      when 3  # 切り捨て
+        @total[i] = @total[i].floor( @frcts[i] )
+      else
+        @total[i] = @total[i].round( @frcts[i] )
+      end
+
+      if @frcts[i] == 0
+        @total[i] = @total[i].to_i
+      else
+        @total[i] = @total[i].to_f
+      end
+    end
+  end
+
+  def singlet()
+    @total = []
+    @total_weight = @weights[0]
+    @items.size.times do |i| @total[i] = BigDecimal( @solid[0][i].to_s ) end
+  end
+
+  def gramt( g )
+    @items.size.times do |i|
+      @total[i] = @total[i] / @total_weight * g
+    end
+  end
+
+  def pickt( item )
+    item_index = @items.index( item )
+    if item_index
+      return @total[item_index]
+    else
+      return nil
+    end
+  end
+
+  def calc_pfc()
+    ei = @items.index( 'ENERC_KCAL' )
+    pi = @items.index( 'PROTV' )
+    fi = @items.index( 'FATV' )
+    pfc = []
+    if ei != nil && pi != nil && fi != nil
+      pfc[0] = ( @total[pi] * 4 / @total[ei] * 100 ).round( 1 )
+      pfc[1] = ( @total[fi] * 4 / @total[ei] * 100 ).round( 1 )
+      pfc[2] = ( 100 - pfc[0] - pfc[1] ).round( 1 )
+      pfc[2] = 0 if pfc[2] == 100
+    end
+
+    return pfc
+  end
+
+  def into_solid( fct )
+    @fns << nil
+    @foods << nil
+    @weights << 100
+    @solid << Marshal.load( Marshal.dump( fct ))
+  end
+
+  def into_zero()
+    @fns << nil
+    @foods << nil
+    @weights << 100
+    zero = []
+    @item.size.times do zero << 0 end
+    @solid << Marshal.load( Marshal.dump( zero ))
+  end
+
+  def put_solid( item, solid_no, value )
+    item_index = @items.index( item )
+    if item_index
+      @solid[solid_no][item_index] = value
+
+      return true
+    else
+      return false
+    end
+  end
+
+  def load_fcz( fzcode, base )
+    r = @db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@db.user.name}' AND code='#{fzcode}' AND base='#{base}';", false )
+    if r.first
+      a = []
+      @items.each do |e|
+        t = r.first[e]
+        t = 0 if t == nil || t == ''
+        a << BigDecimal( t )
+      end
+      @solid << Marshal.load( Marshal.dump( a ))
+      @fns << fzcode
+      @foods << base
+      @weights << 100
+      return true
+    else
+      puts "<span class='error'>FCZ load ERROR[#{fzcode}]</span>"
+      return false
+    end
+  end
+
+  def load_fctp( code )
+    r = @db.query( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{@db.user.name}' OR user='#{$GM}' );", false )
+    if r.first
+      a = []
+      @items.each do |e|
+        t = r.first[e]
+        t = 0 if t == nil || t == '' || t == '-'
+        a << BigDecimal( t )
+      end
+      @solid << Marshal.load( Marshal.dump( a ))
+      @fns << code
+      @foods << 'fctp'
+      @weights << 100
+
+      return r.first['REFUSE'], r.first['Notice']
+    else
+      puts "<span class='error'>fctp load ERROR[#{code}]</span>"
+      return nil, nil
+    end
+  end
+
+  def load_cgi( cgi )
+    a = []
+    @items.each do |e|
+      t = cgi[e]
+      t = 0 if t == '' || t == nil || /[^0-9\-\.]/ =~ t
+      a << BigDecimal( t )
+    end
+    @solid << Marshal.load( Marshal.dump( a ))
+    @fns << cgi['food_code']
+    @foods << cgi['food_name']
+    t = cgi['food_weight']
+    t = '100' if t == '' || t == nil || /[^0-9\-\.]/ =~ t
+    @weights << BigDecimal( t )
+  end
+
+  def save_fcz( zname, base, origin )
+    fct_ = ''
+    @items.size.times do |i| fct_ << "#{@items[i]}='#{@total[i]}'," end
+    fct_.chop!
+
+    code = ''
+    r = @db.query( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{@db.user.name}' AND origin='#{origin}' AND base='#{base}';", false )
+    if r.first
+      @db.query( "UPDATE #{$MYSQL_TB_FCZ} SET #{fct_} WHERE user='#{@db.user.name}' AND origin='#{origin}' AND base='#{base}';", true )
+      code = r.first['code']
+    else
+      code = generate_code( uname, 'z' )
+      @db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SET code='#{code}', base='#{base}', name='#{zname}', user='#{@db.user.name}', origin='#{origin}', #{fct_};", true )
+    end
+
+    return code
+  end
+
+  def sql()
+    sql = ''
+      @items.size.times do |i| sql << "#{@items[i]}='#{@total[i]}'," end
+      sql.chop!
+
+      return sql
+  end
+
+
+  def debug()
+  end
+end
+
+
+#将来的に廃止
 class Bio
   attr_accessor :sex, :birth, :age, :height, :weight, :kexow, :pgene
 
@@ -695,6 +1185,47 @@ class Bio
 
   def kex_ow()
     r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@user}';", false, @debug )
+    if r.first && @kexow == 1
+      koyomi = JSON.parse( r.first['koyomi'] )
+      kex_select = koyomi['kex_select']
+      0.upto( 9 ) do |c|
+        @height = kex_select[c.to_s].to_f * 100 if kex_select[c.to_s] == 'HEIGHT'
+        @weight = kex_select[c.to_s].to_f if kex_select[c.to_s] == 'WEIGHT'
+      end
+    end
+  end
+
+  def debug()
+    puts @sex, @birth, @age, @height, @weight, @kexow, @pgene
+  end
+
+
+end
+
+
+class Bio_
+  attr_accessor :sex, :birth, :age, :height, :weight, :kexow, :pgene
+
+  def initialize( db )
+    @db = db
+
+    r = @db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';", false )
+    if r.first
+      if r.first['bio'] != nil && r.first['bio'] != ''
+        bio = JSON.parse( r.first['bio'] )
+        @sex = bio['sex'].to_i
+        @birth = Time.parse( bio['birth'] )
+        @height = bio['height'].to_f * 100
+        @weight = bio['weight'].to_f
+        @kexow = bio['kexow'].to_i
+        @pgene = bio['pgene'].to_i
+        @age = ( Date.today.strftime( "%Y%m%d" ).to_i - @birth.strftime( "%Y%m%d" ).to_i ) / 10000
+      end
+    end
+  end
+
+  def kex_ow()
+    r = @db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';", false )
     if r.first && @kexow == 1
       koyomi = JSON.parse( r.first['koyomi'] )
       kex_select = koyomi['kex_select']

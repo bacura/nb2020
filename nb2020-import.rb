@@ -13,6 +13,7 @@ require './nb2020-soul'
 #==============================================================================
 script = 'nb2020-import'
 @debug = false
+db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
 
 #==============================================================================
@@ -49,7 +50,6 @@ puts "[#{txt_class}]"
 
 #### DB upadate
 if import_solid.size > 0
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     count = 0
 	case txt_class
 	when 'dic'

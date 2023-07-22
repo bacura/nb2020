@@ -92,15 +92,14 @@ get_data = get_data()
 #### Getting POST date
 user = User.new( @cgi )
 l = language_pack( user.language )
-
-db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+db = Db.new( user, false, true )
 
 puts "#{get_data['mode']}" if @debug
 case get_data['mode']
 when 'check'
 
   puts 'Checking user ID on DB' if @debug
-  r = db.query( "SELECT user, status, cookie FROM #{$MYSQL_TB_USER} WHERE user='#{@cgi['id']}' AND pass='#{@cgi['pass']}' AND status>'0';" )
+  r = db.query( "SELECT user, status, cookie FROM #{$MYSQL_TB_USER} WHERE user='#{@cgi['id']}' AND pass='#{@cgi['pass']}' AND status>'0';", false )
   unless r.first
       html_init( nil )
       html_head( nil, 0, nil )
@@ -117,7 +116,7 @@ when 'check'
     cookie = "Set-Cookie: NAME=#{@cgi['id']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
 
     puts 'Updating user information' if @debug
-    db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m=NULL WHERE user='#{@cgi['id']}';" )
+    db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m=NULL WHERE user='#{@cgi['id']}';", true )
 
     html_init( cookie )
     html_head( 'refresh', status, nil )
@@ -126,16 +125,16 @@ when 'check'
     puts 'Init essential config' if @debug
     if status != 7
       # Checking & repairing history table
-      r = db.query( "SELECT user FROM #{$MYSQL_TB_HIS} WHERE user='#{@cgi['id']}';" )
-      db.query( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{@cgi['id']}', his='';" )  unless r.first
+      r = db.query( "SELECT user FROM #{$MYSQL_TB_HIS} WHERE user='#{@cgi['id']}';", false )
+      db.query( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{@cgi['id']}', his='';", true )  unless r.first
 
       # Checking & repairing SUM table
-      r = db.query( "SELECT user FROM #{$MYSQL_TB_SUM} WHERE user='#{@cgi['id']}';" )
-      db.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{@cgi['id']}', sum='';" ) unless r.first
+      r = db.query( "SELECT user FROM #{$MYSQL_TB_SUM} WHERE user='#{@cgi['id']}';", false )
+      db.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{@cgi['id']}', sum='';", true ) unless r.first
 
       # Checking & repairing meal table
-      r = db.query( "SELECT user FROM #{$MYSQL_TB_MEAL} WHERE user='#{@cgi['id']}';" )
-      db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';" ) unless r.first
+      r = db.query( "SELECT user FROM #{$MYSQL_TB_MEAL} WHERE user='#{@cgi['id']}';", false )
+      db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", true ) unless r.first
     end
   end
 
@@ -145,20 +144,20 @@ when 'logout'
   html_init( cookie )
   html_head( 'refresh', 0, nil )
   puts '</span></body></html>'
-  db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';" )
+  db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
 
 when 'family'
   cookie = ''
   login_mv = get_data['login_mv']
   puts "->#{login_mv}" if @debug
-  r = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{login_mv}';" )
+  r = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{login_mv}';", false )
   if r.first
     puts r.first['mom'] if @debug
     if r.first['mom'] == '' ||  r.first['mom'] == nil
         cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{r.first['cookie']}\n"
-        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';" )
+        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
     else
-      rr = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user=\"#{r.first['mom']}\";" )
+      rr = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user=\"#{r.first['mom']}\";", false )
       if rr.first
         # Issuing cookies
         uid = SecureRandom.hex( 16 )
@@ -166,8 +165,8 @@ when 'family'
         cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
         puts cookie if @debug
 
-        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{mid}' WHERE user='#{login_mv}';" )
-        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';" )
+        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{mid}' WHERE user='#{login_mv}';", true )
+        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
       end
     end
   end
@@ -184,4 +183,3 @@ else
   html_login_form( nil, l )
   html_foot()
 end
-

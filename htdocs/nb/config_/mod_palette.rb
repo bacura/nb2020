@@ -4,8 +4,8 @@
 @degug = true
 
 #### displying palette
-def listing( uname, l, db )
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, @debug )
+def listing( db, l )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{db.user.name}';", false )
 	list_body = ''
 	r.each do |e|
 		count = e['palette'].count( '1' )
@@ -45,21 +45,21 @@ HTML
 end
 
 
-def config_module( cgi, user )
+def config_module( cgi, db )
 	module_js()
-	l = module_lp( user.language )
-	db = Db.new( user, @debug )
+	l = module_lp( db.user.language )
 
 	step = cgi['step']
 	html = ''
 
 	case step
 	when ''
-		html = listing( user.name, l, db )
+		html = listing( db, l )
+
 	when 'new_palette', 'edit_palette'
 		checked = Hash.new
 		if step == 'edit_palette'
-			r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='#{cgi['palette_name']}';", false, false )
+			r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{db.user.name}' AND name='#{cgi['palette_name']}';", false )
 			palette = r.first['palette']
 			palette.size.times do |c|
 				checked[@fct_item[c]] = 'checked' if palette[c] == '1'
@@ -108,29 +108,27 @@ HTML
 		palette_name = cgi['palette_name']
 
 		@fct_min.each do |e| fct_bits << cgi[e].to_i.to_s end
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{user.name}';", false, false )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE name='#{palette_name}' AND user='#{db.user.name}';", false )
 		if r.first
-			db.query( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}' WHERE name='#{palette_name}' AND user='#{user.name}';", true, false )
+			db.query( "UPDATE #{$MYSQL_TB_PALETTE} SET palette='#{fct_bits}' WHERE name='#{palette_name}' AND user='#{db.user.name}';", true )
 		else
-			db.query( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{user.name}', palette='#{fct_bits}';", true, false )
+			db.query( "INSERT INTO #{$MYSQL_TB_PALETTE} SET name='#{palette_name}', user='#{db.user.name}', palette='#{fct_bits}';", true )
 		end
 
-		html = listing( user.name, l, db )
+		html = listing( db, l )
 
 	when 'delete_palette'
-		db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{user.name}';", true, false )
+		db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE name='#{cgi['palette_name']}' AND user='#{db.user.name}';", true )
 
-		html = listing( user.name, l, db )
+		html = listing( db, l )
 
 	when 'reset_palette'
-		db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", true, false )
+		db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{db.user.name}';", true )
 		0.upto( @palette_default.size - 1 ) do |c|
-			db.query( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{user.name}', name='#{$PALETTE_DEFAULT_NAME['jp'][c]}', palette='#{$PALETTE_DEFAULT['jp'][c]}';", true, false )
+			db.query( "INSERT INTO #{$MYSQL_TB_PALETTE} SET user='#{db.user.name}', name='#{$PALETTE_DEFAULT_NAME['jp'][c]}', palette='#{$PALETTE_DEFAULT['jp'][c]}';", true )
 		end
-		html = listing( user.name, l, db )
+		html = listing( db, l )
 	end
-
-	db.close
 
 	return html
 end
@@ -213,6 +211,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name' => "成分パレット",\
 		'edit' => "編集",\
 		'delete' => "削除",\
 		'palette_list' => "カスタム成分パレット一覧",\

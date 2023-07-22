@@ -4,10 +4,9 @@
 #mod debug
 @debug = false
 
-def config_module( cgi, user )
+def config_module( cgi, db )
 	module_js()
-	l = language_pack( user.language )
-	db = Db.new( user, false )
+	l = module_lp( db.user.language )
 
 	step = cgi['step']
 	password = cgi['password']
@@ -41,15 +40,15 @@ HTML
 HTML
 
 			# Updating user table
-			db.query( "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{user.name}' AND cookie='#{user.uid}';", true, false )
+			db.query( "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{db.user.name}' AND cookie='#{db.user.uid}';", true )
 
 			# Deleting indivisual data
-			db.query( "DELETE FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';", true, false )
-			db.query( "DELETE FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", true, false )
-			db.query( "DELETE FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", true, false )
-			db.query( "DELETE FROM #{$MYSQL_TB_MEAL} WHERE user='#{user.name}';", true, false )
-			db.query( "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE user='#{user.name}';", true, false )
-			db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}';", true, false )
+			db.query( "DELETE FROM #{$MYSQL_TB_HIS} WHERE user='#{db.user.name}';", true )
+			db.query( "DELETE FROM #{$MYSQL_TB_SUM} WHERE user='#{db.user.name}';", true )
+			db.query( "DELETE FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", true )
+			db.query( "DELETE FROM #{$MYSQL_TB_MEAL} WHERE user='#{db.user.name}';", true )
+			db.query( "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE user='#{db.user.name}';", true )
+			db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{db.user.name}';", true )
 		else
 			puts 'release step ROM<br>' if @debug
 			html = <<-"HTML"
@@ -61,8 +60,6 @@ HTML
 HTML
 		end
 	end
-
-	db.close
 
 	return html
 
@@ -93,10 +90,11 @@ end
 
 
 # Language pack
-def language_pack( language )
+def module_lp( language )
 	l = Hash.new
 
 	l['jp'] = {
+		'mod_name' => "登録解除",\
 		'msg' => "ユーザー登録を解除する場合は、パスワードを入力し登録解除ボタンを押してください。",\
 		'password' => "パスワード",\
 		'release' => "登録解除",\

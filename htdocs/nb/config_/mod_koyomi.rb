@@ -4,10 +4,9 @@
 @debug = false
 @kex_max = 10
 
-def config_module( cgi, user )
+def config_module( cgi, db )
 	module_js()
-	l = module_lp( user.language )
-	db = Db.new( user, @debug )
+	l = module_lp( db.user.language )
 
 	koyomi = Hash.new
 	start = Time.new.year
@@ -27,7 +26,7 @@ def config_module( cgi, user )
 
 
 	puts 'LOAD config<br>' if @debug
-	r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+	r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 			koyomi = JSON.parse( r.first['koyomi'] )
@@ -68,7 +67,7 @@ def config_module( cgi, user )
 		koyomi['kexu'] = kexu
 		koyomi['kexa'] = kexa
 		koyomi_ = JSON.generate( koyomi )
-		db.query( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", true )
 	end
 
 
@@ -80,8 +79,6 @@ def config_module( cgi, user )
 		start_select << "<option value='#{c}' #{selected}>#{c}</option>"
 	end
   	start_select << "</select>"
-
-  	db.close
 
 	####
 ####

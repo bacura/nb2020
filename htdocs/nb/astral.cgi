@@ -39,6 +39,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST data
@@ -50,7 +51,6 @@ if @debug
 	puts "<hr>\n"
 end
 
-db = Db.new( user, false )
 
 yuid = ''
 yupw = ''
@@ -58,17 +58,17 @@ if command == 'change'
 	if astral_sw == 1
 		yuid = "#{user.name}~"
 		yupw = SecureRandom.alphanumeric( 16 )
-		db.query( "INSERT INTO #{$MYSQL_TB_USER} SET user='#{yuid}', pass='#{yupw}', status=7, language='#{user.language}';", true, false )
-		db.query( "UPDATE #{$MYSQL_TB_USER} SET astral=1 WHERE user='#{user.name}';", true, false )
+		db.query( "INSERT INTO #{$MYSQL_TB_USER} SET user='#{yuid}', pass='#{yupw}', status=7, language='#{user.language}';", true )
+		db.query( "UPDATE #{$MYSQL_TB_USER} SET astral=1 WHERE user='#{user.name}';", true )
 	else
 		yuid = ''
 		yupw = ''
-		db.query( "UPDATE #{$MYSQL_TB_USER} SET astral=0 WHERE user='#{user.name}';", true, false )
-		db.query( "DELETE FROM #{$MYSQL_TB_USER} WHERE user='#{user.name}~';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_USER} SET astral=0 WHERE user='#{user.name}';", true )
+		db.query( "DELETE FROM #{$MYSQL_TB_USER} WHERE user='#{user.name}~';", true )
 	end
 else
 	if user.astral == 1
-		r = db.query( "SELECT pass FROM #{$MYSQL_TB_USER} WHERE user='#{user.name}~';", false, false )
+		r = db.query( "SELECT pass FROM #{$MYSQL_TB_USER} WHERE user='#{user.name}~';", false )
 		if r.first
 			yuid = "#{user.name}~"
 			yupw = r.first['pass']

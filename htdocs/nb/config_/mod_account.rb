@@ -1,14 +1,15 @@
 # Nutorition browser 2020 Config module for acount 0.10b (2022/12/24)
 #encoding: utf-8
 
-def config_module( cgi, user )
+@debug = false
+
+def config_module( cgi, db )
 	module_js()
-	l = language_pack( user.language )
-	db = Db.new( user, false )
+	l = module_lp( db.user.language )
 
 	step = cgi['step']
 
-	res = db.query( "SELECT pass, mail, aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{user.name}' AND cookie='#{user.uid}';", false, false )
+	res = db.query( "SELECT pass, mail, aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{db.user.name}' AND cookie='#{db.user.uid}';", false )
 	aliasu = res.first['aliasu']
 	mail = res.first['mail']
 	pass = res.first['pass']
@@ -30,7 +31,7 @@ def config_module( cgi, user )
 			end
 
 			# Updating acount information
-			db.query( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}', language='#{language}' WHERE user='#{user.name}' AND cookie='#{user.uid}';", true, false )
+			db.query( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}', language='#{language}' WHERE user='#{db.user.name}' AND cookie='#{db.user.uid}';", true )
 		else
 			puts "<span class='msg_small_red'>#{l['no_save']}</span><br>"
 		end
@@ -83,7 +84,6 @@ def config_module( cgi, user )
 	</div>
 HTML
 
-	db.close
 	return html
 end
 
@@ -126,11 +126,12 @@ end
 
 
 # Language pack
-def language_pack( language )
+def module_lp( language )
 	l = Hash.new
 
 	#Japanese
 	l['jp'] = {
+		'mod_name'	=> "アカウント",\
 		'aliase'	=> "二つ名",\
 		'mail'		=> "メールアドレス",\
 		'new_pw'	=> "新しいパスワード",\

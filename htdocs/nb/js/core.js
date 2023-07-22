@@ -649,12 +649,12 @@ var metaDisplay = function( com ){
 // Display config menu
 var configInit = function(){
 	flashBW();
-	$.post( "config.cgi", { mod:'' }, function( data ){
+	$.post( "config.cgi", { mod:'menu' }, function( data ){
 		$( "#LINE" ).html( data );
 		dline = true;
 		displayBW();
 	});
-	$.post( "config.cgi", { mod:'account' }, function( data ){
+	$.post( "config.cgi", { mod:'' }, function( data ){
 		$( "#L1" ).html( data );
 		dl1 = true;
 		displayBW();

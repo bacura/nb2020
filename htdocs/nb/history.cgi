@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser history 0.22b (2023/01/14)
+#Nutritoin browser history 0.23b (2023/07/16)
 
 #==============================================================================
 # STATIC
@@ -62,11 +62,10 @@ def language_pack( language )
 end
 
 #### Getting history
-def get_histry( l, user, sub_fg )
-	db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+def get_histry( db, l, sub_fg )
 	history = []
 	sgh = Hash.new
-	res = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';" )
+	res = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{db.user.name}';", false )
 	t = res.first['his'].split( "\t" )
 
 	gycv = false
@@ -103,11 +102,10 @@ def get_histry( l, user, sub_fg )
 	html = ''
 	history.each do |e|
 		if sgh[e] == 'f' && sub_fg != 'R'
-			q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
-			r_tag = db.query( q )
+			r_tag = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
 			if r_tag.first
 				if sub_fg == '6'
-					res2 = db.query( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{e}';" )
+					res2 = db.query( "SELECT gycv FROM #{$MYSQL_TB_EXT} WHERE FN='#{e}';", false )
 					if res2.first
 						next if res2.first['gycv'] == 1 && ( not gycv )
 						next if res2.first['gycv'] != 1 && gycv
@@ -118,14 +116,13 @@ def get_histry( l, user, sub_fg )
 				tags = bind_tags( r_tag ) if r_tag.first
 
 				# buttons
-				add_button = "<span onclick=\"addingCB( '#{e}', '', '#{food_name}' )\">#{l['cboard']}</span>" if user.name
-				koyomi_button = "<span onclick=\"addKoyomi( '#{e}', 1 )\">#{l['calendar']}</span>" if user.status >= 2
+				add_button = "<span onclick=\"addingCB( '#{e}', '', '#{food_name}' )\">#{l['cboard']}</span>" if db.user.name
+				koyomi_button = "<span onclick=\"addKoyomi( '#{e}', 1 )\">#{l['calendar']}</span>" if db.user.status >= 2
 
 				html << "<tr class='fct_value'><td class='link_cursor' onclick=\"detailView_his( '#{e}' )\">#{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}</td></tr>\n"
 			end
 		elsif ( sgh[e] == 'r' && sub_fg == 'R' ) || sub_fg == 'all'
-			q = "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}';"
-			r = db.query( q )
+			r = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false )
 			if r.first
 				recipe_name = r.first['name']
 				koyomi_button = "<span onclick=\"addKoyomi( '#{e}' )\">#{l['calendar']}</span>" if user.status >= 2
@@ -136,7 +133,6 @@ def get_histry( l, user, sub_fg )
 			end
 		end
 	end
-	db.close
 
 	return html
 end
@@ -179,7 +175,7 @@ user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
 history = Hash.new
-
+db = Db.new( user, @debug, false )
 
 puts 'POST<br>' if @debug
 command = @cgi['command']
@@ -199,7 +195,7 @@ sub_menu( l ) if command == 'menu'
 if sub_fg == 'init'
 	puts "LOAD config<br>" if @debug
 	sub_fg = 1
-	r = mdb( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 	if r.first
 		if r.first['history'] != nil && r.first['history'] != ''
 			history = JSON.parse( r.first['history'] )
@@ -225,11 +221,11 @@ end
 
 
 puts 'History Line All<br>' if @debug
-food_html_all = get_histry( l, user, 'all' )
+food_html_all = get_histry( db, l, 'all' )
 
 
 puts 'History Line SG<br>' if @debug
-food_html_sg = get_histry( l, user, sub_fg )
+food_html_sg = get_histry( db, l, sub_fg )
 
 
 puts 'HTML<br>' if @debug
@@ -257,4 +253,4 @@ puts html
 #Update config
 history['sub_fg'] = sub_fg
 history_ = JSON.generate( history )
-mdb( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", false, @debug )
+db.query( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", false ) unless user.status == 7

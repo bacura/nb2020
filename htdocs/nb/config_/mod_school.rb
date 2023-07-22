@@ -1,13 +1,13 @@
-# Nutorition browser 2020 Config module for school 0.10b
+# Nutorition browser 2020 Config module for school 0.10b (2023/07/19)
 #encoding: utf-8
 
 
-def config_module( cgi, user, lp )
-	l = module_lp( user.language )
+def config_module( cgi, db )
+	l = module_lp( db.user.language )
 	module_js()
 
 	step = cgi['step']
-	r = mdb( "SELECT school FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+	r = db.query( "SELECT school FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['school'] != nil && r.first['school'] != ''
 			school = JSON.parse( r.first['school'] )
@@ -34,7 +34,7 @@ def config_module( cgi, user, lp )
 
 		# Updating bio information
 		school_ = JSON.generate( { "name" => cs_name, "code" => cs_code, "url" => cs_url, "doc" => cs_doc, "format" => cs_format } )
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET school='#{school_}' WHERE user='#{user.name}';", false, false )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET school='#{school_}' WHERE user='#{db.user.name}';", false )
 	end
 
 

@@ -37,11 +37,11 @@ mode = @cgi['mode']
 
 food_weight = BigDecimal( food_weight_check( food_weight ).first )
 
-db = Db.new( user, false )
+db = Db.new( user, @debug, false )
 
 if user.name
 	# Loading CB
-	r = db.query( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, false )
+	r = db.query( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
 	sum = r.first['sum'].split( "\t" )
 	cb_num = sum.size
 	new_sum = ''
@@ -55,7 +55,7 @@ if user.name
 		end
 
 		# Updating CB
-		db.query( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", true )
 		cb_num += 1
 		puts cb_num
 
@@ -74,7 +74,7 @@ if user.name
 		new_sum.chop!
 
 		# Updating CB
-		db.query( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", true )
 		puts cb_num
 	elsif mode == 'refresh'
 

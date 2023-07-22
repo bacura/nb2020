@@ -2,15 +2,14 @@
 #encoding: utf-8
 
 
-def config_module( cgi, user )
+def config_module( cgi, db )
 	module_js()
-	l = module_lp( user.language )
-	db = Db.new( user, @debug )
+	l = module_lp( db.user.language )
 
 	time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120]
 
 	step = cgi['step']
-	r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+	r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -49,10 +48,8 @@ def config_module( cgi, user )
 
 		# Updating bio information
 		bio_ = JSON.generate( { "sex" => sex, "age" => age, "birth" => birth, "height" => height, "weight" => weight, "kexow" => kexow, "pgene" => pgene, "bst" => bst, "lst" => lst , "dst" => dst, "bti" => bti , "lti" => lti , "dti" => dti } )
-		db.query( "UPDATE #{$MYSQL_TB_CFG} SET bio='#{bio_}' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET bio='#{bio_}' WHERE user='#{db.user.name}';", true )
 	end
-
-	db.close
 
 	male_check = ''
 	female_check = ''
@@ -63,14 +60,14 @@ def config_module( cgi, user )
 	end
 
 	kexow_check = ''
-	if user.status >= 2
+	if db.user.status >= 2
 		kexow_check = 'CHECKED' if kexow == 1
 	else
 		kexow_disabled = 'DISABLED'
 	end
 
 	pgene_check = ''
-	if user.status >= 2
+	if db.user.status >= 2
 		pgene_check = 'CHECKED' if pgene == 1
 	else
 		pgene_disabled = 'DISABLED'
@@ -243,6 +240,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name' => "生体情報",\
 		'sex' => "代謝的性別",\
 		'male' => "男性",\
 		'female' => "女性",\

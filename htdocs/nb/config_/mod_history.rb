@@ -1,15 +1,14 @@
 # Nutorition browser 2020 Config module for history 0.03b (2023/7/13)
 #encoding: utf-8
 
-def config_module( cgi, user )
+def config_module( cgi, db )
 	module_js()
-	l = language_pack( user.language )
-	db = Db.new( user, @debug )
+	l = module_lp( db.user.language )
 	history = Hash.new
 	his_max = 200
 
 	puts "LOAD config<br>" if @debug
-	r = db.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+	r = db.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['history'] != nil && r.first['history'] != ''
 			history = JSON.parse( r.first['history'] )
@@ -25,14 +24,12 @@ def config_module( cgi, user )
 
 		history['his_max'] = his_max
 		history_ = JSON.generate( history )
-		db.query( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{db.user.name}';", true )
 
 	when 'clear'
 		puts "CLEAR history<br>" if @debug
-		db.query( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{user.name}';", true, false )
+		db.query( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{db.user.name}';", true )
 	end
-
-	db.close
 
 	html = <<-"HTML"
      <div class="container">
@@ -94,11 +91,12 @@ end
 
 
 # Language pack
-def language_pack( language )
+def module_lp( language )
 	l = Hash.new
 
 	#Japanese
 	l['jp'] = {
+		'mod_name'	=> "履歴",\
 		'his_vol'	=> "履歴保存量",\
 		'msg1'	=> "※増やすとレスポンスが悪くなるかもしれません。",\
 		'msg2'	=> "履歴を初期化する場合は、履歴初期化ボタンを押してください。",\
