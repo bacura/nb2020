@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail sub 0.01b (2023/05/13)
+#Nutrition browser 2020 food detail sub 0.02b (2023/07/30)
 
 
 #==============================================================================
@@ -68,6 +68,7 @@ food_no = @cgi['food_no']
 base = @cgi['base']
 base_fn = @cgi['base_fn']
 if @debug
+	puts "command: #{command}<br>"
 	puts "food_key: #{food_key}<br>"
 	puts "frct_mode: #{frct_mode}<br>"
 	puts "food_weight: #{food_weight}<br>"
@@ -232,7 +233,7 @@ when 'init', 'weight', 'cb', 'cbp'
 
 		# 追加・変更ボタン
 		if user.name && base == 'cb'
-			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{l['change']}</span>"
+			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}', '#{food_weight}' )\">#{l['change']}</span>"
 		elsif user.name
 			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{l['cboard']}</span>"
 		else
@@ -282,8 +283,36 @@ when 'init', 'weight', 'cb', 'cbp'
 		end
 	end
 
+
+	weight_parts = ''
+	if base != 'cb'
+		weight_parts = <<-"WEIGHT"
+<div class="col-3">
+	<div class="input-group input-group-sm">
+		<label class='input-group-text' for='fraction'>#{l['fract']}</label>
+		<select class='form-select' id='fraction' onchange='changeDSWeight( "weight", "#{food_key}", "#{food_no}" )>
+			<option value='1'#{frct_select[1]}>#{l['round']}</option>
+			<option value='2'#{frct_select[2]}>#{l['ceil']}</option>
+			<option value='3'#{frct_select[3]}>#{l['floor']}</option>
+		</select>
+	</div>
+</div>
+
+<div class="col-3">
+	<div class="input-group input-group-sm">
+		<label class="input-group-text" for="weight">#{l['weight']}</label>
+		<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
+		<button class="btn btn-outline-primary" type="button" onclick="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">g</button>
+	</div>
+</div>
+
+WEIGHT
+	end
+
+
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0
+	pseudo_button = ''
+ 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0 && base != 'cb'
 
  	# Recipe search badge
  	recipe_search = ''
@@ -295,7 +324,7 @@ when 'init', 'weight', 'cb', 'cbp'
 
 
 	parallel_button = ''
-	parallel_button = "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{food_no}' )\">#{l['parallel']}</div><br>" if base == 'cb'
+	parallel_button = "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{base_fn}' )\">#{l['parallel']}</div><br>" if base == 'cb'
  
 	html = <<-"HTML"
 	<div class='container-fluid'>
@@ -306,24 +335,9 @@ when 'init', 'weight', 'cb', 'cbp'
 		<div class="row">
   		<div class="col-3"><span class='h5'>#{food_name}</span>#{recipe_search}</div>
   		<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
-		<div class="col-3">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="fraction">#{l['fract']}</label>
-				<select class="form-select" id="fraction" onchange="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">
-					<option value="1"#{frct_select[1]}>#{l['round']}</option>
-					<option value="2"#{frct_select[2]}>#{l['ceil']}</option>
-					<option value="3"#{frct_select[3]}>#{l['floor']}</option>
-				</select>
-			</div>
+		#{weight_parts}
 		</div>
-		<div class="col-3">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="weight">#{l['weight']}</label>
-				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
-				<button class="btn btn-outline-primary" type="button" onclick="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">g</button>
-			</div>
-		</div>
-	</div></div>
+	</div>
 	<br>
 
 	<table class="table table-sm table-hover">

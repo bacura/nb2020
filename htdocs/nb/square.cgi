@@ -37,17 +37,9 @@ def get_history_name( fg, db )
 	if db.user.name
 		r = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{db.user.name}';", false )
 		if r.first
-			his = r.first['his'].split( "\t" )
-########## 応急処置
-			his.each do |e|
-				unless e == ''
-					if ( /P|U/ =~ e && e[1..2].to_i == fg.to_i ) || e[0..1].to_i == fg.to_i
-						rr = db.query( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
-						name_his << rr.first['name'] if rr.first
-					end
-				end
-########## 応急処置
-			end
+			his = r.first['his'].gsub( "\t", ',' )
+			rr = db.query( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg}' AND FN IN (#{his});", false )
+			rr.each do |e| name_his << e['name'] end
 		end
 	end
 
@@ -92,7 +84,7 @@ db = Db.new( user, @debug, false )
 #### GET data
 get_data = get_data()
 channel = get_data['channel']
-category = get_data['category'].to_i
+category = get_data['category'].to_s
 food_key = CGI.unescape( get_data['food_key'] ) if get_data['food_key'] != '' && get_data['food_key'] != nil
 frct_mode = get_data['frct_mode'].to_i
 food_weight = CGI.unescape( get_data['food_weight'] ) if get_data['food_weight'] != '' && get_data['food_weight'] != nil
@@ -113,8 +105,10 @@ end
 
 
 #### 食品グループ番号の桁補完
-if category > 9
-	@fg = category.to_s
+if category == '' || category == nil
+	@fg = food_key.split( ':' ).shift
+elsif category.size == 2
+	@fg = category
 else
 	@fg = "0#{category}"
 end
@@ -238,11 +232,12 @@ when 'fctb'
 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{@fg}::::', '' )\">#{l['plus']}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
-	<h6>#{category}.#{@category[category]}</h6>
+	<h6>#{category}.#{@category[category.to_i]}</h6>
 	#{class_html}
 	#{direct_html}
 	#{pseudo_button}
 HTML
+
 
 #### 第２層閲覧選択ページ
 when 'fctb_l2'

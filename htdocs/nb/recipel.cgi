@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.31b (2023/5/7)
+#Nutrition browser 2020 recipe list 0.32b (2023/5/7)
 
 
 #==============================================================================
@@ -427,7 +427,7 @@ when 'delete'
 	mdb( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
 
 	puts "Deleting recipe from DB<br>" if @debug
-	recipe = Recipe.new( user.name )
+	recipe = Recipe.new( user )
 	recipe.code = code
 	recipe.delete_db
 
@@ -437,7 +437,7 @@ when 'delete'
 
 when 'subspecies'
 	# Loading original recipe
-	recipe = Recipe.new( user.name )
+	recipe = Recipe.new( user )
 	recipe.load_db( code, true )
 
 	# Copying phots
@@ -571,7 +571,7 @@ else
 	res = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name LIMIT #{offset}, #{page_limit};", false, @debug )
 end
 res.each do |e|
-	o = Recipe.new( user.name )
+	o = Recipe.new( user )
 	o.load_db( e, false )
 	o.load_media
 	recipes << o
@@ -612,7 +612,7 @@ if family == 1
 		r.each do |ee|
 			daughters << ee['code']
 
-			ro = Recipe.new( user.name )
+			ro = Recipe.new( user )
       		ro.load_db( ee['code'], true )
 			daughter_recipes << ro
 		end

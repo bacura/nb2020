@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 regist 0.08b (2023/01/11)
+#Nutrition browser 2020 regist 0.09b (2023/07/28)
 
 #==============================================================================
 #STATIC
@@ -163,6 +163,7 @@ end
 html_init( nil )
 
 l = language_pack( $DEFAULT_LP )
+db = Db.new( nil, @debug, false )
 #puts l if @debug
 
 
@@ -228,7 +229,7 @@ when 'finish'
   mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", false, @debug )
 
   # Inserting new config
-#  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', his_max=200;", false, @debug )
+  mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{@cgi['id']}', icache=1;", false, @debug )
 
   html_regist_finish( l )
 

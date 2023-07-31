@@ -1148,6 +1148,30 @@ def ref_its_init( ref_intake )
 end
 
 
+#### Making reference parallel food table.
+def ref_para_init( ref_parallel )
+	query = "SHOW TABLES LIKE 'ref_para';"
+	res = $DB.query( query )
+	if res.first
+		puts 'ref_para already exists.'
+	else
+		query = 'CREATE TABLE ref_para ( FN VARCHAR(5) PRIMARY KEY, para VARCHAR(256));'
+		$DB.query( query )
+
+		ref_solid = []
+		f = open( ref_parallel, 'r' )
+		f.each_line do |e| ref_solid << e.chomp end
+		ref_solid.shift
+		ref_solid.each do |e|
+			a = e.force_encoding( 'utf-8' ).split( "\t" )
+			query = "INSERT INTO ref_para set FN='#{a[0]}', para=\"#{a[1]}\";"
+			$DB.query( query )
+		end
+		puts 'ref_para table has been created.'
+	end
+end
+
+
 #### Making cooking school koyomi table
 def schoolk_init()
 	query = "SHOW TABLES LIKE 'schoolk';"
@@ -1224,6 +1248,7 @@ ref_bmi = 'ref2020-bmi.txt'
 ref_phys = 'ref2020-phys.txt'
 ref_eer = 'ref2020-eer.txt'
 ref_intake = 'ref2020-intake.txt'
+ref_parallel = 'ref2020-parallel.txt'
 
 #==============================================================================
 print 'DB Administrator name？'
@@ -1287,6 +1312,7 @@ ref_bmi_init( ref_bmi )
 ref_phys_init( ref_phys )
 ref_eer_init( ref_eer )
 ref_its_init( ref_intake )
+ref_para_init( ref_parallel )
 
 schoolk_init()
 schoolm_init()

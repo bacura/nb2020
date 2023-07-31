@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 0.9b (2023/07/12)
+#Nutrition browser 2020 soul 1.0b (2023/07/27)
 
 #==============================================================================
 # LIBRARY
@@ -18,7 +18,7 @@ $GM = 'gm'
 $SERVER_PATH = '/var/www'
 $HTDOCS_PATH = "#{$SERVER_PATH}/htdocs/nb"
 $TMP_PATH = '/tmp'
-$NBURL = 'http://localhost/nb/'
+$NBURL = 'https://bacura.jp/nb/'
 $MYURL = 'http://localhost/nb/'
 
 $COOKIE_UID = 'UID2020'
@@ -49,6 +49,7 @@ $MYSQL_TB_MODJ = 'modj'
 $MYSQL_TB_NOTE = 'note'
 $MYSQL_TB_PAG = 'pag'
 $MYSQL_TB_PALETTE = 'palette'
+$MYSQL_TB_PARA = 'ref_para'
 $MYSQL_TB_PRICE = 'price'
 $MYSQL_TB_PRICEM = 'pricem'
 $MYSQL_TB_RECIPE = 'recipe'
@@ -173,16 +174,7 @@ end
 
 #### 履歴追加
 def add_his( user, code )
-  return if user.status == 7
-
-  r = $DB.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';" )
-  if r.first
-    current_his = r.first['his'].split( "\t" )
-  else
-    # 新規追加
-    #DB.query( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{user.name}', his='';" )
-    current_his = []
-  end
+  return if user.status == 7 || user.status == 0
 
   his_max = 200
   r = $DB.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';" )
@@ -194,15 +186,18 @@ def add_his( user, code )
   end
   his_max = 200 if his_max < 200 || his_max > 1000
 
-  new_his = "#{code}\t"
-  0.upto( his_max - 1 ) do |c|
-    new_his << "#{current_his[c]}\t" unless code == current_his[c]
+  current_his = []
+  r = $DB.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';" )
+  if r.first
+    current_his = r.first['his'].split( "\t" )
   end
-  new_his.chop!
 
-  # 履歴の更新
-  $DB.query( "UPDATE #{$MYSQL_TB_HIS} SET his='#{new_his}' WHERE user='#{user.name}';" ) unless user.status == 7
-#  db.close
+  current_his.unshift << code
+  current_his.delete( '' )
+  current_his.uniq!
+  new_his = current_his.take( his_max ).join( "\t" )
+  
+  $DB.query( "UPDATE #{$MYSQL_TB_HIS} SET his='#{new_his}' WHERE user='#{user.name}';" )
 end
 
 
@@ -653,7 +648,7 @@ class Recipe
       @code = res['code']
     end
 
-    @user = res['user'].to_s
+    @user.name = res['user'].to_s
     @branch = res['branch'].to_i
     @root = res['root'].to_s
     @favorite = res['favorite'].to_i
@@ -687,25 +682,25 @@ class Recipe
     @name.gsub!( ';', '' )
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
-    $DB.query( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{@code}', user='#{@user}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', favorite=#{@favorite}, draft=#{@draft}, protect=#{@protect}, public=#{@public}, name='#{@name}', type=#{@type}, role=#{@role}, tech=#{tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', date='#{@date}';" ) unless @user.status == 7
+    $DB.query( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{@code}', user='#{@user.name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', favorite=#{@favorite}, draft=#{@draft}, protect=#{@protect}, public=#{@public}, name='#{@name}', type=#{@type}, role=#{@role}, tech=#{tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', date='#{@date}';" ) unless @user.status == 7
   end
 
   def update_db()
     @name.gsub!( ';', '' )
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
-    $DB.query( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{@name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', type=#{@type}, role=#{@role}, tech=#{@tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', public=#{@public}, favorite=#{@favorite}, protect=#{@protect}, draft=#{@draft}, date='#{@date}' WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == 7
+    $DB.query( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{@name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', type=#{@type}, role=#{@role}, tech=#{@tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', public=#{@public}, favorite=#{@favorite}, protect=#{@protect}, draft=#{@draft}, date='#{@date}' WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
   end
 
   def load_media()
-    res = $DB.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" )
+    res = $DB.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" )
     @media = []
     res.each do |e| @media << e['mcode'] end
   end
 
   def delete_db()
-    $DB.query( "DELETE FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == 7
-    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == 7
+    $DB.query( "DELETE FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
+    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
   end
 
   def tag()
@@ -751,6 +746,7 @@ class Recipe
     puts "Recipe.media:#{@media}<br>"
   end
 end
+
 
 
 class Meal

@@ -44,6 +44,8 @@ def language_pack( language )
     'book'    => "<img src='bootstrap-dist/icons/book.svg' style='height:1.2em; width:1.2em;'>",\
     'gear'    => "<img src='bootstrap-dist/icons/gear-fill.svg' style='height:1.2em; width:1.2em;'>",\
     'fire'    => "<img src='bootstrap-dist/icons/fire-blue.svg' style='height:0.8em; width:1.2em;'>",\
+    'ping'    => "<img src='bootstrap-dist/icons/fire-blue.svg' style='height:0.8em; width:1.2em;'>",\
+    'piny'    => "<img src='bootstrap-dist/icons/fire-blue.svg' style='height:0.8em; width:1.2em;'>",\
     'koyomi'  => "こよみ",\
     'ginmi'   => "アセスメント",\
     'pysique'   => "体格管理",\

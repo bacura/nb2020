@@ -125,7 +125,7 @@ def get_histry( db, l, sub_fg )
 			r = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}';", false )
 			if r.first
 				recipe_name = r.first['name']
-				koyomi_button = "<span onclick=\"addKoyomi( '#{e}' )\">#{l['calendar']}</span>" if user.status >= 2
+				koyomi_button = "<span onclick=\"addKoyomi( '#{e}' )\">#{l['calendar']}</span>" if db.user.status >= 2
 				print_button = "<span onclick=\"print_templateSelect( '#{e}' )\">#{l['printer']}</span>"
 				cp2w_button = "	<span onclick=\"cp2words( '#{e}', '' )\">#{l['cp2words']}</span>"
 

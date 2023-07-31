@@ -26,6 +26,7 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
+db = Db.new( user, @debug, false )
 
 
 #### POST
@@ -36,8 +37,6 @@ base_fn = @cgi['base_fn']
 mode = @cgi['mode']
 
 food_weight = BigDecimal( food_weight_check( food_weight ).first )
-
-db = Db.new( user, @debug, false )
 
 if user.name
 	# Loading CB
@@ -66,7 +65,7 @@ if user.name
 		sum.each do |e|
 			t = e.split( ':' )
 			if t[0] == base_fn
-				new_sum << "#{food_no}:#{t[1]}:#{food_weight}:#{t[3]}:#{t[4]}:#{t[5]}:#{t[6]}:#{t[7]}\t"
+				new_sum << "#{food_no}:#{food_weight}:g:#{food_weight}:#{t[4]}:#{t[5]}:1.0:#{food_weight}\t"
 			else
 				new_sum << "#{e}\t"
 			end

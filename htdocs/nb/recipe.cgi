@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.14b (2023/04/15)
+#Nutrition browser 2020 recipe editor 0.15b (2023/04/15)
 
 #==============================================================================
 #COMMON LIBRARY
@@ -71,7 +71,7 @@ if @debug
 	puts "root:#{code}<br>"
 end
 
-recipe = Recipe.new( user.name )
+recipe = Recipe.new( user )
 recipe.debug if @debug
 
 case command
@@ -97,52 +97,53 @@ when 'save', 'division'
 	recipe.protocol = wash( recipe.protocol )
 
 	r = mdb( "SELECT sum, name, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
-	# Inserting new recipe
 	if r.first['name'] == ''
+		puts 'Inserting new recipe<br>' if @debug
 		recipe.code = generate_code( user.name, 'r' )
 		recipe.sum = r.first['sum']
 		recipe.dish = r.first['dish'].to_i
   		recipe.insert_db
 
-	# Updating recipe
 	else
-		pre_recipe = Recipe.new( user.name )
+		puts 'Updating recipe<br>' if @debug
+		pre_recipe = Recipe.new( user )
 		pre_recipe.code = recipe.code
 		pre_recipe.load_db( code, true )
 		recipe.sum = r.first['sum']
 		recipe.dish = r.first['dish'].to_i
 
-		# Import mode
 		copy_flag = false
 		original_user = nil
 
-		if user.name != pre_recipe.user
+		if user.name != pre_recipe.user.name
+			puts 'Import mode<br>' if @debug
 			copy_flag = true
-			original_user = pre_recipe.user
+			original_user = pre_recipe.user.name
 			recipe.favorite = 0
 			recipe.draft = 1
-			recipe.user = user.name
+			recipe.user = user
 			recipe.sum = r.first['sum']
 			recipe.dish = r.first['dish'].to_i
 		end
 
-		# Canceling public mode of recipe using puseudo user foods
+		puts 'Canceling public mode of recipe using puseudo user foods<br>' if @debug
 		a = recipe.sum.split( "\t" )
 		a.each do |e|
 			sum_items = e.split( ':' )
 			recipe.public = 0 if /^U/ =~ sum_items[0]
 		end
 
-		# Draft mode
 		if recipe.draft == 1
+			puts 'Draft mode<br>' if @debug
 			recipe.protect = 0
 			recipe.public = 0
+
 			recipe.update_db
 
 			copy_flag = true if command == 'division'
 
-		# Normal mode
 		elsif recipe.draft == 0 && recipe.protect == 0
+			puts 'Normal mode<br>' if @debug
 			if recipe.name == pre_recipe.name
 				recipe.update_db
 			else
@@ -150,8 +151,8 @@ when 'save', 'division'
 				copy_flag = true
 			end
 
-		# Protect mode
 		else
+			puts 'Protect mode<br>' if @debug
 			recipe.protect = 1 if recipe.public == 1
 			if pre_recipe.protect == 0 && recipe.name == pre_recipe.name
 				recipe.update_db
@@ -165,7 +166,7 @@ when 'save', 'division'
 			recipe.code = generate_code( user.name, 'r' )
 
 			# Copying name
-			if recipe.name == pre_recipe.name && user.name == pre_recipe.user && command != 'division'
+			if recipe.name == pre_recipe.name && user.name == pre_recipe.user.name && command != 'division'
 				t = pre_recipe.name.match( /\((\d+)\)$/ )
 				sn = 1
 				sn = t[1].to_i + 1 if t != nil
@@ -180,6 +181,7 @@ when 'save', 'division'
 			else
 				rr = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{original_user}' and code='#{code}';", false, @debug )
 			end
+
 			if rr.first
 				puts "Copying photo<br>" if @debug
 				rr.each do |e|

@@ -175,6 +175,11 @@ nav {
   font-size:large;
 }
 
+.fct_value_h{
+  font-size:large;
+  font-weight:bold;
+}
+
 .tag1{
   font-size: small;
   color: chocolate;

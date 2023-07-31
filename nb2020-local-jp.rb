@@ -14,6 +14,7 @@
 @fct_fsv = %w( RETOL CARTA CARTB CRYPXB CARTBEQ VITA_RAE VITD TOCPHA TOCPHB TOCPHG TOCPHD VITK )
 @fct_wsv = %w( THIA RIBF NIA NE VITB6A VITB12 FOL PANTAC BIOT VITC  )
 @fct_as = %w( ALC NACL_EQ )
+@fct_para = %w( ENERC_KCAL WATER PROTV FATV FASAT CHOV FIB CA FE CARTBEQ THIA, RIBF, NACL_EQ )
 @fct_min = @fct_rew + @fct_pf + @fct_cho + @fct_m + @fct_fsv + @fct_wsv + @fct_as
 @fct_min_nr = @fct_ew + @fct_pf + @fct_cho + @fct_m + @fct_fsv + @fct_wsv + @fct_as
 @fct_item = @fct_base + @fct_min

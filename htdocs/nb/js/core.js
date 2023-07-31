@@ -254,7 +254,7 @@ var summonL4 = function( key, direct ){
 // Browsing nutritional Information subset ///////////////////////////////////////////////////////////////////////
 
 // Display foods on BWL5
-var viewDetailSub = function( com, key, direct ){
+const viewDetailSub = function( com, key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.post( "detail-sub.cgi", { command:com, food_key:key }, function( data ){ $( "#L5" ).html( data );});
 	dl5 = true;
@@ -264,10 +264,14 @@ var viewDetailSub = function( com, key, direct ){
 
 
 // Changing weight of food
-var changeDSWeight = function( com, key, fn ){
-	var fraction_mode = document.getElementById( "fraction" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	$.post( "detail-sub.cgi", { command:com, food_key:key, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#L5" ).html( data );});
+const changeDSWeight = function( com, key, fn ){
+	const fraction_mode = document.getElementById( "fraction" ).value;
+	const weight = document.getElementById( "weight" ).value;
+	$.post( "detail-sub.cgi", { command:com, food_key:key, frct_mode:fraction_mode, food_weight:weight, food_no:fn }, function( data ){
+		$( "#L5" ).html( data );
+		displayVIDEO( '(>_<)' );
+
+	});
 };
 
 
@@ -721,9 +725,9 @@ var refreshCBN = function(){
 // Chopping boad ////////////////////////////////////////////////////////////////////////
 
 // 変更ボタンを押してsumの食品を変更する
-var changingCB = function( fn, base_fn ){
+const changingCB = function( fn, base_fn, weight ){
 	if( fn !='' ){
-		var weight = document.getElementById( "weight" ).value;
+//		var weight = document.getElementById( "weight" ).value;
 		$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){
 			$( "#CBN" ).html( data );
 			displayVIDEO( fn + 'has modified' );

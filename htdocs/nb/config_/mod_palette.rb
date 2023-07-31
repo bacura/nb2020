@@ -1,4 +1,4 @@
-# Nutorition browser 2020 Config module for Palette 0.20b
+# Nutorition browser 2020 Config module for Palette 0.21b (2023/07/30)
 #encoding: utf-8
 
 @degug = true
@@ -149,11 +149,13 @@ def module_js()
 
 // Sending FC palette
 var palette_cfg = function( step, id ){
+
 	flashBW();
 	if( step == 'new_palette' ){
 		$.post( "config.cgi", { mod:'palette', step:step }, function( data ){
 			$( "#L2" ).html( data );
 			dl2 = true;
+			displayBW();
 		});
 	}
 
@@ -184,6 +186,7 @@ var palette_cfg = function( step, id ){
 		$.post( "config.cgi", { mod:'palette', step:step, palette_name:id }, function( data ){
 			$( "#L2" ).html( data );
 			dl2 = true;
+			displayBW();
 		});
 	}
 
@@ -200,6 +203,7 @@ var palette_cfg = function( step, id ){
 	dl1 = true;
 	dline = true;
 	displayBW();
+
 };
 
 </script>
