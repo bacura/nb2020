@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.23b (2023/7/15)
+#Nutrition browser 2020 cutting board 0.24b (2023/8/01)
 
 #==============================================================================
 #STATIC
@@ -285,7 +285,7 @@ code = @cgi['code']
 chomi_selected = @cgi['chomi_selected']
 chomi_code = @cgi['chomi_code']
 recipe_user = @cgi['recipe_user']
-recipe_user = user.name if @cgi['recipe_user'] == nil || @cgi['recipe_user'] == ''
+recipe_user = user.name if recipe_user == nil || recipe_user == ''
 if @debug
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"

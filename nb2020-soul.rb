@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.0b (2023/07/27)
+#Nutrition browser 2020 soul 1.1b (2023/08/03)
 
 #==============================================================================
 # LIBRARY
@@ -252,9 +252,11 @@ end
 
 #### 特殊数値変換
 def convert_zero( t )
-  t = 0 if t == nil
   t.to_s.sub!( '(', '' )
   t.to_s.sub!( ')', '' )
+  t.to_s.sub!( '†', '' )
+  t = 0 if t == nil
+  t = 0 if t == ""
   t = 0 if t == '-'
   t = 0 if t == 'Tr'
   t = 0 if t == '*'

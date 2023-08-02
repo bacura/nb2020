@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.32b (2023/5/7)
+#Nutrition browser 2020 recipe list 0.33b (2023/8/01)
 
 
 #==============================================================================
@@ -265,7 +265,7 @@ def recipe_line( recipe, user, page, color, l )
 	tags =''
 	recipe.tag().each do |e| tags << "&nbsp;<span class='list_tag badge bbg' onclick=\"searchDR( '#{e}' )\">#{e}</span>" end
 	if user.status >= 1
-		html << "<td onclick=\"initCB( 'load', '#{recipe.code}', '#{recipe.user}' )\">#{recipe.name}</td><td>#{tags}</td>"
+		html << "<td onclick=\"initCB( 'load', '#{recipe.code}', '#{recipe.user.name}' )\">#{recipe.name}</td><td>#{tags}</td>"
 	else
 		html << "<td><a href='login.cgi'>#{recipe.name}</a></td><td>#{tags}</td>"
 	end
@@ -297,27 +297,27 @@ def recipe_line( recipe, user, page, color, l )
 	html << "</td>"
 	html << "<td>"
 
-	if user.status >= 1 && recipe.user == user.name
+	if user.status >= 1 && recipe.user.name == user.name
 		html << "&nbsp;<span onclick=\"addingMeal( '#{recipe.code}', '#{recipe.name}' )\">#{l['table']}</span>&nbsp;&nbsp;"
 	end
 
-	if user.status >= 2 && recipe.user == user.name
+	if user.status >= 2 && recipe.user.name == user.name
 		html << "&nbsp;<span onclick=\"addKoyomi( '#{recipe.code}' )\">#{l['calendar']}</span>&nbsp;&nbsp;"
 	end
 
 	html << "&nbsp;<span onclick=\"print_templateSelect( '#{recipe.code}' )\">#{l['printer']}</span>&nbsp;&nbsp;"
-	if user.status >= 1 && recipe.user == user.name && ( recipe.root == nil || recipe.root == '' )
+	if user.status >= 1 && recipe.user.name == user.name && ( recipe.root == nil || recipe.root == '' )
 		html << "&nbsp;<span onclick=\"recipeImport( 'subspecies', '#{recipe.code}', '#{page}' )\">#{l['diagram']}</span>"
-	elsif user.status >= 1 && recipe.user == user.name
-		html << "&nbsp;<span onclick=\"initCB( 'load', '#{recipe.root}', '#{recipe.user}' )\">#{l['root']}</span>"
+	elsif user.status >= 1 && recipe.user.name == user.name
+		html << "&nbsp;<span onclick=\"initCB( 'load', '#{recipe.root}', '#{recipe.user.name}' )\">#{l['root']}</span>"
 	end
 
-	if user.status >= 1 && recipe.user == user.name
+	if user.status >= 1 && recipe.user.name == user.name
 		html << "&nbsp;<span onclick=\"cp2words( '#{recipe.code}', '' )\">#{l['dropper']}</span>"
 	end
 	html << "</td>"
 
-	if recipe.user == user.name
+	if recipe.user.name == user.name
 		if recipe.protect == 0
 			html << "<td><input type='checkbox' id='#{recipe.code}'>&nbsp;<span onclick=\"recipeDelete( '#{recipe.code}', #{page} )\">#{l['trash']}</span></td>"
 		else
@@ -454,7 +454,7 @@ when 'subspecies'
 	end
 
 	# Insertinbg recipe into DB
-	recipe.user = user.name
+	recipe.user.name = user.name
 	recipe.code = new_recipe_code
 	recipe.favorite = 0
 	recipe.public = 0
