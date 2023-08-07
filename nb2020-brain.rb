@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.30b (2023/07/19)
+#Nutrition browser 2020 brain 0.32b (2023/08/07)
 
 #==============================================================================
 #STATIC
@@ -101,10 +101,9 @@ end
 
 
 #### from unit volume to weight
-#### 将来的に廃止
 def unit_weight( vol, uc, fn )
   w = 0.0
-  r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false, $DEBUG )
+  r = $DB.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'" )
   if r.first
     if r.first['unit'] != nil && r.first['unit'] != ''
       unith = JSON.parse( r.first['unit'] )
@@ -124,9 +123,10 @@ end
 
 
 #### from unit volume to weight DB
+#### 将来的に廃止
 def unit_weight_( vol, uc, fn, db )
   w = 0.0
-  r = db.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'", false )
+  r = $DB.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{fn}'" )
   if r.first
     if r.first['unit'] != nil && r.first['unit'] != ''
       unith = JSON.parse( r.first['unit'] )
@@ -171,23 +171,11 @@ def extract_sum( sum, dish, ew_mode )
   return fns, fws, tw
 end
 
-#将来的に廃止予定
+
 def menu2rc( uname, code )
   codes = []
 
-  r = mdb( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';", false, false )
-  if r.first
-    a = r.first['meal'].split( "\t" )
-    a.each do |e| codes << e end
-  end
-
-  return codes
-end
-
-def menu2rc_( db, code )
-  codes = []
-
-  r = db.query( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{db.user.name}' AND code='#{code}';", false )
+  r = $DB.query( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{uname}' AND code='#{code}';" )
   if r.first
     a = r.first['meal'].split( "\t" )
     a.each do |e| codes << e end
@@ -197,13 +185,26 @@ def menu2rc_( db, code )
 end
 
 #将来的に廃止予定
+def menu2rc_( db, code )
+  codes = []
+
+  r = $DB.query( "SELECT meal FROM #{$MYSQL_TB_MENU} WHERE user='#{db.user.name}' AND code='#{code}';" )
+  if r.first
+    a = r.first['meal'].split( "\t" )
+    a.each do |e| codes << e end
+  end
+
+  return codes
+end
+
+
 def recipe2fns( uname, code, rate, unit, ew_mode )
   ew_mode = 0 if ew_mode == nil
   fns = []
   fws = []
   tw = []
 
-  r = mdb( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';", false, false )
+  r = $DB.query( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';" )
   if r.first
     fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
 
@@ -221,13 +222,14 @@ def recipe2fns( uname, code, rate, unit, ew_mode )
   return fns, fws, tw
 end
 
+#将来的に廃止予定
 def recipe2fns_( db, code, rate, unit, ew_mode )
   ew_mode = 0 if ew_mode == nil
   fns = []
   fws = []
   tw = []
 
-  r = db.query( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' AND code='#{code}';", false )
+  r = $DB.query( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' AND code='#{code}';" )
   if r.first
     fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
 
@@ -307,7 +309,6 @@ end
 # CLASS
 #==============================================================================
 
-#将来的に廃止予定
 class Palette
   attr_accessor :sets, :bit
 
@@ -315,7 +316,7 @@ class Palette
     @sets = Hash.new
     @bit = []
     if uname
-      r = mdb( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';", false, false )
+      r = $DB.query( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{uname}';" )
       r.each do |e| @sets[e['name']] = e['palette'] end
     else
       $PALETTE_DEFAULT_NAME[$DEFAULT_LP].size.times do |c|
@@ -331,6 +332,7 @@ class Palette
   end
 end
 
+#将来的に廃止予定
 class Palette_
   attr_accessor :sets, :bit
 
@@ -339,7 +341,7 @@ class Palette_
     @sets = Hash.new
     @bit = []
     if @db.user.name
-      r = @db.query( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{@db.user.name}';", false )
+      r = $DB.query( "SELECT * from #{$MYSQL_TB_PALETTE} WHERE user='#{@db.user.name}';" )
       r.each do |e| @sets[e['name']] = e['palette'] end
     else
       $PALETTE_DEFAULT_NAME[$DEFAULT_LP].size.times do |c|
@@ -382,9 +384,7 @@ class Calendar
     end
 
     @yyyyf = Time.now.year
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-    res = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';" )
-    db.close
+    res = $DB.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{uname}';" )
 
     if res.first
        if res.first['koyomi'] != nil && res.first['koyomi'] != ''
@@ -456,7 +456,7 @@ class Calendar_
     end
 
     @yyyyf = Time.now.year
-    res = @db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';", false )
+    res = $DB.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';" )
 
     if res.first
        if res.first['koyomi'] != nil && res.first['koyomi'] != ''
@@ -501,7 +501,6 @@ class Calendar_
 end
 
 
-#将来的に廃止予定
 class FCT
   attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights, :refuses, :total_weight
 
@@ -543,7 +542,6 @@ class FCT
   end
 
   def set_food( uname, food_no, food_weight, non_food )
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     c = 0
     food_no.each do |e|
       if e == '-'
@@ -580,7 +578,7 @@ class FCT
           q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
           qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
         end
-        res = db.query( q )
+        res = $DB.query( q )
         if res.first
           @fns << e
           a = []
@@ -592,7 +590,7 @@ class FCT
             end
           end
           @solid << Marshal.load( Marshal.dump( a ))
-          res2 = db.query( qq )
+          res2 = $DB.query( qq )
           @foods << bind_tags( res2 )
           @weights << food_weight[c]
         else
@@ -601,7 +599,6 @@ class FCT
       end
       c += 1
     end
-    db.close
   end
 
   def calc()
@@ -707,11 +704,10 @@ class FCT
     pi = @items.index( 'PROTV' )
     fi = @items.index( 'FATV' )
     pfc = []
-    if ei != nil && pi != nil && fi != nil
+    if ei != nil
       pfc[0] = ( @total[pi] * 4 / @total[ei] * 100 ).round( 1 )
       pfc[1] = ( @total[fi] * 4 / @total[ei] * 100 ).round( 1 )
       pfc[2] = ( 100 - pfc[0] - pfc[1] ).round( 1 )
-      pfc[2] = 0 if pfc[2] == 100
     end
 
     return pfc
@@ -745,7 +741,7 @@ class FCT
   end
 
   def load_fcz( uname, fzcode, base )
-    r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}' AND base='#{base}';", false, false )
+    r = $DB.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND code='#{fzcode}' AND base='#{base}';" )
     if r.first
       a = []
       @items.each do |e|
@@ -765,7 +761,7 @@ class FCT
   end
 
   def load_fctp( uname, code )
-    r = mdb( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );", false, @debug )
+    r = $DB.query( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{uname}' OR user='#{$GM}' );" )
     if r.first
       a = []
       @items.each do |e|
@@ -806,13 +802,13 @@ class FCT
     fct_.chop!
 
     code = ''
-    r = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND origin='#{origin}' AND base='#{base}';", false, false )
+    r = $DB.query( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND origin='#{origin}' AND base='#{base}';" )
     if r.first
-      mdb( "UPDATE #{$MYSQL_TB_FCZ} SET #{fct_} WHERE user='#{uname}' AND origin='#{origin}' AND base='#{base}';", false, false )
+      $DB.query( "UPDATE #{$MYSQL_TB_FCZ} SET #{fct_} WHERE user='#{uname}' AND origin='#{origin}' AND base='#{base}';" )
       code = r.first['code']
     else
       code = generate_code( uname, 'z' )
-      mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET code='#{code}', base='#{base}', name='#{zname}', user='#{uname}', origin='#{origin}', #{fct_};", false, false )
+      $DB.query( "INSERT INTO #{$MYSQL_TB_FCZ} SET code='#{code}', base='#{base}', name='#{zname}', user='#{uname}', origin='#{origin}', #{fct_};" )
     end
 
     return code
@@ -827,11 +823,23 @@ class FCT
   end
 
 
+  def flash()
+    @fns = []
+    @foods = []
+    @weights = []
+    @refuses = []
+    @solid = []
+    @total = []
+    @total_weight = BigDecimal( '0' )
+  end
+
+
   def debug()
   end
 end
 
 
+#将来的に廃止予定
 class FCT_
   attr_accessor :items, :names, :units, :frcts, :solid, :total, :fns, :foods, :weights, :refuses, :total_weight
 
@@ -910,7 +918,7 @@ class FCT_
           q = "SELECT * from #{$MYSQL_TB_FCT} WHERE FN='#{e}';"
           qq = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e}';"
         end
-        res = @db.query( q, false )
+        res = $DB.query( q )
         if res.first
           @fns << e
           a = []
@@ -931,7 +939,6 @@ class FCT_
       end
       c += 1
     end
-    db.close
   end
 
   def calc()
@@ -1075,7 +1082,7 @@ class FCT_
   end
 
   def load_fcz( fzcode, base )
-    r = @db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@db.user.name}' AND code='#{fzcode}' AND base='#{base}';", false )
+    r = $DB.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{@db.user.name}' AND code='#{fzcode}' AND base='#{base}';" )
     if r.first
       a = []
       @items.each do |e|
@@ -1095,7 +1102,7 @@ class FCT_
   end
 
   def load_fctp( code )
-    r = @db.query( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{@db.user.name}' OR user='#{$GM}' );", false )
+    r = $DB.query( "select * from #{$MYSQL_TB_FCTP} WHERE FN='#{code}' AND ( user='#{@db.user.name}' OR user='#{$GM}' );" )
     if r.first
       a = []
       @items.each do |e|
@@ -1136,13 +1143,13 @@ class FCT_
     fct_.chop!
 
     code = ''
-    r = @db.query( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{@db.user.name}' AND origin='#{origin}' AND base='#{base}';", false )
+    r = $DB.query( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{@db.user.name}' AND origin='#{origin}' AND base='#{base}';" )
     if r.first
-      @db.query( "UPDATE #{$MYSQL_TB_FCZ} SET #{fct_} WHERE user='#{@db.user.name}' AND origin='#{origin}' AND base='#{base}';", true )
+      $DB.query( "UPDATE #{$MYSQL_TB_FCZ} SET #{fct_} WHERE user='#{@db.user.name}' AND origin='#{origin}' AND base='#{base}';" )
       code = r.first['code']
     else
       code = generate_code( uname, 'z' )
-      @db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SET code='#{code}', base='#{base}', name='#{zname}', user='#{@db.user.name}', origin='#{origin}', #{fct_};", true )
+      $DB.query( "INSERT INTO #{$MYSQL_TB_FCZ} SET code='#{code}', base='#{base}', name='#{zname}', user='#{@db.user.name}', origin='#{origin}', #{fct_};" )
     end
 
     return code
@@ -1156,19 +1163,17 @@ class FCT_
       return sql
   end
 
-
   def debug()
   end
 end
 
 
-#将来的に廃止
 class Bio
   attr_accessor :sex, :birth, :age, :height, :weight, :kexow, :pgene
 
   def initialize( user )
     @user = user.name
-    r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{@user}';", false, @debug )
+    r = $DB.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{@user}';" )
     if r.first
       if r.first['bio'] != nil && r.first['bio'] != ''
         bio = JSON.parse( r.first['bio'] )
@@ -1184,7 +1189,7 @@ class Bio
   end
 
   def kex_ow()
-    r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@user}';", false, @debug )
+    r = $DB.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@user}';" )
     if r.first && @kexow == 1
       koyomi = JSON.parse( r.first['koyomi'] )
       kex_select = koyomi['kex_select']
@@ -1203,13 +1208,14 @@ class Bio
 end
 
 
+#将来的に廃止
 class Bio_
   attr_accessor :sex, :birth, :age, :height, :weight, :kexow, :pgene
 
   def initialize( db )
     @db = db
 
-    r = @db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';", false )
+    r = $DB.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';" )
     if r.first
       if r.first['bio'] != nil && r.first['bio'] != ''
         bio = JSON.parse( r.first['bio'] )
@@ -1225,7 +1231,7 @@ class Bio_
   end
 
   def kex_ow()
-    r = @db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';", false )
+    r = $DB.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{@db.user.name}';" )
     if r.first && @kexow == 1
       koyomi = JSON.parse( r.first['koyomi'] )
       kex_select = koyomi['kex_select']

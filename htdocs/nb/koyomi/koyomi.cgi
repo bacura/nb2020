@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.15b (2023/05/19)
+#Nutrition browser 2020 koyomi 0.20b (2023/08/05)
 
 
 #==============================================================================
@@ -76,16 +76,16 @@ end
 
 
 ####
-def meals_html( meal, user )
+def meals_html( meal, db )
 	mb_html = '<ul>'
-	a = meal.split( "\t" )
+	a = meal['koyomi'].split( "\t" )
 	a.each do |e|
 		aa = e.split( '~' )
 		if /^\?/ =~ aa[0]
 			mb_html << "<li style='list-style-type: circle'>#{@something[aa[0]]}</li>"
 		elsif /\-m\-/ =~ aa[0]
 			puts 'menu' if @debug
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE user='#{user.name} AND code='#{aa[0]}';", false, @debug )
+			r = db.query( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE user='#{db.user.name} AND code='#{aa[0]}';", false )
 			if r.first
 				mb_html << "<li>#{r.first['name']}</li>"
 			else
@@ -93,7 +93,7 @@ def meals_html( meal, user )
 			end
 		elsif /\-z\-/ =~ aa[0]
 			puts 'fix' if @debug
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{aa[0]}';", false, @debug )
+			r = db.query( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE user='#{db.user.name}' AND base='fix' AND code='#{aa[0]}';", false )
 			if r.first
 				mb_html << "<li style='list-style-type: circle'>#{r.first['name']}</li>"
 			else
@@ -101,7 +101,7 @@ def meals_html( meal, user )
 			end
 		elsif /\-/ =~ aa[0]
 			puts 'recipe' if @debug
-			r = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{aa[0]}';", false, @debug )
+			r = db.query( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' AND code='#{aa[0]}';", false )
 			if r.first
 				mb_html << "<li>#{r.first['name']}</li>"
 			else
@@ -110,8 +110,8 @@ def meals_html( meal, user )
 		else
 			puts 'food' if @debug
 			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}';"
-			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{uname}';" if /^U/ =~ aa[0]
-			r = mdb( q, false, @debug )
+			q = "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{aa[0]}' AND user='#{db.user.name}';" if /^U/ =~ aa[0]
+			r = db.query( q, false )
 			if r.first
 				mb_html << "<li style='list-style-type: square'>#{r.first['name']}</li>"
 			else
@@ -133,11 +133,12 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 #### Guild member check
 if user.status < 3
 	puts "Guild member error."
-	exit
+#	exit
 end
 
 
@@ -184,33 +185,16 @@ freeze_all_checked = ''
 case command
 when 'freeze'
 	if freeze_check == 'true'
-		r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
-		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
-		else
-	   		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', freeze='1', date='#{sql_ymd}';", false, @debug )
-		end
+		db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{user.name}' AND date='#{sql_ymd}';", true )
 	elsif freeze_check == 'false'
-		r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
-		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{user.name}' AND date='#{sql_ymd}';", false, @debug )
-		end
+		db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{user.name}' AND date='#{sql_ymd}';", true )
 	end
 when 'freeze_all'
 	if freeze_check_all == 'true'
-		1.upto( calendar.ddl ) do |c|
-			r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-			if r.first
-				if r.first['freeze'] != 1
-					mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-				end
-			else
-	   			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', freeze='1', date='#{sql_ym}-#{c}';", false, @debug )
-			end
-		end
+		db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", true )
 		freeze_all_checked = 'CHECKED'
 	elsif freeze_check_all == 'false'
-		 mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", false, @debug )
+		 db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", true )
 	end
 end
 
@@ -220,167 +204,176 @@ palette = Palette.new( user.name )
 palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 
-puts "Multi calc process<br>" if @debug
+puts "koyomi matrix<br>" if @debug
+koyomi_mx = []
+31.times do |i| koyomi_mx[i] = Array.new end
+r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND koyomi!='' AND koyomi IS NOT NULL AND date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-31';", false )
+r.each do |e| koyomi_mx[e['date'].day][e['tdiv']] = e end
+
+puts "html parts<br>" if @debug
 fct_day_htmls = ['']
-1.upto( calendar.ddl ) do |c|
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-	fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
-	fct_day.load_palette( palette.bit )
-	freeze_flag = false
 
-	r.each do |e|
-		if e['tdiv'].to_i < 4 && e['koyomi'] != nil && e['koyomi'] != ''
+fct_day = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+fct_day.load_palette( palette.bit )
 
-			fzcode = e['fzcode']
-			code_set = []
-			rate_set = []
-			unit_set = []
+fct_tdiv = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
+fct_tdiv.load_palette( palette.bit )
 
-			fct_tdiv = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
-			fct_tdiv.load_palette( palette.bit )
+puts "koyomi matrix calc<br>" if @debug
+1.upto( calendar.ddl ) do |day|
+	if koyomi_mx[day] != nil
+		freeze_flag = false
+		code_set = []
+		rate_set = []
+		unit_set = []
 
-			if e['freeze'] == 1
-				puts "Freeze:#{fzcode}<br>" if @debug
-				if fct_tdiv.load_fcz( user.name, fzcode, 'freeze' )
-					fct_day.into_solid( fct_tdiv.solid[0] )
-					freeze_flag = true
-				end
-			else
-				puts 'Row<br>' if @debug
-				a = []
-				a = e['koyomi'].split( "\t" ) if e['koyomi']
-				a.each do |ee|
-					koyomi_code, koyomi_rate, koyomi_unit = ee.split( '~' )[0..2]
-					code_set << koyomi_code
-					rate_set << koyomi_rate
-					unit_set << koyomi_unit
-				end
+		fct_day.flash
 
-				code_set.size.times do |cc|
-					code = code_set[cc]
-					rate = food_weight_check( rate_set[cc] ).last
-					unit = unit_set[cc]
+		4.times do |tdiv|
+			kmre = koyomi_mx[day][tdiv]
+			fct_tdiv.flash
 
-					if /\?/ =~ code
-						fct_tdiv.into_zero
-					elsif /\-z\-/ =~ code
-						puts 'FIX<br>' if @debug
-						fct_tdiv.load_fcz( user.name, code, 'fix' )
-					else
-						puts 'Recipe<br>' if @debug
-						recipe_codes = []
-						if /\-m\-/ =~ code
-							recipe_codes = menu2rc( user.name, code )
-						else
-							recipe_codes << code
-						end
-
-						food_nos = []
-						food_weights = []
-						recipe_codes.each do |e|
-							if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
-								fns, fws = recipe2fns( user.name, e, rate, unit, 1 )[0..1]
-								food_nos.concat( fns )
-								food_weights.concat( fws )
-							else
-								food_nos << code
-								food_weights << unit_weight( rate, unit, code )
-							end
-						end
-						puts 'Foods<br>' if @debug
-						fct_tdiv.set_food( user.name, food_nos, food_weights, false )
+			if kmre != nil
+				fzcode = kmre['fzcode']
+				if kmre['freeze'] == 1
+					puts "Freeze:#{fzcode}<br>" if @debug
+					if fct_tdiv.load_fcz( user.name, fzcode, 'freeze' )
+						fct_day.into_solid( fct_tdiv.solid[0] )
+						freeze_flag = true
 					end
-				end
-
-				puts 'Start calculation<br>' if @debug
-				fct_tdiv.calc
-				fct_tdiv.digit
-				fct_day.into_solid( fct_tdiv.total )
-
-				if fct_tdiv.foods.size != 0
-					puts "freeze process<br>" if @debug
-					fzcode = fct_tdiv.save_fcz( user.name, nil, 'freeze', "#{sql_ym}-#{c}-#{e['tdiv']}" )
-					mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{e['tdiv']}';", false, @debug )
 				else
-					mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{c}-#{e['tdiv']}';", false, @debug )
+					puts 'Row<br>' if @debug
+					a = []
+					a = kmre['koyomi'].split( "\t" )
+					a.each do |e|
+						koyomi_code, koyomi_rate, koyomi_unit = e.split( '~' )[0..2]
+						code_set << koyomi_code
+						rate_set << koyomi_rate
+						unit_set << koyomi_unit
+					end
+
+					code_set.size.times do |c|
+						code = code_set[c]
+						rate = food_weight_check( rate_set[c] ).last
+						unit = unit_set[c]
+
+						if /\?/ =~ code
+							fct_day.into_zero
+						elsif /\-z\-/ =~ code
+							puts 'FIX<br>' if @debug
+							fct_tdiv.load_fcz( user.name, code, 'fix' )
+						else
+							puts 'Recipe<br>' if @debug
+							recipe_codes = []
+							if /\-m\-/ =~ code
+								recipe_codes = menu2rc( user.name, code )
+							else
+								recipe_codes << code
+							end
+
+							food_nos = []
+							food_weights = []
+							recipe_codes.each do |e|
+								if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
+									fns, fws = recipe2fns( user.name, e, rate, unit, 1 )[0..1]
+									food_nos.concat( fns )
+									food_weights.concat( fws )
+								else
+									food_nos << code
+									food_weights << unit_weight( rate, unit, code )
+								end
+							end
+							puts 'Foods<br>' if @debug
+							fct_tdiv.set_food( user.name, food_nos, food_weights, false )
+						end
+					end
+
+					puts 'Start calculation<br>' if @debug
+					fct_tdiv.calc
+					fct_tdiv.digit
+					fct_day.into_solid( fct_tdiv.total )
+
+					if fct_tdiv.foods.size != 0
+						puts "freeze process<br>" if @debug
+
+						fzcode = fct_tdiv.save_fcz( user.name, nil, 'freeze', "#{sql_ym}-#{day}-#{tdiv}" )
+						db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET fzcode='#{fzcode}' WHERE user='#{user.name}' AND date='#{sql_ym}-#{day}' AND tdiv='#{tdiv}';", true )
+					else
+						db.query( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{day}-#{tdiv}';", true )
+					end
 				end
 			end
 		end
-	end
-	puts "Summary#{c} html<br>" if @debug
-	fct_day.calc
-	fct_day.digit
+		
+		puts "Summary#{day} html<br>" if @debug
+		fct_day.calc
+		fct_day.digit
+		pfc = fct_day.calc_pfc
 
-	pfc = fct_day.calc_pfc
+		if fct_day.foods.size == 0 && freeze_flag == false
+			fct_day_htmls << ''
+		else
+			t = ''
+			fct_day.names.size.times do |i|
+				t << "#{fct_day.names[i]}[#{fct_day.total[i]}]&nbsp;&nbsp;&nbsp;&nbsp;"
+			end
 
-	if fct_day.foods.size == 0 && freeze_flag == false
-		fct_day_htmls << ''
-	else
-		t = ''
-		fct_day.names.size.times do |i|
-			t << "#{fct_day.names[i]}[#{fct_day.total[i]}]&nbsp;&nbsp;&nbsp;&nbsp;"
+			if pfc.size == 3
+				t << "<br><span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = "
+				t << "<span style='color:crimson'>#{pfc[0]}</span> : <span style='color:green'>#{pfc[1]}</span> : <span style='color:blue'>#{pfc[2]}</span>"
+				t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{day}' )\">#{l['visionnerz']}</span>" if user.status >= 5
+			end
+			fct_day_htmls << t
 		end
 
-		if pfc.size == 3
-			t << "<br><span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = "
-			t << "<span style='color:crimson'>#{pfc[0]}</span> : <span style='color:green'>#{pfc[1]}</span> : <span style='color:blue'>#{pfc[2]}</span>"
-			t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{c}' )\">#{l['visionnerz']}</span>" if user.status >= 5
+		
+		if koyomi_mx[day][4] != nil
 		end
-		fct_day_htmls << t
-	end
-
-	unless r.first
- 		mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND koyomi='';", false, @debug )
- 		0.upto( 3 ) do |i|
- 			mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND origin='#{sql_ym}-#{c}-#{i}';", false, @debug )
- 		end
 	end
 end
+
 
 puts "Day process<br>" if @debug
 date_html = ''
 week_count = calendar.wf
 weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
-1.upto( calendar.ddl ) do |c|
+1.upto( calendar.ddl ) do |day|
 	freeze_flag = false
-	koyomi_tmp = []
+	kmrd = koyomi_mx[day]
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}';", false, @debug )
-	if r.first
-		r.each do |e|
-			koyomi_tmp[e['tdiv']] = e['koyomi'] if e['tdiv']
-			freeze_flag = true if r.first['freeze'] == 1
-		end
-	else
-		5.times do koyomi_tmp << nil end
-	end
-
-	date_html << "<tr id='day#{c}'>"
+	puts "Day #{day}<br>" if @debug
+	date_html << "<tr id='day#{day}'>"
 	style = ''
 	style = 'color:red;' if week_count == 0
-	date_html << "<td style='#{style}'><span>#{c}</span> (#{weeks[week_count]})</td>"
+	date_html << "<td style='#{style}'><span>#{day}</span> (#{weeks[week_count]})</td>"
+	onclick = "onclick=\"editKoyomi( 'init', '#{day}' )\""
 
-	onclick = "onclick=\"editKoyomi( 'init', '#{c}' )\""
-	4.times do |cc|
-		tmp = '-'
-		tmp = meals_html( koyomi_tmp[cc], user ) if koyomi_tmp[cc]
-		date_html << "<td #{onclick}>#{tmp}</td>"
+	if kmrd != nil
+		5.times do |tdiv|
+			tmp = '-'
+			if kmrd[tdiv] != nil
+				if tdiv < 4
+					tmp = meals_html( kmrd[tdiv], db )
+				else
+					tmp = kmrd[4]['koyomi']
+				end
+				freeze_flag = true if kmrd[tdiv]['freeze'] == 1
+			end
+			date_html << "<td #{onclick}>#{tmp}</td>"
+		end
+	else
+		5.times do date_html << "<td #{onclick}>-</td>" end
 	end
-
-	tmp = '-'
-	tmp = koyomi_tmp[4] if koyomi_tmp[4]
-	date_html << "<td #{onclick}>#{tmp}</td>"
 
 	freeze_checked = ''
 	freeze_checked = 'CHECKED' if freeze_flag
-	date_html << "<td><input type='checkbox' id='freeze_check#{c}' onChange=\"freezeKoyomi( '#{c}' )\" #{freeze_checked}></td>"
+	date_html << "<td><input type='checkbox' id='freeze_check#{day}' onChange=\"freezeKoyomi( '#{day}' )\" #{freeze_checked}></td>"
 	date_html << "</tr>"
 
 	style = ''
-	style = 'display:none' if fct_day_htmls[c] == '' || fct_day_htmls[c] == nil
-	date_html << "<tr id='nutrition#{c}' class='table-borderless' style='#{style}'>"
-	date_html << "<td></td><td colspan='6'>#{fct_day_htmls[c]}</td>"
-#	date_html << "<td></td>"
+	style = 'display:none' if fct_day_htmls[day] == '' || fct_day_htmls[day] == nil
+	date_html << "<tr id='nutrition#{day}' class='table-borderless' style='#{style}'>"
+	date_html << "<td></td><td colspan='6'>#{fct_day_htmls[day]}</td>"
 	date_html << "</tr>"
 
 	week_count += 1
@@ -422,6 +415,9 @@ HTML
 
 puts html
 
+#==============================================================================
+# POST PROCESS
+#==============================================================================
 
 #### Deleting Empty koyomi
-mdb( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi IS NULL OR koyomi='';", false, @debug )
+db.query( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi IS NULL OR koyomi='';", true )
