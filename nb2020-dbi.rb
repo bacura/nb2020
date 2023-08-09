@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.63b (2023/7/12)
+#nb2020-dbi.rb 0.64b (2023/08/08)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -1160,10 +1160,8 @@ def ref_para_init( ref_parallel )
 
 		ref_solid = []
 		f = open( ref_parallel, 'r' )
-		f.each_line do |e| ref_solid << e.chomp end
-		ref_solid.shift
-		ref_solid.each do |e|
-			a = e.force_encoding( 'utf-8' ).split( "\t" )
+		f.each_line do |e|
+			a = e.force_encoding( 'utf-8' ).chomp.split( "\t" )
 			query = "INSERT INTO ref_para set FN='#{a[0]}', para=\"#{a[1]}\";"
 			$DB.query( query )
 		end
