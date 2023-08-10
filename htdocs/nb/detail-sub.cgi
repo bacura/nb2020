@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail sub 0.02b (2023/07/30)
+#Nutrition browser 2020 food detail sub 0.03b (2023/08/09)
 
 
 #==============================================================================
@@ -33,6 +33,7 @@ def language_pack( language )
 		'fn' 		=> "食品番号",\
 		'name' 		=> "食品名",\
 		'change'	=> "<img src='bootstrap-dist/icons/hammer.svg' style='height:1.2em; width:1.2em;'>",\
+		'egg'		=> "<img src='bootstrap-dist/icons/egg.svg' style='height:1.2em; width:1.2em;'>",\
 		'cboard' 	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>",\
 		'calendar'	=> "<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>",\
 		'unit' 		=> "単",\
@@ -232,7 +233,9 @@ when 'init', 'weight', 'cb', 'cbp'
 		end
 
 		# 追加・変更ボタン
-		if user.name && base == 'cb'
+		if user.name && base == 'cb' && food_no_list[c] == base_fn
+			add_button = "<span onclick=\"addingCB( '#{base_fn}', 'weight_sub', 'duplicated' )\">#{l['egg']}</span>"
+		elsif user.name && base == 'cb'
 			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}', '#{food_weight}' )\">#{l['change']}</span>"
 		elsif user.name
 			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{l['cboard']}</span>"
@@ -338,6 +341,7 @@ WEIGHT
 		#{weight_parts}
 		</div>
 	</div>
+	<input type='hidden' id='weight_sub' value='#{food_weight.to_f}'>
 	<br>
 
 	<table class="table table-sm table-hover">

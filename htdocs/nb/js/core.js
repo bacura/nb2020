@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.44b (2023/05/13)
+// Nutorition Browser 2020 core.js 0.45b (2023/08/08)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -711,6 +711,13 @@ var addingCB = function( fn, weight_id, food_name ){
 		$( "#CBN" ).html( data );
 		refreshCBN();
 		if( fn != '' ){ displayVIDEO( '+' + food_name ); }
+		if( weight_id = 'weight_sub' ){
+			initCB( 'init' );
+
+			flashBW();
+			dl1 = true;
+			displayBW();
+		}
 	});
 };
 
@@ -727,7 +734,6 @@ var refreshCBN = function(){
 // 変更ボタンを押してsumの食品を変更する
 const changingCB = function( fn, base_fn, weight ){
 	if( fn !='' ){
-//		var weight = document.getElementById( "weight" ).value;
 		$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){
 			$( "#CBN" ).html( data );
 			displayVIDEO( fn + 'has modified' );
