@@ -206,7 +206,7 @@ palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 puts "koyomi matrix<br>" if @debug
 koyomi_mx = []
-31.times do |i| koyomi_mx[i] = Array.new end
+31.times do |i| koyomi_mx[i + 1] = Array.new end
 r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND koyomi!='' AND koyomi IS NOT NULL AND date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-31';", false )
 r.each do |e| koyomi_mx[e['date'].day][e['tdiv']] = e end
 
@@ -236,11 +236,14 @@ puts "koyomi matrix calc<br>" if @debug
 			if kmre != nil
 				fzcode = kmre['fzcode']
 				if kmre['freeze'] == 1
+
 					puts "Freeze:#{fzcode}<br>" if @debug
-					if fct_tdiv.load_fcz( user.name, fzcode, 'freeze' )
-						fct_day.into_solid( fct_tdiv.solid[0] )
-						freeze_flag = true
+					if fzcode != ''
+						if fct_tdiv.load_fcz( user.name, fzcode, 'freeze' )
+							fct_day.into_solid( fct_tdiv.solid[0] )
+						end
 					end
+					freeze_flag = true
 				else
 					puts 'Row<br>' if @debug
 					a = []
@@ -319,7 +322,7 @@ puts "koyomi matrix calc<br>" if @debug
 			end
 
 			if pfc.size == 3
-				t << "<br><span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = "
+				t << "&nbsp;&nbsp;<span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = "
 				t << "<span style='color:crimson'>#{pfc[0]}</span> : <span style='color:green'>#{pfc[1]}</span> : <span style='color:blue'>#{pfc[2]}</span>"
 				t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{day}' )\">#{l['visionnerz']}</span>" if user.status >= 5
 			end
@@ -338,17 +341,14 @@ date_html = ''
 week_count = calendar.wf
 weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 1.upto( calendar.ddl ) do |day|
-	freeze_flag = false
-	kmrd = koyomi_mx[day]
-
 	puts "Day #{day}<br>" if @debug
-	date_html << "<tr id='day#{day}'>"
-	style = ''
-	style = 'color:red;' if week_count == 0
-	date_html << "<td style='#{style}'><span>#{day}</span> (#{weeks[week_count]})</td>"
+	freeze_flag = false
+	active_flag = true
+	kmrd = koyomi_mx[day]
 	onclick = "onclick=\"editKoyomi( 'init', '#{day}' )\""
 
-	if kmrd != nil
+	tmp_html = ''
+	if kmrd.size != 0
 		5.times do |tdiv|
 			tmp = '-'
 			if kmrd[tdiv] != nil
@@ -359,21 +359,26 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 				end
 				freeze_flag = true if kmrd[tdiv]['freeze'] == 1
 			end
-			date_html << "<td #{onclick}>#{tmp}</td>"
+			tmp_html << "<td #{onclick}>#{tmp}</td>"
 		end
 	else
-		5.times do date_html << "<td #{onclick}>-</td>" end
+		5.times do tmp_html << "<td #{onclick}>-</td>" end
+		active_flag = false
 	end
 
-	freeze_checked = ''
-	freeze_checked = 'CHECKED' if freeze_flag
-	date_html << "<td><input type='checkbox' id='freeze_check#{day}' onChange=\"freezeKoyomi( '#{day}' )\" #{freeze_checked}></td>"
-	date_html << "</tr>"
+
 
 	style = ''
-	style = 'display:none' if fct_day_htmls[day] == '' || fct_day_htmls[day] == nil
-	date_html << "<tr id='nutrition#{day}' class='table-borderless' style='#{style}'>"
-	date_html << "<td></td><td colspan='6'>#{fct_day_htmls[day]}</td>"
+	style = 'color:red;' if week_count == 0
+	date_html << "<tr id='day#{day}'>"
+	date_html << "<td align='center' rowspan=2 style='#{style}'><span>#{day}</span> (#{weeks[week_count]})"
+	date_html << "<br><br><input type='checkbox' id='freeze_check#{day}' onChange=\"freezeKoyomi( '#{day}' )\" #{$CHECK[freeze_flag]}>" if active_flag
+	date_html << "</td>"
+	date_html << tmp_html
+	date_html << "</tr>"
+
+	date_html << "<tr>"
+	date_html << "<td colspan='5' #{onclick}>#{fct_day_htmls[day]}</td>" if fct_day_htmls[day] != nil
 	date_html << "</tr>"
 
 	week_count += 1
@@ -397,16 +402,20 @@ html = <<-"HTML"
 	</div>
 	<br>
 
-	<table class="table table-sm table-hover">
-	<thead>
+	<table class="table table-sm">
+	<thead class="table-light">
     	<tr>
-     		<th align='center'></th>
+     		<th align='center'>
+     			<div class="form-check">
+     				<input class="form-check-input" type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll()" #{freeze_all_checked}>
+					<label class="form-check-label">#{l['snow']}</label>
+				</div>
+     		</th>
      		<th align='center' width='15%'>#{l['breakfast']}</th>
      		<th align='center' width='15%'>#{l['lunch']}</th>
      		<th align='center' width='15%'>#{l['dinner']}</th>
      		<th align='center' width='15%'>#{l['supply']}</th>
      		<th align='center'>#{l['memo']}</th>
-     		<th align='center'><input type='checkbox' id='freeze_check_all' onChange="freezeKoyomiAll()" #{freeze_all_checked}>&nbsp;#{l['snow']}</th>
     	</tr>
   	</thead>
 	#{date_html}

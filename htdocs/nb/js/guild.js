@@ -1,4 +1,4 @@
-//guild.js ver 0.35b (2023/04/08)
+//guild.js ver 0.36b (2023/08/11)
 
 kp = 'koyomi/'
 
@@ -41,8 +41,8 @@ var freezeKoyomiAll = function(){
 // Koyomi Edit//////////////////////////////////////////////////////////////
 
 // Koyomi edit
-var editKoyomi = function( com, dd ){
-	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
+const editKoyomi = function( com, dd ){
+	const yyyy_mm = document.getElementById( "yyyy_mm" ).value;
 	$.post( kp + "koyomi-edit.cgi", { command:com, yyyy_mm:yyyy_mm, dd:dd }, function( data ){
 		$( "#L2" ).html( data );
 		flashBW();
@@ -53,8 +53,8 @@ var editKoyomi = function( com, dd ){
 };
 
 // Koyomi edit 2 with yy_mm_dd
-var editKoyomi2 = function( com, dd ){
-	var yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
+const editKoyomi2 = function( com, dd ){
+	const yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
 	$.post( kp + "koyomi-edit.cgi", { command:com, yyyy_mm_dd:yyyy_mm_dd, dd:dd }, function( data ){
 		$( "#L2" ).html( data );
 		flashBW();
@@ -65,13 +65,13 @@ var editKoyomi2 = function( com, dd ){
 };
 
 // Koyomi delete
-var deleteKoyomi = function( yyyy, mm, dd, tdiv, code, order ){
+const deleteKoyomi = function( yyyy, mm, dd, tdiv, code, order ){
 	$.post( kp + "koyomi-edit.cgi", { command:'delete', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, code:code, order:order }, function( data ){ $( "#L2" ).html( data );});
 };
 
 // Koyomi memo
-var memoKoyomi = function( yyyy, mm, dd ){
-	var memo = document.getElementById( "memo" ).value;
+const memoKoyomi = function( yyyy, mm, dd ){
+	const memo = document.getElementById( "memo" ).value;
 	$.post( kp + "koyomi-edit.cgi", { command:'memo', yyyy:yyyy, mm:mm, dd:dd, memo:memo }, function( data ){
 		$( "#L2" ).html( data );
 		displayVIDEO( 'memo saved');
@@ -79,16 +79,28 @@ var memoKoyomi = function( yyyy, mm, dd ){
 };
 
 // Koyomi Save Something
-var koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
-	var some = document.getElementById( id ).value;
+const koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
+	const some = document.getElementById( id ).value;
 	$.post( kp + "koyomi-edit.cgi", { command:'some', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99, some:some }, function( data ){
 		$( "#L2" ).html( data );
 		displayVIDEO( 'Something saved' );
 	});
 };
 
+// Koyomi clear
+const clearKoyomi = function( yyyy, mm, dd ){
+	if( document.getElementById( 'check_kc' ).checked ){
+		$.post( kp + "koyomi-edit.cgi", { command:'clear', yyyy:yyyy, mm:mm, dd:dd }, function( data ){
+			$( "#L2" ).html( data );
+			displayVIDEO( 'Cleared' );
+		});
+	}else{
+		displayVIDEO( '(>_<)check!' );
+	}
+};
+
 // Koyomi edit return
-var editKoyomiR = function( yyyy, mm ){
+const editKoyomiR = function( yyyy, mm ){
 	$.post( kp + "koyomi.cgi", { command:"init", yyyy:yyyy, mm:mm }, function( data ){
 		$( "#L1" ).html( data );
 		dl1 = true;
@@ -99,7 +111,7 @@ var editKoyomiR = function( yyyy, mm ){
 
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-var koyomiPhotoSave = function( code, form, dd ){
+const koyomiPhotoSave = function( code, form, dd ){
 	form_data = new FormData( $( form )[0] );
 	form_data.append( 'command', 'upload' );
 	form_data.append( 'code', code );
@@ -118,7 +130,7 @@ var koyomiPhotoSave = function( code, form, dd ){
 
 
 // delete photo from media db
-var koyomiPhotoDel = function( code, mcode, dd ){
+const koyomiPhotoDel = function( code, mcode, dd ){
 	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){
 		editKoyomi( 'init', dd );
 	});
@@ -834,14 +846,6 @@ var photoNoteSave = function( code ){
 			}
 		}
 	);
-};
-
-
-// delete photo from media db
-var koyomiPhotoDel = function( code, mcode, dd ){
-	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){
-		editKoyomi( 'init', dd );
-	});
 };
 
 

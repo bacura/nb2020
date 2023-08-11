@@ -419,51 +419,52 @@ when 'refer'
 
 when 'delete'
 	puts "Deleting photos<br>" if @debug
-	r = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
-	r.each do |e|
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
+	if user.status != 7
+		r = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
+		r.each do |e|
+			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
+		end
+		db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", true )
+
+		puts "Deleting recipe from DB<br>" if @debug
+		recipe = Recipe.new( user )
+		recipe.code = code
+		recipe.delete_db
+
+		puts "Clearing Sum<br>" if @debug
+		r = db.query( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
+		db.query( "UPDATE #{$MYSQL_TB_SUM} SET code='', name='', dish=1 WHERE user='#{user.name}';", true ) if r.first['code'] == code
 	end
-	db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", true )
-
-	puts "Deleting recipe from DB<br>" if @debug
-	recipe = Recipe.new( user )
-	recipe.code = code
-	recipe.delete_db
-
-	puts "Clearing Sum<br>" if @debug
-	r = db.query( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
-	db.query( "UPDATE #{$MYSQL_TB_SUM} SET code='', name='', dish=1 WHERE user='#{user.name}';", true ) if r.first['code'] == code
-
 when 'subspecies'
 	# Loading original recipe
-	recipe = Recipe.new( user )
-	recipe.load_db( code, true )
+	if user.status != 7
+		recipe = Recipe.new( user )
+		recipe.load_db( code, true )
 
-	# Copying phots
-	new_media_code = generate_code( user.name, 'p' )
-	new_recipe_code = generate_code( user.name, 'r' )
-	r = db.query( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
-	if r.first && user.status != 7
+		# Copying phots
+		new_media_code = generate_code( user.name, 'p' )
+		new_recipe_code = generate_code( user.name, 'r' )
+		r = db.query( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
 		r.each do |e|
 			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
 			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
 			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
 			db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{new_recipe_code}', mcode='#{new_media_code}', origin='#{r.first['origin']}', date='#{@datetime}';", true )
 		end
-	end
 
-	# Insertinbg recipe into DB
-	recipe.user.name = user.name
-	recipe.code = new_recipe_code
-	recipe.favorite = 0
-	recipe.public = 0
-	recipe.protect = 0
-	recipe.draft = 1
-	recipe.date = @datetime
-	recipe.root = code
-	recipe.insert_db
+		# Insertinbg recipe into DB
+		recipe.user.name = user.name
+		recipe.code = new_recipe_code
+		recipe.favorite = 0
+		recipe.public = 0
+		recipe.protect = 0
+		recipe.draft = 1
+		recipe.date = @datetime
+		recipe.root = code
+		recipe.insert_db
+	end
 
 when 'limit'
 	page = @cgi['page'].to_i
@@ -478,6 +479,7 @@ when 'limit'
 	family = @cgi['family'].to_i
 	words = @cgi['words']
 end
+
 range = 5 if user.status == 0
 if @debug
 	puts "page: #{page}<br>"
@@ -684,7 +686,7 @@ html = <<-"HTML"
 	<br>
 
 	<table class="table table-sm table-hover">
-		<thead>
+		<thead class="table-light">
 			<tr>
 				<td>#{l['photo']}</td>
 				<td>#{l['name']}</td>

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.14b (2023/05/07)
+#Nutrition browser 2020 detail viewer 0.15b (2023/08/11)
 
 #==============================================================================
 # STATIC
@@ -40,7 +40,7 @@ def language_pack( language )
 		'cboard'	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:2em; width:2em;'>",\
 		'rev'		=> "<img src='bootstrap-dist/icons/caret-left.svg' style='height:1.5em; width:1.5em;'>",\
 		'fwd'		=> "<img src='bootstrap-dist/icons/caret-right.svg' style='height:1.5em; width:1.5em;'>",\
-		'downlord'	=> "<img src='bootstrap-dist/icons/download.svg' style='height:2em; width:2em;'>",\
+		'downlord'	=> "<img src='bootstrap-dist/icons/filetype-txt.svg' style='height:2em; width:2em;'>",\
 		'return'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>"
 	}
 
@@ -48,7 +48,7 @@ def language_pack( language )
 end
 
 #### 検索インデックスの飛ばし処理
-def sid_skip( sid, dir )
+def sid_skip( sid, dir, db )
 	r = []
 	c = 0
 	until r.first
@@ -59,7 +59,7 @@ def sid_skip( sid, dir )
 			sid = sid.to_i - 1
 			sid = 2481 if sid < 1
 		end
-		r = mdb( "SELECT FN, SID FROM #{$MYSQL_TB_TAG} WHERE SID='#{sid}';", false, @debug )
+		r = db.query( "SELECT FN, SID FROM #{$MYSQL_TB_TAG} WHERE SID='#{sid}';", false )
 		c += 1
 		break if c > 100
 	end
@@ -76,7 +76,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
-
+db = Db.new( user, @debug, false )
 
 puts 'POST<br>' if @debug
 frct_mode = @cgi['frct_mode']
@@ -103,7 +103,7 @@ unit_set = []
 unit_select = []
 selectu = 'g' if selectu == ''
 uk = BigDecimal( '1' )
-r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false, @debug )
+r = db.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false )
 if r.first
 	unith = JSON.parse( r.first['unit'] )
 	unith.each do |k, v|
@@ -127,12 +127,12 @@ frct_select = selected( 0, 3, frct_mode )
 
 
 puts 'Search index<br>' if @debug
-food_no = sid_skip( sid, dir ) if sid != ''
+food_no = sid_skip( sid, dir, db ) if sid != ''
 
 
 puts 'Load FCT<br>' if @debug
 fct_opt = Hash.new
-r = mdb( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false, @debug )
+r = db.query( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false )
 sid = r.first['SID']
 food_no = r.first['FN']
 @fct_item.each do |e| fct_opt[e] = num_opt( r.first[e], food_weight, frct_mode, @fct_frct[e] ) end
@@ -140,10 +140,7 @@ food_no = r.first['FN']
 
 puts 'Aliase process<br>' if @debug
 search_key = ''
-r = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no}';", false, @debug )
-food_name = r.first['name']
-
-r = mdb( "SELECT alias FROM #{$MYSQL_TB_DIC} WHERE org_name='#{food_name}';", false, @debug )
+r = db.query( "SELECT alias FROM #{$MYSQL_TB_DIC} WHERE org_name=(SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no}');", false )
 r.each do |e| search_key << "#{e['alias']}," end
 search_key.chop!
 
@@ -158,28 +155,28 @@ end
 
 
 puts 'FCT table HTML<br>' if @debug
-energy_html = '<table class="table table-sm table-striped" width="100%">'
+energy_html = '<table class="table table-sm" width="100%">'
 energy_html << "<tr>"
 @fct_rew.each do |e| energy_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 energy_html << '</table>'
 
-pf_html = '<table class="table table-sm table-striped" width="100%">'
+pf_html = '<table class="table table-sm" width="100%">'
 @fct_pf.each do |e| pf_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 pf_html << '</table>'
 
-cho_html = '<table class="table table-sm table-striped" width="100%">'
+cho_html = '<table class="table table-sm" width="100%">'
 @fct_cho.each do |e| cho_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 cho_html << '</table>'
 
-mineral_html = '<table class="table table-sm table-striped" width="100%">'
+mineral_html = '<table class="table table-sm" width="100%">'
 @fct_m.each do |e| mineral_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 mineral_html << '</table>'
 
-fsv_html = '<table class="table table-sm table-striped" width="100%">'
+fsv_html = '<table class="table table-sm" width="100%">'
 @fct_fsv.each do |e| fsv_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 fsv_html << '</table>'
 
-wsv_html = '<table class="table table-sm table-striped" width="100%">'
+wsv_html = '<table class="table table-sm" width="100%">'
 @fct_wsv.each do |e| wsv_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
 wsv_html << "<tr><td></td><td></td></tr>"
 @fct_as.each do |e| wsv_html << "<tr><td>#{@fct_name[e]}</td><td align='right'>#{fct_opt[e]} #{@fct_unit[e]}</td></tr>" end
@@ -286,5 +283,8 @@ HTML
 puts html
 
 
-#### 登録ユーザーで直接参照の場合は履歴に追加
+#==============================================================================
+# POST PROCESS
+#==============================================================================
+puts 'Adding History<br>' if @debug
 add_his( user, food_no ) if sid_flag == false && user.status != 0
