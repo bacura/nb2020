@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.20b (2023/08/05)
+#Nutrition browser 2020 koyomi 0.21b (2023/08/20)
 
 
 #==============================================================================
@@ -232,6 +232,9 @@ puts "koyomi matrix calc<br>" if @debug
 		4.times do |tdiv|
 			kmre = koyomi_mx[day][tdiv]
 			fct_tdiv.flash
+			code_set = []
+			rate_set = []
+			unit_set = []
 
 			if kmre != nil
 				fzcode = kmre['fzcode']
@@ -294,6 +297,7 @@ puts "koyomi matrix calc<br>" if @debug
 					puts 'Start calculation<br>' if @debug
 					fct_tdiv.calc
 					fct_tdiv.digit
+
 					fct_day.into_solid( fct_tdiv.total )
 
 					if fct_tdiv.foods.size != 0

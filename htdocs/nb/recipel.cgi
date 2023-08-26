@@ -609,7 +609,7 @@ family_pair = Hash.new
 family_recipes = Hash.new
 if family == 1
 	recipes.each do |e|
-		r = db.query( "SELECT code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and root='#{e.code}' ORDER BY name;", false, @debug )
+		r = db.query( "SELECT code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and root='#{e.code}' ORDER BY name;", false )
 		daughters = []
 		daughter_recipes = []
 		r.each do |ee|

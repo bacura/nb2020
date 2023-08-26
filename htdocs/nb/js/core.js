@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.45b (2023/08/08)
+// Nutorition Browser 2020 core.js 0.46b (2023/08/15)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -709,7 +709,6 @@ var addingCB = function( fn, weight_id, food_name ){
 	}
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){
 		$( "#CBN" ).html( data );
-		refreshCBN();
 		if( fn != '' ){ displayVIDEO( '+' + food_name ); }
 		if( weight_id = 'weight_sub' ){
 			initCB( 'init' );
@@ -719,6 +718,8 @@ var addingCB = function( fn, weight_id, food_name ){
 			displayBW();
 		}
 	});
+
+	refreshCBN();
 };
 
 
@@ -754,12 +755,13 @@ const changingCB = function( fn, base_fn, weight ){
 var initCB = function( com, code, recipe_user ){
 	$.post( "cboard.cgi", { command:com, code:code, recipe_user:recipe_user }, function( data ){
 		$( "#L1" ).html( data );
-		refreshCBN();
 
 		flashBW();
 		dl1 = true;
 		displayBW();
 	});
+
+	setTimeOut( refreshCBN(), 1000 );
 };
 
 
@@ -767,10 +769,8 @@ var initCB = function( com, code, recipe_user ){
 var clearCB = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'all_check' ).checked ){
-			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){
-				$( "#L1" ).html( data );
-				refreshCBN();
-			});
+			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
+
 			flashBW();
 			dl1 = true;
 			displayBW();
@@ -780,9 +780,9 @@ var clearCB = function( order, code ){
 	} else{
 		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){
 			$( "#L1" ).html( data );
-			refreshCBN();
 		});
 	}
+	setTimeOut( refreshCBN(), 1000 );
 };
 
 
@@ -860,20 +860,16 @@ var sortCB = function( code ){
 // まな板の食品番号追加ボタンを押して食品を追加してL1にリストを表示。そしてカウンターも更新
 var recipeAdd = function( code ){
 	var fn = document.getElementById( "food_add" ).value;
-	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){
-		$( "#L1" ).html( data );
-		refreshCBN();
-	});
+	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){ $( "#L1" ).html( data );});
+	setTimeOut( refreshCBN(), 1000 );
 };
 
 
 // まな板の調味％ボタンを押してプリセット食品を追加してL1にリストを表示。そしてカウンターも更新
 var seasoningAdd = function( code ){
 	var seasoning = document.getElementById( "seasoning" ).value;
-	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){
-		$( "#L1" ).html( data );
-		refreshCBN();
-	});
+	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#L1" ).html( data );});
+	setTimeOut( refreshCBN(), 1000 );
 };
 
 
@@ -1265,11 +1261,12 @@ var luckyPush = function( idc ){
 		$.post( "lucky.cgi", { command:'push', lucky_solid:lucky_solid }, function( data ){
 //			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-			refreshCBN();
 
 			dl2 = false;
 			displayBW();
 		});
+
+		refreshCBN();
 	}
 };
 

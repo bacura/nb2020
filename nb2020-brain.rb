@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.32b (2023/08/07)
+#Nutrition browser 2020 brain 0.33b (2023/08/20)
 
 #==============================================================================
 #STATIC
@@ -564,7 +564,7 @@ class FCT
         if non_food
           @fns << '0'
           @solid << '0'
-          @foods << '0'
+          @foods << ''
           @weights << '0'
           @refuses << '0'
         end
@@ -835,6 +835,21 @@ class FCT
 
 
   def debug()
+   # p @item
+   # p @name
+   # p @unit
+   # p @frct
+
+    p @fns
+    p @foods
+    p @weights
+    p @refuses
+    p @solid
+    p @total
+    p @total_weight
+    p @frct_accu
+    p @frct_mode
+
   end
 end
 
