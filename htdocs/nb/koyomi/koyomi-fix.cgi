@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.11b (2022/12/17)
+#Nutrition browser koyomi fix fct editer 0.12b (2023/08/27)
 
 #==============================================================================
 # STATIC
@@ -51,6 +51,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 koyomi = Calendar.new( user.name, 0, 0, 0 )
 
 
@@ -96,7 +97,7 @@ end
 puts 'Getting standard meal start & time<br>' if @debug
 start_times = []
 meal_tiems = []
-r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, false )
+r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 if r.first
 	if r.first['bio'] != nil && r.first['bio'] != ''
 		bio = JSON.parse( r.first['bio'] )
@@ -135,11 +136,11 @@ if command == 'save'
 
 	#### modify
 	if  modifyf == 1
-		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+		r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 		if r.first
 			a = r.first['koyomi'].split( "\t" )[order]
 			code = a.split( "~" )[0]
-			mdb( "UPDATE #{$MYSQL_TB_FCZ} SET name='#{food_name}', date='#{yyyy}-#{mm}-#{dd}', #{fix_set} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug )
+			db.query( "UPDATE #{$MYSQL_TB_FCZ} SET name='#{food_name}', date='#{yyyy}-#{mm}-#{dd}', #{fix_set} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", true )
 		end
 		koyomi_update = ''
 		delimiter = "\t"
@@ -154,11 +155,11 @@ if command == 'save'
 			end
 		end
 		koyomi_update.chop!
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug)
+		db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi_update}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", true )
 	else
  		fix_code = generate_code( user.name, 'z' )
-		mdb( "INSERT INTO #{$MYSQL_TB_FCZ} SET base='fix', code='#{fix_code}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}', date='#{yyyy}-#{mm}-#{dd}', name='#{food_name}',user='#{user.name}', #{fix_set};", false, @debug )
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+		db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SET base='fix', code='#{fix_code}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}', date='#{yyyy}-#{mm}-#{dd}', name='#{food_name}',user='#{user.name}', #{fix_set};", true )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 		if r.first
 			koyomi = r.first['koyomi']
 			delimiter = ''
@@ -172,10 +173,10 @@ if command == 'save'
 				end
 			end
 			koyomi << "#{delimiter}#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+			db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", true )
 		else
 			koyomi = "#{fix_code}~100~99~#{hh_mm}~#{meal_time}"
-			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", true )
 		end
 	end
 end
@@ -188,14 +189,14 @@ end
 #### modify
 if command == 'modify' || modifyf == 1
 	puts 'modify process<br>' if @debug
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 	if r.first
 		a = r.first['koyomi'].split( "\t" )[order]
 		aa = a.split( "~" )
 		code = aa[0]
 		hh_mm = aa[3]
 		meal_time = aa[4].to_i
-		rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false, @debug )
+		rr = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{code}';", false )
 		if rr.first
 			food_name = rr.first['name']
 			@fct_min_nr.each do |e| fix_opt[e] = rr.first[e].to_f end
@@ -209,7 +210,7 @@ end
 if command == 'history'
 	puts 'HISTORY<br>' if @debug
 	fix_his_code = @cgi['fix_his_code']
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{fix_his_code}';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code='#{fix_his_code}';", false )
 	if r.first
 		food_name = r.first['name']
 		@fct_min_nr.each do |e| fix_opt[e] = r.first[e].to_f end
@@ -343,8 +344,8 @@ his_w1 = ( @time_now - ( 60 * 60 * 24 * 7 )).strftime( "%Y-%m-%d" )
 his_w1_ = ( @time_now - ( 60 * 60 * 24 * 8 )).strftime( "%Y-%m-%d" )
 his_m1 = ( @time_now - ( 60 * 60 * 24 * 30 )).strftime( "%Y-%m-%d" )
 
-r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_w1}' AND '#{his_today}';", false, @debug )
-rr = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_m1}' AND '#{his_w1_}';", false, @debug )
+r = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_w1}' AND '#{his_today}';", false )
+rr = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_m1}' AND '#{his_w1_}';", false )
 fix_his_html << "<div class='input-group input-group-sm'>"
 
 fix_his_html << "<label class='input-group-text'>#{l['history']}</label>"

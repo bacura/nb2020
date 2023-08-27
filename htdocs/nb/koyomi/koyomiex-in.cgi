@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 file into koyomi extra 0.30b (2023/01/21)
+#Nutrition browser 2020 file into koyomi extra 0.31b (2023/08/27)
 
 
 #==============================================================================
@@ -57,6 +57,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 html = []
 
 
@@ -87,7 +88,7 @@ skip_line1 = nil
 overwrite = nil
 selecteds = ''
 
-r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 		koyomi = JSON.parse( r.first['koyomi'] ) if r.first['koyomi'] != ''
@@ -279,7 +280,7 @@ when 'update'
 
 		if yyyymmdd != nil
 			puts "LOAD date cell<br>" if @debug
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
+			r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false )
 			kexc = Hash.new
 			count_flag = false
 			if r.first
@@ -293,7 +294,7 @@ when 'update'
 					end
 				end
 				cell_ = JSON.generate( kexc )
-				mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}' WHERE user='#{user.name}' AND date='#{yyyymmdd}';", false, @debug )
+				db.query( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}' WHERE user='#{user.name}' AND date='#{yyyymmdd}';", true )
 				count += 1 if count_flag
 
 			else
@@ -301,7 +302,7 @@ when 'update'
 					kexc[k] = ea[v] unless k == 'date'
 				end
 				cell_ = JSON.generate( kexc )
-				mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}', user='#{user.name}', date='#{yyyymmdd}';", false, @debug )
+				db.query( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}', user='#{user.name}', date='#{yyyymmdd}';", true )
 				count += 1
 			end
 		else
@@ -341,5 +342,5 @@ if command == 'update'
 
 	kexin = { 'skip_line1'=>skip_line1, 'overwrite'=>overwrite, 'selecteds'=>selecteds_ }
 	koyomi_ = JSON.generate( { "start"=>start,  "kexu"=>kexu, "kexa"=>kexa, "kexin"=>kexin } )
-	mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", true )
 end

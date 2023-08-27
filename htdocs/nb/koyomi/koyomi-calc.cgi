@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi calc 0.01b (2022/12/11)
+#Nutrition browser 2020 koyomi calc 0.02b (2023/08/27)
 
 
 #==============================================================================
@@ -59,6 +59,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 #### Guild member check
 if user.status < 3
@@ -85,7 +86,7 @@ end
 
 
 puts 'LOAD config<br>' if @debug
-r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 		koyomi = JSON.parse( r.first['koyomi'] )
@@ -107,7 +108,7 @@ dtiv1 = Hash.new
 dtiv2 = Hash.new
 dtiv3 = Hash.new
 koyomi_box = [dtiv0, dtiv1, dtiv2, dtiv3 ]
-r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND tdiv != 4 AND date BETWEEN '#{yyyymmdds}' AND '#{yyyymmdde}';", false, @debug )
+r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND tdiv != 4 AND date BETWEEN '#{yyyymmdds}' AND '#{yyyymmdde}';", false )
 r.each do |e|
 	if e['freeze'].to_i == 1
 		koyomi_box[e['tdiv'].to_i][e['date'].to_s] = e['koyomi']
@@ -134,13 +135,13 @@ end
 
 puts 'HTML FCZの生成 <br>' if @debug
 fcz_html = ''
-r = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='ref_intake';", false, @debug )
+r = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='ref_intake';", false )
 r.each do |e|
 	s = ''
 	s = 'SELECTED' if fcz == e['code']
 	fcz_html << "<option value='#{e['code']}' #{s}>#{e['name']}</option>"
 end
-r_fcz = mdb( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='ref_intake' AND code='#{fcz}';", false, @debug )
+r_fcz = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='ref_intake' AND code='#{fcz}';", false )
 
 
 
@@ -437,5 +438,5 @@ puts html
 if command == 'calc'
 		koyomi['calc'] = { 'yyyymmdds' => yyyymmdds, 'yyyymmdde' => yyyymmdde, 'palette' => palette_, 'fcz' => fcz, 'ew_mode' => ew_mode }
 		koyomi_ = JSON.generate( koyomi )
-	mdb( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", true )
 end

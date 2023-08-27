@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.26b (2023/07/16)
+#Nutrition browser 2020 koyomi adding panel 0.27b (2023/08/27)
 
 #==============================================================================
 # STATIC
@@ -259,46 +259,64 @@ else
 end
 
 
+puts "koyomi matrix<br>" if @debug
+koyomi_mx = []
+kfreeze_flags = []
+31.times do |i| koyomi_mx[i + 1] = Array.new end
+r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND koyomi!='' AND koyomi IS NOT NULL AND date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-31';", false )
+r.each do |e|
+	koyomi_mx[e['date'].day][e['tdiv']] = e
+	kfreeze_flags[e['date'].day] = true if e['freeze'] == 1
+end
+
+
 #### Date HTML
 date_html = ''
 week_count = calendar.wf
 weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
-1.upto( calendar.ddl ) do |c|
-	date_html << "<tr id='day#{c}'>"
+1.upto( calendar.ddl ) do |day_|
+	kmrd = koyomi_mx[day_]
+
+	date_html << "<tr id='day#{day_}'>"
 	style = ''
 	style = 'color:red;' if week_count == 0
-	onclick = "onclick=\"editKoyomi2( 'init', '#{c}' )\""
-	date_html << "<td style='#{style}' #{onclick}>#{c} (#{weeks[week_count]})</td>"
+	onclick = "onclick=\"editKoyomi2( 'init', '#{day_}' )\""
+	date_html << "<td style='#{style}' #{onclick}>#{day_} (#{weeks[week_count]})</td>"
 
-	r = db.query( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND freeze='1';", false )
-	unless r.first
-		0.upto( 3 ) do |cc|
-			koyomi_c = '-'
-			rr = db.query( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ym}-#{c}' AND tdiv='#{cc}';", false )
-			onclick = ''
-			if command == 'modify' || command == 'move' || command == 'move_fix'
-				onclick = "onclick=\"k2Koyomi_direct( 'move', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			elsif command == 'fzc_mode' || command == 'fzcopy'
-				onclick = "onclick=\"k2Koyomi_direct( 'fzcopy', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			else
-				onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			end
+	if kmrd.size != 0
+		unless kfreeze_flags[day_]
+			0.upto( 4 ) do  |tdiv_|
+				koyomi_c = '-'
+				kmre = koyomi_mx[day_][tdiv_]
 
-			bs_class = 'table-light'
-			if rr.first
-				if rr.first['koyomi'] != ''
-					koyomi_c = rr.first['koyomi'].split( "\t" ).size
-					if dd == c and tdiv == cc
-						bs_class = 'table-warning'
-					else
-						bs_class = 'table-info'
+				onclick = ''
+				if command == 'modify' || command == 'move' || command == 'move_fix'
+					onclick = "onclick=\"k2Koyomi_direct( 'move', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+				elsif command == 'fzc_mode' || command == 'fzcopy'
+					onclick = "onclick=\"k2Koyomi_direct( 'fzcopy', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+				else
+					onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+				end
+
+				bs_class = 'table-light'
+
+				if kmre
+					if kmre['koyomi'] != ''
+						koyomi_c = kmre['koyomi'].split( "\t" ).size
+						if dd == day_ and tdiv == tdiv_
+							bs_class = 'table-warning'
+						else
+							bs_class = 'table-info'
+						end
 					end
 				end
+				date_html << "<td class='#{bs_class}' align='center' #{onclick}>#{koyomi_c}</td>"
 			end
-			date_html << "<td class='#{bs_class}' align='center' #{onclick}>#{koyomi_c}</td>"
+		else
+			4.times do date_html << "<td class='table-secondary'></td>" end
 		end
 	else
-		4.times do date_html << "<td class='table-secondary'></td>" end
+		4.times do date_html << "<td class='table-light' align='center' #{onclick}>-</td>" end
 	end
 
 	date_html << "</tr>"

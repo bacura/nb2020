@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.09b (2023/04/09)
+#Nutrition browser 2020 koyomi menu copy / move 0.10b (2023/08/27)
 
 
 #==============================================================================
@@ -59,6 +59,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST
@@ -100,10 +101,11 @@ end
 puts 'Getting date<br>' if @debug
 calendar = Calendar.new( user.name, yyyy, mm, dd )
 calendar.debug if @debug
+sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 
 
 puts 'Getting koyomi start year<br>' if @debug
-r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 		koyomi_cfg = JSON.parse( r.first['koyomi'] )
@@ -116,7 +118,7 @@ end
 puts 'Getting standard meal start & time<br>' if @debug
 start_time_set = []
 meal_tiems_set = []
-r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 if r.first
 	if r.first['bio'] != nil && r.first['bio'] != ''
 		bio = JSON.parse( r.first['bio'] )
@@ -137,7 +139,7 @@ dd_ = nil
 puts 'Save food<br>' if @debug
 if command == 'save'
 	( yyyy_, mm_, dd_, tdiv_ ) = origin.split( ':' )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false )
 	if r.first
 		koyomi_ = r.first['koyomi']
 		t = ''
@@ -145,14 +147,13 @@ if command == 'save'
 		a.each do |e|
 			aa = e.split( '~' )
 			if /\-z\-/ =~ aa[0]
-				rr = mdb( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE code='#{aa[0]}' AND base='fix' AND user='#{user.name}';", false, @debug )
+				rr = db.query( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE code='#{aa[0]}' AND base='fix' AND user='#{user.name}';", false )
 				if rr.first
 					fzcode = generate_code( user.name, 'z' )
-					db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-					db.query( "CREATE TEMPORARY TABLE tmp SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{aa[0]}' AND base='fix' AND user='#{user.name}';" )
-					db.query( "UPDATE tmp SET code='#{fzcode}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}' WHERE base='fix' AND user='#{user.name}';" )
-					db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SELECT * FROM tmp;" )
-					db.query( "DROP TABLE tmp;" )
+					db.query( "CREATE TEMPORARY TABLE tmp SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{aa[0]}' AND base='fix' AND user='#{user.name}';", true )
+					db.query( "UPDATE tmp SET code='#{fzcode}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}' WHERE base='fix' AND user='#{user.name}';", true )
+					db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SELECT * FROM tmp;", true )
+					db.query( "DROP TABLE tmp;", true )
 					db.close
 					t << "#{fzcode}~#{aa[1]}~#{aa[2]}~#{hh_mm}~#{meal_time}\t"
 				end
@@ -162,7 +163,7 @@ if command == 'save'
 		end
 		koyomi_ = t.chop
 
-		rr = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+		rr = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 		if rr.first
 			koyomi = rr.first['koyomi']
 			if koyomi == ''
@@ -171,13 +172,13 @@ if command == 'save'
 				koyomi << "\t#{koyomi_}"
 			end
 
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}', fzcode='' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false, @debug )
+			db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}', fzcode='' WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", true )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi_}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", false, @debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi_}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}';", true )
 		end
 
 		if cm_mode == 'move' && ( yyyy != yyyy_.to_i || mm != mm_.to_i || dd != dd_.to_i || tdiv != tdiv_.to_i )
-			mdb( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='' WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", false, @debug )
+			db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='' WHERE user='#{user.name}' AND date='#{yyyy_}-#{mm_}-#{dd_}' AND tdiv='#{tdiv_}';", true )
 			origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}"
 		end
 		calendar = Calendar.new( user.name, yyyy, mm, dd )
@@ -191,40 +192,58 @@ save_button_txt = l['move'] if cm_mode == 'move'
 save_button = "<button class='btn btn-sm btn-outline-primary' type='button' onclick=\"cmmSaveKoyomi( '#{cm_mode}', '#{origin}' )\">#{save_button_txt}</button>"
 
 
+puts "koyomi matrix<br>" if @debug
+koyomi_mx = []
+kfreeze_flags = []
+31.times do |i| koyomi_mx[i + 1] = Array.new end
+r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND koyomi!='' AND koyomi IS NOT NULL AND date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-31';", false )
+r.each do |e|
+	koyomi_mx[e['date'].day][e['tdiv']] = e
+	kfreeze_flags[e['date'].day] = true if e['freeze'] == 1
+end
+
+
 puts 'Date HTML<br>' if @debug
 date_html = ''
 week_count = calendar.wf
 weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
-1.upto( calendar.ddl ) do |c|
-	date_html << "<tr id='day#{c}'>"
+1.upto( calendar.ddl ) do |day_|
+	kmrd = koyomi_mx[day_]
+
+	date_html << "<tr id='day#{day_}'>"
 	style = ''
 	style = 'color:red;' if week_count == 0
-	onclick = "onclick=\"editKoyomi2( 'init', '#{c}' )\""
-	date_html << "<td style='#{style}' #{onclick}>#{c} (#{weeks[week_count]})</td>"
+	onclick = "onclick=\"editKoyomi2( 'init', '#{day_}' )\""
+	date_html << "<td style='#{style}' #{onclick}>#{day_} (#{weeks[week_count]})</td>"
 
-	r = mdb( "SELECT freeze FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND freeze='1';", false, @debug )
-	unless r.first
-		0.upto( 3 ) do |cc|
-			koyomi_c = '-'
-			rr = mdb( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{c}' AND tdiv='#{cc}';", false, @debug )
-			onclick = "onclick=\"cmmSaveKoyomi_direct( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{c}', '#{cc}', '#{origin}' )\""
-			if rr.first
-				if rr.first['koyomi'] == ''
-					date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
-				else
-					koyomi_c = rr.first['koyomi'].split( "\t" ).size
-					if dd == c and tdiv == cc
-						date_html << "<td class='table-warning' align='center' #{onclick}>#{koyomi_c}</td>"
+	if kmrd.size != 0
+		unless kfreeze_flags[day_]
+			0.upto( 3 ) do |tdiv_|
+				koyomi_c = '-'
+				kmre = koyomi_mx[day_][tdiv_]
+				onclick = "onclick=\"cmmSaveKoyomi_direct( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+
+				if kmre
+					if kmre['koyomi'] != ''
+						date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 					else
-						date_html << "<td class='table-info' align='center' #{onclick}>#{koyomi_c}</td>"
+						koyomi_c = kmre['koyomi'].split( "\t" ).size
+						if dd == day_ and tdiv == tdiv_
+							date_html << "<td class='table-warning' align='center' #{onclick}>#{koyomi_c}</td>"
+						else
+							date_html << "<td class='table-info' align='center' #{onclick}>#{koyomi_c}</td>"
+						end
 					end
+				else
+
+					date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 				end
-			else
-				date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 			end
+		else
+			4.times do date_html << "<td class='table-secondary'></td>" end
 		end
 	else
-		4.times do date_html << "<td class='table-secondary'></td>" end
+		4.times do date_html << "<td class='table-light' align='center' #{onclick}>-</td>" end
 	end
 
 	date_html << "</tr>"
