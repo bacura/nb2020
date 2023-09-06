@@ -1,4 +1,4 @@
-//guild.js ver 0.36b (2023/08/11)
+//guild.js ver 0.37b (2023/09/02)
 
 kp = 'koyomi/'
 
@@ -816,7 +816,7 @@ var deleteNote = function( code ){
 var deleteNoteP = function( code, mcode ){
 	if( document.getElementById( code ).checked ){
 		$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'note' }, function( data ){
-			$( '#L2' ).html( data );
+			$( '#LM' ).html( data );
 			$.post( "note.cgi", { command:'delete', code:code }, function( data ){
 				$( "#L1" ).html( data );}
 			);

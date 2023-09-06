@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.25b (2023/07/15)
+#Nutrition browser 2020 index page 0.26b (2023/09/02)
 
 
 #==============================================================================
@@ -336,6 +336,7 @@ html = <<-"HTML"
   <div class="browse_window" id='L4' style="display: none;"></div>
   <div class="browse_window" id='L5' style="display: none;"></div>
   <div class="browse_window" id='LF' style="display: none;"></div>
+  <div class="browse_window" id='LM' style="display: none;"></div>
   <div class="video" id='VIDEO' style="display: none;"></div>
 </div>
 HTML

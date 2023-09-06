@@ -415,8 +415,8 @@ const listPointerGM = function( category ){
 };
 
 // New pointer form
-const newPMemoryGM = function( category, pointer, post_process ){
-	$.post( mp + "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
+const newPMemoryGM = function( code, category, pointer, post_process ){
+	$.post( mp + "gm-memory.cgi", { command:'new_pointer', code:code, category:category, pointer:pointer, post_process:post_process }, function( data ){
 		$( "#LF" ).html( data );
 
 		dl1 = false;
@@ -424,19 +424,33 @@ const newPMemoryGM = function( category, pointer, post_process ){
 		dlf = true;
 		displayBW();
 	});
-};
 
-// New pointer form from nomatch
-const newPMemoryNM = function( pointer, post_process ){
-	const category = document.getElementById( 'nonmatch_categoly' ).value;
-	$.post( mp + "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
-		$( "#LF" ).html( data );
+	$.post( "photo.cgi", { command:'view_series', code:code, base:'memory' }, function( data ){
+		$( "#LM" ).html( data );
 
-		if( post_process == 'front'){ dl1 = false; }
-		dlf = true;
+		dlm = true;
 		displayBW();
 	});
 };
+
+// New pointer form from nomatch
+//const newPMemoryNM = function( pointer, post_process ){
+//	const category = document.getElementById( 'nonmatch_categoly' ).value;
+//	$.post( mp + "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
+//		$( "#LF" ).html( data );
+
+//		if( post_process == 'front'){ dl1 = false; }
+//		dlf = true;
+//		displayBW();
+//	});
+
+//	$.post( "photo.cgi", { command:'view_series', code:code, base:'memory' }, function( data ){
+//		$( "#LM" ).html( data );
+
+//		dlm = true;
+//		displayBW();
+//	});
+//};
 
 // Save pointer
 const savePMemory = function( category, post_process ){

@@ -35,7 +35,8 @@ def language_pack( language )
 		'rank' 	=> "ランク",\
 		'move' 	=> "移動",\
 		'save' 	=> "保存",\
-		'memory_edit' => "記憶管理:"
+		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>",\
+		'memory_edit' => "記憶管理GM:"
 	}
 
 	return l[language]
@@ -100,12 +101,10 @@ def list( category, l, db )
 	memory_html = ''
 
 	new_html << "<div class='row'>"
-	new_html << "<div class='col-10'></div>"
-	new_html << "<div class='col-2'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newPMemoryGM( '#{category}', '', 'front' )\">#{l['new_reg']}</button></div>"
+	new_html << "<div class='col' align='right'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newPMemoryGM( '#{category}', '', 'front' )\">#{l['new_reg']}</button></div>"
 	new_html << "</div>"
 	new_html << "</div>"
 
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false )
 	memory_html << "<table class='table table-sm table-striped'>"
 	memory_html << "<thead>"
 	memory_html << "<th>#{'key'}</th>"
@@ -113,18 +112,19 @@ def list( category, l, db )
 	memory_html << "<th>#{l['rank']}</th>"
 	memory_html << "</thead>"
 
-	c = 0
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false )
 	r.each do |e|
-		memory_html << "<tr onclick=\"newPMemoryGM( '#{category}', '#{e['pointer']}', 'front' )\">"
+		memory_html << "<tr onclick=\"newPMemoryGM( '#{e['code']}', '#{category}', '#{e['pointer']}', 'front' )\">"
 		memory_html << "<td>#{e['pointer']}</td>"
+
 		if e['memory'].size > 80
 			memory_html << "<td>#{e['memory'][0, 80]}...</td>"
 		else
 			memory_html << "<td>#{e['memory']}</td>"
 		end
+
 		memory_html << "<td>#{e['rank']}</td>"
 		memory_html << "</tr>"
-		c += 1
 	end
 	memory_html << "</table>"
 
@@ -133,41 +133,39 @@ end
 
 
 #### Pointer editor
-def new_pointer( category, pointer, memory, rank, category_set, post_process, l )
+def new_pointer( code, category, pointer, memory, rank, category_set, post_process, l )
 	rank_select_html = ''
 	rank_select_html << "<select class='form-select form-select-sm' id='rank'>"
 	1.upto( 5 ) do |c|
-		if c == rank
-			rank_select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-		else
-			rank_select_html << "<option value='#{c}'>#{c}</option>"
-		end
+		rank_select_html << "<option value='#{c}' #{$SELECT[c == rank]}>#{c}</option>"
 	end
 	rank_select_html << "</select>"
-
 	category_select_html = ''
 	category_select_html << "<select class='form-select form-select-sm' id='mvcategory'>"
 	category_set.each do |e|
-		if e == category
-			category_select_html << "<option value='#{e}' SELECTED>#{e}</option>"
-		else
-			category_select_html << "<option value='#{e}'>#{e}</option>"
-		end
+		category_select_html << "<option value='#{e}' #{$SELECT[e == category]}>#{e}</option>"
 	end
 	category_select_html << "</select>"
 
+	puts "HTML Photo upload form<br>" if @debug
+	form_photo = ''
+	form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
+	form_photo << '<div class="input-group input-group-sm">'
+	form_photo << "<label class='input-group-text'>#{l['camera']}</label>"
+
+	if code == nil
+		form_photo << "<input type='file' class='form-control' DISABLED>"
+	else
+		form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{code}', '#photo_form', 'memory' )\">"
+	end
+	form_photo << '</form></div>'
+
 	new_html = <<-"NEW"
 	<div class='row'>
-		<div class='col-6'>
+		<div class='col-4'>
 			<div class='input-group input-group-sm'>
 				<span class='input-group-text' id='inputGroup-sizing-sm'>#{l['key']}</span>
 				<input type='text' class='form-control' id='pointer' value='#{pointer}'>
-			</div>
-		</div>
-		<div class='col-2'>
-			<div class='input-group input-group-sm'>
-				<label class='input-group-text' for='rank'>#{l['rank']}</label>
-				#{rank_select_html}
 			</div>
 		</div>
 		<div class='col-4'>
@@ -177,6 +175,15 @@ def new_pointer( category, pointer, memory, rank, category_set, post_process, l 
 				<button type='button' class='btn btn-success btn-sm' onclick="movePMemory( '#{category}', '#{pointer}', '#{post_process}' )">#{l['move']}</button>
 			</div>
 		</div>
+		<div class='col-3'>
+			<div class='input-group input-group-sm'>
+				<label class='input-group-text' for='rank'>#{l['rank']}</label>
+				#{rank_select_html}
+			</div>
+		</div>
+		<div class='col-1' align='right'>
+			<button type='button' class='btn btn-success btn-sm' onclick="savePMemory( '#{category}', '#{post_process}' )">#{l['save']}</button>
+		</div>
 	</div><br>
 NEW
 
@@ -185,9 +192,10 @@ NEW
 		<textarea class='form-control' rows='5' aria-label='memory' id='memory'>#{memory}</textarea>
 	</div><br>
 	<div class='row'>
-		<div class='col-1'><button type='button' class='btn btn-success btn-sm' onclick="savePMemory( '#{category}', '#{post_process}' )">#{l['save']}</button></div>
-		<div class='col-9'></div>
-		<div class='col-2' align='right'><input type='checkbox' id='deletepm_check'>&nbsp;
+		<div class='col-4'>
+			#{form_photo}
+		</div>
+		<div class='col-8' align='right'><input type='checkbox' id='deletepm_check'>&nbsp;
 		<button type='button' class='btn btn-danger btn-sm' onclick="deletePMemory( '#{category}', '#{pointer}', '#{post_process}' )">#{l['delete']}</button></div>
 	</div>
 MEMORY
@@ -217,6 +225,7 @@ end
 #### Getting POST data
 command = @cgi['command']
 mode = @cgi['mode']
+code = @cgi['code']
 category = @cgi['category']
 new_category = @cgi['new_category']
 mvcategory = @cgi['mvcategory']
@@ -273,6 +282,12 @@ when 'new_pointer'
 			pointer = r.first['pointer']
 			memory = r.first['memory']
 			rank = r.first['rank']
+			code = r.first['code']
+		end
+
+		if code == nil
+			code = generate_code( user.name, 'k' )
+			db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET code='#{code}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
 		end
 	end
 
@@ -280,7 +295,7 @@ when 'new_pointer'
 	r = db.query( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY};", false )
 	r.each do |e| category_set << e['category'] end
 
-	new_html, memory_html = new_pointer( category, pointer, memory, rank, category_set, post_process, l )
+	new_html, memory_html = new_pointer( code, category, pointer, memory, rank, category_set, post_process, l )
 
 when 'delete_pointer'
 	db.query( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", true )

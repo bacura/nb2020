@@ -5,7 +5,7 @@
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -285,7 +285,7 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 
 	if kmrd.size != 0
 		unless kfreeze_flags[day_]
-			0.upto( 4 ) do  |tdiv_|
+			4.times do |tdiv_|
 				koyomi_c = '-'
 				kmre = koyomi_mx[day_][tdiv_]
 
@@ -316,7 +316,10 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 			4.times do date_html << "<td class='table-secondary'></td>" end
 		end
 	else
-		4.times do date_html << "<td class='table-light' align='center' #{onclick}>-</td>" end
+		4.times do |tdiv_|
+			onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+			date_html << "<td class='table-light' align='center' #{onclick}>-</td>"
+		end
 	end
 
 	date_html << "</tr>"

@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.46b (2023/08/15)
+// Nutorition Browser 2020 core.js 0.47b (2023/09/02)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -7,6 +7,7 @@ dl3 = false;
 dl4 = false;
 dl5 = false;
 dlf = false;
+dlm = false;
 dline = false;
 
 hl1 = false;
@@ -15,6 +16,7 @@ hl3 = false;
 hl4 = false;
 hl5 = false;
 hlf = false;
+hlm = false;
 hline = false;
 
 bwl1 = null;
@@ -23,6 +25,7 @@ bwl3 = null;
 bwl4 = null;
 bwl5 = null;
 bwlf = null;
+bwlm = null;
 line = null;
 video = null;
 
@@ -44,6 +47,7 @@ window.onload = function(){
 		bwl4 = document.getElementById( "L4" );
 		bwl5 = document.getElementById( "L5" );
 		bwlf = document.getElementById( "LF" );
+		bwlm = document.getElementById( "LM" );
 		line = document.getElementById( "LINE" );
 		video = document.getElementById( "VIDEO" );
 		help = document.getElementById( "HELP" );
@@ -78,6 +82,7 @@ displayBW = function(){
 	if( dl4 ){ bwl4.style.display = 'block'; }else{ bwl4.style.display = 'none'; }
 	if( dl5 ){ bwl5.style.display = 'block'; }else{ bwl5.style.display = 'none'; }
 	if( dlf ){ bwlf.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
+	if( dlm ){ bwlm.style.display = 'block'; }else{ bwlm.style.display = 'none'; }
 	if( dline ){ line.style.display = 'block'; }else{ line.style.display = 'none'; }
 };
 
@@ -90,6 +95,7 @@ flashBW = function(){
 	dl4 = false;
 	dl5 = false;
 	dlf = false;
+	dlm = false;
 	dline = false;
 }
 
@@ -102,6 +108,7 @@ pushBW = function(){
 	hl4 = dl4;
 	hl5 = dl5;
 	hlf = dlf;
+	hlm = dlm;
 	hline = dline;
 };
 
@@ -114,6 +121,7 @@ pullHW = function(){
 	dl4 = hl4;
 	dl5 = hl5;
 	dlf = hlf;
+	dlm = hlm;
 	dline = hline;
 };
 
@@ -588,7 +596,7 @@ var bookOpen = function( url, depth ){
 // Memory ///////////////////////////////////////////////////////////////////////
 
 // Memory init
-var initMemory_ = function(){
+const initMemory_ = function(){
 	$.post( "memory.cgi", { command:'init' }, function( data ){
 		$( "#L2" ).html( data );
 
@@ -600,7 +608,7 @@ var initMemory_ = function(){
 
 
 // List each pointer
-var listPointer = function( category ){
+const listPointer = function( category ){
 	$.post( "memory.cgi", { command:'list_pointer', category:category }, function( data ){
 		$( "#L2" ).html( data );
 
@@ -610,11 +618,26 @@ var listPointer = function( category ){
 };
 
 
+// Open memory
+const memoryOpen = function( code ){
+	$.post( "memory.cgi", { command:'refer', code, depth:2 }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+
 // Open memory link
-var memoryOpenLink = function( pointer, depth ){
+const memoryOpenLink = function( pointer, depth ){
 	$.post( "memory.cgi", { command:'refer', pointer:pointer, depth:depth }, function( data ){
 		$( "#L" + depth ).html( data );
-		if( depth == '1' ){ closeBroseWindows( 1 ); }
+		if( depth == '1' ){
+			flashBW();
+			dl1 = true;
+			displayBW();
+		}
 		document.getElementById( "L" + depth ).style.display = 'block';
 
 		words = document.getElementById( "words" ).value = pointer;
@@ -624,14 +647,14 @@ var memoryOpenLink = function( pointer, depth ){
 
 
 // New pointer form
-var newPMemory = function( category, pointer, post_process ){
-	$.post( "memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
-		$( "#LF" ).html( data );
+//var newPMemory = function( category, pointer, post_process ){
+//	$.post( "memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
+//		$( "#LF" ).html( data );
 
-		if( post_process == 'front'){ document.getElementById( "L2" ).style.display = 'none'; }
-		document.getElementById( "LF" ).style.display = 'block';
-	});
-};
+//		if( post_process == 'front'){ document.getElementById( "L2" ).style.display = 'none'; }
+//		document.getElementById( "LF" ).style.display = 'block';
+//	});
+//};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Meta data //////////////////////////////////////////////////////////////////////////
@@ -688,7 +711,7 @@ var photoSave = function( code, form, base ){
 			contentType: false,
 			data: form_data,
 			dataype: 'html',
-			success: function( data ){ $( '#L3' ).html( data ); }
+			success: function( data ){ $( '#LM' ).html( data ); }
 		}
 	);
 };
@@ -696,7 +719,7 @@ var photoSave = function( code, form, base ){
 
 // delete photo from media db
 var photoDel = function( code, mcode, base ){
-	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:base }, function( data ){ $( '#L3' ).html( data );});
+	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:base }, function( data ){ $( '#LM' ).html( data );});
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -992,8 +1015,8 @@ const recipeEdit = function( com, code ){
 		displayBW();
 	});
 	$.post( "photo.cgi", { command:'view_series', code:code, base:'recipe' }, function( data ){
-		$( "#L3" ).html( data );
-		dl3 = true;
+		$( "#LM" ).html( data );
+		dlm = true;
 		displayBW();
 	});
 };
@@ -1028,7 +1051,7 @@ const recipeSave = function( com, code ){
 		$.post( "recipe.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#L3" ).html( data );});
+			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#LM" ).html( data );});
 			displayVIDEO( recipe_name );
 		});
 	}
@@ -1423,8 +1446,8 @@ var menuEdit = function( com, code ){
 		displayBW();
 	});
 	$.post( "photo.cgi", { command:'view_series', code:code, base:'menu' }, function( data ){
-		$( "#L3" ).html( data )
-		dl3 = true;
+		$( "#LM" ).html( data )
+		dlm = true;
 		displayBW();
 	});
 };

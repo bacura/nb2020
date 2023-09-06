@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.64b (2023/08/08)
+#nb2020-dbi.rb 0.65b (2023/09/02)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -935,7 +935,7 @@ def memory_init()
 	if res.first
 		puts 'memory already exists.'
 	else
-		query = 'CREATE TABLE memory (user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT, total_rank TINYINT, count BIGINT UNSIGNED, know BIGINT UNSIGNED, date DATETIME );'
+		query = 'CREATE TABLE memory (code VARCHAR(32) PRIMARY KEY, user VARCHAR(32), category VARCHAR(32), pointer VARCHAR(64), memory VARCHAR(1024), rank TINYINT, total_rank TINYINT, count BIGINT UNSIGNED, know BIGINT UNSIGNED, date DATETIME );'
 		$DB.query( query )
 		puts 'memory table has been created.'
 	end

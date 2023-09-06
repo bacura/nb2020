@@ -218,13 +218,13 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 
 	if kmrd.size != 0
 		unless kfreeze_flags[day_]
-			0.upto( 3 ) do |tdiv_|
+			4.times do |tdiv_|
 				koyomi_c = '-'
 				kmre = koyomi_mx[day_][tdiv_]
 				onclick = "onclick=\"cmmSaveKoyomi_direct( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
 
 				if kmre
-					if kmre['koyomi'] != ''
+					if kmre['koyomi'] == ''
 						date_html << "<td class='table-light' align='center' #{onclick}>#{koyomi_c}</td>"
 					else
 						koyomi_c = kmre['koyomi'].split( "\t" ).size
@@ -243,7 +243,10 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 			4.times do date_html << "<td class='table-secondary'></td>" end
 		end
 	else
-		4.times do date_html << "<td class='table-light' align='center' #{onclick}>-</td>" end
+		4.times do |tdiv_|
+			onclick = "onclick=\"cmmSaveKoyomi_direct( '#{cm_mode}', '#{yyyy}', '#{mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+			date_html << "<td class='table-light' align='center' #{onclick}>-</td>"
+		end
 	end
 
 	date_html << "</tr>"

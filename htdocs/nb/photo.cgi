@@ -94,6 +94,7 @@ if code == ''
 end
 
 
+
 case command
 when 'view_series'
 	puts 'View series<br>' if @debug
