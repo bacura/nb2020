@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.21b (2023/8/01)
+#Nutrition browser 2020 food square 0.22b (2023/9/23)
 
 
 #==============================================================================
@@ -37,7 +37,6 @@ def get_history_name( fg, db )
 	if db.user.name
 		r = db.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{db.user.name}';", false )
 		if r.first
-
 			his_raw = r.first['his'].split( "\t" )
 			his_raw.map! do |x|
 				x = "'#{x}'" if x.size <= 6
@@ -45,8 +44,10 @@ def get_history_name( fg, db )
 			his_raw.delete( nil )
 			his = his_raw.join( ',' )
 
-			rr = db.query( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg}' AND FN IN (#{his});", false )
-			rr.each do |e| name_his << e['name'] end
+			unless his == ''
+				rr = db.query( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg}' AND FN IN (#{his});", false )
+				rr.each do |e| name_his << e['name'] end
+			end
 		end
 	end
 

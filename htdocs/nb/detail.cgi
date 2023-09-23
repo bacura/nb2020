@@ -1,11 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.15b (2023/08/11)
+#Nutrition browser 2020 detail viewer 0.15b (2023/09/23)
 
 #==============================================================================
 # STATIC
 #==============================================================================
 @debug = false
+sn_max = 2538
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -47,27 +48,6 @@ def language_pack( language )
 	return l[language]
 end
 
-#### 検索インデックスの飛ばし処理
-def sid_skip( sid, dir, db )
-	r = []
-	c = 0
-	until r.first
-		if dir == 'fwd'
-			sid = sid.to_i + 1
-			sid = 1 if sid > 2481
-		else
-			sid = sid.to_i - 1
-			sid = 2481 if sid < 1
-		end
-		r = db.query( "SELECT FN, SID FROM #{$MYSQL_TB_TAG} WHERE SID='#{sid}';", false )
-		c += 1
-		break if c > 100
-	end
-	food_no = r.first['FN']
-
-	return food_no
-end
-
 #==============================================================================
 # Main
 #==============================================================================
@@ -82,17 +62,11 @@ puts 'POST<br>' if @debug
 frct_mode = @cgi['frct_mode']
 food_weight = @cgi['food_weight']
 food_no = @cgi['food_no']
-dir = @cgi['dir']
-sid = @cgi['sid']
-sid_flag = false
-sid_flag = true if sid != ''
 selectu = @cgi['selectu'].to_s
 if @debug
 	puts "frct_mode: #{frct_mode}<br>"
 	puts "food_weight: #{food_weight}<br>"
 	puts "food_no: #{food_no}<br>"
-	puts "dir: #{dir}<br>"
-	puts "sid: #{sid}<br>"
 	puts "selectu: #{selectu}<br>"
 	puts "<hr>"
 end
@@ -126,10 +100,6 @@ food_weight = food_volume * uk
 frct_select = selected( 0, 3, frct_mode )
 
 
-puts 'Search index<br>' if @debug
-food_no = sid_skip( sid, dir, db ) if sid != ''
-
-
 puts 'Load FCT<br>' if @debug
 fct_opt = Hash.new
 r = db.query( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no}';", false )
@@ -152,6 +122,21 @@ if user.status > 0
 	alias_button <<	"<div class='input-group-prepend'><button class='btn btn-outline-primary' type='button' onclick=\"aliasRequest( '#{food_no}' )\">#{l['request']}</button></div>"
 	alias_button << '</div>'
 end
+
+
+puts 'Search index<br>' if @debug
+r = db.query( "SELECT SN FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no}';", false )
+sn = r.first['SN'].to_i
+
+sn_rev = sn - 1
+sn_rev = sn_max if sn < 1
+r = db.query( "SELECT FN FROM #{$MYSQL_TB_TAG} WHERE SN='#{sn_rev}';", false )
+fn_rev = r.first['FN']
+
+sn_fwd = sn + 1
+sn_fwd = 1 if sn > sn_max
+r = db.query( "SELECT FN FROM #{$MYSQL_TB_TAG} WHERE SN='#{sn_fwd}';", false )
+fn_fwd = r.first['FN']
 
 
 puts 'FCT table HTML<br>' if @debug
@@ -212,9 +197,9 @@ html = <<-"HTML"
 	<div class="row">
 		<div class="col-2">
 			<span class='h6'>#{l['food_no']}：#{food_no}</span><br>
-			<span onclick="detailPage( 'rev', '#{sid}' )">#{l['rev']}</span>
+			<span onclick="detailWeight( '#{fn_rev}' )">#{l['rev']}</span>
 			#{l['sid']}：#{sid}</span>
-			<span onclick="detailPage( 'fwd', '#{sid}' )">#{l['fwd']}</span>
+			<span onclick="detailWeight( '#{fn_fwd}' )">#{l['fwd']}</span>
 		</div>
 		<div class="col"><h6>#{fct_opt['Tagnames']}</h6></div>
 	  	<div class="col-1"><h6>#{food_volume.to_f} #{selectu}<br>#{food_weight.to_f} g</h6></div>

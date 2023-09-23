@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.47b (2023/09/02)
+// Nutorition Browser 2020 core.js 0.48b (2023/09/23)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -319,14 +319,6 @@ var detailWeight = function( fn ){
 	var food_weight = document.getElementById( "detail_volume" ).value;
 	var selectu = document.getElementById( "detail_unit" ).value;
 	$.post( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:food_weight, selectu:selectu }, function( data ){ $( "#LF" ).html( data );});
-};
-
-// 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
-var detailPage = function( dir, sid ){
-	var fraction_mode = document.getElementById( "detail_fraction" ).value;
-	var food_weight = document.getElementById( "detail_volume" ).value;
-	var selectu = document.getElementById( "detail_unit" ).value;
-	$.post( "detail.cgi", { dir:dir, sid:sid, frct_mode:fraction_mode, food_weight:food_weight, selectu:selectu }, function( data ){ $( "#LF" ).html( data );});
 };
 
 // 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。

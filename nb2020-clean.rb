@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-clean.rb for modified20211228
+#nb2020-clean.rb for modified20230428
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -11,8 +11,8 @@
 # MAIN
 #==============================================================================
 
-source_file = '20201225-mxt_kagsei-mext_01110_012-m20211228.txt'
-out_file = '20201225-mxt_kagsei-mext_01110_012-m20211228_clean.txt'
+source_file = '20230428-mxt_kagsei-mext_00001_012.txt'
+out_file = '20230428-mxt_kagsei-mext_00001_012_clean.txt'
 
 data_solid = []
 

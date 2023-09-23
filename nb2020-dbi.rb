@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.65b (2023/09/02)
+#nb2020-dbi.rb 0.70b (2023/09/20)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -106,7 +106,26 @@ def fcts_init( base_file, sub_files )
 	if res.first
 		puts 'fcts table already exists.'
 	else
-		query = 'CREATE TABLE fcts (FN VARCHAR(5) NOT NULL PRIMARY KEY,ILE VARCHAR(8),LEU VARCHAR(8),LYS VARCHAR(8),MET VARCHAR(8),CYS VARCHAR(8),AAS VARCHAR(8),PHE VARCHAR(8),TYR VARCHAR(8),AAA VARCHAR(8),THR VARCHAR(8),TRP VARCHAR(8),VAL VARCHAR(8),HIS VARCHAR(8),ARG VARCHAR(8),ALA VARCHAR(8),ASP VARCHAR(8),GLU VARCHAR(8),GLY VARCHAR(8),PRO VARCHAR(8),SER VARCHAR(8),HYP VARCHAR(8),AAT VARCHAR(8),AMMON VARCHAR(8),AMMONE VARCHAR(8),FACID VARCHAR(8),FASAT VARCHAR(8),FAMS VARCHAR(8),FAPU VARCHAR(8),FAPUN3 VARCHAR(8),FAPUN6 VARCHAR(8),F4D0 VARCHAR(8),F6D0 VARCHAR(8),F7D0 VARCHAR(8),F8D0 VARCHAR(8),F10D0 VARCHAR(8),F12D0 VARCHAR(8),F13D0 VARCHAR(8),F14D0 VARCHAR(8),F15D0 VARCHAR(8),F15D0AI VARCHAR(8),F16D0 VARCHAR(8),F16D0I VARCHAR(8),F17D0 VARCHAR(8),F17D0AI VARCHAR(8),F18D0 VARCHAR(8),F20D0 VARCHAR(8),F22D0 VARCHAR(8),F24D0 VARCHAR(8),F10D1 VARCHAR(8),F14D1 VARCHAR(8),F15D1 VARCHAR(8),F16D1 VARCHAR(8),F17D1 VARCHAR(8),F18D1 VARCHAR(8),F18D1CN9 VARCHAR(8),F18D1CN7 VARCHAR(8),F20D1 VARCHAR(8),F22D1 VARCHAR(8),F24D1 VARCHAR(8),F16D2 VARCHAR(8),F16D3 VARCHAR(8),F16D4 VARCHAR(8),F18D2N6 VARCHAR(8),F18D3N3 VARCHAR(8),F18D3N6 VARCHAR(8),F18D4N3 VARCHAR(8),F20D2N6 VARCHAR(8),F20D3N3 VARCHAR(8),F20D3N6 VARCHAR(8),F20D4N3 VARCHAR(8),F20D4N6 VARCHAR(8),F20D5N3 VARCHAR(8),F21D5N3 VARCHAR(8),F22D2 VARCHAR(8),F22D4N6 VARCHAR(8),F22D5N3 VARCHAR(8),F22D5N6 VARCHAR(8),F22D6N3 VARCHAR(8),FAUN VARCHAR(8),FIBSOL VARCHAR(8),FIBINS VARCHAR(8),FIBTG VARCHAR(8),FIBSDFS VARCHAR(8),FIBSDFP VARCHAR(8),FIBIDF VARCHAR(8),STARES VARCHAR(8),FIBTDF VARCHAR(8),FORAC VARCHAR(8),ACEAC VARCHAR(8),GLYCLAC VARCHAR(8),LACAC VARCHAR(8),GLUCAC VARCHAR(8),OXALAC VARCHAR(8),MOLAC VARCHAR(8),SUCAC VARCHAR(8),FUMAC VARCHAR(8),MALAC VARCHAR(8),TARAC VARCHAR(8),GLUAKAC VARCHAR(8),CITAC VARCHAR(8),SALAC VARCHAR(8),PCHOUAC VARCHAR(8),CAFFAC VARCHAR(8),FERAC VARCHAR(8),CHLRAC VARCHAR(8),QUINAC VARCHAR(8),OROTAC VARCHAR(8),PYROGAC VARCHAR(8),PROPAC VARCHAR(8),NoticeAA VARCHAR(255),NoticeFA VARCHAR(255),NoticeFIB VARCHAR(255),NoticeOA VARCHAR(255));'
+		query = 'CREATE TABLE fcts (FN VARCHAR(5) NOT NULL PRIMARY KEY'
+		sub_files.each do |e|
+			f = open( e, 'r' )
+				f.each_line do |ee|
+					a = ee.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+					a.shift
+					a.each do |eee|
+						if eee.include?( 'Notice' )
+							query << ",#{eee} VARCHAR(256)"
+						else
+							query << ",#{eee} VARCHAR(8)"
+						end
+					end
+
+					break
+				end
+			f.close
+		end
+		query << ');'
+
 		$DB.query( query )
 
 		item_names = []
@@ -155,7 +174,7 @@ def fct_init( source_file, plus_fct )
 	if res.first
 		puts 'fct table already exists.'
 	else
-		query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5) NOT NULL PRIMARY KEY,SID SMALLINT UNSIGNED,Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),PROTV VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),FATV VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVLM_ VARCHAR(1),CHOAVL VARCHAR(8),CHOAVLDF VARCHAR(8),CHOV VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIA VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
+		query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5) NOT NULL PRIMARY KEY,SID VARCHAR(6),Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),PROTV VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),FATV VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVLM_ VARCHAR(1),CHOAVL VARCHAR(8),CHOAVLDF VARCHAR(8),CHOV VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIA VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
 		$DB.query( query )
 
 		query = 'ALTER TABLE fct'
@@ -212,7 +231,7 @@ end
 #### Updating food tag table.
 def tag_update( source_file )
 	query = 'DELETE FROM tag WHERE user IS NULL;'
-	res = $DB.query( query )
+	$DB.query( query )
 
 	# タグテーブルから読み込んでタグテーブル更新
 	f = open( source_file, 'r' )
@@ -296,12 +315,13 @@ def tag_init( source_file )
 		puts 'tag table already exists.'
 		tag_update( source_file )
 	else
-		query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID VARCHAR(5), user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
+		query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID VARCHAR(6), SN VARCHAR(4), user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
 		$DB.query( query )
 
 		# タグテーブルから読み込んでタグテーブル更新
 		f = open( source_file, 'r' )
 		label = true
+		sn = 0
 		f.each_line do |e|
 			items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 			sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
@@ -364,9 +384,11 @@ def tag_init( source_file )
 					end
 				end
 			end
-			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
+
+			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',SN='#{sn}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
 			$DB.query( sql_query_tag ) unless label
 			label = false
+			sn += 1
 		end
 		f.close
 		puts 'tag table has been created.'
@@ -445,7 +467,7 @@ def ext_update( gycv_file, shun_file, unit_file )
 		if e == "NB2020 [unit] data\n"
 			unit_flag = true
 			next
-		elsif unit_flag == true
+		elsif unit_flag
 			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 
 			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{a[0]}';"
@@ -453,12 +475,30 @@ def ext_update( gycv_file, shun_file, unit_file )
 			if res.first
 				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
 			else
-				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+				query = "INSERT INTO #{$MYSQL_TB_EXT} SET  FN='#{a[0]}, unit='#{a[1]}';"
 			end
 			$DB.query( query )
 		end
 	end
 	f.close
+
+	query = "SELECT FN, ENERC_KCAL FROM #{$MYSQL_TB_FCT};"
+	unith = Hash.new
+	res = $DB.query( query )
+	res.each do |e|
+		query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{e['FN']}';"
+		res2 = $DB.query( query )
+		unless res2.first
+			unith.clear
+			unith['g'] = 1	
+			unith['kcal'] = ( 100 / e['ENERC_KCAL'].to_f ).round( 2 ) if e['ENERC_KCAL'] != 0
+
+			unit_ = JSON.generate( unith )
+			query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{e['FN']}', unit='#{unit_}';"
+			$DB.query( query )
+		end
+	end
+
 	puts 'Unit in ext has been updated.' if unit_flag == true
 end
 
@@ -690,10 +730,10 @@ def user_init()
 		$DB.query( query )
 		puts 'user in ext has been created.'
 
-		$DB.query( "INSERT INTO user SET user='#{$GM}', pass='', status='9', language='#{$DEFAULT_LP}', ref=0;" )
+		$DB.query( "INSERT INTO user SET user='#{$GM}', pass='', status='9', language='#{$DEFAULT_LP}', astral=0;" )
 
 		['guest', 'guest2', 'guest3'].each do |e|
-			$DB.query( "INSERT INTO user SET user='#{e}', pass='', status='3', language='#{$DEFAULT_LP}', ref=0;" )
+			$DB.query( "INSERT INTO user SET user='#{e}', pass='', status='3', language='#{$DEFAULT_LP}', astral=0;" )
 		end
 
 		puts 'GM & guests have been registed.'
@@ -1158,7 +1198,6 @@ def ref_para_init( ref_parallel )
 		query = 'CREATE TABLE ref_para ( FN VARCHAR(5) PRIMARY KEY, para VARCHAR(256));'
 		$DB.query( query )
 
-		ref_solid = []
 		f = open( ref_parallel, 'r' )
 		f.each_line do |e|
 			a = e.force_encoding( 'utf-8' ).chomp.split( "\t" )
@@ -1231,12 +1270,13 @@ end
 
 
 #==============================================================================
-base_file = '20201225-mxt_kagsei-mext_01110_012-m20211228_clean.txt'
-aa_file = '20201225-mxt_kagsei-mext_01110-AA-m20211227_clean.txt'
-fa_file = '20201225-mxt_kagsei-mext_01110-FA-m20211227_clean.txt'
-fib_file = '20201225-mxt_kagsei-mext_01110-FIB-m20211227_clean.txt'
-oa_file = '20201225-mxt_kagsei-mext_01110-OA-m20211227_clean.txt'
-sub_files = [aa_file, fa_file, fib_file, oa_file]
+base_file 	= '20230428-mxt_kagsei-mext_00001_012_clean.txt'
+aa_file 	= '20230428-mxt_kagsei-mext_00001_AA_clean.txt'
+fa_file 	= '20230428-mxt_kagsei-mext_00001_FA_clean.txt'
+fib_file 	= '20230428-mxt_kagsei-mext_00001_FIB_clean.txt'
+sug_file 	= '20230428-mxt_kagsei-mext_00001_SUG_clean.txt'
+oa_file 	= '20230428-mxt_kagsei-mext_00001_OA_clean.txt'
+sub_files = [aa_file, fa_file, fib_file, sug_file, oa_file]
 plus_fct = %w( FASAT FAMS FAPU FAPUN3 FAPUN6 FIBSOL FIBINS FIBTG FIBSDFS FIBSDFP FIBIDF STARES FIBTDF )
 gycv_file = 'nb2020-gycv.txt'
 shun_file = 'nb2020-shun.txt'

@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.1b (2023/08/03)
+#Nutrition browser 2020 soul 1.2b (2023/09/23)
 
 #==============================================================================
 # LIBRARY
@@ -80,7 +80,11 @@ $SELECT = { true => 'SELECTED', false => '', 1 => 'SELECTED', 0 => '', '1' => 'S
 $CHECK = { true => 'CHECKED', false => '', 1 => 'CHECKED', 0 => '', '1' => 'CHECKED', '0' => ''}
 $DISABLE = { true => 'DISABLED', false => '', 1 => 'DISABLED', 0 => '', '1' => 'DISABLED', '0' => ''}
 
-$DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+begin
+  $DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
+rescue
+  $DB = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :encoding => "utf8" )
+end
 
 $DEBUG = false
 
