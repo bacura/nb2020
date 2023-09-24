@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.70b (2023/09/20)
+#nb2020-dbi.rb 0.71b (2023/09/24)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -103,8 +103,10 @@ end
 def fcts_init( base_file, sub_files )
 	query = "SHOW TABLES LIKE 'fcts';"
 	res = $DB.query( query )
+	update_flag = false
 	if res.first
 		puts 'fcts table already exists.'
+		update_flag = true
 	else
 		query = 'CREATE TABLE fcts (FN VARCHAR(5) NOT NULL PRIMARY KEY'
 		sub_files.each do |e|
@@ -127,42 +129,50 @@ def fcts_init( base_file, sub_files )
 		query << ');'
 
 		$DB.query( query )
+	end
 
-		item_names = []
-		f = open( base_file, 'r' )
+	item_names = []
+	f = open( base_file, 'r' )
+	label = true
+	f.each_line do |e|
+		if label
+			label = false
+		else
+			items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+			begin
+				query = "INSERT INTO #{$MYSQL_TB_FCTS} SET FN ='#{items[1]}';"
+				$DB.query( query )
+			rescue
+			end
+		end
+	end
+	f.close
+
+	sub_files.each do |e|
+		f = open( e, 'r' )
 		label = true
-		f.each_line do |e|
+		f.each_line do |ee|
 			if label
+				item_names = ee.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 				label = false
 			else
-				items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-				query = "INSERT INTO #{$MYSQL_TB_FCTS} SET FN ='#{items[1]}';"
+				items = ee.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+				query = "UPDATE #{$MYSQL_TB_FCTS} SET"
+				item_names.size.times do |c|
+					query << " #{item_names[c]}='#{items[c]}',"
+				end
+				query.chop!
+				query << " WHERE FN='#{items[0]}';"
+
 				$DB.query( query )
 			end
 		end
 		f.close
+	end
 
-		sub_files.each do |e|
-			f = open( e, 'r' )
-			label = true
-			f.each_line do |ee|
-				if label
-					item_names = ee.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-					label = false
-				else
-					items = ee.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-					query = "UPDATE #{$MYSQL_TB_FCTS} SET"
-					item_names.size.times do |c|
-						query << " #{item_names[c]}='#{items[c]}',"
-					end
-					query.chop!
-					query << " WHERE FN='#{items[0]}';"
-
-					$DB.query( query )
-				end
-			end
-			f.close
-		end
+	if update_flag 
+		puts 'fcts table has been updated.'
+	else
 		puts 'fcts table has been created.'
 	end
 end
@@ -171,8 +181,10 @@ end
 def fct_init( source_file, plus_fct )
 	query = "SHOW TABLES LIKE 'fct';"
 	res = $DB.query( query )
+	update_flag = false
 	if res.first
 		puts 'fct table already exists.'
+		update_flag = true
 	else
 		query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5) NOT NULL PRIMARY KEY,SID VARCHAR(6),Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),PROTV VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),FATV VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVLM_ VARCHAR(1),CHOAVL VARCHAR(8),CHOAVLDF VARCHAR(8),CHOV VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIA VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
 		$DB.query( query )
@@ -182,63 +194,78 @@ def fct_init( source_file, plus_fct )
 		query.chop!
 		query << ";"
 		$DB.query( query )
+	end
 
-		plus_fct_sql = plus_fct.join( ',' )
-		f = open( source_file, 'r' )
-		label = true
-		item_names = []
-		f.each_line do |e|
-			if label
-				item_names = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-				label = false
-			else
-				items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-				query = "INSERT INTO #{$MYSQL_TB_FCT} SET"
+	plus_fct_sql = plus_fct.join( ',' )
+	f = open( source_file, 'r' )
+	label = true
+	item_names = []
+	f.each_line do |e|
+		if label
+			item_names = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+			label = false
+		else
+			items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+			query = "INSERT INTO #{$MYSQL_TB_FCT} SET"
 
-				item_names.size.times do |c| query << " #{item_names[c]}='#{items[c]}'," end
+			item_names.size.times do |c| query << " #{item_names[c]}='#{items[c]}'," end
 
-				plus_res = $DB.query( "SELECT #{plus_fct_sql} FROM #{$MYSQL_TB_FCTS} WHERE FN='#{items[1]}';" )
-				plus_fct.each do |e| query << " #{e}='#{plus_res.first[e]}'," end
+			plus_res = $DB.query( "SELECT #{plus_fct_sql} FROM #{$MYSQL_TB_FCTS} WHERE FN='#{items[1]}';" )
+			plus_fct.each do |e| query << " #{e}='#{plus_res.first[e]}'," end
 
-				query.chop!
-				query << ";"
+			query.chop!
+			query << ";"
 
+			begin
 				$DB.query( query )
+			rescue
 			end
 		end
-		f.close
+	end
+	f.close
 
-		res = $DB.query( 'SELECT * from fct;' )
-		res.each do |r|
-			protv = r['PROTCAA']
-			protv = r['PROT'] if r['PROTCAA'] == '-'
+	res = $DB.query( 'SELECT * from fct;' )
+	res.each do |r|
+		protv = r['PROTCAA']
+		protv = r['PROT'] if r['PROTCAA'] == '-'
 
-			fatv = r['FATNLEA']
-			fatv = r['FAT'] if r['FATNLEA'] == '-'
+		fatv = r['FATNLEA']
+		fatv = r['FAT'] if r['FATNLEA'] == '-'
 
-			chov = r['CHOAVL']
-			chov = r['CHOAVLDF'] if r['CHOAVL'] == '-' || r['CHOAVLM_'] == ''
+		chov = r['CHOAVL']
+		chov = r['CHOAVLDF'] if r['CHOAVL'] == '-' || r['CHOAVLM_'] == ''
 
-			query = "UPDATE #{$MYSQL_TB_FCT} SET PROTV='#{protv}', FATV='#{fatv}', CHOV='#{chov}' WHERE FN='#{r['FN']}';"
-			$DB.query( query )
-		end
+		query = "UPDATE #{$MYSQL_TB_FCT} SET PROTV='#{protv}', FATV='#{fatv}', CHOV='#{chov}' WHERE FN='#{r['FN']}';"
+		$DB.query( query )
+	end
 
+	if update_flag 
+		puts 'fct table has been updated.'
+	else
 		puts 'fct table has been created.'
 	end
 end
 
 
-#### Updating food tag table.
-def tag_update( source_file )
-	query = 'DELETE FROM tag WHERE user IS NULL;'
-	$DB.query( query )
+#### Making food tag table.
+def tag_init( source_file )
+	query = "SHOW TABLES LIKE 'tag';"
+	res = $DB.query( query )
+	update_flag = false
+	if res.first
+		puts 'tag table already exists.'
+		update_flag = true
+	else
+		query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID VARCHAR(6), SN VARCHAR(4), user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
+		$DB.query( query )
+	end
 
 	# タグテーブルから読み込んでタグテーブル更新
 	f = open( source_file, 'r' )
 	label = true
+	sn = 0
 	f.each_line do |e|
 		items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
-		sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
 		t = items[3]
 
 		t.gsub!( '（', "｛" )
@@ -298,106 +325,45 @@ def tag_update( source_file )
 				end
 			end
 		end
-		sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
-		$DB.query( sql_query_tag ) unless label
-		label = false
-	end
-	f.close
-	puts 'tag table has been updated.'
-end
 
-
-#### Making food tag table.
-def tag_init( source_file )
-	query = "SHOW TABLES LIKE 'tag';"
-	res = $DB.query( query )
-	if res.first
-		puts 'tag table already exists.'
-		tag_update( source_file )
-	else
-		query = 'CREATE TABLE tag (FG VARCHAR(2), FN VARCHAR(6), SID VARCHAR(6), SN VARCHAR(4), user VARCHAR(32), name VARCHAR(64),class1 VARCHAR(64),class2 VARCHAR(64),class3 VARCHAR(64),tag1 VARCHAR(64),tag2 VARCHAR(64),tag3 VARCHAR(64),tag4 VARCHAR(64),tag5 VARCHAR(64), public TINYINT(1));'
-		$DB.query( query )
-
-		# タグテーブルから読み込んでタグテーブル更新
-		f = open( source_file, 'r' )
-		label = true
-		sn = 0
-		f.each_line do |e|
-			items = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
+		begin
 			sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
-			t = items[3]
-
-			t.gsub!( '（', "｛" )
-			t.gsub!( '＞　｛', "＞　（" )
-			t.gsub!( '］　｛', "］　（" )
-			t.gsub!( /^｛/, "（" )
-			t.gsub!( '｛', '' )
-			t.gsub!( 'もの｝', '' )
-
-			t.gsub!( '　', "\t" )
-			t.gsub!( '＞', "\t" )
-			t.gsub!( '）', "\t" )
-			t.gsub!( '］', "\t" )
-			t.gsub!( "\s", "\t" )
-			t.gsub!( /\t{2,}/, "\t" )
-			t.gsub!( /\t+$/, '' )
-
-			tags = t.split( "\t" )
-			class1 = ''
-			class2 = ''
-			class3 = ''
-			name_ = ''
-			tag1 = ''
-			tag2 = ''
-			tag3 = ''
-			tag4 = ''
-			tag5 = ''
-			count = 0
-
-			tags.each do |ee|
-				if /＜/ =~ ee
-					class1 = ee.sub( '＜', '' )
-				elsif /［/ =~ ee
-					class2 = ee.sub( '［', '' )
-				elsif /（/ =~ ee
-					class3 = ee.sub( '（', '' )
-				else
-					case count
-					when 0
-						name_ = ee
-						count += 1
-					when 1
-						tag1 = ee
-						count += 1
-					when 2
-						tag2 = ee
-						count += 1
-					when 3
-						tag3 = ee
-						count += 1
-					when 4
-						tag4 = ee
-						count += 1
-					when 5
-						tag5 = ee
-						count += 1
-					end
-				end
-			end
-
 			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',SN='#{sn}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
+
 			$DB.query( sql_query_tag ) unless label
 			label = false
-			sn += 1
+		rescue
+			sql_query_tag = "UPDATE #{$MYSQL_TB_TAG} SET"
+			sql_query_tag << " SID='#{items[2]}',SN='#{sn}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9' WHERE FN='#{items[1]}';"
+
+			$DB.query( sql_query_tag ) unless label
+			label = false
 		end
-		f.close
+		sn += 1
+	end
+	f.close
+
+	if update_flag 
+		puts 'tag table has been updated.'
+	else
 		puts 'tag table has been created.'
 	end
 end
 
 
-#### Updating food extra tag table.
-def ext_update( gycv_file, shun_file, unit_file )
+#### Making food extra tag table.
+def ext_init( gycv_file, shun_file, unit_file )
+	query = "SHOW TABLES LIKE 'ext';"
+	res = $DB.query( query )
+	update_flag = false
+	if res.first
+		puts 'ext table already exists.'
+		update_flag = true
+	else
+		query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen1 TINYINT(1), allergen2 TINYINT(1), unit VARCHAR(1000), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
+		$DB.query( query )
+	end
+
 #	query = "SELECT FN FROM #{$MYSQL_TB_TAG};"
 #	res = $DB.query( query )
 #	res.each do |e|
@@ -415,14 +381,13 @@ def ext_update( gycv_file, shun_file, unit_file )
 		elsif gycv_flag == true
 			food_no = e.chomp
 
-			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
-			res = $DB.query( query )
-			if res.first
-				query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
-			else
+			begin
 				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', gycv='1';"
+				$DB.query( query )
+			rescue
+				query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
+				$DB.query( query )
 			end
-			$DB.query( query )
 		end
 	end
 	puts 'Green/Yellow color vegitable in ext has been updated.' if gycv_flag == true
@@ -447,14 +412,13 @@ def ext_update( gycv_file, shun_file, unit_file )
 			shun2s = 0 if shun2s == nil || shun2s == ''
 			shun2e = 0 if shun2e == nil || shun2e == ''
 
-			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';"
-			res = $DB.query( query )
-			if res.first
-				query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
-			else
+			begin
 				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e};"
+				$DB.query( query )
+			rescue
+				query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
+				$DB.query( query )
 			end
-			$DB.query( query )
 		end
 	end
 	f.close
@@ -470,51 +434,36 @@ def ext_update( gycv_file, shun_file, unit_file )
 		elsif unit_flag
 			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 
-			query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{a[0]}';"
-			res = $DB.query( query )
-			if res.first
-				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
-			else
+			begin
 				query = "INSERT INTO #{$MYSQL_TB_EXT} SET  FN='#{a[0]}, unit='#{a[1]}';"
+				$DB.query( query )
+			rescue
+				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+				$DB.query( query )
 			end
-			$DB.query( query )
 		end
 	end
 	f.close
 
-	query = "SELECT FN, ENERC_KCAL FROM #{$MYSQL_TB_FCT};"
 	unith = Hash.new
+	query = "SELECT FN, ENERC_KCAL FROM #{$MYSQL_TB_FCT};"
 	res = $DB.query( query )
 	res.each do |e|
-		query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{e['FN']}';"
-		res2 = $DB.query( query )
-		unless res2.first
-			unith.clear
-			unith['g'] = 1	
-			unith['kcal'] = ( 100 / e['ENERC_KCAL'].to_f ).round( 2 ) if e['ENERC_KCAL'] != 0
+		unith.clear
+		unith['g'] = 1	
+		unith['kcal'] = ( 100 / e['ENERC_KCAL'].to_f ).round( 2 ) if e['ENERC_KCAL'] != 0
 
-			unit_ = JSON.generate( unith )
+		unit_ = JSON.generate( unith )
+		begin
 			query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{e['FN']}', unit='#{unit_}';"
+			$DB.query( query )
+		rescue
+			query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit_}' WHERE FN='#{e['FN']}';"
 			$DB.query( query )
 		end
 	end
 
 	puts 'Unit in ext has been updated.' if unit_flag == true
-end
-
-
-#### Making food extra tag table.
-def ext_init( gycv_file, shun_file, unit_file )
-	query = "SHOW TABLES LIKE 'ext';"
-	res = $DB.query( query )
-	if res.first
-		puts 'ext table already exists.'
-		ext_update( gycv_file, shun_file, unit_file )
-	else
-		query = 'CREATE TABLE ext (FN VARCHAR(6), user VARCHAR(32), gycv TINYINT(1), allergen1 TINYINT(1), allergen2 TINYINT(1), unit VARCHAR(1000), color1 TINYINT, color2 TINYINT, color1h TINYINT, color2h TINYINT, shun1s TINYINT(2), shun1e TINYINT(2), shun2s TINYINT(2), shun2e TINYINT(2));'
-		$DB.query( query )
-		ext_update( gycv_file, shun_file, unit_file )
-	end
 end
 
 
