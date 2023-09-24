@@ -326,15 +326,17 @@ def tag_init( source_file )
 			end
 		end
 
-		begin
-			sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
-			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',SN='#{sn}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
+		query = "SELECT FN FROM #{$MYSQL_TB_TAG} WHERE FN='#{items[1]}';"
+		res = $DB.query( query ) 
+		if res.first
+			sql_query_tag = "UPDATE #{$MYSQL_TB_TAG} SET"
+			sql_query_tag << " SID='#{items[2]}',SN='#{sn}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9' WHERE FN='#{items[1]}';"
 
 			$DB.query( sql_query_tag ) unless label
 			label = false
-		rescue
-			sql_query_tag = "UPDATE #{$MYSQL_TB_TAG} SET"
-			sql_query_tag << " SID='#{items[2]}',SN='#{sn}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9' WHERE FN='#{items[1]}';"
+		else
+			sql_query_tag = "INSERT INTO #{$MYSQL_TB_TAG} SET"
+			sql_query_tag << " FG='#{items[0]}',FN='#{items[1]}',SID='#{items[2]}',SN='#{sn}',name='#{name_}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='9';"
 
 			$DB.query( sql_query_tag ) unless label
 			label = false
@@ -371,6 +373,18 @@ def ext_init( gycv_file, shun_file, unit_file )
 #		$DB.query( query )
 #	end
 
+	query = "SELECT FN FROM #{$MYSQL_TB_FCT};"
+	res = $DB.query( query )
+	res.each do |r|
+		query = "SELECT FN FROM #{$MYSQL_TB_EXT} WHERE FN='#{r['FN']}';"
+		res2 = $DB.query( query ) 
+		unless res2.first
+			query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{r['FN']}';"
+			$DB.query( query )
+		end
+	end
+
+
 	# Green/Yellow color vegitable
 	f = open( gycv_file, 'r' )
 	gycv_flag = false
@@ -381,13 +395,8 @@ def ext_init( gycv_file, shun_file, unit_file )
 		elsif gycv_flag == true
 			food_no = e.chomp
 
-			begin
-				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', gycv='1';"
-				$DB.query( query )
-			rescue
-				query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
-				$DB.query( query )
-			end
+			query = "UPDATE #{$MYSQL_TB_EXT} SET gycv='1' WHERE FN='#{food_no}';"
+			$DB.query( query )
 		end
 	end
 	puts 'Green/Yellow color vegitable in ext has been updated.' if gycv_flag == true
@@ -412,13 +421,8 @@ def ext_init( gycv_file, shun_file, unit_file )
 			shun2s = 0 if shun2s == nil || shun2s == ''
 			shun2e = 0 if shun2e == nil || shun2e == ''
 
-			begin
-				query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{food_no}', shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e};"
-				$DB.query( query )
-			rescue
-				query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
-				$DB.query( query )
-			end
+			query = "UPDATE #{$MYSQL_TB_EXT} SET shun1s=#{shun1s}, shun1e=#{shun1e}, shun2s=#{shun2s}, shun2e=#{shun2e} WHERE FN='#{food_no}';"
+			$DB.query( query )
 		end
 	end
 	f.close
@@ -434,13 +438,8 @@ def ext_init( gycv_file, shun_file, unit_file )
 		elsif unit_flag
 			a = e.force_encoding( 'UTF-8' ).chomp.split( "\t" )
 
-			begin
-				query = "INSERT INTO #{$MYSQL_TB_EXT} SET  FN='#{a[0]}, unit='#{a[1]}';"
-				$DB.query( query )
-			rescue
-				query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
-				$DB.query( query )
-			end
+			query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{a[1]}' WHERE FN='#{a[0]}';"
+			$DB.query( query )
 		end
 	end
 	f.close
@@ -450,17 +449,16 @@ def ext_init( gycv_file, shun_file, unit_file )
 	res = $DB.query( query )
 	res.each do |e|
 		unith.clear
+
+		query = "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{e['FN']}';"
+		res2 = $DB.query( query )
+		unith = JSON.parse( res2.first['unit'] ) if res2.first
 		unith['g'] = 1	
 		unith['kcal'] = ( 100 / e['ENERC_KCAL'].to_f ).round( 2 ) if e['ENERC_KCAL'] != 0
 
 		unit_ = JSON.generate( unith )
-		begin
-			query = "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{e['FN']}', unit='#{unit_}';"
-			$DB.query( query )
-		rescue
-			query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit_}' WHERE FN='#{e['FN']}';"
-			$DB.query( query )
-		end
+		query = "UPDATE #{$MYSQL_TB_EXT} SET unit='#{unit_}' WHERE FN='#{e['FN']}';"
+		$DB.query( query )
 	end
 
 	puts 'Unit in ext has been updated.' if unit_flag == true
