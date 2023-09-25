@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.22b (2023/9/23)
+#Nutrition browser 2020 food square 0.23b (2023/9/25)
 
 
 #==============================================================================
@@ -176,7 +176,7 @@ case channel
 when 'fctb'
 
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND public='9';", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND public='9' GROUP BY SN;", false )
 	r.each do |e|
 		if e['class1'] != ''
 			class1_group << e['class1']
@@ -250,7 +250,7 @@ HTML
 #### 第２層閲覧選択ページ
 when 'fctb_l2'
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9' GROUP BY SN;", false )
 	r.each do |e|
 		if e['class1'] != '' && e['class2'] != ''
 			class2_group << e['class2']
@@ -320,7 +320,7 @@ HTML
 #### 第３層閲覧選択ページ
 when 'fctb_l3'
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9' GROUP BY SN;", false )
 	r.each do |e|
 		if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 			class3_group << e['class3']
@@ -373,7 +373,7 @@ HTML
 #### 第４層閲覧選択ページ
 when 'fctb_l4'
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9';", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9' GROUP BY SN;", false )
 	r.each do |e| direct_group << e['name'] end
 
 	# ダイレクトグループの作成
