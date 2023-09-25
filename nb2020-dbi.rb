@@ -464,7 +464,9 @@ def ext_init( gycv_file, shun_file, unit_file )
 
 		query = "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{e['FN']}';"
 		res2 = $DB.query( query )
-		unith = JSON.parse( res2.first['unit'] ) if res2.first
+		if res2.first
+			unith = JSON.parse( res2.first['unit'] ) unless res2.first['unit']
+		end
 		unith['g'] = 1	
 		unith['kcal'] = ( 100 / e['ENERC_KCAL'].to_f ).round( 2 ) if e['ENERC_KCAL'] != 0
 
