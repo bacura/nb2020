@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.24b (2023/8/01)
+#Nutrition browser 2020 cutting board 0.25b (2023/9/27)
 
 #==============================================================================
 #STATIC
@@ -318,6 +318,7 @@ recipe_user = r.first['user']
 dish_num = r.first['dish'].to_i if dish_num == '' || dish_num == nil
 dish_num = 1 if dish_num == 0
 protect = r.first['protect'].to_i
+adjew = 0
 adjew = r.first['adjew'].to_i if command != 'load' && command != 'adjew'
 
 sum = r.first['sum']
@@ -773,12 +774,14 @@ html = <<-"UPPER_MENU"
   				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl.round}">
 			</div>
 		</div>
+
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 	        	<button class='btn btn-outline-primary' type='button' onclick=\"energyAdj( '#{code}' )\">#{l['guide_e']}</button>
-  				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl.round}">
+ 				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl.round}">
 			</div>
 		</div>
+
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 	        	<button class='btn btn-outline-primary' type='button' onclick=\"saltAdj( '#{code}' )\">#{l['guide_s']}</button>
@@ -797,7 +800,6 @@ html = <<-"UPPER_MENU"
   				<input type="number" min='0' class="form-control" id="loss_adj" value="0">
 			</div>
 		</div>
-
 		<div class='col' align='right'>
 			<input type='checkbox' id='gn_check'>&nbsp;
 			<span class='badge rounded-pill npill' onclick=\"gnExchange( '#{code}' )\">#{l['gram']}</span>

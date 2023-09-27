@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.15b (2023/04/15)
+#Nutrition browser 2020 recipe editor 0.16b (2023/09/27)
 
 #==============================================================================
 #COMMON LIBRARY
@@ -210,7 +210,7 @@ check_public = checked( recipe.public )
 check_protect = checked( recipe.protect )
 check_draft =  checked( recipe.draft )
 file_disabled = false
-if user.name != recipe.user
+if user.name != recipe.user.name
 	check_favorite = 'DISABLED'
 	check_public = 'DISABLED'
 	check_protect = 'DISABLED'

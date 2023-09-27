@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.15b (2023/09/23)
+#Nutrition browser 2020 detail viewer 0.16b (2023/09/27)
 
 #==============================================================================
 # STATIC
@@ -129,12 +129,12 @@ r = db.query( "SELECT SN FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no}';", false )
 sn = r.first['SN'].to_i
 
 sn_rev = sn - 1
-sn_rev = sn_max if sn < 1
+sn_rev = sn_max if sn_rev < 1
 r = db.query( "SELECT FN FROM #{$MYSQL_TB_TAG} WHERE SN='#{sn_rev}';", false )
 fn_rev = r.first['FN']
 
 sn_fwd = sn + 1
-sn_fwd = 1 if sn > sn_max
+sn_fwd = 1 if sn_fwd > sn_max
 r = db.query( "SELECT FN FROM #{$MYSQL_TB_TAG} WHERE SN='#{sn_fwd}';", false )
 fn_fwd = r.first['FN']
 
