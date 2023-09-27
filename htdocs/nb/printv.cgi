@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.23b (2023/04/15)
+#Nutrition browser 2020 print web page 0.24b (2023/09/27)
 
 #==============================================================================
 # STATIC
@@ -264,7 +264,7 @@ def modify_protocol( recipe, user, depth )
 			t = e.delete( '!' )
 			return_protocol << "<span class='print_subtitle'>#{t}</span><br>\n"
 		elsif /^\&/ =~ e
-			link_code = e.sub( '&', '' ).chomp
+			link_code = e.sub( '&amp', '' ).chomp
 			if recipe.code == link_code || depth > 1
 				return_protocol << "<span class='error'>循環参照</span><br>\n"
 			else
