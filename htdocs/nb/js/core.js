@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.48b (2023/09/23)
+// Nutorition Browser 2020 core.js 0.49b (2023/10/03)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -719,13 +719,16 @@ var photoDel = function( code, mcode, base ){
 
 // Add food into sum, and reload CB counter
 var addingCB = function( fn, weight_id, food_name ){
+
+	displayVIDEO( weight_id );
 	if( weight_id != '' ){
 		var weight = document.getElementById( weight_id ).value;
 	}
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){
 		$( "#CBN" ).html( data );
 		if( fn != '' ){ displayVIDEO( '+' + food_name ); }
-		if( weight_id = 'weight_sub' ){
+
+		if( weight_id == 'weight_sub' ){
 			initCB( 'init' );
 
 			flashBW();
@@ -776,7 +779,7 @@ var initCB = function( com, code, recipe_user ){
 		displayBW();
 	});
 
-	setTimeOut( refreshCBN(), 1000 );
+	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -797,7 +800,7 @@ var clearCB = function( order, code ){
 			$( "#L1" ).html( data );
 		});
 	}
-	setTimeOut( refreshCBN(), 1000 );
+	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -876,7 +879,7 @@ var sortCB = function( code ){
 var recipeAdd = function( code ){
 	var fn = document.getElementById( "food_add" ).value;
 	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){ $( "#L1" ).html( data );});
-	setTimeOut( refreshCBN(), 1000 );
+	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -884,7 +887,7 @@ var recipeAdd = function( code ){
 var seasoningAdd = function( code ){
 	var seasoning = document.getElementById( "seasoning" ).value;
 	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#L1" ).html( data );});
-	setTimeOut( refreshCBN(), 1000 );
+	setTimeout( refreshCBN(), 1000 );
 };
 
 

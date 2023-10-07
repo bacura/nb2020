@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.21b (2023/08/11)
+#Nutrition browser 2020 koyomi editor 0.22b (2023/10/04)
 
 
 #==============================================================================
@@ -98,8 +98,8 @@ def meals( e, l, db, freeze_flag )
 			if rr.first
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
-				onclick = " onclick=\"modifysaveKoyomiFC( '#{code}', '#{origin}' )\"" if freeze_flag == 0
-				fix_copy_button = "<span onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\">#{l['move']}</span>"
+				onclick = " onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\"" if freeze_flag == 0
+				fix_copy_button = "<span onclick=\"modifysaveKoyomiFC( '#{code}', '#{origin}' )\">#{l['move']}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
 				onclick = ''

@@ -245,8 +245,8 @@ food_name = code
 if /\-m\-/ =~ code
 	r = db.query( "SELECT name FROM #{$MYSQL_TB_MENU} WHERE code='#{code}' and user='#{user.name}';", false )
 	food_name = r.first['name']
-elsif /\-f\-/ =~ code
-	r = db.query( "SELECT name FROM #{$MYSQL_TB_FCS} WHERE code='#{code}' and user='#{user.name}';", false )
+elsif /\-z\-/ =~ code
+	r = db.query( "SELECT name FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}' and user='#{user.name}';", false )
 	food_name = r.first['name']
 elsif /\-/ =~ code
 	r = db.query( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE code='#{code}' and user='#{user.name}';", false )
