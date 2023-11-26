@@ -1,4 +1,4 @@
-// master.js 0.06b (2023/07/17)
+// master.js 0.07b (2023/11/26)
 
 const mp = 'master/';
 
@@ -433,25 +433,6 @@ const newPMemoryGM = function( code, category, pointer, post_process ){
 	});
 };
 
-// New pointer form from nomatch
-//const newPMemoryNM = function( pointer, post_process ){
-//	const category = document.getElementById( 'nonmatch_categoly' ).value;
-//	$.post( mp + "gm-memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
-//		$( "#LF" ).html( data );
-
-//		if( post_process == 'front'){ dl1 = false; }
-//		dlf = true;
-//		displayBW();
-//	});
-
-//	$.post( "photo.cgi", { command:'view_series', code:code, base:'memory' }, function( data ){
-//		$( "#LM" ).html( data );
-
-//		dlm = true;
-//		displayBW();
-//	});
-//};
-
 // Save pointer
 const savePMemory = function( category, post_process ){
 	const pointer = document.getElementById( 'pointer' ).value;
@@ -460,19 +441,23 @@ const savePMemory = function( category, post_process ){
 
 	if( pointer != '' ){
 		if( post_process == 'front'){
-			$.post( mp + "gm-memory.cgi", { command:'save_pointer', memory:memory, category:category, pointer:pointer, rank:rank, post_process:post_process }, function( data ){ $( "#L2" ).html( data );});
+			$.post( mp + "gm-memory.cgi", { command:'save_pointer', memory:memory, category:category, pointer:pointer, rank:rank, post_process:post_process }, function( data ){});
 			$.post( mp + "gm-memory.cgi", { command:'list_pointer', category:category, post_process:post_process }, function( data ){ $( "#L1" ).html( data );});
 			dl1 = true;
 			dl2 = false;
+			dlm = false;
 		}else{
 			$.post( mp + "gm-memory.cgi", { command:'save_pointer', memory:memory, category:category, pointer:pointer, rank:rank, post_process:post_process }, function( data ){});
 		}
-		dlf = false
+		pullHW();
+		dlf = false;
+		dlm = false;
 		displayBW();
+
+		displayVIDEO( 'Saved' );
 	}else{
-		displayVIDEO( '(>_<)key!!' );
+		displayVIDEO( '(>_<)Pointer!!' );
 	}
-	displayVIDEO( 'Saved' );
 }
 
 // Move pointer

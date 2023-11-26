@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.2b (2023/09/23)
+#Nutrition browser 2020 soul 1.3b (2023/11/05)
 
 #==============================================================================
 # LIBRARY
@@ -159,7 +159,7 @@ def mdb( query, html_opt, debug )
   begin
     db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
     t = query.chop
-    if /[\;\#\$]/ =~ t
+    if /[\;\$]/ =~ t
         puts "<span class='error'>[mdb]ERROR!!</span><br>"
         exit( 9 )
     end
@@ -402,7 +402,7 @@ class Db
       end
 
       t = query.chop
-      if /[\;\#\$]/ =~ t
+      if /[\;\$]/ =~ t
           puts "<span class='error'>[db]ERROR!!</span><br>"
           exit( 9 )
       end

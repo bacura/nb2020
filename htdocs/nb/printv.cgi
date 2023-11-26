@@ -263,8 +263,8 @@ def modify_protocol( recipe, user, depth )
 		elsif /^\!/ =~ e
 			t = e.delete( '!' )
 			return_protocol << "<span class='print_subtitle'>#{t}</span><br>\n"
-		elsif /^\&/ =~ e
-			link_code = e.sub( '&amp', '' ).chomp
+		elsif /^\+/ =~ e
+			link_code = e.sub( '+', '' ).chomp
 			if recipe.code == link_code || depth > 1
 				return_protocol << "<span class='error'>循環参照</span><br>\n"
 			else

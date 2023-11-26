@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.14b (2022/10/29)
+#Nutrition browser 2020 memory editor 0.20b (2022/11/26)
 
 #==============================================================================
 #STATIC
@@ -29,7 +29,6 @@ def language_pack( language )
 		'category'	=> "カテゴリー",\
 		'item_num'	=> "項目数",\
 		'new'	=> "新規カテゴリー",\
-		'regist'	=> "登録",\
 		'key'	=> "キー",\
 		'memory'	=> "記憶",\
 		'rank'	=> "ランク",\
@@ -123,7 +122,7 @@ def list( db, category, l )
 		end
 		####
 
-		memory_html << "<tr onclick=\"memoryOpen( '#{category}', '#{e['pointer']}' )\">"
+		memory_html << "<tr onclick=\"memoryOpenCode( '#{e['code']}' )\">"
 		memory_html << "<td>#{e['pointer']}</td>"
 		if e['memory'].size > 80
 			memory_html << "<td>#{e['memory'][0, 80]}...</td>"
@@ -211,12 +210,43 @@ end
 
 
 #### EXPAND memory
-def extend_linker( memory, depth )
+def extend_linker( db, res, depth )
+	code = res['code']
+	memory = res['memory']
 	depth += 1 if depth < 5
+
+	memory_ = ''
+	memory_line = memory.split( "\n" )
+	memory_line.each do |e|
+		if /^\@/ =~ e
+			t = e.delete( '@' )
+			memory_ << "<span class='print_comment'>(#{t})</span>\n"
+		elsif /^\!/ =~ e
+			t = e.delete( '!' )
+			memory_ << "<span class='print_subtitle'>#{t}</span>\n"
+		elsif /^\#/ =~ e
+			#
+		elsif /^\~/ =~ e
+			t = e.delete( '~' )
+			memory_ << "<a href='#{t}' target='blank_'>#{t}</a>" + "\n"
+		elsif /^\[\]/ =~ e
+			t = e.chomp.sub( /^\[\]/, '' )
+			memory_ << "<table>"
+			rows = t.split( '[]' )
+			rows.each do |row|
+				memory_ << "<tr>"
+				cols = row.split('|')
+					cols.each do |ee| memory_ << "<td style='padding-top:0.2em; padding-bottom:0.2em; padding-left:0.5em; padding-right:0.5em; border-bottom:solid 1px; border-top:solid 1px;'>#{ee}</td>" end
+				memory_ << "</tr>"
+			end
+			memory_ << "</table>\n"
+		else
+			memory_ << e + "\n"
+		end
+	end
+
 	link_pointer = memory.scan( /\{\{[^\}\}]+\}\}/ )
 	link_pointer.uniq!
-
-	memory_ = memory
 	link_pointer.each do |e|
 		pointer = e.sub( '{{', "" ).sub( '}}', "" )
 		pointer.gsub!( '<', "&lt;" )
@@ -227,6 +257,11 @@ def extend_linker( memory, depth )
 		memory_.gsub!( e, pointer_ )
 	end
 	memory_.gsub!( "\n", "<br>\n" )
+
+	r = db.query( "SELECT mcode, type FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{code}';", false )
+	r.each do |e|
+		memory_ << "<a href='#{$PHOTO}/#{e['mcode']}.#{e['type']}' target='blank_'><img src='#{$PHOTO}/#{e['mcode']}-tn.#{e['type']}'></a>"	
+	end
 
 	return memory_
 end
@@ -355,6 +390,7 @@ db = Db.new( user, @debug, false )
 
 #### Getting POST data
 command = @cgi['command']
+code = @cgi['code']
 mode = @cgi['mode']
 category = @cgi['category']
 depth = @cgi['depth'].to_i
@@ -368,6 +404,7 @@ memory_solid = @cgi['memory']
 memory_solid.gsub!( ',', "\t" ) if memory_solid != nil && memory_solid != ''
 if @debug
 	puts "command:#{command}<br>\n"
+	puts "code:#{code}<br>\n"
 	puts "mode:#{mode}<br>\n"
 	puts "category:#{category}<br>\n"
 	puts "new_category:#{new_category}<br>\n"
@@ -456,7 +493,6 @@ when 'refer'
 	pointer.gsub!( /\s+/, ' ' )
 	a = pointer.split( ' ' )
 	score = 0
-
 	a.each do |e|
 		r = db.query( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{e}';", false )
 		if r.first
@@ -472,7 +508,7 @@ when 'refer'
 			r.each do |ee|
 				edit_button = ''
 				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemoryGM( '#{ee['code']}', '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{l['edit']}</button>" if user.status >= 8
-				memory_html << extend_linker( ee['memory'], depth )
+				memory_html << extend_linker( db, ee, depth )
 				memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
 			end
 
@@ -495,7 +531,7 @@ when 'refer'
 				rr.each do |ee|
 					edit_button = ''
 					edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemoryGM( '#{ee['code']}', '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{l['edit']}</button>" if user.status >= 8
-					memory_html << extend_linker( ee['memory'], depth )
+					memory_html << extend_linker( db, ee, depth )
 					memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
 				end
 				count = rr.first['count'].to_i + 1
@@ -516,6 +552,26 @@ when 'refer'
 		memory_html << new_pointer_form( db, pointer, l )
 		memory_html << "</div>"
 		memory_html << "</div>"
+	end
+when 'refer_code'
+	puts "Referencing memory code" if @debug
+	r = db.query( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE code='#{code}';", false )
+	if r.first
+		puts "Finding in DB<br>" if @debug
+		pointer = r.first['pointer']
+		memory_html << "<div class='row'>"
+		memory_html << "<div class='col-8'><span class='memory_pointer'>#{pointer}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{pointer}', '1' )\">#{l['re_search']}</span></div>"
+		memory_html << "<div class='col-4' align='right'>"
+		memory_html << new_pointer_form( db, pointer, l )
+		memory_html << "</div>"
+		memory_html << "</div>"
+
+		edit_button = ''
+		edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemoryGM( '#{code}', '#{r.first['category']}', '#{r.first['pointer']}', 'back' )\">#{l['edit']}</button>" if user.status >= 8
+		memory_html << extend_linker( db, r.first, depth )
+		memory_html << "<div align='right'>#{r.first['category']} / #{r.first['date'].year}/#{r.first['date'].month}/#{r.first['date'].day}#{edit_button}</div>"
+	else
+		puts "No finding in DB<br>" if @debug
 	end
 end
 

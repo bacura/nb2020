@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM memory editor 0.02b (2023/07/17)
+#Nutrition browser 2020 GM memory editor 0.03b (2023/11/26)
 
 #==============================================================================
 #STATIC
@@ -23,14 +23,14 @@ def language_pack( language )
 
 	#Japanese
 	l['jp'] = {
-		'list' 	=> "記憶一覧",\
+		'list' 	=> "ポインタ一覧",\
 		'delete' 	=> "削除",\
 		'category' 	=> "カテゴリー",\
 		'item_num' 	=> "項目数",\
 		'new_cate' 	=> "新規カテゴリー",\
 		'regist' 	=> "登録",\
-		'new_reg' 	=> "新規登録",\
-		'key'	=> "キー",\
+		'new_reg' 	=> "新規ポインタ登録",\
+		'key'	=> "ポインタ",\
 		'memory'	=> "記憶",\
 		'rank' 	=> "ランク",\
 		'move' 	=> "移動",\
@@ -101,13 +101,13 @@ def list( category, l, db )
 	memory_html = ''
 
 	new_html << "<div class='row'>"
-	new_html << "<div class='col' align='right'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newPMemoryGM( '#{category}', '', 'front' )\">#{l['new_reg']}</button></div>"
+	new_html << "<div class='col' align='right'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newPMemoryGM( '', '#{category}', '', 'front' )\">#{l['new_reg']}</button></div>"
 	new_html << "</div>"
 	new_html << "</div>"
 
 	memory_html << "<table class='table table-sm table-striped'>"
 	memory_html << "<thead>"
-	memory_html << "<th>#{'key'}</th>"
+	memory_html << "<th>#{l['key']}</th>"
 	memory_html << "<th>#{l['memory']}</th>"
 	memory_html << "<th>#{l['rank']}</th>"
 	memory_html << "</thead>"
@@ -134,6 +134,7 @@ end
 
 #### Pointer editor
 def new_pointer( code, category, pointer, memory, rank, category_set, post_process, l )
+
 	rank_select_html = ''
 	rank_select_html << "<select class='form-select form-select-sm' id='rank'>"
 	1.upto( 5 ) do |c|
@@ -257,9 +258,9 @@ when 'init'
 	new_html, memory_html = init( l, db )
 
 when 'save_category'
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", true )
-	db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='', memory='', category='#{category}', rank='1', date='#{@datetime}';", true ) unless r.first
-
+	r = db.query( "SELECT code FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false )
+	code = generate_code( user.name, 'k' )
+	db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET code='#{code}', user='#{user.name}', pointer='#{l['new_cate']}', memory='', category='#{category}', rank='1', date='#{@datetime}';", true ) unless r.first
 	new_html, memory_html = init( l, db )
 
 when 'change_category'
@@ -276,6 +277,7 @@ when 'list_pointer'
 
 when 'new_pointer'
 	puts 'New pointer<br>' if @debug
+
 	if pointer != ''
 		r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
 		if r.first
@@ -308,7 +310,8 @@ when 'save_pointer'
 	if r.first
 		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{@datetime}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
 	else
-		db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{@datetime}';", true )
+		code = generate_code( user.name, 'k' )
+		db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET code='#{code}', user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{@datetime}';", true )
 	end
 
 	exit() unless post_process == 'front'

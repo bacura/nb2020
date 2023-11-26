@@ -332,9 +332,9 @@ var detailReturn = function(){
 // Referencing /////////////////////////////////////////////////////////////////////////
 
 // Disply results
-var search = function(){
-	var words = document.getElementById( "words" ).value;
-	var qcate = document.getElementById( "qcate" ).value;
+const search = function(){
+	const words = document.getElementById( "words" ).value;
+	const qcate = document.getElementById( "qcate" ).value;
 	if( words != '' ){
 		flashBW();
 		switch( qcate ){
@@ -356,6 +356,7 @@ var search = function(){
 			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){
 				$( "#L1" ).html( data );
 		 		dl1 = true;
+		 		pushBW();
 		 		displayBW();
 			});
 			break;
@@ -616,6 +617,19 @@ const memoryOpen = function( code ){
 		$( "#L2" ).html( data );
 
 		dl2 = true;
+		pushBW();
+		displayBW();
+	});
+};
+
+
+// Open memory code
+const memoryOpenCode = function( code ){
+	$.post( "memory.cgi", { command:'refer_code', code, depth:2 }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		pushBW();
 		displayBW();
 	});
 };
@@ -625,28 +639,32 @@ const memoryOpen = function( code ){
 const memoryOpenLink = function( pointer, depth ){
 	$.post( "memory.cgi", { command:'refer', pointer:pointer, depth:depth }, function( data ){
 		$( "#L" + depth ).html( data );
-		if( depth == '1' ){
-			flashBW();
-			dl1 = true;
-			displayBW();
+		displayVIDEO( depth );
+		switch( depth ){
+			case "2":
+				dl2 = true;
+				break;
+			case "3":
+				dl3 = true;
+				break;
+			case "4":
+				dl4 = true;
+				break;
+			case "5":
+				dl5 = true;
+				break;
+			default:
+				flashBW();
+				dl1 = true;
 		}
-		document.getElementById( "L" + depth ).style.display = 'block';
+		pushBW();
+		displayBW();
 
 		words = document.getElementById( "words" ).value = pointer;
 		qcate = document.getElementById( "qcate" ).value = 2;
 	});
 };
 
-
-// New pointer form
-//var newPMemory = function( category, pointer, post_process ){
-//	$.post( "memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
-//		$( "#LF" ).html( data );
-
-//		if( post_process == 'front'){ document.getElementById( "L2" ).style.display = 'none'; }
-//		document.getElementById( "LF" ).style.display = 'block';
-//	});
-//};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Meta data //////////////////////////////////////////////////////////////////////////
