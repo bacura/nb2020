@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.20b (2022/11/26)
+#Nutrition browser 2020 memory editor 0.21b (2022/11/27)
 
 #==============================================================================
 #STATIC
@@ -212,6 +212,8 @@ end
 #### EXPAND memory
 def extend_linker( db, res, depth )
 	code = res['code']
+	category = res['category']
+	pointer = res['pointer']
 	memory = res['memory']
 	depth += 1 if depth < 5
 
@@ -258,10 +260,18 @@ def extend_linker( db, res, depth )
 	end
 	memory_.gsub!( "\n", "<br>\n" )
 
-	r = db.query( "SELECT mcode, type FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{code}';", false )
-	r.each do |e|
-		memory_ << "<a href='#{$PHOTO}/#{e['mcode']}.#{e['type']}' target='blank_'><img src='#{$PHOTO}/#{e['mcode']}-tn.#{e['type']}'></a>"	
+	####一時的
+	if code == nil
+		code = generate_code( db.user.name, 'k' )
+		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET code='#{code}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
+	else
+		r = db.query( "SELECT mcode, type FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{code}';", false )
+		r.each do |e|
+			p e['mcode']
+			memory_ << "<a href='#{$PHOTO}/#{e['mcode']}.#{e['type']}' target='blank_'><img src='#{$PHOTO}/#{e['mcode']}-tn.#{e['type']}'></a>"	
+		end
 	end
+	####
 
 	return memory_
 end

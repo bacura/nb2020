@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.17b (2023/11/05)
+#Nutrition browser 2020 recipe editor 0.18b (2023/11/26)
 
 #==============================================================================
 #COMMON LIBRARY
@@ -35,7 +35,7 @@ def language_pack( language )
 		'name' 		=> "レシピ名",\
 		'save' 		=> "保存",\
 		'protocol' 	=> "調理手順",\
-		'special' 	=> "【行頭特殊記号】　<b>!</b>[文字]:強調、<b>@</b>[文字]:ただし書き（薄カッコ表示）、<b>#</b>[文字]:コメント（非表示）、<b>&</b>[レシピコード]:参照レシピ",\
+		'special' 	=> "【行頭特殊記号】　<b>!</b>[文字]:強調、<b>@</b>[文字]:ただし書き（薄カッコ表示）、<b>#</b>[文字]:コメント（非表示）、<b>+</b>[レシピコード]:参照レシピ",\
 		'root' 		=> "母",\
 		'branch' 	=> "娘",\
 		'favorite' 	=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.0em; width:1.0em;'>お気に入り",\

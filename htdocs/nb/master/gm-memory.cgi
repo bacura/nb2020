@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM memory editor 0.03b (2023/11/26)
+#Nutrition browser 2020 GM memory editor 0.04b (2023/11/27)
 
 #==============================================================================
 #STATIC
@@ -318,15 +318,15 @@ when 'save_pointer'
 	new_html, memory_html = list( category, l, db )
 
 when 'move_pointer'
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{mvcategory}' AND pointer='#{pointer}';", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
 	if r.first
 		t = r.first['memory']
 		t << memory
-		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{t}', rank='#{rank}', date='#{@datetime}' WHERE category='#{mvcategory}' AND pointer='#{pointer}';", true )
+		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET category='#{mvcategory}', memory='#{t}', rank='#{rank}', date='#{@datetime}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
 	else
 		db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{mvcategory}', rank='#{rank}', date='#{@datetime}';", true )
 	end
-	db.query( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", true )
+	db.query( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", true ) unless category == mvcategory
 
 	exit() unless post_process == 'front'
 	new_html, memory_html = list( category, l, db )

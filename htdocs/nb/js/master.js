@@ -1,4 +1,4 @@
-// master.js 0.07b (2023/11/26)
+// master.js 0.08b (2023/11/27)
 
 const mp = 'master/';
 
@@ -416,6 +416,9 @@ const listPointerGM = function( category ){
 
 // New pointer form
 const newPMemoryGM = function( code, category, pointer, post_process ){
+	if( category==""){
+		category = document.getElementById( 'nonmatch_categoly' ).value;
+	}
 	$.post( mp + "gm-memory.cgi", { command:'new_pointer', code:code, category:category, pointer:pointer, post_process:post_process }, function( data ){
 		$( "#LF" ).html( data );
 
