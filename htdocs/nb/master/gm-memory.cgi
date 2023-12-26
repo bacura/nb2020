@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM memory editor 0.04b (2023/11/27)
+#Nutrition browser 2020 GM memory editor 0.05b (2023/12/03)
 
 #==============================================================================
 #STATIC
@@ -321,7 +321,7 @@ when 'move_pointer'
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
 	if r.first
 		t = r.first['memory']
-		t << memory
+		t << memory unless t == memory
 		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET category='#{mvcategory}', memory='#{t}', rank='#{rank}', date='#{@datetime}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
 	else
 		db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{mvcategory}', rank='#{rank}', date='#{@datetime}';", true )

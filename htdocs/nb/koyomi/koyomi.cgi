@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.21b (2023/08/20)
+#Nutrition browser 2020 koyomi 0.22b (2023/12/24)
 
 
 #==============================================================================
@@ -124,6 +124,16 @@ def meals_html( meal, db )
 	return mb_html
 end
 
+
+def media_html( yyyy, mm, dd, tdiv, db )
+	html = ''
+	r = db.query( "SELECT mcode, zidx FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{yyyy}-#{mm}-#{dd}-#{tdiv}' AND type='jpg' ORDER BY zidx;", false )
+	r.each do |e|
+		html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='media'><img src='#{$PHOTO}/#{e['mcode']}-tns.jpg'></a>"
+	end
+
+	return html
+end
 
 #==============================================================================
 # Main
@@ -332,7 +342,6 @@ puts "koyomi matrix calc<br>" if @debug
 			end
 			fct_day_htmls << t
 		end
-
 		
 		if koyomi_mx[day][4] != nil
 		end
@@ -358,9 +367,11 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 			if kmrd[tdiv] != nil
 				if tdiv < 4
 					tmp = meals_html( kmrd[tdiv], db )
+					tmp << media_html( calendar.yyyy, calendar.mm, day, tdiv, db  )
 				else
 					tmp = kmrd[4]['koyomi']
 				end
+
 				freeze_flag = true if kmrd[tdiv]['freeze'] == 1
 			end
 			tmp_html << "<td #{onclick}>#{tmp}</td>"
@@ -369,8 +380,6 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 		5.times do tmp_html << "<td #{onclick}>-</td>" end
 		active_flag = false
 	end
-
-
 
 	style = ''
 	style = 'color:red;' if week_count == 0

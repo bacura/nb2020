@@ -40,6 +40,7 @@ def language_pack( language )
 		'some+'		=> "大盛",\
 		'some--'	=> "微盛",\
 		'some++'	=> "特盛",\
+		'somep'		=> "写真",\
 		'plus'		=> "＋",\
 		'copy'		=> "複製",\
 		'move'		=> "移動",\
@@ -309,6 +310,21 @@ palette = Palette.new( user.name )
 palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 
+puts 'Updaing media<br>' if @debug
+4.times do |tdiv|
+	r = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{yyyy}-#{mm}-#{dd}-#{tdiv}';", false )
+	if r.first
+		rr = db.query( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+		db.query( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}', koyomi='?P';", true ) unless rr.first
+	else
+		rr = db.query( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
+		if rr.first
+			db.query( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", true ) if rr.first['koyomi'] == '?P'
+		end
+	end
+end
+
+
 puts 'Updaing freeze<br>' if @debug
 r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}';", false )
 freeze_flag = r.first['freeze'].to_i if r.first
@@ -346,6 +362,9 @@ r.each do |e|
 				unit = unit_set[cc]
 
 				if /\?/ =~ code
+
+
+
 				elsif /\-z\-/ =~ code
 					puts 'FIX<br>' if @debug
 					fct.load_fcz( user.name, code, 'fix' )
