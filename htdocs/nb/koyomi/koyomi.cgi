@@ -129,7 +129,7 @@ def media_html( yyyy, mm, dd, tdiv, db )
 	html = ''
 	r = db.query( "SELECT mcode, zidx FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{yyyy}-#{mm}-#{dd}-#{tdiv}' AND type='jpg' ORDER BY zidx;", false )
 	r.each do |e|
-		html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='media'><img src='#{$PHOTO}/#{e['mcode']}-tns.jpg'></a>"
+		html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='media'><img src='#{$PHOTO}/#{e['mcode']}-tns.jpg' class='photo_tns'></a>"
 	end
 
 	return html

@@ -287,9 +287,16 @@ nav {
 }
 
 /*===============*/
+/* Media         */
+/*===============*/
+.photo_tns{
+  border-radius: 0.4em;
+  border:solid 0.2em white;
+}
+
+/*===============*/
 /* ジョイスティック & */
 /*===============*/
-
 .joystic_top{
   border: none;
   border-width: 1px;

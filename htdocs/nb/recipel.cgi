@@ -257,7 +257,7 @@ def recipe_line( recipe, user, page, color, l )
 	html = "<tr style='font-size:medium; background-color:#{color};'>"
 
 	if recipe.media[0] != nil
-		html << "<td><a href='#{$PHOTO}/#{recipe.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{recipe.media[0]}-tns.jpg'></a></td>"
+		html << "<td><a href='#{$PHOTO}/#{recipe.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{recipe.media[0]}-tns.jpg' class='photo_tns'></a></td>"
 	else
 		html << "<td>-</td>"
 	end
