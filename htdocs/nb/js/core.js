@@ -28,6 +28,7 @@ bwlf = null;
 bwlm = null;
 line = null;
 video = null;
+modal = null;
 
 help = null;
 help_tp = '1154';
@@ -50,6 +51,7 @@ window.onload = function(){
 		bwlm = document.getElementById( "LM" );
 		line = document.getElementById( "LINE" );
 		video = document.getElementById( "VIDEO" );
+		modal = document.getElementById( "MODAL" );
 		help = document.getElementById( "HELP" );
 
 		toHelp();
@@ -708,7 +710,7 @@ var configForm = function( mod ){
 // Photo //////////////////////////////////////////////////////////////////////////
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-var photoSave = function( code, form, base ){
+const photoSave = function( code, form, base ){
 	form_data = new FormData( $( form )[0] );
 	form_data.append( 'command', 'upload' );
 	form_data.append( 'code', code );
@@ -726,9 +728,13 @@ var photoSave = function( code, form, base ){
 	);
 };
 
+// Moving photo position( zidx )
+const photoMove = function( code, mcode, zidx){
+	$.post( "photo.cgi", { command:'move', code:code, mcode:mcode, zidx:zidx }, function( data ){ $( '#LM' ).html( data );});
+}
 
 // delete photo from media db
-var photoDel = function( code, mcode, base ){
+const photoDel = function( code, mcode, base ){
 	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:base }, function( data ){ $( '#LM' ).html( data );});
 };
 

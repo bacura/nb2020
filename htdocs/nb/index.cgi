@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.26b (2023/09/02)
+#Nutrition browser 2020 index page 0.27b (2024/01/02)
 
 
 #==============================================================================

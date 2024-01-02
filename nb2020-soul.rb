@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.3b (2023/11/05)
+#Nutrition browser 2020 soul 1.4b (2024/01/02)
 
 #==============================================================================
 # LIBRARY
@@ -699,7 +699,7 @@ class Recipe
   end
 
   def load_media()
-    res = $DB.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" )
+    res = $DB.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}' ORDER BY zidx;" )
     @media = []
     res.each do |e| @media << e['mcode'] end
   end
@@ -882,7 +882,7 @@ class Menu
 end
 
 class Media
-  attr_accessor :user, :code, :mcode, :muser, :series, :origin, :type, :date
+  attr_accessor :user, :code, :mcode, :muser, :series, :origin, :type, :date, :zidx
 
   def initialize( user )
     @code = nil
@@ -892,6 +892,7 @@ class Media
     @origin = nil
     @type = nil
     @date = nil
+    @zidx = 0
     @series = []
   end
 
@@ -905,6 +906,7 @@ class Media
       @origin = res.first['origin'].to_s
       @type = res.first['type'].to_s
       @date = res.first['date']
+      @zidx = res.first['zidx'].to_i
     else
       puts "<span class='error'>[Media load]ERROR!!<br>"
       puts "mcode:#{@mcode}</span><br>"
@@ -913,7 +915,8 @@ class Media
   end
 
   def save_db()
-    $DB.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user.name}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', type='#{@type}', date='#{@date}'" ) unless @user.status == 7
+    @zidx = @series.size
+    $DB.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user.name}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', type='#{@type}', date='#{@date}', zidx='#{@zidx}';" ) unless @user.status == 7
   end
 
   def delete_db()
@@ -922,12 +925,18 @@ class Media
 
   def load_series()
     unless @code == '' || @code == nil
-      res = $DB.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE code='#{@code}';" )
+      res = $DB.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE code='#{@code}' ORDER BY zidx;" )
       @muser = res.first['user'] if res.first
       res.each do |e| @series << e['mcode'] end
     end
+  end
 
-    return @series
+  def move_series()
+    @series.delete( @mcode )
+    @series.insert( @zidx.to_i, @mcode )
+    @series.each.with_index do |e, i|
+      $DB.query( "UPDATE #{$MYSQL_TB_MEDIA} SET zidx='#{i}' WHERE mcode='#{e}' AND code='#{@code}';" ) unless @user.status == 7
+    end
   end
 
   def delete_series()

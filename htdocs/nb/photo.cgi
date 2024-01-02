@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.2b
+#Nutrition browser 2020 recipe photo 0.4b (2024/01/02)
 
 #==============================================================================
 # STATIC
@@ -9,13 +9,11 @@
 tmp_delete = false
 #script = File.basename( $0, '.cgi' )
 
-
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
 require 'fileutils'
-
 
 #==============================================================================
 #DEFINITION
@@ -27,22 +25,35 @@ def language_pack( language )
 
 	#Japanese
 	l['jp'] = {
-		'trash'	=> "<img src='bootstrap-dist/icons/trash-fill.svg' style='height:1.2em; width:1.2em;'>"
+		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>",\
+		'trash'		=> "<img src='bootstrap-dist/icons/trash-fill.svg' style='height:1.2em; width:1.2em;'>",\
+		'left-ca'	=> "<img src='bootstrap-dist/icons/arrow-left-circle.svg' style='height:1.2em; width:1.2em;'>",\
+		'right-ca'	=> "<img src='bootstrap-dist/icons/arrow-right-circle.svg' style='height:1.2em; width:1.2em;'>"
 	}
 
 	return l[language]
 end
 
-def view_series( user, code, del_icon, size )
-	media = Media.new( user )
+
+def view_series( user, code, l, size )
+	recipe = Recipe.new( user )
+	recipe.load_db( code, true )
+
+	media = Media.new( user.name )
 	media.code = code
 	media.load_series()
+
 	if media.series.size > 0
 		puts "<div class='row'>"
-		media.series.each do |e|
+		media.series.each.with_index( 0 ) do |e, i|
 			puts "<div class='col'>"
-			puts "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{del_icon}</span><br>" if media.muser == user.name
-			puts "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a>"
+			if recipe.protect != 1 && media.muser == user.name
+				puts "<span onclick=\"photoMove( '#{code}', '#{e}', #{i - 1} )\">#{l['left-ca']}</span>" if i != 0
+				puts "&nbsp;&nbsp;<span onclick=\"photoMove( '#{code}', '#{e}', #{i + 1} )\">#{l['right-ca']}</span>" if i != media.series.size - 1
+			end
+			puts '<br>'
+			puts "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a><br>"
+			puts "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{l['trash']}</span>" if recipe.protect != 1 && media.muser == user.name
 			puts "</div>"
 		end
 		puts "</div>"
@@ -68,10 +79,12 @@ command = @cgi['command']
 base = @cgi['base']
 code = @cgi['code']
 mcode = @cgi['mcode']
+zidx = @cgi['zidx']
 if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
 	puts "mcode: #{mcode}<br>"
+	puts "zidx: #{zidx}<br>"
 	puts "base: #{base}<br>"
 	puts "PHOTO_PATH: #{$PHOTO_PATH}<br>"
 	puts "<hr>"
@@ -94,12 +107,7 @@ if code == ''
 end
 
 
-
 case command
-when 'view_series'
-	puts 'View series<br>' if @debug
-	view_series( user, code, l['trash'], 200 )
-
 when 'upload'
 	puts 'Upload<br>' if @debug
 	if user.status != 7
@@ -172,12 +180,25 @@ when 'upload'
 			photo.write( "#{$PHOTO_PATH}/#{media.mcode}.jpg" )
 
 			puts "insert DB<br>" if @debug
+			media.load_series()
 			media.save_db
 
 			File.unlink "#{$TMP_PATH}/#{media.origin}" if File.exist?( "#{$TMP_PATH}/#{media.origin}" ) && tmp_delete
 		end
 	end
-	view_series( user, code, l['trash'], 200 )
+
+when 'move'
+	if user.status != 7
+		puts 'Move<br>' if @debug
+		media = Media.new( user )
+		media.code = code
+		media.mcode = mcode
+		media.zidx = zidx
+
+		puts "Update DB<br>" if @debug
+		media.load_series()
+		media.move_series()
+	end
 
 when 'delete'
 	if user.status != 7
@@ -190,8 +211,8 @@ when 'delete'
 		media = Media.new( user )
 		media.mcode = mcode
 		media.delete_db
-		view_series( user, code, l['trash'], 200 )
 	end
 end
 
+view_series( user, code, l, 200 )
 puts "	<div align='right' class='code'>#{code}</div>"
