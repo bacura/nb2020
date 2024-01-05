@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.71b (2023/09/24)
+#nb2020-dbi.rb 0.72b (2023/01/03)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -808,7 +808,7 @@ def media_init()
 	if res.first
 		puts 'media table already exists.'
 	else
-		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(64), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, zidx TINYINT UNSIGNED);'
+		query = 'CREATE TABLE media (user VARCHAR(32) NOT NULL, code VARCHAR(64), mcode VARCHAR(64) NOT NULL PRIMARY KEY, origin VARCHAR(64), type VARCHAR(8), date DATETIME, zidx TINYINT UNSIGNED, caption VARCHAR(64));'
 		$DB.query( query )
 		puts 'media table has been created.'
 	end
@@ -1126,13 +1126,13 @@ def ref_para_init( ref_parallel )
 	if res.first
 		puts 'ref_para already exists.'
 	else
-		query = 'CREATE TABLE ref_para ( FN VARCHAR(5) PRIMARY KEY, para VARCHAR(256));'
+		query = 'CREATE TABLE ref_para ( FN VARCHAR(5) PRIMARY KEY, juten VARCHAR(32), para VARCHAR(256));'
 		$DB.query( query )
 
 		f = open( ref_parallel, 'r' )
 		f.each_line do |e|
 			a = e.force_encoding( 'utf-8' ).chomp.split( "\t" )
-			query = "INSERT INTO ref_para set FN='#{a[0]}', para=\"#{a[1]}\";"
+			query = "INSERT INTO ref_para set FN='#{a[1]}', para=\"#{a[2].delete( "'" )}\", juten=\"#{a[0]}\";"
 			$DB.query( query )
 		end
 		puts 'ref_para table has been created.'
@@ -1217,7 +1217,7 @@ ref_bmi = 'ref2020-bmi.txt'
 ref_phys = 'ref2020-phys.txt'
 ref_eer = 'ref2020-eer.txt'
 ref_intake = 'ref2020-intake.txt'
-ref_parallel = 'ref2020-parallel.txt'
+ref_parallel = 'ref2020-parallel_.txt'
 
 #==============================================================================
 print 'DB Administrator name？'
