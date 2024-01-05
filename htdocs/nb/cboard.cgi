@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.22b (2023/1/17)
+#Nutrition browser 2020 cutting board 0.25b (2023/9/27)
 
 #==============================================================================
 #STATIC
@@ -11,7 +11,7 @@
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 #==============================================================================
@@ -87,7 +87,7 @@ end
 
 
 #### Easy energy calc
-def energy_calc( food_list, uname, dish_num, adjew )
+def energy_calc( food_list, dish_num, adjew, db )
 	energy = BigDecimal( '0' )
 	energy_checked = BigDecimal( '0' )
 
@@ -99,8 +99,8 @@ def energy_calc( food_list, uname, dish_num, adjew )
 	food_list.each do |e|
 		unless e.fn == '-' || e.fn == '+'
 			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCT} WHERE FN='#{e.fn}';"
-			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
-			r = mdb( q, false, @debug )
+			q = "SELECT ENERC_KCAL from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{db.user.name}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
+			r = db.query( q, false )
 			if r.first
 				rr = 1.0
 				rr = e.rr.to_f if adjew == 1
@@ -119,7 +119,7 @@ end
 
 
 #### Easy salt calc
-def salt_calc( food_list, uname, dish_num, adjew )
+def salt_calc( food_list, dish_num, adjew, db )
 	salt = BigDecimal( '0' )
 	salt_checked = BigDecimal( '0' )
 
@@ -131,8 +131,8 @@ def salt_calc( food_list, uname, dish_num, adjew )
 	food_list.each do |e|
 		unless e.fn == '-' || e.fn == '+'
 			q = "SELECT NACL_EQ from #{$MYSQL_TB_FCT} WHERE FN='#{e.fn}';"
-			q = "SELECT NACL_EQ from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{uname}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
-			r = mdb( q, false, @debug )
+			q = "SELECT NACL_EQ from #{$MYSQL_TB_FCTP} WHERE FN='#{e.fn}' AND ( user='#{db.user.name}' OR user='#{$GM}' );" if /P|U/ =~ e.fn
+			r = db.query( q, false )
 			if r.first
 				rr = 1.0
 				rr = e.rr.to_f if adjew == 1
@@ -208,16 +208,18 @@ end
 
 
 #### Chomi cell
-def chomi_cell( user, l, code, chomi_selected, chomi_code )
+def chomi_cell( l, code, chomi_selected, chomi_code, db )
 	puts 'chomi % categoty set<br>' if @debug
 	chomi_html = ''
 
 	chomim_categoty = []
-	r = mdb( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and role='100' ORDER BY name;", false, @debug )
+	r = db.query( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' and role='100' ORDER BY name;", false )
+
 	r.each do |e|
 		a = e['name'].sub( '：', ':' ).split( ':' )
 		chomim_categoty << a[0]
 	end
+
 	chomim_categoty.uniq!
 
 	chomi_html << '<div class="input-group input-group-sm">'
@@ -267,7 +269,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
-
+db = Db.new( user, @debug, false )
 
 #### POST
 command = @cgi['command']
@@ -283,7 +285,7 @@ code = @cgi['code']
 chomi_selected = @cgi['chomi_selected']
 chomi_code = @cgi['chomi_code']
 recipe_user = @cgi['recipe_user']
-recipe_user = user.name if @cgi['recipe_user'] == nil || @cgi['recipe_user'] == ''
+recipe_user = user.name if recipe_user == nil || recipe_user == ''
 if @debug
 	puts "command:#{command}<br>"
 	puts "code:#{code}<br>"
@@ -309,20 +311,21 @@ if command == 'load'
 else
 	query = "SELECT * from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';"
 end
-r = mdb( query, false, @debug )
+r = db.query( query, false )
 code = r.first['code']
 recipe_name = r.first['name']
 recipe_user = r.first['user']
 dish_num = r.first['dish'].to_i if dish_num == '' || dish_num == nil
 dish_num = 1 if dish_num == 0
 protect = r.first['protect'].to_i
+adjew = 0
 adjew = r.first['adjew'].to_i if command != 'load' && command != 'adjew'
 
 sum = r.first['sum']
 sum = '' if sum == nil
 food_list = []
 sum.split( "\t" ).each do |e|
-	t = Sum.new
+	t = Sum.new( user )
 	t.load_sum( e )
 	food_list << t
 end
@@ -339,7 +342,7 @@ end
 
 #### adjust weight mode
 adjew_checked = [ '', 'CHECKED' ]
-r = mdb( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';",false, @debug )
+r = db.query( "SELECT calcc FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';",false )
 if r.first && r.first['calcc'] != nil
 	a = r.first['calcc'].split( ':' )
 	palette_ = a[0]
@@ -354,7 +357,7 @@ end
 if command == 'adjew'
 	puts "Adjust mode<br>" if @debug
 	adjew = @cgi['adjew'].to_i
-	mdb( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette_}:#{adjew}:#{frct_mode}:#{frct_accu}' WHERE user='#{user.name}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_CFG} SET calcc='#{palette_}:#{adjew}:#{frct_mode}:#{frct_accu}' WHERE user='#{user.name}';", true )
 end
 
 
@@ -362,7 +365,7 @@ update = ''
 all_check = ''
 case command
 when 'chomi_cell'
-	chomi_html = chomi_cell( user, l, code, chomi_selected, chomi_code )
+	chomi_html = chomi_cell( l, code, chomi_selected, chomi_code, db )
 	puts chomi_html
 	exit
 
@@ -481,7 +484,7 @@ when 'weight'
 	# 食品ごとの単位読み込み
 	uk = BigDecimal( '1' )
 	if unit != 'g'
-		r = mdb( "SELECT unit from #{$MYSQL_TB_EXT} WHERE FN='#{food_list[order_no].fn}';", false, @debug )
+		r = db.query( "SELECT unit from #{$MYSQL_TB_EXT} WHERE FN='#{food_list[order_no].fn}';", false )
 		unith = JSON.parse( r.first['unit'] )
 		uk = unith[unit]
 	end
@@ -537,14 +540,14 @@ when 'add'
 	food_list_ = []
 	0.upto( insert_posi ) do |c| food_list_ << food_list[c] end
 
-	o = Sum.new
+	o = Sum.new( user )
 	if add_food_no == nil
 		o.fn = '-'
 	elsif /\d{5}/ =~ add_food_no
-		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}';", false, @debug )
+		r = db.query( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}';", false )
 		o.load_sum( "#{add_food_no}:#{add_food_weight}:0:#{add_food_weight}:0::1.0:#{add_food_weight}" ) if r.first
 	elsif /[PU]?\d{5}/ =~ add_food_no
-		r = mdb( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}' AND (( user='#{user.name}' AND public!='#{2}' ) OR public='1' );", false, @debug )
+		r = db.query( "SELECT FN from #{$MYSQL_TB_TAG} WHERE FN='#{add_food_no}' AND (( user='#{user.name}' AND public!='#{2}' ) OR public='1' );", false )
 		o.load_sum( "#{add_food_no}:#{add_food_weight}:0:#{add_food_weight}:0::1.0:#{add_food_weight}" ) if r.first
 	else
 		o.load_sum( "+::::0:#{add_food_no}" )
@@ -584,7 +587,7 @@ when 'dish'
 
 when 'quick_save'
 	puts "quick_save<br>" if @debug
-	mdb( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{@datetime}', dish='#{dish_num}' WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_RECIPE} SET sum='#{sum}', date='#{@datetime}', dish='#{dish_num}' WHERE user='#{user.name}' and code='#{code}';", true )
 
 
 when 'gn_exchange'
@@ -618,10 +621,10 @@ when 'chomis'
 	target_weight = total_weight if target_weight == 0
 	chomi_rate = target_weight / 100
 
-	r = mdb( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{chomi_code}';", false, @debug )
+	r = db.query( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{chomi_code}';", false )
 	if r.first
 		 r.first['sum'].split( "\t" ).each do |e|
-			t = Sum.new
+			t = Sum.new( user )
 			t.load_sum( e )
 			t.weight = BigDecimal( t.weight ) * chomi_rate
 			t.unitv = t.weight
@@ -651,7 +654,7 @@ when 'eadj'
 	puts "Adjusting tootal food energy<br>" if @debug
 	energy_adj = @cgi['energy_adj'].to_i
 	puts "energy_adj:#{energy_adj}<br>" if @debug
-	energy_ctrl, energy_checked, check_all = energy_calc( food_list, user.name, dish_num, adjew )
+	energy_ctrl, energy_checked, check_all = energy_calc( food_list, dish_num, adjew, db )
 	eadj_rate = BigDecimal( energy_adj - ( energy_ctrl - energy_checked )) / ( energy_checked )
 	food_list.size.times do |c|
 		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
@@ -667,7 +670,7 @@ when 'sadj'
 	puts "Adjusting tootal food salt<br>" if @debug
 	salt_adj = @cgi['salt_adj'].to_f
 	puts "salt_adj:#{salt_adj}<br>" if @debug
-	salt_ctrl, salt_checked, check_all = salt_calc( food_list, user.name, dish_num, adjew )
+	salt_ctrl, salt_checked, check_all = salt_calc( food_list, dish_num, adjew, db )
 	sadj_rate = BigDecimal( salt_adj - ( salt_ctrl - salt_checked )) / ( salt_checked )
 	food_list.size.times do |c|
 		if food_list[c].check == '1' || check_all && food_list[c].weight != '-' && food_list[c].weight != '+'
@@ -707,8 +710,8 @@ puts "update:#{update}<br><hr>" if @debug
 
 puts "Getting food weight & food energy & food salt<br>" if @debug
 weight_ctrl, weight_checked = weight_calc( food_list, dish_num, adjew )
-energy_ctrl, energy_checked = energy_calc( food_list, user.name, dish_num, adjew )
-salt_ctrl, salt_checked = salt_calc( food_list, user.name, dish_num, adjew )
+energy_ctrl, energy_checked = energy_calc( food_list, dish_num, adjew, db )
+salt_ctrl, salt_checked = salt_calc( food_list, dish_num, adjew, db )
 weitht_adj = weight_ctrl if weitht_adj == 0
 energy_adj = energy_ctrl if energy_adj == 0
 salt_adj = salt_ctrl if salt_adj == 0
@@ -716,11 +719,9 @@ salt_adj = salt_ctrl if salt_adj == 0
 
 puts "Loading CB tag<br>" if @debug
 food_tag = []
-db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 if false
 	food_list.each do |e|
-		q = "SELECT Tagnames from #{$MYSQL_TB_FCT} WHERE FN='#{e.fn}';"
-		r = db.query( q )
+		r = db.query( "SELECT Tagnames from #{$MYSQL_TB_FCT} WHERE FN='#{e.fn}';", false )
 		food_tag << r.first['Tagnames'] if r.first
 		food_tag << '' if e.fn == '-' || e.fn == '+'
 	end
@@ -728,16 +729,15 @@ else
 	food_list.each do |e|
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.fn}';"
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.fn}' AND user='#{user.name}';" if /^U\d{5}/ =~ e.fn
-		r = db.query( q )
+		r = db.query( q, false )
 		food_tag << bind_tags( r ) if r.first
 		food_tag << '' if e.fn == '-' || e.fn == '+'
 	end
 end
-db.close
 
 
 puts 'chomi % HTML<br>' if @debug
-chomi_html = chomi_cell( user, l, code, chomi_selected, chomi_code )
+chomi_html = chomi_cell( l, code, chomi_selected, chomi_code, db )
 
 
 puts 'HTML upper part<br>' if @debug
@@ -774,12 +774,14 @@ html = <<-"UPPER_MENU"
   				<input type="number" min='1' class="form-control" id="weight_adj" value="#{weight_ctrl.round}">
 			</div>
 		</div>
+
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 	        	<button class='btn btn-outline-primary' type='button' onclick=\"energyAdj( '#{code}' )\">#{l['guide_e']}</button>
-  				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl.round}">
+ 				<input type="number" min='1' class="form-control" id="energy_adj" value="#{energy_ctrl.round}">
 			</div>
 		</div>
+
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 	        	<button class='btn btn-outline-primary' type='button' onclick=\"saltAdj( '#{code}' )\">#{l['guide_s']}</button>
@@ -798,7 +800,6 @@ html = <<-"UPPER_MENU"
   				<input type="number" min='0' class="form-control" id="loss_adj" value="0">
 			</div>
 		</div>
-
 		<div class='col' align='right'>
 			<input type='checkbox' id='gn_check'>&nbsp;
 			<span class='badge rounded-pill npill' onclick=\"gnExchange( '#{code}' )\">#{l['gram']}</span>
@@ -847,7 +848,7 @@ food_list.each do |e|
 	unit_set = []
 	unit_select = []
   	unless e.fn == '-' || e.fn == '+'
-		r = mdb( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{e.fn}';", false, @debug )
+		r = db.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{e.fn}';", false )
 		if r.first
 			unith = JSON.parse( r.first['unit'] )
 			unith.each do |k, v|
@@ -868,7 +869,7 @@ food_list.each do |e|
   	unless e.fn == '-' || e.fn == '+'
   		q = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{e.fn}';"
 		q = "SELECT * from #{$MYSQL_TB_TAG} WHERE FN='#{e.fn}' AND user='#{user.name}';" if /^U\d{5}/ =~ e.fn
-		r = mdb( q, false, @debug )
+		r = db.query( q, false )
 		food_key = "#{r.first['FG']}:#{r.first['class1']}:#{r.first['class2']}:#{r.first['class3']}:#{r.first['name']}" if r.first
 	end
 
@@ -977,6 +978,6 @@ sum_new = ''
 food_list.each do |e| sum_new << "#{e.fn}:#{e.weight}:#{e.unit}:#{e.unitv}:#{e.check}:#{e.init}:#{e.rr}:#{e.ew}\t" end
 sum_new.chop!
 
-mdb( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{user.name}';", false, @debug )
+db.query( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{user.name}';", true ) unless user.status == 7
 
-add_his( user.name, code ) if command == 'load'
+add_his( user, code ) if command == 'load'

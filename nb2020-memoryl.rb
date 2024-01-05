@@ -22,6 +22,7 @@ $MYSQL_USER = 'user'
 $MYSQL_PW = 'password'
 $MYSQL_DB = 'nb2020'
 $MYSQL_TB_MEMORY = 'memory'
+db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
 @debug = false
 
@@ -35,7 +36,6 @@ $MYSQL_TB_MEMORY = 'memory'
 # Main
 #==============================================================================
 
-db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 
 category_list = []
 pointer_list = []

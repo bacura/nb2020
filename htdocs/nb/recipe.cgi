@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.14b (2023/04/15)
+#Nutrition browser 2020 recipe editor 0.18b (2023/11/26)
 
 #==============================================================================
 #COMMON LIBRARY
@@ -35,7 +35,7 @@ def language_pack( language )
 		'name' 		=> "レシピ名",\
 		'save' 		=> "保存",\
 		'protocol' 	=> "調理手順",\
-		'special' 	=> "【行頭特殊記号】　<b>!</b>[文字]:強調、<b>@</b>[文字]:ただし書き（薄カッコ表示）、<b>#</b>[文字]:コメント（非表示）、<b>&</b>[レシピコード]:参照レシピ",\
+		'special' 	=> "【行頭特殊記号】　<b>!</b>[文字]:強調、<b>@</b>[文字]:ただし書き（薄カッコ表示）、<b>#</b>[文字]:コメント（非表示）、<b>+</b>[レシピコード]:参照レシピ",\
 		'root' 		=> "母",\
 		'branch' 	=> "娘",\
 		'favorite' 	=> "<img src='bootstrap-dist/icons/star-fill-y.svg' style='height:1.0em; width:1.0em;'>お気に入り",\
@@ -59,6 +59,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### POST
@@ -71,7 +72,7 @@ if @debug
 	puts "root:#{code}<br>"
 end
 
-recipe = Recipe.new( user.name )
+recipe = Recipe.new( user )
 recipe.debug if @debug
 
 case command
@@ -96,53 +97,54 @@ when 'save', 'division'
 	# excepting for tags
 	recipe.protocol = wash( recipe.protocol )
 
-	r = mdb( "SELECT sum, name, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
-	# Inserting new recipe
+	r = db.query( "SELECT sum, name, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
 	if r.first['name'] == ''
+		puts 'Inserting new recipe<br>' if @debug
 		recipe.code = generate_code( user.name, 'r' )
 		recipe.sum = r.first['sum']
 		recipe.dish = r.first['dish'].to_i
   		recipe.insert_db
 
-	# Updating recipe
 	else
-		pre_recipe = Recipe.new( user.name )
+		puts 'Updating recipe<br>' if @debug
+		pre_recipe = Recipe.new( user )
 		pre_recipe.code = recipe.code
 		pre_recipe.load_db( code, true )
 		recipe.sum = r.first['sum']
 		recipe.dish = r.first['dish'].to_i
 
-		# Import mode
 		copy_flag = false
 		original_user = nil
 
-		if user.name != pre_recipe.user
+		if user.name != pre_recipe.user.name
+			puts 'Import mode<br>' if @debug
 			copy_flag = true
-			original_user = pre_recipe.user
+			original_user = pre_recipe.user.name
 			recipe.favorite = 0
 			recipe.draft = 1
-			recipe.user = user.name
+			recipe.user = user
 			recipe.sum = r.first['sum']
 			recipe.dish = r.first['dish'].to_i
 		end
 
-		# Canceling public mode of recipe using puseudo user foods
+		puts 'Canceling public mode of recipe using puseudo user foods<br>' if @debug
 		a = recipe.sum.split( "\t" )
 		a.each do |e|
 			sum_items = e.split( ':' )
 			recipe.public = 0 if /^U/ =~ sum_items[0]
 		end
 
-		# Draft mode
 		if recipe.draft == 1
+			puts 'Draft mode<br>' if @debug
 			recipe.protect = 0
 			recipe.public = 0
+
 			recipe.update_db
 
 			copy_flag = true if command == 'division'
 
-		# Normal mode
 		elsif recipe.draft == 0 && recipe.protect == 0
+			puts 'Normal mode<br>' if @debug
 			if recipe.name == pre_recipe.name
 				recipe.update_db
 			else
@@ -150,8 +152,8 @@ when 'save', 'division'
 				copy_flag = true
 			end
 
-		# Protect mode
 		else
+			puts 'Protect mode<br>' if @debug
 			recipe.protect = 1 if recipe.public == 1
 			if pre_recipe.protect == 0 && recipe.name == pre_recipe.name
 				recipe.update_db
@@ -165,7 +167,7 @@ when 'save', 'division'
 			recipe.code = generate_code( user.name, 'r' )
 
 			# Copying name
-			if recipe.name == pre_recipe.name && user.name == pre_recipe.user && command != 'division'
+			if recipe.name == pre_recipe.name && user.name == pre_recipe.user.name && command != 'division'
 				t = pre_recipe.name.match( /\((\d+)\)$/ )
 				sn = 1
 				sn = t[1].to_i + 1 if t != nil
@@ -176,10 +178,11 @@ when 'save', 'division'
 			puts "checking media<br>" if @debug
 			rr = ''
 			if original_user == nil
-				rr = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+				rr = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
 			else
-				rr = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{original_user}' and code='#{code}';", false, @debug )
+				rr = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{original_user}' and code='#{code}';", false )
 			end
+
 			if rr.first
 				puts "Copying photo<br>" if @debug
 				rr.each do |e|
@@ -190,7 +193,7 @@ when 'save', 'division'
 					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
 
 					puts "Inserting into DB<br>" if @debug
-					mdb( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{recipe.code}', mcode='#{new_media_code}', origin='#{e['origin']}', date='#{@datetime}';", false, @debug )
+					db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{recipe.code}', mcode='#{new_media_code}', origin='#{e['origin']}', date='#{@datetime}';", true )
 				end
 			end
 
@@ -198,7 +201,7 @@ when 'save', 'division'
 		end
 	end
 
-	mdb( "UPDATE #{$MYSQL_TB_SUM} SET name='#{recipe.name}', code='#{recipe.code}', protect='#{recipe.protect}' WHERE user='#{user.name}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_SUM} SET name='#{recipe.name}', code='#{recipe.code}', protect='#{recipe.protect}' WHERE user='#{user.name}';", true )
 end
 
 
@@ -208,7 +211,7 @@ check_public = checked( recipe.public )
 check_protect = checked( recipe.protect )
 check_draft =  checked( recipe.draft )
 file_disabled = false
-if user.name != recipe.user
+if user.name != recipe.user.name
 	check_favorite = 'DISABLED'
 	check_public = 'DISABLED'
 	check_protect = 'DISABLED'
@@ -280,7 +283,7 @@ division = "<span onclick=\"recipeSave( 'division', '#{recipe.code}' )\">#{l['di
 
 puts "branche parts<br>" if @debug
 branche = "<div class='col' id='tree' style='display:none;'>"
-r = mdb( "SELECT name, code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.code}';", false, @debug )
+r = db.query( "SELECT name, code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.code}';", false )
 if r.first && recipe.code != nil
     branche	<< '<ul class="list-group">'
 	r.each do |e|
@@ -295,7 +298,7 @@ else
 	root_button = "<button class='btn btn-sm btn-secondary' onclick='words2Root()'>#{l['root']}</button>"
 
 	if recipe.root != ""
-		rr = mdb( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.root}';", false, @debug )
+		rr = db.query( "SELECT name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND root='#{recipe.root}';", false )
 		if rr.first
 			root_button = "<button class='btn btn-sm btn-info' onclick='initCB( \"load\", \"#{recipe.root}\", \"#{user.name}\" )'>#{l['root']}</button>"
 			root_recipe_id = recipe.root
@@ -413,14 +416,14 @@ if command == 'save'
 
 	puts "Makeing alias dictionary<br>" if @debug
 	dic = Hash.new
-	r = mdb( "SELECT org_name, alias FROM #{$MYSQL_TB_DIC};", false, @debug )
+	r = db.query( "SELECT org_name, alias FROM #{$MYSQL_TB_DIC};", @debug )
 	r.each do |e| dic[e['alias']] = e['org_name'] end
 
 	target = []
 
 	puts "Marking recipe name<br>" if @debug
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{recipe.code}' AND word='#{recipe.name}' AND user='#{user.name}';", false, @debug )
-	mdb( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{recipe.name}';", false, @debug ) unless r.first
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{recipe.code}' AND word='#{recipe.name}' AND user='#{user.name}';", false )
+	db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{recipe.name}';", true ) unless r.first
 	recipe.name.gsub!( '　', "\t" )
 	recipe.name.gsub!( '・', "\t" )
 	recipe.name.gsub!( '／', "\t" )
@@ -442,8 +445,8 @@ if command == 'save'
 			tags.each do |e|
 				if e != ''
 					target << e
-					r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{recipe.code}' AND word='#{e}' AND user='#{user.name}';", false, @debug )
-					mdb( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{e}';", false, @debug ) unless r.first
+					r = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE code='#{recipe.code}' AND word='#{e}' AND user='#{user.name}';", false )
+					db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{e}';", true ) unless r.first
 				end
 			end
 		end
@@ -461,8 +464,8 @@ if command == 'save'
 		mecab.parse( true_word ) do |n|
 			a = n.feature.force_encoding( 'utf-8' ).split( ',' )
 		 	if a[0] == '名詞' && ( a[1] == '一般' || a[1] == '普通名詞' || a[1] == '固有名詞' || a[1] == '人名' )
-				r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{user.name}' AND code='#{recipe.code}' AND word='#{n.surface}';", false, @debug )
-				mdb( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{n.surface}';", false, @debug ) unless r.first
+				r = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{user.name}' AND code='#{recipe.code}' AND word='#{n.surface}';", false )
+				db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{n.surface}';", true ) unless r.first
 		 	end
 		end
 	end
@@ -473,13 +476,13 @@ if command == 'save'
 	target_food = []
 	a.each do |e| sum_code << e.split( ':' ).first end
 	sum_code.each do |e|
-		r = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false, @debug )
+		r = db.query( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
 		target_food << r.first['name'] if r.first
 	end
 
 	target_food.each do |e|
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{user.name}' AND code='#{recipe.code}' AND word='#{e}';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{e}';", false, @debug ) unless r.first
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPEI} WHERE user='#{user.name}' AND code='#{recipe.code}' AND word='#{e}';", false )
+		db.query( "INSERT INTO #{$MYSQL_TB_RECIPEI}  SET public='#{recipe.public}', user='#{user.name}', code='#{recipe.code}', word='#{e}';", true ) unless r.first
 	end
 end
 

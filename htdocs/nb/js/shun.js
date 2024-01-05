@@ -710,7 +710,7 @@ var recipe3dsPlottDraw = function(){
 
 // JSON list init
 var initJsonlist = function(){
-	$.post( "json-list.cgi", { command:'init' }, function( data ){
+	$.post( "jsonl.cgi", { command:'init' }, function( data ){
 		$( "#L1" ).html( data );
 
 		flashBW();
@@ -724,7 +724,35 @@ var initJsonlist = function(){
 
 // Media list init
 var initMedialist = function(){
-	$.post( "media-list.cgi", { command:'init' }, function( data ){
+	$.post( "medial.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// Astral body projection //////////////////////////////////////////////////////////////
+
+// Astral body init
+var initAstral = function(){
+	$.post( "astral.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+// Astral body init
+var changeAstral = function(){
+	let astral_sw = 0;
+	if( document.getElementById( "astral_sw" ).checked ){ astral_sw = 1; }
+
+	$.post( "astral.cgi", { command:'change', astral_sw:astral_sw }, function( data ){
 		$( "#L1" ).html( data );
 
 		flashBW();

@@ -1,31 +1,55 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.14b (2022/10/29)
+#Nutrition browser 2020 memory editor 0.21b (2022/11/27)
+
+#==============================================================================
+#STATIC
+#==============================================================================
+@debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
 
-
-#==============================================================================
-#STATIC
-#==============================================================================
-script = 'memory'
-@debug = false
-
-
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'mkanri'	=> "記憶:",\
+		'list'	=> "一覧",\
+		'edit'	=> "編集",\
+		'category'	=> "カテゴリー",\
+		'item_num'	=> "項目数",\
+		'new'	=> "新規カテゴリー",\
+		'key'	=> "キー",\
+		'memory'	=> "記憶",\
+		'rank'	=> "ランク",\
+		'move'	=> "移動",\
+		'save'	=> "保存",\
+		'idkw'	=> "ちょっと何言っているかわからないです。",\
+		'delete'	=> "削除",\
+		'regist'	=> "新規登録",\
+		're_search'	=> "再検索"
+	}
+
+	return l[language]
+end
+
 #### init
-def init( lp )
+def init( db, l )
 	category_list = []
 	pointer_num = []
-	r = mdb( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY};", false, @debug )
+	r = db.query( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY};", false )
 	r.each do |e|
-		rr = mdb( "SELECT pointer FROM #{$MYSQL_TB_MEMORY} WHERE category='#{e['category']}';", false, @debug )
+		rr = db.query( "SELECT pointer FROM #{$MYSQL_TB_MEMORY} WHERE category='#{e['category']}';", false )
 		category_list << e['category']
 		pointer_num << rr.size
 	end
@@ -35,7 +59,7 @@ def init( lp )
 		list_html << "<tr>"
 		list_html << "<td><input type='text' size='32' id='#{category_list[c]}' value='#{category_list[c]}' DISABLED></td>"
 		list_html << "<td>#{pointer_num[c]}</td>"
-		list_html << "<td><button type='button' class='btn btn-primary btn-sm' onclick=\"listPointer( '#{category_list[c]}' )\"\">#{lp[2]}</button></td>"
+		list_html << "<td><button type='button' class='btn btn-primary btn-sm' onclick=\"listPointer( '#{category_list[c]}' )\"\">#{l['list']}</button></td>"
 		list_html << "<td></td>"
 		list_html << "</tr>"
 	end
@@ -43,8 +67,8 @@ def init( lp )
 	memory_html = <<-"MEMORY"
 	<table class='table table-striped'>
 	<thead>
-	<th>#{lp[4]}</th>
-	<th>#{lp[5]}</th>
+	<th>#{l['category']}</th>
+	<th>#{l['item_num']}</th>
 	<th></th>
 	<th></th>
 	</thead>
@@ -54,12 +78,11 @@ MEMORY
 
 	new_html = <<-"NEW"
 	<div class='row'>
-		<div class='col-6'></div>
 		<div class='col-6'>
-			<div class="input-group input-group">
-				<span class='input-group-text' id='inputGroup-sizing-sm'>#{lp[6]}</span>
+			<div class="input-group input-group-sm">
+				<span class='input-group-text'>#{l['new']}</span>
  				<input type='text' class='form-control' id='category'>
-				<button type='button' class='btn btn-success' onclick="saveCategory()">#{lp[7]}</button>
+				<button type='button' class='btn btn-sm btn-success' onclick="saveCategory()">#{l['regist']}</button>
 			</div>
 		</div>
 	</div>
@@ -71,27 +94,35 @@ end
 
 
 #### Listing pointers
-def list( category, lp )
+def list( db, category, l )
 	new_html = ''
 	memory_html = ''
 
 	new_html << "<div class='row'>"
 	new_html << "<div class='col-10'></div>"
-	new_html << "<div class='col-2'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newPMemory( '#{category}', '', 'front' )\">#{lp[8]}</button></div>"
+	new_html << "<div class='col-2'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newPMemory( '#{category}', '', 'front' )\">#{l['key']}</button></div>"
 	new_html << "</div>"
 	new_html << "</div>"
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false )
 	memory_html << "<table class='table table-sm table-striped'>"
 	memory_html << "<thead>"
-	memory_html << "<th>#{lp[9]}</th>"
-	memory_html << "<th>#{lp[10]}</th>"
-	memory_html << "<th>#{lp[11]}</th>"
+	memory_html << "<th>#{l['key']}</th>"
+	memory_html << "<th>#{l['memory']}</th>"
+	memory_html << "<th>#{l['rank']}</th>"
 	memory_html << "</thead>"
 
-	c = 0
 	r.each do |e|
-		memory_html << "<tr onclick=\"newPMemory( '#{category}', '#{e['pointer']}', 'front' )\">"
+		code = e['code']
+
+		####一時的
+		if e['code'] == nil
+			code = generate_code( db.user.name, 'k' )
+			db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET code='#{code}' WHERE category='#{category}' AND pointer='#{e['pointer']}';", true )
+		end
+		####
+
+		memory_html << "<tr onclick=\"memoryOpenCode( '#{e['code']}' )\">"
 		memory_html << "<td>#{e['pointer']}</td>"
 		if e['memory'].size > 80
 			memory_html << "<td>#{e['memory'][0, 80]}...</td>"
@@ -100,7 +131,6 @@ def list( category, lp )
 		end
 		memory_html << "<td>#{e['rank']}</td>"
 		memory_html << "</tr>"
-		c += 1
 	end
 	memory_html << "</table>"
 
@@ -109,62 +139,59 @@ end
 
 
 #### Pointer editor
-def new_pointer( category, pointer, memory, rank, category_set, post_process, user, lp )
+def new_pointer( code, category, pointer, memory, rank, category_set, post_process, db, l )
 	disabled = ''
-	disabled = 'DISABLED' if user.status < 8
+	disabled = 'DISABLED' if db.user.status < 8
 
 	rank_select_html = ''
 	rank_select_html << "<select class='form-select form-select-sm' id='rank' #{disabled}>"
 	1.upto( 5 ) do |c|
-		if c == rank
-			rank_select_html << "<option value='#{c}' SELECTED>#{c}</option>"
-		else
-			rank_select_html << "<option value='#{c}'>#{c}</option>"
-		end
+		rank_select_html << "<option value='#{c}' #{$SELECT[c == rank]}>#{c}</option>"
 	end
 	rank_select_html << "</select>"
 
 	category_select_html = ''
 	category_select_html << "<select class='form-select form-select-sm' id='mvcategory' #{disabled}>"
 	category_set.each do |e|
-		if e == category
-			category_select_html << "<option value='#{e}' SELECTED>#{e}</option>"
-		else
-			category_select_html << "<option value='#{e}'>#{e}</option>"
-		end
+		category_select_html << "<option value='#{e}' #{$SELECT[e == category]}>#{e}</option>"
 	end
 	category_select_html << "</select>"
 
 	move_button = ''
-	move_button = "<button type='button' class='btn btn-success btn-sm' onclick=\"movePMemory( '#{category}', '#{pointer}', '#{post_process}' )\">#{lp[12]}</button>" if user.status >= 8
+	move_button = "<button type='button' class='btn btn-success btn-sm' onclick=\"movePMemory( '#{category}', '#{pointer}', '#{post_process}' )\">#{l['save']}</button>" if db.user.status >= 8
 
 	save_button = ''
-	save_button = "<button type='button' class='btn btn-success btn-sm' onclick=\"savePMemory( '#{category}', '#{post_process}' )\">#{lp[13]}</button>" if user.status >= 8
+	save_button = "<button type='button' class='btn btn-success btn-sm' onclick=\"savePMemory( '#{category}', '#{post_process}' )\">#{l['save']}</button>" if db.user.status >= 8
 
 	delete_button =  ''
-	delete_button = "<input type='checkbox' id='deletepm_check'>&nbsp;<button type='button' class='btn btn-danger btn-sm' onclick=\"deletePMemory( '#{category}', '#{pointer}', '#{post_process}' )\">#{lp[3]}</button>" if user.status >= 8
+	delete_button = "<input type='checkbox' id='deletepm_check'>&nbsp;<button type='button' class='btn btn-danger btn-sm' onclick=\"deletePMemory( '#{category}', '#{pointer}', '#{post_process}' )\">#{l['delete']}</button>" if db.user.status >= 8
 
 	new_html = <<-"NEW"
 	<div class='row'>
-		<div class='col-6'>
+		<div class='col-4'>
 			<div class='input-group input-group-sm'>
-				<span class='input-group-text' id='inputGroup-sizing-sm'>#{lp[9]}</span>
+				<span class='input-group-text' id='inputGroup-sizing-sm'>#{l['memory']}</span>
 				<input type='text' class='form-control' id='pointer' value='#{pointer}' #{disabled}>
 			</div>
 		</div>
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
-				<label class='input-group-text' for='rank'>#{lp[11]}</label>
+				<label class='input-group-text' for='rank'>#{l['move']}</label>
 				#{rank_select_html}
 			</div>
 		</div>
 		<div class='col-4'>
 			<div class='input-group input-group-sm'>
-				<label class='input-group-text' for='mvcategory'>#{lp[4]}</label>
+				<label class='input-group-text' for='mvcategory'>#{l['category']}</label>
 				#{category_select_html}
 				#{move_button}
+
 			</div>
 		</div>
+		<div class='col-2' align="right">
+			#{save_button}
+		</div>
+
 	</div><br>
 NEW
 
@@ -173,8 +200,7 @@ NEW
 		<textarea class='form-control' rows='5' aria-label='memory' id='memory' #{disabled}>#{memory}</textarea>
 	</div><br>
 	<div class='row'>
-		<div class='col-1'>#{save_button}</div>
-		<div class='col-9'></div>
+		<div class='col-10'></div>
 		<div class='col-2' align='right'>#{delete_button}</div>
 	</div>
 MEMORY
@@ -184,12 +210,45 @@ end
 
 
 #### EXPAND memory
-def extend_linker( memory, depth )
+def extend_linker( db, res, depth )
+	code = res['code']
+	category = res['category']
+	pointer = res['pointer']
+	memory = res['memory']
 	depth += 1 if depth < 5
+
+	memory_ = ''
+	memory_line = memory.split( "\n" )
+	memory_line.each do |e|
+		if /^\@/ =~ e
+			t = e.delete( '@' )
+			memory_ << "<span class='print_comment'>(#{t})</span>\n"
+		elsif /^\!/ =~ e
+			t = e.delete( '!' )
+			memory_ << "<span class='print_subtitle'>#{t}</span>\n"
+		elsif /^\#/ =~ e
+			#
+		elsif /^\~/ =~ e
+			t = e.delete( '~' )
+			memory_ << "<a href='#{t}' target='blank_'>#{t}</a>" + "\n"
+		elsif /^\[\]/ =~ e
+			t = e.chomp.sub( /^\[\]/, '' )
+			memory_ << "<table>"
+			rows = t.split( '[]' )
+			rows.each do |row|
+				memory_ << "<tr>"
+				cols = row.split('|')
+					cols.each do |ee| memory_ << "<td style='padding-top:0.2em; padding-bottom:0.2em; padding-left:0.5em; padding-right:0.5em; border-bottom:solid 1px; border-top:solid 1px;'>#{ee}</td>" end
+				memory_ << "</tr>"
+			end
+			memory_ << "</table>\n"
+		else
+			memory_ << e + "\n"
+		end
+	end
+
 	link_pointer = memory.scan( /\{\{[^\}\}]+\}\}/ )
 	link_pointer.uniq!
-
-	memory_ = memory
 	link_pointer.each do |e|
 		pointer = e.sub( '{{', "" ).sub( '}}', "" )
 		pointer.gsub!( '<', "&lt;" )
@@ -200,6 +259,19 @@ def extend_linker( memory, depth )
 		memory_.gsub!( e, pointer_ )
 	end
 	memory_.gsub!( "\n", "<br>\n" )
+
+	####一時的
+	if code == nil
+		code = generate_code( db.user.name, 'k' )
+		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET code='#{code}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
+	else
+		r = db.query( "SELECT mcode, type FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{code}';", false )
+		r.each do |e|
+			p e['mcode']
+			memory_ << "<a href='#{$PHOTO}/#{e['mcode']}.#{e['type']}' target='blank_'><img src='#{$PHOTO}/#{e['mcode']}-tn.#{e['type']}'></a>"	
+		end
+	end
+	####
 
 	return memory_
 end
@@ -230,7 +302,7 @@ def alike_pointer( key )
 		normal.gsub!( '＋', '+' )
 		normal.gsub!( '－', '-' )
 
-		r = mdb( "SELECT pointer from #{$MYSQL_TB_MEMORY};", false, @debug )
+		r = db.query( "SELECT pointer from #{$MYSQL_TB_MEMORY};", false )
 		r.each do |e|
 			normal_pointer = e['pointer'].tr( 'ぁ-ん０-９A-ZA-Z', 'ァ-ン0-9a-za-z' )
 			normal_pointer.gsub!( '一', '1' )
@@ -296,18 +368,18 @@ end
 
 
 # Add new pointer form
-def new_pointer_form( lp, user, pointer )
+def new_pointer_form( db, pointer, l )
 	html = ''
-	if user.status >= 8
-		r = mdb( "SELECT DISTINCT category from #{$MYSQL_TB_MEMORY};", false, @debug )
+	if db.user.status >= 8
+		r = db.query( "SELECT DISTINCT category from #{$MYSQL_TB_MEMORY};", false )
 		if r.first
 			html << "<div class='input-group input-group-sm'>"
-			html << "<label class='input-group-text'>#{lp[4]}</label>"
+			html << "<label class='input-group-text'>#{l['category']}</label>"
 			html << "<select class='form-select' id='nonmatch_categoly'>"
 			r.each do |e| html << "<option value='#{e['category']}'>#{e['category']}</option>" end
 
 			html << "</select>"
-			html << "<button type='button' class='btn btn-outline-primary' onclick=\"newPMemoryNM( '#{pointer}', '' )\"`>#{lp[8]}</button>"
+			html << "<button type='button' class='btn btn-outline-primary' onclick=\"newPMemoryGM( '', '', '#{pointer}', '' )\"`>#{l['regist']}</button>"
 			html << "</div>"
 		end
 	end
@@ -322,11 +394,13 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST data
 command = @cgi['command']
+code = @cgi['code']
 mode = @cgi['mode']
 category = @cgi['category']
 depth = @cgi['depth'].to_i
@@ -340,6 +414,7 @@ memory_solid = @cgi['memory']
 memory_solid.gsub!( ',', "\t" ) if memory_solid != nil && memory_solid != ''
 if @debug
 	puts "command:#{command}<br>\n"
+	puts "code:#{code}<br>\n"
 	puts "mode:#{mode}<br>\n"
 	puts "category:#{category}<br>\n"
 	puts "new_category:#{new_category}<br>\n"
@@ -357,69 +432,70 @@ memory_html = ''
 new_html = ''
 case command
 when 'init'
-	new_html, memory_html = init( lp )
+	new_html, memory_html = init( db, l )
 
 when 'save_category'
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false, @debug )
-	mdb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='', memory='', category='#{category}', total_rank='1', rank='1', date='#{@datetime}';", false, @debug ) unless r.first
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false )
+	db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='', memory='', category='#{category}', total_rank='1', rank='1', date='#{@datetime}';", true ) unless r.first
 
-	new_html, memory_html = init( lp )
+	new_html, memory_html = init( db, l )
 
 when 'change_category'
-	mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET category='#{new_category}' WHERE category='#{category}';", false, @debug )
-	new_html, memory_html = init( lp )
+	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET category='#{new_category}' WHERE category='#{category}';", true )
+	new_html, memory_html = init( db, l )
 
 when 'delete_category'
-	mdb( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", false, @debug )
-	new_html, memory_html = init( lp )
+	db.query( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}';", true )
+	new_html, memory_html = init( db, l )
 
 when 'list_pointer'
-	new_html, memory_html = list( category, lp )
+	new_html, memory_html = list( db, category, l )
 
-when 'new_pointer'
+when 'open'
 	if pointer != ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
+		code = r.first['code']
 		pointer = r.first['pointer']
 		memory = r.first['memory']
 		rank = r.first['rank']
 	end
 
 	category_set = []
-	r = mdb( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY};", false, @debug )
+	r = db.query( "SELECT DISTINCT category FROM #{$MYSQL_TB_MEMORY};", false )
 	r.each do |e| category_set << e['category'] end
 
-	new_html, memory_html = new_pointer( category, pointer, memory, rank, category_set, post_process, user, lp )
+	new_html, memory_html = new_pointer( code, category, pointer, memory, rank, category_set, post_process, db, l )
 
 when 'delete_pointer'
-	mdb( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false, @debug )
+	db.query( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", true )
 
 	exit() unless post_process == 'front'
-	new_html, memory_html = list( category, lp )
+	new_html, memory_html = list( db, category, l )
 
 when 'save_pointer'
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false , @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false )
 	if r.first
-		mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{@datetime}' WHERE category='#{category}' AND pointer='#{pointer}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{@datetime}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
 	else
-		mdb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{@datetime}';", false, @debug )
+		db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{category}', rank='#{rank}', date='#{@datetime}';", true )
 	end
 
 	exit() unless post_process == 'front'
-	new_html, memory_html = list( category, lp )
+	new_html, memory_html = list( db, category, l )
 
 when 'move_pointer'
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{mvcategory}' AND pointer='#{pointer}';", false , @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{mvcategory}' AND pointer='#{pointer}';", false )
 	if r.first
 		t = r.first['memory']
 		t << memory
-		mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{t}', rank='#{rank}', date='#{@datetime}' WHERE category='#{mvcategory}' AND pointer='#{pointer}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{t}', rank='#{rank}', date='#{@datetime}' WHERE category='#{mvcategory}' AND pointer='#{pointer}';", true )
 	else
-		mdb( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{mvcategory}', rank='#{rank}', date='#{@datetime}';", false, @debug )
+		db.query( "INSERT INTO #{$MYSQL_TB_MEMORY} SET user='#{user.name}', pointer='#{pointer}', memory='#{memory_solid}', category='#{mvcategory}', rank='#{rank}', date='#{@datetime}';", true )
 	end
-	mdb( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", false, @debug )
+	db.query( "DELETE FROM #{$MYSQL_TB_MEMORY} WHERE category='#{category}' AND pointer='#{pointer}';", true )
 
 	exit() unless post_process == 'front'
-	new_html, memory_html = list( category, lp )
+	new_html, memory_html = list( db, category, l )
 
 when 'refer'
 	puts "Referencing memory" if @debug
@@ -427,72 +503,91 @@ when 'refer'
 	pointer.gsub!( /\s+/, ' ' )
 	a = pointer.split( ' ' )
 	score = 0
-
 	a.each do |e|
-		r = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{e}';", false, @debug )
+		r = db.query( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{e}';", false )
 		if r.first
 			puts "Finding in DB<br>" if @debug
 			pointer = ''
 			memory_html << "<div class='row'>"
-			memory_html << "<div class='col-8'><span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{lp[15]}</span></div>"
+			memory_html << "<div class='col-8'><span class='memory_pointer'>#{e}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{l['re_search']}</span></div>"
 			memory_html << "<div class='col-4' align='right'>"
-			memory_html << new_pointer_form( lp, user, e )
+			memory_html << new_pointer_form( db, e, l )
 			memory_html << "</div>"
 			memory_html << "</div>"
 
 			r.each do |ee|
 				edit_button = ''
-				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
-				memory_html << extend_linker( ee['memory'], depth )
+				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemoryGM( '#{ee['code']}', '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{l['edit']}</button>" if user.status >= 8
+				memory_html << extend_linker( db, ee, depth )
 				memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
 			end
 
 			count = r.first['count'].to_i + 1
-			mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{e}';", false, @debug )
-			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='9', date='#{@datetime}';", false ,@debug )
+			db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{e}';", true )
+			db.query( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='9', date='#{@datetime}';", true )
 		else
 			puts "No finding in DB<br>" if @debug
 			a_pointer, score = alike_pointer( e )
 			unless a_pointer == ''
-				rr = mdb( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{a_pointer}';", false, @debug )
+				rr = db.query( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE pointer='#{a_pointer}';", false )
 				pointer = ''
 				memory_html << "<div class='row'>"
-				memory_html << "<div class='col-8'><span class='memory_pointer'>#{a_pointer}&nbsp;??</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{lp[15]}</span></div>"
+				memory_html << "<div class='col-8'><span class='memory_pointer'>#{a_pointer}&nbsp;??</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{e}', '1' )\">#{l['re_search']}</span></div>"
 				memory_html << "<div class='col-4' align='right'>"
-				memory_html << new_pointer_form( lp, user, e )
+				memory_html << new_pointer_form( db, e, l )
 				memory_html << "</div>"
 				memory_html << "</div>"
 
 				rr.each do |ee|
 					edit_button = ''
-					edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemory( '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{lp[3]}</button>" if user.status >= 8
-					memory_html << extend_linker( ee['memory'], depth )
+					edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemoryGM( '#{ee['code']}', '#{ee['category']}', '#{ee['pointer']}', 'back' )\">#{l['edit']}</button>" if user.status >= 8
+					memory_html << extend_linker( db, ee, depth )
 					memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day}#{edit_button}</div>"
 				end
 				count = rr.first['count'].to_i + 1
-				mdb( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{a_pointer}';", false, @debug )
+				db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET count='#{count}' WHERE pointer='#{a_pointer}';", true )
 			end
-			mdb( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='#{score}', date='#{@datetime}';", false ,@debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='#{score}', date='#{@datetime}';", true )
 		end
 	end
 
 	if memory_html == ''
 		memory_html << "<div class='row'>"
-		memory_html << "<div class='col'>#{lp[14]} (#{pointer})</div>"
+		memory_html << "<div class='col'>#{l['idkw']} (#{pointer})</div>"
 		memory_html << "</div>"
 		memory_html << "<br>"
 
 		memory_html << "<div class='row'>"
-		memory_html << "<div class='col-6'>"
-		memory_html << new_pointer_form( lp, user, pointer )
+		memory_html << "<div class='col-4'>"
+		memory_html << new_pointer_form( db, pointer, l )
 		memory_html << "</div>"
 		memory_html << "</div>"
+	end
+when 'refer_code'
+	puts "Referencing memory code" if @debug
+	r = db.query( "SELECT * from #{$MYSQL_TB_MEMORY} WHERE code='#{code}';", false )
+	if r.first
+		puts "Finding in DB<br>" if @debug
+		pointer = r.first['pointer']
+		memory_html << "<div class='row'>"
+		memory_html << "<div class='col-8'><span class='memory_pointer'>#{pointer}</span>&nbsp;&nbsp;<span class='badge bg-info text-dark' onclick=\"memoryOpenLink( '#{pointer}', '1' )\">#{l['re_search']}</span></div>"
+		memory_html << "<div class='col-4' align='right'>"
+		memory_html << new_pointer_form( db, pointer, l )
+		memory_html << "</div>"
+		memory_html << "</div>"
+
+		edit_button = ''
+		edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"newPMemoryGM( '#{code}', '#{r.first['category']}', '#{r.first['pointer']}', 'back' )\">#{l['edit']}</button>" if user.status >= 8
+		memory_html << extend_linker( db, r.first, depth )
+		memory_html << "<div align='right'>#{r.first['category']} / #{r.first['date'].year}/#{r.first['date'].month}/#{r.first['date'].day}#{edit_button}</div>"
+	else
+		puts "No finding in DB<br>" if @debug
 	end
 end
 
 
 title = ''
-title = "<div class='col'><h5>#{lp[1]} #{category}</h5></div>" if command != 'refer'
+title = "<div class='col'><h5>#{l['mkanri']} #{category}</h5></div>" if command != 'refer'
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>

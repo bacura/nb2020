@@ -1,7 +1,14 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition physical tools 0.03b (2022/09/18)
+#Nutrition browser 2020 nutrition physical tools 0.04b (2023/07/06)
 
+
+#==============================================================================
+#STATIC
+#==============================================================================
+@debug = false
+#script = File.basename( $0, '.cgi' )
+$mod_path = 'physique_'
 
 #==============================================================================
 #LIBRARY
@@ -9,36 +16,29 @@
 require './soul'
 require './brain'
 
-
-#==============================================================================
-#STATIC
-#==============================================================================
-script = 'physique'
-@debug = false
-
-
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
-#### line menu
-def line( lp )
-	html = <<-"HTML"
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-loss' )">#{lp[1]}</span>
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-keep' )">#{lp[3]}</span>
-	<span class='badge rounded-pill ppill' onclick="PhysiqueForm( 'weight-gain' )">#{lp[4]}</span>
-HTML
+#### Menu no line
+def menu( user )
+	mods = Dir.glob( "#{$HTDOCS_PATH}/#{$mod_path}/mod_*" )
+	mods.map! do |x|
+		x = File.basename( x )
+		x = x.sub( 'mod_', '' )
+		x = x.sub( '.rb', '' )
+	end
+
+	html = ''
+	mods.each.with_index( 1 ) do |e, i|
+		require "#{$HTDOCS_PATH}/#{$mod_path}/mod_#{e}.rb"
+		ml = module_lp( user.language )
+		html << "<span class='btn badge rounded-pill ppill' onclick='PhysiqueForm( \"#{e}\" )'>#{ml['mod_name']}</span>"
+	end
 
 	return html
 end
 
-
-####
-def init( lp )
-	html = "<div align='center'>#{lp[2]}</div>"
-
-	return html
-end
 
 #==============================================================================
 # Main
@@ -46,7 +46,7 @@ end
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST
@@ -63,12 +63,13 @@ end
 ####
 html = "<div class='container-fluid'>"
 if mod == 'line'
-	html = line( lp )
+	exlib_plot()
+	html = menu( user )
 elsif mod == ''
-	html = init( lp )
+	html =  "<div align='center'>Physique</div>"
 else
 	require "#{$HTDOCS_PATH}/physique_/mod_#{mod}.rb"
-	html = physique_module( @cgi, user )
+	html = physique_module( @cgi, db )
 end
 html << "</div>"
 

@@ -1,13 +1,15 @@
-# Nutorition browser 2020 Config module for acount 0.02b (2022/12/24)
+# Nutorition browser 2020 Config module for acount 0.10b (2022/12/24)
 #encoding: utf-8
 
-def config_module( cgi, user, lp )
+@debug = false
+
+def config_module( cgi, db )
 	module_js()
-	l = language_pack( user.language )
+	l = module_lp( db.user.language )
 
 	step = cgi['step']
 
-	res = mdb( "SELECT pass, mail, aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{user.name}' AND cookie='#{user.uid}';", false, false )
+	res = db.query( "SELECT pass, mail, aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{db.user.name}' AND cookie='#{db.user.uid}';", false )
 	aliasu = res.first['aliasu']
 	mail = res.first['mail']
 	pass = res.first['pass']
@@ -29,7 +31,7 @@ def config_module( cgi, user, lp )
 			end
 
 			# Updating acount information
-			mdb( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}', language='#{language}' WHERE user='#{user.name}' AND cookie='#{user.uid}';", false, false )
+			db.query( "UPDATE #{$MYSQL_TB_USER} SET pass='#{pass}', mail='#{mail}', aliasu='#{aliasu}', language='#{language}' WHERE user='#{db.user.name}' AND cookie='#{db.user.uid}';", true )
 		else
 			puts "<span class='msg_small_red'>#{l['no_save']}</span><br>"
 		end
@@ -81,6 +83,7 @@ def config_module( cgi, user, lp )
 		</div>
 	</div>
 HTML
+
 	return html
 end
 
@@ -91,25 +94,29 @@ def module_js()
 
 // Updating account information
 var account_cfg = function( step ){
-	var new_mail = '';
-	var new_aliasu = '';
-	var old_password = '';
-	var new_password1 = '';
-	var new_password2 = '';
-	var language = '';
+	let new_mail = '';
+	let new_aliasu = '';
+	let old_password = '';
+	let new_password1 = '';
+	let new_password2 = '';
+	let language = '';
 
 	if( step == 'change' ){
-		var new_mail = document.getElementById( "new_mail" ).value;
-		var new_aliasu = document.getElementById( "new_aliasu" ).value;
-		var old_password = document.getElementById( "old_password" ).value;
-		var new_password1 = document.getElementById( "new_password1" ).value;
-		var new_password2 = document.getElementById( "new_password2" ).value;
-		var language = document.getElementById( "language" ).value;
+		new_mail = document.getElementById( "new_mail" ).value;
+		new_aliasu = document.getElementById( "new_aliasu" ).value;
+		old_password = document.getElementById( "old_password" ).value;
+		new_password1 = document.getElementById( "new_password1" ).value;
+		new_password2 = document.getElementById( "new_password2" ).value;
+		language = document.getElementById( "language" ).value;
 	}
 
-	$.post( "config.cgi", { mod:'account', step:step, new_mail:new_mail, new_aliasu:new_aliasu, old_password:old_password, new_password1:new_password1, new_password2:new_password2, language:language }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
+	$.post( "config.cgi", { mod:'account', step:step, new_mail:new_mail, new_aliasu:new_aliasu, old_password:old_password, new_password1:new_password1, new_password2:new_password2, language:language }, function( data ){
+		$( "#L1" ).html( data );
+		dl1 = true;
+		dline = true;
+		displayBW();
+
+	});
 };
 
 </script>
@@ -119,11 +126,12 @@ end
 
 
 # Language pack
-def language_pack( language )
+def module_lp( language )
 	l = Hash.new
 
 	#Japanese
 	l['jp'] = {
+		'mod_name'	=> "アカウント",\
 		'aliase'	=> "二つ名",\
 		'mail'		=> "メールアドレス",\
 		'new_pw'	=> "新しいパスワード",\

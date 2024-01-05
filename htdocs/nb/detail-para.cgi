@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail parallel 0.00b (2023/05/14)
+#Nutrition browser 2020 food detail parallel 0.00b (2023/07/31)
 
 
 #==============================================================================
@@ -43,6 +43,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### POST
@@ -121,15 +122,25 @@ when 'init', 'weight', 'cb', 'cbp'
 		class_add = ''
 	end
 
+	puts 'Base food<br>' if @debug
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{base_fn}';", false )
+	base_energy = num_opt( r.first['ENERC_KCAL'], food_weight, frct_mode, @fct_frct['ENERC_KCAL'] )
 
-	# 正規食品
-	if class_no.to_i == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false, @debug )
-	else
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false, @debug )
+	rr = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN='#{base_fn}';", false )
+	base_name = rr.first['name']
+	base_tags = "<span class='tag1'>#{rr.first['tag1']}</span> <span class='tag2'>#{rr.first['tag2']}</span> <span class='tag3'>#{rr.first['tag3']}</span> <span class='tag4'>#{rr.first['tag4']}</span> <span class='tag5'>#{rr.first['tag5']}</span>"
+ 
+	base_sub_components = "<td align='center'>#{food_weight.to_f}</td>"
+	@fct_para.each do |e|
+		t = num_opt( r.first[e], food_weight, frct_mode, @fct_frct[e] )
+		base_sub_components << "<td align='center'>#{t}</td>"
 	end
+
+
+	r = db.query( "SELECT FN, para FROM #{$MYSQL_TB_PARA} WHERE FN='#{base_fn}';", false )
 	if r.first
-		r.each do |e|
+		rr = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN IN (#{r.first['para']});", false )
+		rr.each do |e|
 			food_no_list << e['FN']
 			food_name_list << e['name']
 			tag1_list << e['tag1']
@@ -140,95 +151,42 @@ when 'init', 'weight', 'cb', 'cbp'
 		end
 	end
 
-
-	# 擬似食品
-	if class_no.to_i == 0
-		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
-	else
-		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
-	end
-	puts "#{query}<br>" if @debug
-	r = mdb( query, false, @debug )
-	if r.first
-		r.each do |e|
-			food_no_list << e['FN']
-			food_name_list << e['name']
-			tag1_list << e['tag1']
-			tag2_list << e['tag2']
-			tag3_list << e['tag3']
-			tag4_list << e['tag4']
-			tag5_list << e['tag5']
-		end
-	end
-
- 	# 簡易表示の項目
+	puts 'Display items<br>' if @debug
 	fc_items_html = ''
- 	fc_items = %w( ENERC_KCAL WATER PROTV FATV FASAT CHOV FIB NACL_EQ )
-	fc_items.each do |e| fc_items_html << "<th align='right'>#{@fct_name[e]}</th>" end
+	@fct_para.each do |e| fc_items_html << "<th align='right'>#{@fct_name[e]}</th>" end
 
 
-	# 食品ラインの生成
-	food_html = ''
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-	food_no_list.size.times do |c|
-		pseudo_flag = false
-		# 栄養素の一部を取得
-		if /U/ =~ food_no_list[c]
-			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';"
-			pseudo_flag = true
-		elsif /P|C/ =~ food_no_list[c]
-			query = "SELECT * FROM #{$MYSQL_TB_FCTP} WHERE FN='#{food_no_list[c]}';"
-			pseudo_flag = true
-		else
-			query = "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN='#{food_no_list[c]}';"
-		end
-		p query if @debug
+	puts 'Food list<br>' if @debug
+	food_html = "<tr class='fct_value_h'><td>#{base_fn}</td><td class='link_cursor'>#{class_add}#{base_name} #{base_tags}</td><td></td>#{base_sub_components}</tr>\n"
 
-		res = db.query( query )
-		unless res.first
-			puts "<span class='error'>[FCTP load]ERROR!!<br>"
-			puts "code:#{food_no_list[c]}</span><br>"
-			db.query( "DELETE FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
-			db.query( "DELETE FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
-			exit()
-		end
 
-		sub_components = ''
-		fc_items.each do |e|
-			if res.first[e] != nil
-				t = num_opt( res.first[e], food_weight, frct_mode, @fct_frct[e] )
-				sub_components << "<td align='center'>#{t}</td>"
-			else
-				sub_components << "<td align='center'><span class='error'>[FCTP load]ERROR!!</td>"
-			end
+	c = 0
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_FCT} WHERE FN IN (#{r.first['para']});", false )
+	r.each do |e|
+		para_energy = num_opt( e['ENERC_KCAL'], food_weight, frct_mode, @fct_frct['ENERC_KCAL'] )
+		para_weight = ( food_weight.to_f * base_energy / para_energy ).round( 1 )
+
+		sub_components = "<td align='center'>#{para_weight}</td>"
+		@fct_para.each do |ee|
+			t = num_opt( e[ee], para_weight, frct_mode, @fct_frct[ee] )
+			sub_components << "<td align='center'>#{t}</td>"
 		end
 
 		# 追加・変更ボタン
-		if user.name && base == 'cb'
-			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{l['change']}</span>"
-		elsif user.name
-			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{l['cboard']}</span>"
-		else
-			add_button = ""
-		end
+		add_button = "<span onclick=\"changingCB( '#{e['FN']}', '#{base_fn}', '#{para_weight}' )\">#{l['change']}</span>"
 
 		tags = "<span class='tag1'>#{tag1_list[c]}</span> <span class='tag2'>#{tag2_list[c]}</span> <span class='tag3'>#{tag3_list[c]}</span> <span class='tag4'>#{tag4_list[c]}</span> <span class='tag5'>#{tag5_list[c]}</span>"
-		if pseudo_flag
-			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}</td>#{sub_components}</tr>\n"
-		else
-			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}</td>#{sub_components}</tr>\n"
-		end
+		food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}</td>#{sub_components}</tr>\n"
+		c += 1
 	end
-	db.close
 
-
- 	#
+ 
 	return_button = ''
 	return_button = "<div align='center' class='joystic_koyomi' onclick=\"returnCB( '', '' )\">#{l['signpost']}</div><br>" if base == 'cb'
 
 
 	parallel_button = ''
-	parallel_button = "<div align='center' class='joystic_active' onclick=\"cb_detail_sub( '#{food_key}', '#{food_weight}', '#{food_no}' )\">#{l['parallel']}</div><br>" if base == 'cb'
+	parallel_button = "<div align='center' class='joystic_active' onclick=\"cb_detail_sub( '#{food_key}', '#{food_weight}', '#{base_fn}' )\">#{l['parallel']}</div><br>" if base == 'cb'
 
 	html = <<-"HTML"
 	<div class='container-fluid'>
@@ -237,16 +195,10 @@ when 'init', 'weight', 'cb', 'cbp'
 			<div class="col-1">#{parallel_button}</div>
 		</div>
 		<div class="row">
-  		<div class="col-3"><span class='h5'>#{food_name}</span></div>
-  		<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
-		<div class="col-3">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="weight">#{l['weight']}</label>
-				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
-				<button class="btn btn-outline-primary" type="button" onclick="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">g</button>
-			</div>
+  			<div class="col-3"><span class='h5'>#{food_name}</span></div>
+  			<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
 		</div>
-	</div></div>
+	</div>
 	<br>
 
 	<table class="table table-sm table-hover">
@@ -255,6 +207,7 @@ when 'init', 'weight', 'cb', 'cbp'
 	  			<th>#{l['fn']}</th>
 	  			<th>#{l['name']}</th>
 				<th></th>
+	  			<th>#{l['weight']}</th>
 				#{fc_items_html}
     		</tr>
   		</thead>

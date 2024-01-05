@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.44b (2023/05/13)
+// Nutorition Browser 2020 core.js 0.49b (2023/10/03)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -7,6 +7,7 @@ dl3 = false;
 dl4 = false;
 dl5 = false;
 dlf = false;
+dlm = false;
 dline = false;
 
 hl1 = false;
@@ -15,6 +16,7 @@ hl3 = false;
 hl4 = false;
 hl5 = false;
 hlf = false;
+hlm = false;
 hline = false;
 
 bwl1 = null;
@@ -23,8 +25,10 @@ bwl3 = null;
 bwl4 = null;
 bwl5 = null;
 bwlf = null;
+bwlm = null;
 line = null;
 video = null;
+modal = null;
 
 help = null;
 help_tp = '1154';
@@ -44,8 +48,10 @@ window.onload = function(){
 		bwl4 = document.getElementById( "L4" );
 		bwl5 = document.getElementById( "L5" );
 		bwlf = document.getElementById( "LF" );
+		bwlm = document.getElementById( "LM" );
 		line = document.getElementById( "LINE" );
 		video = document.getElementById( "VIDEO" );
+		modal = document.getElementById( "MODAL" );
 		help = document.getElementById( "HELP" );
 
 		toHelp();
@@ -78,6 +84,7 @@ displayBW = function(){
 	if( dl4 ){ bwl4.style.display = 'block'; }else{ bwl4.style.display = 'none'; }
 	if( dl5 ){ bwl5.style.display = 'block'; }else{ bwl5.style.display = 'none'; }
 	if( dlf ){ bwlf.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
+	if( dlm ){ bwlm.style.display = 'block'; }else{ bwlm.style.display = 'none'; }
 	if( dline ){ line.style.display = 'block'; }else{ line.style.display = 'none'; }
 };
 
@@ -90,6 +97,7 @@ flashBW = function(){
 	dl4 = false;
 	dl5 = false;
 	dlf = false;
+	dlm = false;
 	dline = false;
 }
 
@@ -102,6 +110,7 @@ pushBW = function(){
 	hl4 = dl4;
 	hl5 = dl5;
 	hlf = dlf;
+	hlm = dlm;
 	hline = dline;
 };
 
@@ -114,6 +123,7 @@ pullHW = function(){
 	dl4 = hl4;
 	dl5 = hl5;
 	dlf = hlf;
+	dlm = hlm;
 	dline = hline;
 };
 
@@ -254,7 +264,7 @@ var summonL4 = function( key, direct ){
 // Browsing nutritional Information subset ///////////////////////////////////////////////////////////////////////
 
 // Display foods on BWL5
-var viewDetailSub = function( com, key, direct ){
+const viewDetailSub = function( com, key, direct ){
 	if( direct > 0 ){ closeBroseWindows( direct ); }
 	$.post( "detail-sub.cgi", { command:com, food_key:key }, function( data ){ $( "#L5" ).html( data );});
 	dl5 = true;
@@ -264,10 +274,14 @@ var viewDetailSub = function( com, key, direct ){
 
 
 // Changing weight of food
-var changeDSWeight = function( com, key, fn ){
-	var fraction_mode = document.getElementById( "fraction" ).value;
-	var weight = document.getElementById( "weight" ).value;
-	$.post( "detail-sub.cgi", { command:com, food_key:key, frct_mode:fraction_mode, food_weight:weight }, function( data ){ $( "#L5" ).html( data );});
+const changeDSWeight = function( com, key, fn ){
+	const fraction_mode = document.getElementById( "fraction" ).value;
+	const weight = document.getElementById( "weight" ).value;
+	$.post( "detail-sub.cgi", { command:com, food_key:key, frct_mode:fraction_mode, food_weight:weight, food_no:fn }, function( data ){
+		$( "#L5" ).html( data );
+		displayVIDEO( '(>_<)' );
+
+	});
 };
 
 
@@ -310,14 +324,6 @@ var detailWeight = function( fn ){
 };
 
 // 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
-var detailPage = function( dir, sid ){
-	var fraction_mode = document.getElementById( "detail_fraction" ).value;
-	var food_weight = document.getElementById( "detail_volume" ).value;
-	var selectu = document.getElementById( "detail_unit" ).value;
-	$.post( "detail.cgi", { dir:dir, sid:sid, frct_mode:fraction_mode, food_weight:food_weight, selectu:selectu }, function( data ){ $( "#LF" ).html( data );});
-};
-
-// 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
 var detailReturn = function(){
 	pullHW();
 	displayBW();
@@ -328,9 +334,9 @@ var detailReturn = function(){
 // Referencing /////////////////////////////////////////////////////////////////////////
 
 // Disply results
-var search = function(){
-	var words = document.getElementById( "words" ).value;
-	var qcate = document.getElementById( "qcate" ).value;
+const search = function(){
+	const words = document.getElementById( "words" ).value;
+	const qcate = document.getElementById( "qcate" ).value;
 	if( words != '' ){
 		flashBW();
 		switch( qcate ){
@@ -352,6 +358,7 @@ var search = function(){
 			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){
 				$( "#L1" ).html( data );
 		 		dl1 = true;
+		 		pushBW();
 		 		displayBW();
 			});
 			break;
@@ -584,7 +591,7 @@ var bookOpen = function( url, depth ){
 // Memory ///////////////////////////////////////////////////////////////////////
 
 // Memory init
-var initMemory_ = function(){
+const initMemory_ = function(){
 	$.post( "memory.cgi", { command:'init' }, function( data ){
 		$( "#L2" ).html( data );
 
@@ -596,7 +603,7 @@ var initMemory_ = function(){
 
 
 // List each pointer
-var listPointer = function( category ){
+const listPointer = function( category ){
 	$.post( "memory.cgi", { command:'list_pointer', category:category }, function( data ){
 		$( "#L2" ).html( data );
 
@@ -606,28 +613,60 @@ var listPointer = function( category ){
 };
 
 
+// Open memory
+const memoryOpen = function( code ){
+	$.post( "memory.cgi", { command:'refer', code, depth:2 }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		pushBW();
+		displayBW();
+	});
+};
+
+
+// Open memory code
+const memoryOpenCode = function( code ){
+	$.post( "memory.cgi", { command:'refer_code', code, depth:2 }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		pushBW();
+		displayBW();
+	});
+};
+
+
 // Open memory link
-var memoryOpenLink = function( pointer, depth ){
+const memoryOpenLink = function( pointer, depth ){
 	$.post( "memory.cgi", { command:'refer', pointer:pointer, depth:depth }, function( data ){
 		$( "#L" + depth ).html( data );
-		if( depth == '1' ){ closeBroseWindows( 1 ); }
-		document.getElementById( "L" + depth ).style.display = 'block';
+		displayVIDEO( depth );
+		switch( depth ){
+			case "2":
+				dl2 = true;
+				break;
+			case "3":
+				dl3 = true;
+				break;
+			case "4":
+				dl4 = true;
+				break;
+			case "5":
+				dl5 = true;
+				break;
+			default:
+				flashBW();
+				dl1 = true;
+		}
+		pushBW();
+		displayBW();
 
 		words = document.getElementById( "words" ).value = pointer;
 		qcate = document.getElementById( "qcate" ).value = 2;
 	});
 };
 
-
-// New pointer form
-var newPMemory = function( category, pointer, post_process ){
-	$.post( "memory.cgi", { command:'new_pointer', category:category, pointer:pointer, post_process:post_process }, function( data ){
-		$( "#LF" ).html( data );
-
-		if( post_process == 'front'){ document.getElementById( "L2" ).style.display = 'none'; }
-		document.getElementById( "LF" ).style.display = 'block';
-	});
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Meta data //////////////////////////////////////////////////////////////////////////
@@ -649,12 +688,12 @@ var metaDisplay = function( com ){
 // Display config menu
 var configInit = function(){
 	flashBW();
-	$.post( "config.cgi", { mod:'' }, function( data ){
+	$.post( "config.cgi", { mod:'menu' }, function( data ){
 		$( "#LINE" ).html( data );
 		dline = true;
 		displayBW();
 	});
-	$.post( "config.cgi", { mod:'account' }, function( data ){
+	$.post( "config.cgi", { mod:'' }, function( data ){
 		$( "#L1" ).html( data );
 		dl1 = true;
 		displayBW();
@@ -671,7 +710,7 @@ var configForm = function( mod ){
 // Photo //////////////////////////////////////////////////////////////////////////
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-var photoSave = function( code, form, base ){
+const photoSave = function( code, form, base ){
 	form_data = new FormData( $( form )[0] );
 	form_data.append( 'command', 'upload' );
 	form_data.append( 'code', code );
@@ -684,15 +723,19 @@ var photoSave = function( code, form, base ){
 			contentType: false,
 			data: form_data,
 			dataype: 'html',
-			success: function( data ){ $( '#L3' ).html( data ); }
+			success: function( data ){ $( '#LM' ).html( data ); }
 		}
 	);
 };
 
+// Moving photo position( zidx )
+const photoMove = function( code, mcode, zidx){
+	$.post( "photo.cgi", { command:'move', code:code, mcode:mcode, zidx:zidx }, function( data ){ $( '#LM' ).html( data );});
+}
 
 // delete photo from media db
-var photoDel = function( code, mcode, base ){
-	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:base }, function( data ){ $( '#L3' ).html( data );});
+const photoDel = function( code, mcode, base ){
+	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:base }, function( data ){ $( '#LM' ).html( data );});
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -700,14 +743,25 @@ var photoDel = function( code, mcode, base ){
 
 // Add food into sum, and reload CB counter
 var addingCB = function( fn, weight_id, food_name ){
+
+	displayVIDEO( weight_id );
 	if( weight_id != '' ){
 		var weight = document.getElementById( weight_id ).value;
 	}
 	$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, mode:'add' }, function( data ){
 		$( "#CBN" ).html( data );
-		refreshCBN();
 		if( fn != '' ){ displayVIDEO( '+' + food_name ); }
+
+		if( weight_id == 'weight_sub' ){
+			initCB( 'init' );
+
+			flashBW();
+			dl1 = true;
+			displayBW();
+		}
 	});
+
+	refreshCBN();
 };
 
 
@@ -721,9 +775,8 @@ var refreshCBN = function(){
 // Chopping boad ////////////////////////////////////////////////////////////////////////
 
 // 変更ボタンを押してsumの食品を変更する
-var changingCB = function( fn, base_fn ){
+const changingCB = function( fn, base_fn, weight ){
 	if( fn !='' ){
-		var weight = document.getElementById( "weight" ).value;
 		$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){
 			$( "#CBN" ).html( data );
 			displayVIDEO( fn + 'has modified' );
@@ -744,12 +797,13 @@ var changingCB = function( fn, base_fn ){
 var initCB = function( com, code, recipe_user ){
 	$.post( "cboard.cgi", { command:com, code:code, recipe_user:recipe_user }, function( data ){
 		$( "#L1" ).html( data );
-		refreshCBN();
 
 		flashBW();
 		dl1 = true;
 		displayBW();
 	});
+
+	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -757,10 +811,8 @@ var initCB = function( com, code, recipe_user ){
 var clearCB = function( order, code ){
 	if( order == 'all'){
 		if( document.getElementById( 'all_check' ).checked ){
-			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){
-				$( "#L1" ).html( data );
-				refreshCBN();
-			});
+			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
+
 			flashBW();
 			dl1 = true;
 			displayBW();
@@ -770,9 +822,9 @@ var clearCB = function( order, code ){
 	} else{
 		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){
 			$( "#L1" ).html( data );
-			refreshCBN();
 		});
 	}
+	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -850,20 +902,16 @@ var sortCB = function( code ){
 // まな板の食品番号追加ボタンを押して食品を追加してL1にリストを表示。そしてカウンターも更新
 var recipeAdd = function( code ){
 	var fn = document.getElementById( "food_add" ).value;
-	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){
-		$( "#L1" ).html( data );
-		refreshCBN();
-	});
+	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){ $( "#L1" ).html( data );});
+	setTimeout( refreshCBN(), 1000 );
 };
 
 
 // まな板の調味％ボタンを押してプリセット食品を追加してL1にリストを表示。そしてカウンターも更新
 var seasoningAdd = function( code ){
 	var seasoning = document.getElementById( "seasoning" ).value;
-	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){
-		$( "#L1" ).html( data );
-		refreshCBN();
-	});
+	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#L1" ).html( data );});
+	setTimeout( refreshCBN(), 1000 );
 };
 
 
@@ -986,8 +1034,8 @@ const recipeEdit = function( com, code ){
 		displayBW();
 	});
 	$.post( "photo.cgi", { command:'view_series', code:code, base:'recipe' }, function( data ){
-		$( "#L3" ).html( data );
-		dl3 = true;
+		$( "#LM" ).html( data );
+		dlm = true;
 		displayBW();
 	});
 };
@@ -1022,7 +1070,7 @@ const recipeSave = function( com, code ){
 		$.post( "recipe.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
 			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#L3" ).html( data );});
+			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#LM" ).html( data );});
 			displayVIDEO( recipe_name );
 		});
 	}
@@ -1255,11 +1303,12 @@ var luckyPush = function( idc ){
 		$.post( "lucky.cgi", { command:'push', lucky_solid:lucky_solid }, function( data ){
 //			$( "#L2" ).html( data );
 			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-			refreshCBN();
 
 			dl2 = false;
 			displayBW();
 		});
+
+		refreshCBN();
 	}
 };
 
@@ -1416,8 +1465,8 @@ var menuEdit = function( com, code ){
 		displayBW();
 	});
 	$.post( "photo.cgi", { command:'view_series', code:code, base:'menu' }, function( data ){
-		$( "#L3" ).html( data )
-		dl3 = true;
+		$( "#LM" ).html( data )
+		dlm = true;
 		displayBW();
 	});
 };

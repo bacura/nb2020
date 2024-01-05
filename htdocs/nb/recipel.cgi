@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.31b (2023/5/7)
+#Nutrition browser 2020 recipe list 0.34b (2023/8/07)
 
 
 #==============================================================================
@@ -209,7 +209,7 @@ def pageing_html( page, page_start, page_end, page_max, l )
 end
 
 
-def referencing( words, uname, sql_where_ij )
+def referencing( words, db, sql_where_ij )
 	words.gsub!( /\s+/, "\t")
 	words.gsub!( /　+/, "\t")
 	words.gsub!( /,+/, "\t")
@@ -221,10 +221,10 @@ def referencing( words, uname, sql_where_ij )
 	# Recoding query & converting by DIC
 	true_query = []
 	query_word.each do |e|
-		mdb( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{uname}', words='#{e}', date='#{@datetime}';", false, @debug )
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false, @debug )
+		db.query( "INSERT INTO #{$MYSQL_TB_SLOGR} SET user='#{db.user.name}', words='#{e}', date='#{@datetime}';", true )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{e}';", false )
 		if r.first
-			rr = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class1='#{r.first['org_name']}' OR class2='#{r.first['org_name']}' OR class3='#{r.first['org_name']}';", false, @debug )
+			rr = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE class1='#{r.first['org_name']}' OR class2='#{r.first['org_name']}' OR class3='#{r.first['org_name']}';", false )
 			if rr.first
 				rr.each do |ee| true_query << ee['name'] end
 			else
@@ -245,9 +245,9 @@ def referencing( words, uname, sql_where_ij )
 	# Referencing recipe
 	true_query.each do |e|
 		if e =~ /\-r\-/
-			return mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}' AND ( user='#{uname}' OR public='1' );", false, @debug )
+			return db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE code='#{e}' AND ( user='#{db.user.name}' OR public='1' );", false )
 		else
-			return mdb( "SELECT t1.* FROM #{$MYSQL_TB_RECIPE} AS t1 INNER JOIN #{$MYSQL_TB_RECIPEI} AS t2 ON t1.code = t2.code #{sql_where_ij} AND t2.word='#{e}';", false, @debug )
+			return db.query( "SELECT t1.* FROM #{$MYSQL_TB_RECIPE} AS t1 INNER JOIN #{$MYSQL_TB_RECIPEI} AS t2 ON t1.code = t2.code #{sql_where_ij} AND t2.word='#{e}';", false )
 		end
 	end
 end
@@ -257,7 +257,7 @@ def recipe_line( recipe, user, page, color, l )
 	html = "<tr style='font-size:medium; background-color:#{color};'>"
 
 	if recipe.media[0] != nil
-		html << "<td><a href='#{$PHOTO}/#{recipe.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{recipe.media[0]}-tns.jpg'></a></td>"
+		html << "<td><a href='#{$PHOTO}/#{recipe.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{recipe.media[0]}-tns.jpg' class='photo_tns'></a></td>"
 	else
 		html << "<td>-</td>"
 	end
@@ -265,7 +265,7 @@ def recipe_line( recipe, user, page, color, l )
 	tags =''
 	recipe.tag().each do |e| tags << "&nbsp;<span class='list_tag badge bbg' onclick=\"searchDR( '#{e}' )\">#{e}</span>" end
 	if user.status >= 1
-		html << "<td onclick=\"initCB( 'load', '#{recipe.code}', '#{recipe.user}' )\">#{recipe.name}</td><td>#{tags}</td>"
+		html << "<td onclick=\"initCB( 'load', '#{recipe.code}', '#{recipe.user.name}' )\">#{recipe.name}</td><td>#{tags}</td>"
 	else
 		html << "<td><a href='login.cgi'>#{recipe.name}</a></td><td>#{tags}</td>"
 	end
@@ -297,27 +297,27 @@ def recipe_line( recipe, user, page, color, l )
 	html << "</td>"
 	html << "<td>"
 
-	if user.status >= 1 && recipe.user == user.name
+	if user.status >= 1 && recipe.user.name == user.name
 		html << "&nbsp;<span onclick=\"addingMeal( '#{recipe.code}', '#{recipe.name}' )\">#{l['table']}</span>&nbsp;&nbsp;"
 	end
 
-	if user.status >= 2 && recipe.user == user.name
+	if user.status >= 2 && recipe.user.name == user.name
 		html << "&nbsp;<span onclick=\"addKoyomi( '#{recipe.code}' )\">#{l['calendar']}</span>&nbsp;&nbsp;"
 	end
 
 	html << "&nbsp;<span onclick=\"print_templateSelect( '#{recipe.code}' )\">#{l['printer']}</span>&nbsp;&nbsp;"
-	if user.status >= 1 && recipe.user == user.name && ( recipe.root == nil || recipe.root == '' )
+	if user.status >= 1 && recipe.user.name == user.name && ( recipe.root == nil || recipe.root == '' )
 		html << "&nbsp;<span onclick=\"recipeImport( 'subspecies', '#{recipe.code}', '#{page}' )\">#{l['diagram']}</span>"
-	elsif user.status >= 1 && recipe.user == user.name
-		html << "&nbsp;<span onclick=\"initCB( 'load', '#{recipe.root}', '#{recipe.user}' )\">#{l['root']}</span>"
+	elsif user.status >= 1 && recipe.user.name == user.name
+		html << "&nbsp;<span onclick=\"initCB( 'load', '#{recipe.root}', '#{recipe.user.name}' )\">#{l['root']}</span>"
 	end
 
-	if user.status >= 1 && recipe.user == user.name
+	if user.status >= 1 && recipe.user.name == user.name
 		html << "&nbsp;<span onclick=\"cp2words( '#{recipe.code}', '' )\">#{l['dropper']}</span>"
 	end
 	html << "</td>"
 
-	if recipe.user == user.name
+	if recipe.user.name == user.name
 		if recipe.protect == 0
 			html << "<td><input type='checkbox' id='#{recipe.code}'>&nbsp;<span onclick=\"recipeDelete( '#{recipe.code}', #{page} )\">#{l['trash']}</span></td>"
 		else
@@ -336,8 +336,9 @@ end
 
 user = User.new( @cgi )
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
-r = mdb( "SELECT icache, recipe FROM cfg WHERE user='#{user.name}';", false, false )
+r = db.query( "SELECT icache, recipe FROM cfg WHERE user='#{user.name}';", false )
 if r.first
 	if r.first['icache'].to_i == '1'
 		html_init_cache( nil )
@@ -418,51 +419,52 @@ when 'refer'
 
 when 'delete'
 	puts "Deleting photos<br>" if @debug
-	r = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
-	r.each do |e|
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e['mcode']}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
+	if user.status != 7
+		r = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
+		r.each do |e|
+			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
+		end
+		db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", true )
+
+		puts "Deleting recipe from DB<br>" if @debug
+		recipe = Recipe.new( user )
+		recipe.code = code
+		recipe.delete_db
+
+		puts "Clearing Sum<br>" if @debug
+		r = db.query( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
+		db.query( "UPDATE #{$MYSQL_TB_SUM} SET code='', name='', dish=1 WHERE user='#{user.name}';", true ) if r.first['code'] == code
 	end
-	mdb( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", false, @debug )
-
-	puts "Deleting recipe from DB<br>" if @debug
-	recipe = Recipe.new( user.name )
-	recipe.code = code
-	recipe.delete_db
-
-	puts "Clearing Sum<br>" if @debug
-	r = mdb( "SELECT code FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
-	mdb( "UPDATE #{$MYSQL_TB_SUM} SET code='', name='', dish=1 WHERE user='#{user.name}';", false, @debug ) if r.first['code'] == code
-
 when 'subspecies'
 	# Loading original recipe
-	recipe = Recipe.new( user.name )
-	recipe.load_db( code, true )
+	if user.status != 7
+		recipe = Recipe.new( user )
+		recipe.load_db( code, true )
 
-	# Copying phots
-	new_media_code = generate_code( user.name, 'p' )
-	new_recipe_code = generate_code( user.name, 'r' )
-	r = mdb( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
-	if r.first
+		# Copying phots
+		new_media_code = generate_code( user.name, 'p' )
+		new_recipe_code = generate_code( user.name, 'r' )
+		r = db.query( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
 		r.each do |e|
 			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
 			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
 			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-			mdb( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{new_recipe_code}', mcode='#{new_media_code}', origin='#{r.first['origin']}', date='#{@datetime}';", false, @debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{new_recipe_code}', mcode='#{new_media_code}', origin='#{r.first['origin']}', date='#{@datetime}';", true )
 		end
-	end
 
-	# Insertinbg recipe into DB
-	recipe.user = user.name
-	recipe.code = new_recipe_code
-	recipe.favorite = 0
-	recipe.public = 0
-	recipe.protect = 0
-	recipe.draft = 1
-	recipe.date = @datetime
-	recipe.root = code
-	recipe.insert_db
+		# Insertinbg recipe into DB
+		recipe.user.name = user.name
+		recipe.code = new_recipe_code
+		recipe.favorite = 0
+		recipe.public = 0
+		recipe.protect = 0
+		recipe.draft = 1
+		recipe.date = @datetime
+		recipe.root = code
+		recipe.insert_db
+	end
 
 when 'limit'
 	page = @cgi['page'].to_i
@@ -477,6 +479,7 @@ when 'limit'
 	family = @cgi['family'].to_i
 	words = @cgi['words']
 end
+
 range = 5 if user.status == 0
 if @debug
 	puts "page: #{page}<br>"
@@ -557,21 +560,21 @@ recipe_num = 0
 res = nil
 ref_msg = words
 if words != '' && words != nil
-	res = referencing( words, user.name, sql_where_ij )
+	res = referencing( words, db, sql_where_ij )
 	ref_msg = "#{l['words']}#{words}<br>#{l['norecipe']}" if res.size == 0
 
 	recipe_num = res.size
 	offset = ( page - 1 ) * page_limit
 	limit = offset + page_limit
 else
-	r = mdb( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} #{sql_where};", false, @debug )
+	r = db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} #{sql_where};", false )
 	recipe_num = r.first['COUNT(*)']
 
 	offset = ( page - 1 ) * page_limit
-	res = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name LIMIT #{offset}, #{page_limit};", false, @debug )
+	res = db.query( "SELECT * FROM #{$MYSQL_TB_RECIPE} #{sql_where} ORDER BY name LIMIT #{offset}, #{page_limit};", false )
 end
 res.each do |e|
-	o = Recipe.new( user.name )
+	o = Recipe.new( user )
 	o.load_db( e, false )
 	o.load_media
 	recipes << o
@@ -606,13 +609,13 @@ family_pair = Hash.new
 family_recipes = Hash.new
 if family == 1
 	recipes.each do |e|
-		r = mdb( "SELECT code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and root='#{e.code}' ORDER BY name;", false, @debug )
+		r = db.query( "SELECT code FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and root='#{e.code}' ORDER BY name;", false )
 		daughters = []
 		daughter_recipes = []
 		r.each do |ee|
 			daughters << ee['code']
 
-			ro = Recipe.new( user.name )
+			ro = Recipe.new( user )
       		ro.load_db( ee['code'], true )
 			daughter_recipes << ro
 		end
@@ -683,7 +686,7 @@ html = <<-"HTML"
 	<br>
 
 	<table class="table table-sm table-hover">
-		<thead>
+		<thead class="table-light">
 			<tr>
 				<td>#{l['photo']}</td>
 				<td>#{l['name']}</td>
@@ -722,9 +725,9 @@ puts html
 #### 検索設定の保存
 #words = nil if recipe_code_list.size == 0
 recipe_ = JSON.generate( { "page" => page, "page_limit" => page_limit, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "family" => family, "words" => words } )
-r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 if r.first
-	mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", true )
 else
-	mdb( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', recipe='#{recipe_}';", false, @debug )
+	db.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', recipe='#{recipe_}';", true )
 end

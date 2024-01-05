@@ -1,14 +1,14 @@
-# Nutorition browser 2020 Config module for history 0.02b (2020/12/24)
+# Nutorition browser 2020 Config module for history 0.03b (2023/7/13)
 #encoding: utf-8
 
-def config_module( cgi, user, lp )
+def config_module( cgi, db )
 	module_js()
-	l = language_pack( user.language )
+	l = module_lp( db.user.language )
 	history = Hash.new
 	his_max = 200
 
 	puts "LOAD config<br>" if @debug
-	r = mdb( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['history'] != nil && r.first['history'] != ''
 			history = JSON.parse( r.first['history'] )
@@ -24,11 +24,11 @@ def config_module( cgi, user, lp )
 
 		history['his_max'] = his_max
 		history_ = JSON.generate( history )
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{db.user.name}';", true )
 
 	when 'clear'
 		puts "CLEAR history<br>" if @debug
-		mdb( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{user.name}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_HIS} SET his='' WHERE user='#{db.user.name}';", true )
 	end
 
 	html = <<-"HTML"
@@ -66,11 +66,15 @@ def module_js()
 
 // History initialisation
 var history_cfg = function( step ){
-	var his_max = document.getElementById( "his_max" ).value;
-	closeBroseWindows( 1 );
-	$.post( "config.cgi", { mod:'history', step:step, his_max:his_max }, function( data ){ $( "#L1" ).html( data );});
-	document.getElementById( "L1" ).style.display = 'block';
-	displayLINE( 'on' );
+	const his_max = document.getElementById( "his_max" ).value;
+	$.post( "config.cgi", { mod:'history', step:step, his_max:his_max }, function( data ){
+			$( "#L1" ).html( data );
+
+			flashBW();
+			dl1 = true;
+			dline = true;
+			displayBW();
+	});
 
 	if( step == 'clear' ){
 		displayVIDEO( 'Initialized' );
@@ -80,7 +84,6 @@ var history_cfg = function( step ){
 	}
 };
 
-
 </script>
 JS
 	puts js
@@ -88,11 +91,12 @@ end
 
 
 # Language pack
-def language_pack( language )
+def module_lp( language )
 	l = Hash.new
 
 	#Japanese
 	l['jp'] = {
+		'mod_name'	=> "履歴",\
 		'his_vol'	=> "履歴保存量",\
 		'msg1'	=> "※増やすとレスポンスが悪くなるかもしれません。",\
 		'msg2'	=> "履歴を初期化する場合は、履歴初期化ボタンを押してください。",\

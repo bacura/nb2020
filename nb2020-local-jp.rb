@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.15b (2023/04/08)
+#Nutrition browser 2020 soul Japanese pack 0.16b (2023/12/24)
 
 #==============================================================================
 # STATIC
@@ -14,6 +14,7 @@
 @fct_fsv = %w( RETOL CARTA CARTB CRYPXB CARTBEQ VITA_RAE VITD TOCPHA TOCPHB TOCPHG TOCPHD VITK )
 @fct_wsv = %w( THIA RIBF NIA NE VITB6A VITB12 FOL PANTAC BIOT VITC  )
 @fct_as = %w( ALC NACL_EQ )
+@fct_para = %w( ENERC_KCAL WATER PROTV FATV FASAT CHOV FIB CA FE CARTBEQ THIA RIBF NACL_EQ )
 @fct_min = @fct_rew + @fct_pf + @fct_cho + @fct_m + @fct_fsv + @fct_wsv + @fct_as
 @fct_min_nr = @fct_ew + @fct_pf + @fct_cho + @fct_m + @fct_fsv + @fct_wsv + @fct_as
 @fct_item = @fct_base + @fct_min
@@ -44,14 +45,14 @@ $PALETTE_DEFAULT = { 'jp' => @palette_default }
 #             0    1   2    3    4  5  6  7  8 9  10 11
 #@color = %w( 未指定 赤 ピンク オレンジ 黄 緑 青 紫 茶 白 黒 透明 )
 
-#             0      1   2     3      4         5      6 7   8      9
-@account = %w( 退会 一般 ギルメン guest ギルメン・萌 ギルメン・旬 娘 - サブマス ギルマス )
+#             0      1   2     3     4         5        6  7   8      9
+@account = %w( 退会 一般 ギルメン guest ギルメン・萌 ギルメン・旬 娘 幽体 サブマス ギルマス )
 
 #             0                1                   2                 3                4             5                 6                7                     8              9               10                   11                  12                  13                14               15                   16                     17                     18             19             20             21             22             23
 @kex_std = { '身長'=>'cm', '体重'=>'kg', 'BMI'=>'', '体脂肪率'=>'%', '腹囲'=>'cm', 'ブリストルスケール'=>'','歩数'=>'歩', 'METs'=>'', 'Δエネルギー'=>'kcal', '収縮期血圧'=>'mmHg', '拡張期血圧'=>'mmHg', '空腹時血糖'=>'mg/dl', 'HbA1c'=>'%', '中性脂肪'=>'mg/dL', '総コレステロール'=>'mg/dL', 'LDL'=>'mg/dL', 'HDL'=>'mg/dL', '尿酸'=>'mg/dL',  'AST'=>'IU/L',  'ALT'=>'IU/L',  'ALP'=>'IU/L',  'LDH'=>'IU/L',  'γ-GTP'=>'IU/L' }
 
 #
-@something = {'?--'=>'何か食べた（微盛）', '?-'=>'何か食べた（小盛）', '?='=>'何か食べた（並盛）', '?+'=>'何か食べた（大盛）', '?++'=>'何か食べた（特盛）', '?0'=>'何も食べない'}
+@something = {'?--'=>'何か食べた（微盛）', '?-'=>'何か食べた（小盛）', '?='=>'何か食べた（並盛）', '?+'=>'何か食べた（大盛）', '?++'=>'何か食べた（特盛）', '?0'=>'何も食べない', '?P'=>'写真のみ'}
 
 #==============================================================================
 # HTML header
@@ -94,11 +95,6 @@ def html_head( interrupt, status, sub_title )
   <!-- bootstrap -->
   <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css">
   <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
-
-  <!-- d3/c3.js -->
-  <link rel="stylesheet" href="c3/c3.min.css">
-  <script type="text/javascript" src="d3/d3.min.js"></script>
-  <script type="text/javascript" src="c3/c3.min.js"></script>
 
   <link rel="stylesheet" href="#{$CSS_PATH}/core.css">
   <script type="text/javascript" src="#{$JS_PATH}/core.js"></script>

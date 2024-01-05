@@ -1,16 +1,16 @@
-# Weight loss module for Physique 0.28b (2022/09/11)
+# Weight loss module for Physique 0.29b (2023/07/21)
 #encoding: utf-8
 
 @module = 'weight-loss'
 @debug = false
 @period = 96
 
-def physique_module( cgi, user )
-	l = module_lp( user.language )
+def physique_module( cgi, db )
+	l = module_lp( db.user.language )
 	today_p = Time.parse( @datetime )
 
 	puts "LOAD bio config<br>" if @debug
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -35,7 +35,7 @@ def physique_module( cgi, user )
 		pal = 1.50
 		eenergy = calc_energy( weight, height, age, sex, pal )
 
-		r = mdb( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' and module='#{@module}';", false, @debug )
+		r = db.query( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' and module='#{@module}';", false )
 		if r.first
 			mod_cfg_h = JSON.parse( r.first['json'] )
 			start_date = mod_cfg_h[@module]['start_date']
@@ -92,11 +92,11 @@ HTML
 		eenergy = cgi['eenergy'].to_i
 
 		json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal, "eenergy" => eenergy }} )
-		res = mdb( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
+		res = db.query( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' AND module='#{@module}';", false )
 		if res.first
-			mdb( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{user.name}' AND module='#{@module}';", false, @debug )
+			db.query( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{db.user.name}' AND module='#{@module}';", true )
 		else
-			mdb( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{user.name}', module='#{@module}';", false, @debug )
+			db.query( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{db.user.name}', module='#{@module}';", true )
 		end
 		start_date_p = Time.parse( start_date )
 		end_date = ( start_date_p + ( @period - 1 ) * 86400 ).strftime( "%Y-%m-%d" )
@@ -116,7 +116,7 @@ HTML
 		measured = []
 		denergy = []
 		start_date_p = Time.parse( start_date )
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date BETWEEN '#{start_date}' AND '#{end_date}';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND date BETWEEN '#{start_date}' AND '#{end_date}';", false )
 		r.each do |e|
 			if e['cell'] != nil
 				kexc = JSON.parse( e['cell'] )
@@ -169,7 +169,7 @@ HTML
 		puts "LOAD Intake enargy 1pass<br>" if @debug
 		tdiv_enargy = [[],[],[],[]]
 		start_date_p = Time.parse( start_date )
-		res_koyomi = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND freeze=1 AND tdiv!=4 AND date BETWEEN '#{start_date}' AND '#{end_date}';", false, @debug )
+		res_koyomi = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{db.user.name}' AND freeze=1 AND tdiv!=4 AND date BETWEEN '#{start_date}' AND '#{end_date}';", false )
 		res_koyomi.each do |e|
 			tdiv = e['tdiv'].to_i
 			day_pass = (( Time.parse( e['date'].strftime( "%Y-%m-%d" )) - start_date_p ) / 86400 ).to_i
@@ -186,7 +186,7 @@ HTML
 			elsif /^\?0/ =~ e['koyomi']
 				tdiv_enargy[tdiv][day_pass] = ''
 			else
-				res_fcz = mdb( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND code='#{e['fzcode']}';", false, @debug )
+				res_fcz = db.query( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCZ} WHERE user='#{db.user.name}' AND code='#{e['fzcode']}';", false )
 				tdiv_enargy[tdiv][day_pass] = res_fcz.first['ENERC_KCAL'].to_i
 			end
 		end
@@ -469,6 +469,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name' => "減量チャート",\
 		'male' => "男性",\
 		'female' => "女性",\
 		'chart_name' => "減量チャート",\

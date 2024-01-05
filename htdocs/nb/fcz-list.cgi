@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 fcz edit list 0.02b (2022/12/17)
+#Nutrition browser 2020 fcz edit list 0.03b (2023/08/15)
 
 
 #==============================================================================
@@ -81,6 +81,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### POST
@@ -90,7 +91,7 @@ base = @cgi['base'].to_s
 fcz_code = @cgi['fcz_code'].to_s
 
 fcze_cfg = Hash.new
-r = mdb( "SELECT fcze FROM cfg WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT fcze FROM cfg WHERE user='#{user.name}';", false )
 if r.first
 	if r.first['fcze'] != nil
 		fcze_cfg = JSON.parse( r.first['fcze'] )
@@ -112,12 +113,12 @@ end
 case command
 when 'delete'
 	puts "Deleting FCZ<br>" if @debug
-	mdb( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='#{base}' AND code='#{fcz_code}';", false, @debug )
+	db.query( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='#{base}' AND code='#{fcz_code}';", true )
 end
 
 
 puts "Paging parts<br>" if @debug
-r = mdb( "SELECT COUNT(code) FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='#{base}';", false, @debug )
+r = db.query( "SELECT COUNT(code) FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='#{base}';", false )
 item_num = r.first['COUNT(code)']
 
 page_max = item_num / page_limit
@@ -144,7 +145,7 @@ html_paging = pageing_html( page, page_start, page_end, page_max, l )
 
 puts "Base select parts<br>" if @debug
 base_select = "<SELECT class='form-select form-select-sm' id='base_select' onchange=\"baseFCZlist( #{page} )\">"
-r = mdb( "SELECT DISTINCT base FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT DISTINCT base FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}';", false )
 base_select << "<OPTION value='general'>general</OPTION>"
 r.each do |e|
 	s = ''
@@ -158,7 +159,7 @@ puts "FCZ list<br>" if @debug
 fcz_html = ''
 offset = ( page - 1 ) * page_limit
 offset = 0 if offset < 0
-r = mdb( "SELECT code, origin, base, name FROM #{$MYSQL_TB_FCZ} WHERE base='#{base}' ORDER BY name LIMIT #{offset}, #{page_limit};", false, @debug )
+r = db.query( "SELECT code, origin, base, name FROM #{$MYSQL_TB_FCZ} WHERE base='#{base}' ORDER BY name LIMIT #{offset}, #{page_limit};", false )
 r.each do |e|
 	fcz_html << '<tr style="font-size:medium;">'
 	fcz_html << "<td onclick=\"initFCZedit( '#{e['code']}' )\">#{e['code']}</td>"
@@ -198,13 +199,12 @@ html = <<-"HTML"
 	<br>
 
 	<table class="table table-sm table-hover">
-	<thead class='cb_header'>
+	<thead class='table-light'>
 		<tr>
 			<td>#{l['fczcode']}</td>
 			<td>#{l['name']}</td>
 			<td>#{l['origin']}</td>
 			<td>#{l['pad']}</td>
-			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>
 	</thead>
@@ -223,4 +223,4 @@ puts html
 
 #### 検索設定の保存
 fcze_ = JSON.generate( { "page" => page, "base" => base } )
-mdb( "UPDATE #{$MYSQL_TB_CFG} SET fcze='#{fcze_}' WHERE user='#{user.name}';", false, @debug )
+db.query( "UPDATE #{$MYSQL_TB_CFG} SET fcze='#{fcze_}' WHERE user='#{user.name}';", true )

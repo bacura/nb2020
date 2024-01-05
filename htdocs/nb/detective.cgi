@@ -3,63 +3,98 @@
 #Nutrition browser Detective input 0.05b (2022/10/16)
 
 #==============================================================================
+#STATIC
+#==============================================================================
+@debug = false
+@dummy = false
+script = File.basename( $0, '.cgi' )
+food_max = 10
+
+#==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
 require './brain'
 
-
-#==============================================================================
-#STATIC
-#==============================================================================
-@debug = false
-@dummy = false
-script = 'detective'
-food_max = 10
-
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
-def html_form_hints( user, lp, volume, energy, protein, fat, carbo, salt )
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'energy' 	=> "エネルギー(kcal)",\
+		'protein'	=> "たんぱく質(g)",\
+		'fat'		=> "脂質(g)",\
+		'carbo'		=> "炭水化物(g)",\
+		'salt'		=> "食塩相当量(g)",\
+		'suiri'		=> "推　理",\
+		'volume'	=> "重量(g)",\
+		'adapt'		=> "採　用",\
+		'food_name'	=> "食品名",\
+		'total'		=> "合計",\
+		'target'	=> "目標",\
+		'ratio'		=> "比率",\
+		'detective'	=> "<img src='bootstrap-dist/icons/incognito.svg' style='height:3.2em; width:3.2em;'>",\
+		'result'	=> "前回の推理結果",\
+		'suiri_time'=> "推理時間",\
+		'suiri_chu'	=> "忙しいので無理"
+	}
+
+	return l[language]
+end
+
+
+def html_form_hints( db, l, volume, energy, protein, fat, carbo, salt )
 	reasoning_button = ''
-	r = mdb( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
-	if r.first
-		sum = r.first['sum']
-		foods = sum.split( "\t" )
-		reasoning_button = "<button type='button' class='btn btn-sm btn-warning' onclick=\"reasoning()\">#{lp[6]}</button>" if foods.size > 0
+
+	uptime = `uptime`
+	cpu_load = uptime.scan( /\d\.\d\d/ )[0].to_f
+
+	if cpu_load < 0.8
+		r = db.query( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{db.user.name}';", false )
+		if r.first
+
+			sum = r.first['sum']
+			foods = sum.split( "\t" )
+			reasoning_button = "<button type='button' class='btn btn-sm btn-warning' onclick=\"reasoning()\">#{l['suiri']}</button>" if foods.size > 0
+		end
+	else
+		reasoning_button = "<button type='button' class='btn btn-sm btn-secondary'>#{l['suiri_chu']}</button>"
 	end
 
 	token_button = ''
-	r = mdbr( "SELECT token FROM detective WHERE user='#{user.name}';", false, @debug )
-	token_button = "<span class='badge text-light bg-dark' onclick=\"loadDetectiveResult()\">#{lp[14]}</span>" if r.first
+	r = mdbr( "SELECT token FROM detective WHERE user='#{db.user.name}';", false, false )
+	token_button = "<span class='badge text-light bg-dark' onclick=\"loadDetectiveResult()\">#{l['result']}</span>" if r.first
 
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div align="right">#{token_button}</div><br>
 	<div class='row'>
 		<div class='col-2'>
-			#{lp[7]}<br>
+			#{l['volume']}<br>
 			<input type='text' id='volume' value='#{volume}'>
 		</div>
 		<div class='col-2'>
-			#{lp[1]}<br>
+			#{l['energy']}<br>
 			<input type='text' id='energy' value='#{energy}'>
 		</div>
 		<div class='col-2'>
-			#{lp[2]}<br>
+			#{l['protein']}<br>
 			<input type='text' id='protein' value='#{protein}'>
 		</div>
 		<div class='col-2'>
-			#{lp[3]}<br>
+			#{l['fat']}<br>
 			<input type='text' id='fat' value='#{fat}'>
 		</div>
 		<div class='col-2'>
-			#{lp[4]}<br>
+			#{l['carbo']}<br>
 			<input type='text' id='carbo' value='#{carbo}'>
 		</div>
 		<div class='col-2'>
-			#{lp[5]}<br>
+			#{l['salt']}<br>
 			<input type='text' id='salt' value='#{salt}'>
 		</div>
 	</div>
@@ -74,11 +109,11 @@ HTML
 end
 
 
-def html_table_result( user, lp,volume, energy, protein, fat, carbo, salt, food_nos, fw_ex, fct_ex, fct_ex_total, fct_ratio )
+def html_table_result( db, l,volume, energy, protein, fat, carbo, salt, food_nos, fw_ex, fct_ex, fct_ex_total, fct_ratio )
 	c = 0
 	tbody = '<tbody>'
 	food_nos.each do |e|
-		r = mdb( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false, @debug )
+		r = db.query( "SELECT name FROM #{$MYSQL_TB_TAG} WHERE FN='#{e}';", false )
 		if r.first
 			tbody << '<tr>'
 			tbody << "<td>#{r.first['name']}</td>"
@@ -105,13 +140,13 @@ html = <<-"HTML"
 		<table class='table table-sm'>
 			<thead>
 				<tr>
-					<td class='cb_header'>#{lp[9]}</td>
-					<td class='cb_header'>#{lp[7]}</td>
-					<td class='cb_header'>#{lp[1]}</td>
-					<td class='cb_header'>#{lp[2]}</td>
-					<td class='cb_header'>#{lp[3]}</td>
-					<td class='cb_header'>#{lp[4]}</td>
-					<td class='cb_header'>#{lp[5]}</td>
+					<td class='cb_header'>#{l['food_name']}</td>
+					<td class='cb_header'>#{l['volume']}</td>
+					<td class='cb_header'>#{l['energy']}</td>
+					<td class='cb_header'>#{l['protein']}</td>
+					<td class='cb_header'>#{l['fat']}</td>
+					<td class='cb_header'>#{l['carbo']}</td>
+					<td class='cb_header'>#{l['salt']}</td>
 				</td>
 			<thead>
 
@@ -121,21 +156,21 @@ html = <<-"HTML"
 			<br>
 
 			<tr>
-			<td>#{lp[10]}</td><td></td>
+			<td>#{l['total']}</td><td></td>
 			#{fct_ex_total_}
 			</tr>
 
 			<tr>
-			<td>#{lp[11]}</td><td></td>
-			<td>#{energy}</td>
-			<td>#{protein}</td>
-			<td>#{fat}</td>
-			<td>#{carbo}</td>
-			<td>#{salt}</td>
+			<td class='text-primary'>#{l['target']}</td><td></td>
+			<td class='text-primary'>#{energy}</td>
+			<td class='text-primary'>#{protein}</td>
+			<td class='text-primary'>#{fat}</td>
+			<td class='text-primary'>#{carbo}</td>
+			<td class='text-primary'>#{salt}</td>
 			</tr>
 
 			<tr>
-			<td>#{lp[12]}</td><td></td>
+			<td>#{l['ratio']}</td><td></td>
 				#{fct_ratio_}
 			</tr>
 
@@ -144,7 +179,7 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<button type='button' class='btn btn-sm btn-success' onclick="detectiveAdopt( '#{food_nos_solid}', '#{fw_ex_solid}' )">#{lp[8]}</button>
+		<button type='button' class='btn btn-sm btn-success' onclick="detectiveAdopt( '#{food_nos_solid}', '#{fw_ex_solid}' )">#{l['adapt']}</button>
 	</div>
 </div>
 HTML
@@ -160,7 +195,8 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 puts "POST<br>" if @debug
@@ -195,6 +231,11 @@ if @debug
 end
 
 
+uptime = `uptime`
+cpu_load = uptime.scan( /\d\.\d\d/ )[0].to_f
+puts "<div align='center'>#{l['detective']}</div><br>"
+
+
 ####
 html = ''
 message = ''
@@ -218,7 +259,7 @@ when 'reasoning'
 		salt = salt / volume * 100
 	end
 
-	r = mdb( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
 	if r.first
 		sum = r.first['sum']
 		foods = sum.split( "\t" )
@@ -237,7 +278,7 @@ when 'reasoning'
 				else
           			query  = "SELECT ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCT} WHERE FN='#{a[0]}';"
 				end
-				rr = mdb( query, false, @debug )
+				rr = db.query( query, false )
 				if rr.first
 					dp1[c] << rr.first['ENERC_KCAL'].to_f / 100
 					dp1[c] << rr.first['PROTV'].to_f / 100
@@ -466,8 +507,8 @@ when 'reasoning'
 		mdbr( "DELETE FROM #{script} WHERE user='#{user.name}';", false, @debug )
 		mdbr( "INSERT INTO #{script} SET token='#{token}', user='#{user.name}', result='#{result_}';", false, @debug )
 
-		html =  html_table_result( user, lp, volume, energy, protein, fat, carbo, salt, food_nos, fw_ex, fct_ex, fct_ex_total, fct_ratio )
-		message = "#{lp[15]} #{ptime.hour}:#{ptime.min}:#{ptime.sec}"
+		html =  html_table_result( db, l, volume, energy, protein, fat, carbo, salt, food_nos, fw_ex, fct_ex, fct_ex_total, fct_ratio )
+		message = "#{l['suiri_time']} #{ptime.hour}:#{ptime.min}:#{ptime.sec}"
 	else
 		puts 'ERROR'
 	end
@@ -492,8 +533,8 @@ when 'load_result'
 		carbo = hints['carbo']
 		salt = hints['salt']
 
-		html =  html_table_result( user, lp, volume, energy, protein, fat, carbo, salt, food_nos, fw_ex, fct_ex, fct_ex_total, fct_ratio )
-		message = "#{lp[15]} #{ptime.hour}:#{ptime.min}:#{ptime.sec}"
+		html =  html_table_result( db, l, volume, energy, protein, fat, carbo, salt, food_nos, fw_ex, fct_ex, fct_ex_total, fct_ratio )
+		message = "#{l['suiri_time']} #{ptime.hour}:#{ptime.min}:#{ptime.sec}"
 	else
 		message = "ERROR"
 	end
@@ -502,7 +543,7 @@ when 'adopt'
 	puts 'ADOPT<br>' if @debug
 	food_nos = @cgi['food_nos_solid'].split( ':' )
 	fw_ex = @cgi['fw_ex_solid'].split( ':' )
-	r = mdb( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT sum FROM #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
 	new_sum = ''
 	sum = r.first['sum']
 	if sum != ''
@@ -530,11 +571,11 @@ when 'adopt'
 		end
 		new_sum.chop!
 	end
-	mdb( "UPDATE #{$MYSQL_TB_SUM} set sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_SUM} set sum='#{new_sum}' WHERE user='#{user.name}';", true )
 
 when 'wait'
 	html = '<div class="spinner-border" role="status" align="center"><span class="visually-hidden">Loading...</span></div>'
-	message = lp[16]
+	message = l['suiri_chu']
 else
 	puts "CHECK detective table in DBR<br>" if @debug
 	r = mdbr( "SHOW TABLES LIKE '#{script}';", false, @debug )
@@ -542,7 +583,7 @@ else
 
 	if code != ''
 		puts "FCZ import<br>" if @debug
-		r = mdb( "SELECT origin, ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}' AND user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT origin, ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}' AND user='#{user.name}';", false, @debug )
 		if r.first
 			volume = r.first['origin'].to_i
 			energy = r.first['ENERC_KCAL'].to_f
@@ -564,11 +605,8 @@ else
 		end
 	end
 
-	html = html_form_hints( user, lp, volume, energy, protein, fat, carbo, salt )
+	html = html_form_hints( db, l, volume, energy, protein, fat, carbo, salt )
 end
 
-
-message = `uptime` if message == ''
-puts "<div align='center'>#{lp[13]}&nbsp;&nbsp;#{message}</div><br>"
 
 puts html

@@ -1,4 +1,4 @@
-# Ginmi module for basal metabolism reference 0.11b  (2020/09/12)
+# Ginmi module for basal metabolism reference 0.12b  (2023/07/08)
 #encoding: utf-8
 
 @debug = false
@@ -45,7 +45,7 @@ def ginmi_module( cgi, user )
 		end
 
 		sex_select = []
-		if sex = 0
+		if sex == 0
 			sex_select[0] = 'SELECTED'
 		else
 			sex_select[1] = 'SELECTED'

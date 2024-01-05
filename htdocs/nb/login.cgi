@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 login 0.05b (2023/05/16)
+#Nutrition browser 2020 login 0.06b (2023/07/15)
 
 
 #==============================================================================
@@ -91,20 +91,18 @@ get_data = get_data()
 
 #### Getting POST date
 user = User.new( @cgi )
-user.debug if @debug
-l = language_pack( $DEFAULT_LP )
-
+l = language_pack( user.language )
+db = Db.new( user, false, true )
 
 puts "#{get_data['mode']}" if @debug
 case get_data['mode']
 when 'check'
-  #### Checking user ID on DB
 
-  r = mdb( "SELECT user, status FROM #{$MYSQL_TB_USER} WHERE user='#{@cgi['id']}' AND pass='#{@cgi['pass']}' AND status>'0';", true, @debug )
+  puts 'Checking user ID on DB' if @debug
+  r = db.query( "SELECT user, status, cookie FROM #{$MYSQL_TB_USER} WHERE user='#{@cgi['id']}' AND pass='#{@cgi['pass']}' AND status>'0';", false )
   unless r.first
       html_init( nil )
       html_head( nil, 0, nil )
-#      html_head( nil, 0, nil )
       html_top_login( l )
       msg = "<p class='msg_small_red'>#{l['error']}</p>"
       html_login_form( msg, l )
@@ -112,27 +110,32 @@ when 'check'
   else
     status = r.first['status'].to_i
 
-    # Issuing cookies
+    puts 'Issuing cookies' if @debug
     uid = SecureRandom.hex( 16 )
+    uid = r.first['cookie'] if status == 7 && r.first['cookie'] != nil
     cookie = "Set-Cookie: NAME=#{@cgi['id']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
 
-    # Updating user information
-    mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m=NULL WHERE user='#{@cgi['id']}';", true, @debug )
+    puts 'Updating user information' if @debug
+    db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m=NULL WHERE user='#{@cgi['id']}';", true )
+
     html_init( cookie )
     html_head( 'refresh', status, nil )
     puts '</span></body></html>'
 
-    # Checking & repairing history table
-    r = mdb( "SELECT user FROM #{$MYSQL_TB_HIS} WHERE user='#{@cgi['id']}';", false, @debug )
-    mdb( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{@cgi['id']}', his='';", false, @debug )  unless r.first
+    puts 'Init essential config' if @debug
+    if status != 7
+      # Checking & repairing history table
+      r = db.query( "SELECT user FROM #{$MYSQL_TB_HIS} WHERE user='#{@cgi['id']}';", false )
+      db.query( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{@cgi['id']}', his='';", true )  unless r.first
 
-    # Checking & repairing SUM table
-    r = mdb( "SELECT user FROM #{$MYSQL_TB_SUM} WHERE user='#{@cgi['id']}';", false, @debug )
-    mdb( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{@cgi['id']}', sum='';", false, @debug ) unless r.first
+      # Checking & repairing SUM table
+      r = db.query( "SELECT user FROM #{$MYSQL_TB_SUM} WHERE user='#{@cgi['id']}';", false )
+      db.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{@cgi['id']}', sum='';", true ) unless r.first
 
-    # Checking & repairing meal table
-    r = mdb( "SELECT user FROM #{$MYSQL_TB_MEAL} WHERE user='#{@cgi['id']}';", false, @debug )
-    mdb( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", false, @debug ) unless r.first
+      # Checking & repairing meal table
+      r = db.query( "SELECT user FROM #{$MYSQL_TB_MEAL} WHERE user='#{@cgi['id']}';", false )
+      db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", true ) unless r.first
+    end
   end
 
 when 'logout'
@@ -141,20 +144,20 @@ when 'logout'
   html_init( cookie )
   html_head( 'refresh', 0, nil )
   puts '</span></body></html>'
-  mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true, @debug )
+  db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
 
 when 'family'
   cookie = ''
   login_mv = get_data['login_mv']
   puts "->#{login_mv}" if @debug
-  r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{login_mv}';", true, @debug )
+  r = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{login_mv}';", false )
   if r.first
     puts r.first['mom'] if @debug
     if r.first['mom'] == '' ||  r.first['mom'] == nil
         cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{r.first['cookie']}\n"
-        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true, @debug )
+        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
     else
-      rr = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user=\"#{r.first['mom']}\";", true, @debug )
+      rr = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user=\"#{r.first['mom']}\";", false )
       if rr.first
         # Issuing cookies
         uid = SecureRandom.hex( 16 )
@@ -162,8 +165,8 @@ when 'family'
         cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
         puts cookie if @debug
 
-        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{mid}' WHERE user='#{login_mv}';", true, @debug )
-        mdb( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true, @debug )
+        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{mid}' WHERE user='#{login_mv}';", true )
+        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
       end
     end
   end
@@ -180,4 +183,3 @@ else
   html_login_form( nil, l )
   html_foot()
 end
-

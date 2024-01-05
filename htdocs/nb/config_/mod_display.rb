@@ -1,11 +1,11 @@
-# Nutorition browser 2020 Config module for NB display 0.03b (2023/5/7)
+# Nutorition browser 2020 Config module for NB display 0.04b (2023/7/13)
 #encoding: utf-8
 
 @debug = false
 
-def config_module( cgi, user, lp )
+def config_module( cgi, db )
 	module_js()
-	l = language_pack( user.language )
+	l = module_lp( db.user.language )
 
 	step = cgi['step']
 
@@ -18,15 +18,14 @@ def config_module( cgi, user, lp )
 		icalc = cgi['icalc'].to_i
 
 		# Updating bio information
-		mdb( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}', ifix='#{ifix}', icalc='#{icalc}' WHERE user='#{user.name}';", false, @debug )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET icache='#{icache}', ifix='#{ifix}', icalc='#{icalc}' WHERE user='#{db.user.name}';", true )
 	else
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false,  @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 
 		icache = r.first['icache'].to_i
 		ifix = r.first['ifix'].to_i
 		icalc = r.first['icalc'].to_i
 	end
-
 
 	icalc = 14 if icalc == 0
 
@@ -90,10 +89,11 @@ end
 
 
 # Language pack
-def language_pack( language )
+def module_lp( language )
 	l = Hash.new
 
 	l['jp'] = {
+		'mod_name' => "表示",\
 		'cache' => "画像キャッシュ",\
 		'fix' => "メニューの固定:",\
 		'reload' => "※更新後、リロードが必要です",\

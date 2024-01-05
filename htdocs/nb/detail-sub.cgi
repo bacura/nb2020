@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail sub 0.01b (2023/05/13)
+#Nutrition browser 2020 food detail sub 0.03b (2023/08/09)
 
 
 #==============================================================================
@@ -33,6 +33,7 @@ def language_pack( language )
 		'fn' 		=> "食品番号",\
 		'name' 		=> "食品名",\
 		'change'	=> "<img src='bootstrap-dist/icons/hammer.svg' style='height:1.2em; width:1.2em;'>",\
+		'egg'		=> "<img src='bootstrap-dist/icons/egg.svg' style='height:1.2em; width:1.2em;'>",\
 		'cboard' 	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>",\
 		'calendar'	=> "<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>",\
 		'unit' 		=> "単",\
@@ -56,6 +57,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### POST
@@ -67,6 +69,7 @@ food_no = @cgi['food_no']
 base = @cgi['base']
 base_fn = @cgi['base_fn']
 if @debug
+	puts "command: #{command}<br>"
 	puts "food_key: #{food_key}<br>"
 	puts "frct_mode: #{frct_mode}<br>"
 	puts "food_weight: #{food_weight}<br>"
@@ -139,9 +142,9 @@ when 'init', 'weight', 'cb', 'cbp'
 
 	# 正規食品
 	if class_no.to_i == 0
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false )
 	else
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false )
 	end
 	if r.first
 		r.each do |e|
@@ -163,7 +166,7 @@ when 'init', 'weight', 'cb', 'cbp'
 		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
 	end
 	puts "#{query}<br>" if @debug
-	r = mdb( query, false, @debug )
+	r = db.query( query, false )
 	if r.first
 		r.each do |e|
 			food_no_list << e['FN']
@@ -180,7 +183,7 @@ when 'init', 'weight', 'cb', 'cbp'
  	fc_items = []
 	fc_items_html = ''
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false, @debug )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_PALETTE} WHERE user='#{user.name}' AND name='簡易表示用';", false )
 	if r.first
 		palette = r.first['palette']
 		palette.size.times do |c|
@@ -196,7 +199,6 @@ when 'init', 'weight', 'cb', 'cbp'
 
 	# 食品ラインの生成
 	food_html = ''
-    db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
 	food_no_list.size.times do |c|
 		pseudo_flag = false
 		# 栄養素の一部を取得
@@ -211,12 +213,12 @@ when 'init', 'weight', 'cb', 'cbp'
 		end
 		p query if @debug
 
-		res = db.query( query )
+		res = db.query( query, false )
 		unless res.first
 			puts "<span class='error'>[FCTP load]ERROR!!<br>"
 			puts "code:#{food_no_list[c]}</span><br>"
-			db.query( "DELETE FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
-			db.query( "DELETE FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';" )
+			db.query( "DELETE FROM #{$MYSQL_TB_TAG} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';", true )
+			db.query( "DELETE FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}' AND user='#{user.name}';", true )
 			exit()
 		end
 
@@ -231,8 +233,10 @@ when 'init', 'weight', 'cb', 'cbp'
 		end
 
 		# 追加・変更ボタン
-		if user.name && base == 'cb'
-			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}' )\">#{l['change']}</span>"
+		if user.name && base == 'cb' && food_no_list[c] == base_fn
+			add_button = "<span onclick=\"addingCB( '#{base_fn}', 'weight_sub', 'duplicated' )\">#{l['egg']}</span>"
+		elsif user.name && base == 'cb'
+			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}', '#{food_weight}' )\">#{l['change']}</span>"
 		elsif user.name
 			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{l['cboard']}</span>"
 		else
@@ -254,7 +258,7 @@ when 'init', 'weight', 'cb', 'cbp'
 		gm_dic = ''
 
 		if user.status >= 8
-			res = mdb( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false, @debug )
+			res = db.query( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false )
 			if res.first
 				bc = 'btn-outline-secondary'
 				bc = 'btn-outline-danger' if res.first['unit'] != '{"g":1}';
@@ -281,13 +285,41 @@ when 'init', 'weight', 'cb', 'cbp'
 			food_html << "<tr class='fct_value'><td>#{food_no_list[c]}</td><td class='link_cursor' onclick=\"detailView( '#{food_no_list[c]}' )\">#{class_add}#{food_name_list[c]} #{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}&nbsp;&nbsp;#{gm_unitc}&nbsp;#{gm_allergen}&nbsp;#{gm_shun}&nbsp;#{gm_dic}</td>#{sub_components}</tr>\n"
 		end
 	end
-	db.close
+
+
+	weight_parts = ''
+	if base != 'cb'
+		weight_parts = <<-"WEIGHT"
+<div class="col-3">
+	<div class="input-group input-group-sm">
+		<label class='input-group-text' for='fraction'>#{l['fract']}</label>
+		<select class='form-select' id='fraction' onchange='changeDSWeight( "weight", "#{food_key}", "#{food_no}" )>
+			<option value='1'#{frct_select[1]}>#{l['round']}</option>
+			<option value='2'#{frct_select[2]}>#{l['ceil']}</option>
+			<option value='3'#{frct_select[3]}>#{l['floor']}</option>
+		</select>
+	</div>
+</div>
+
+<div class="col-3">
+	<div class="input-group input-group-sm">
+		<label class="input-group-text" for="weight">#{l['weight']}</label>
+		<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
+		<button class="btn btn-outline-primary" type="button" onclick="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">g</button>
+	</div>
+</div>
+
+WEIGHT
+	end
+
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0
+	pseudo_button = ''
+ 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0 && base != 'cb'
 
  	# Recipe search badge
- 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l['search']}</span><br><br>"
+ 	recipe_search = ''
+ 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l['search']}</span><br><br>" unless user.status == 0
 
  	#
 	return_button = ''
@@ -295,8 +327,8 @@ when 'init', 'weight', 'cb', 'cbp'
 
 
 	parallel_button = ''
-	parallel_button = "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{food_no}' )\">#{l['parallel']}</div><br>" if base == 'cb'
-
+	parallel_button = "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{base_fn}' )\">#{l['parallel']}</div><br>" if base == 'cb'
+ 
 	html = <<-"HTML"
 	<div class='container-fluid'>
 		<div class="row">
@@ -306,24 +338,10 @@ when 'init', 'weight', 'cb', 'cbp'
 		<div class="row">
   		<div class="col-3"><span class='h5'>#{food_name}</span>#{recipe_search}</div>
   		<div class="col-3"><h5>#{food_weight.to_f} g</h5></div>
-		<div class="col-3">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="fraction">#{l['fract']}</label>
-				<select class="form-select" id="fraction" onchange="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">
-					<option value="1"#{frct_select[1]}>#{l['round']}</option>
-					<option value="2"#{frct_select[2]}>#{l['ceil']}</option>
-					<option value="3"#{frct_select[3]}>#{l['floor']}</option>
-				</select>
-			</div>
+		#{weight_parts}
 		</div>
-		<div class="col-3">
-			<div class="input-group input-group-sm">
-				<label class="input-group-text" for="weight">#{l['weight']}</label>
-				<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
-				<button class="btn btn-outline-primary" type="button" onclick="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">g</button>
-			</div>
-		</div>
-	</div></div>
+	</div>
+	<input type='hidden' id='weight_sub' value='#{food_weight.to_f}'>
 	<br>
 
 	<table class="table table-sm table-hover">
