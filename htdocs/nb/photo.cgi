@@ -36,12 +36,13 @@ end
 
 
 def view_series( user, code, l, size )
-	recipe = Recipe.new( user )
-	recipe.load_db( code, true )
-
 	media = Media.new( user.name )
 	media.code = code
 	media.load_series()
+	protect = true
+
+	recipe = Recipe.new( user )
+	recipe.load_db( code, true ) if /\-r/ =~ code
 
 	if media.series.size > 0
 		puts "<div class='row'>"

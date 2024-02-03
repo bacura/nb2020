@@ -1,5 +1,5 @@
 #! /usr/bin/ruby
-#nb2020-dbi.rb 0.72b (2023/01/03)
+#nb2020-dbi.rb 0.73b (2024/01/05)
 
 #Bacura KYOTO Lab
 #Saga Ukyo-ku Kyoto, JAPAN
@@ -101,8 +101,12 @@ end
 
 #### Making fct additional table.
 def fcts_init( base_file, sub_files )
-	query = "DROP TABLE fcts;"
-	$DB.query( query )
+	query = "SHOW TABLES LIKE 'fcts';"
+	res = $DB.query( query )
+	if res.first
+		query = "DROP TABLE fcts;"
+		$DB.query( query )
+	end
 
 	query = 'CREATE TABLE fcts (FN VARCHAR(5) NOT NULL PRIMARY KEY'
 	sub_files.each do |e|
@@ -170,8 +174,12 @@ end
 
 #### Making fct table.
 def fct_init( source_file, plus_fct )
-	query = "DROP TABLES fct;"
-	$DB.query( query )
+	query = "SHOW TABLES LIKE 'fct';"
+	res = $DB.query( query )
+	if res.first
+		query = "DROP TABLE fct;"
+		$DB.query( query )
+	end
 
 	query = 'CREATE TABLE fct (FG VARCHAR(2),FN VARCHAR(5) NOT NULL PRIMARY KEY,SID VARCHAR(8),Tagnames VARCHAR(255),REFUSE TINYINT UNSIGNED,ENERC SMALLINT UNSIGNED,ENERC_KCAL SMALLINT UNSIGNED,WATER VARCHAR(8),PROTCAA VARCHAR(8),PROT VARCHAR(8),PROTV VARCHAR(8),FATNLEA VARCHAR(8),CHOLE VARCHAR(8),FAT VARCHAR(8),FATV VARCHAR(8),CHOAVLM VARCHAR(8),CHOAVLM_ VARCHAR(1),CHOAVL VARCHAR(8),CHOAVLDF VARCHAR(8),CHOV VARCHAR(8),FIB VARCHAR(8),POLYL VARCHAR(8),CHOCDF VARCHAR(8),OA VARCHAR(8),ASH VARCHAR(8),NA VARCHAR(8),K VARCHAR(8),CA VARCHAR(8),MG VARCHAR(8),P VARCHAR(8),FE VARCHAR(8),ZN VARCHAR(8),CU VARCHAR(8),MN VARCHAR(8),ID VARCHAR(8),SE VARCHAR(8),CR VARCHAR(8),MO VARCHAR(8),RETOL VARCHAR(8),CARTA VARCHAR(8),CARTB VARCHAR(8),CRYPXB VARCHAR(8),CARTBEQ VARCHAR(8),VITA_RAE VARCHAR(8),VITD VARCHAR(8),TOCPHA VARCHAR(8),TOCPHB VARCHAR(8),TOCPHG VARCHAR(8),TOCPHD VARCHAR(8),VITK VARCHAR(8),THIA VARCHAR(8),RIBF VARCHAR(8),NIA VARCHAR(8),NE VARCHAR(8),VITB6A VARCHAR(8),VITB12 VARCHAR(8),FOL VARCHAR(8),PANTAC VARCHAR(8),BIOT VARCHAR(8),VITC VARCHAR(8),ALC VARCHAR(8),NACL_EQ VARCHAR(8),Notice VARCHAR(255));'
 	$DB.query( query )
@@ -1126,13 +1134,13 @@ def ref_para_init( ref_parallel )
 	if res.first
 		puts 'ref_para already exists.'
 	else
-		query = 'CREATE TABLE ref_para ( FN VARCHAR(5) PRIMARY KEY, juten VARCHAR(32), para VARCHAR(256));'
+		query = 'CREATE TABLE ref_para ( FN VARCHAR(5), juten VARCHAR(32), para VARCHAR(256));'
 		$DB.query( query )
 
 		f = open( ref_parallel, 'r' )
 		f.each_line do |e|
 			a = e.force_encoding( 'utf-8' ).chomp.split( "\t" )
-			query = "INSERT INTO ref_para set FN='#{a[1]}', para=\"#{a[2].delete( "'" )}\", juten=\"#{a[0]}\";"
+			query = "INSERT INTO ref_para set FN='#{a[1]}', para=\"#{a[2]}\", juten=\"#{a[0]}\";"
 			$DB.query( query )
 		end
 		puts 'ref_para table has been created.'
@@ -1217,7 +1225,7 @@ ref_bmi = 'ref2020-bmi.txt'
 ref_phys = 'ref2020-phys.txt'
 ref_eer = 'ref2020-eer.txt'
 ref_intake = 'ref2020-intake.txt'
-ref_parallel = 'ref2020-parallel_.txt'
+ref_parallel = 'ref2020-parallel.txt'
 
 #==============================================================================
 print 'DB Administrator name？'

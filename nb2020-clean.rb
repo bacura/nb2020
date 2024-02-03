@@ -19,6 +19,7 @@ data_solid = []
 # 食品成分表データの読み込みと加工
 f = open( source_file, 'r' )
 f.each_line do |e|
+	puts e.force_encoding( 'UTF-8' )
 	items = e.force_encoding( 'UTF-8' ).split( "\t" )
 
 	#### 共通

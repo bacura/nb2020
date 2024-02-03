@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.49b (2023/10/03)
+// Nutorition Browser 2020 core.js 0.50b (2024/01/06)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -963,7 +963,7 @@ var quickSave = function( code ){
 
 
 // GN Exchange
-var gnExchange = function( code ){
+const gnExchange = function( code ){
 	if( document.getElementById( 'gn_check' ).checked ){
 		$.post( "cboard.cgi", { command:'gn_exchange', code:code }, function( data ){
 			$( "#L1" ).html( data );
@@ -976,7 +976,7 @@ var gnExchange = function( code ){
 
 
 // まな板からでL5閲覧ウインドウを表示する。
-var cb_detail_sub = function( key, weight, base_fn ){
+const cb_detail_sub = function( key, weight, base_fn ){
 	$.get( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
 		$( "#L2" ).html( data );
 
@@ -987,8 +987,8 @@ var cb_detail_sub = function( key, weight, base_fn ){
 };
 
 
-// まな板からでL5閲覧ウインドウを表示する。
-var cb_detail_para = function( key, weight, base_fn ){
+// パラレルウインドウを表示する。
+const cb_detail_para = function( key, weight, base_fn ){
 	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
 		$( "#L3" ).html( data );
 
@@ -999,8 +999,29 @@ var cb_detail_para = function( key, weight, base_fn ){
 };
 
 
+// パラレルウインドウの重点を変更する
+const cb_detail_para_juten = function( key, weight, base_fn ){
+	let juten = "FLAT";
+	if( document.getElementById( "para_ENERC_KCAL" ).checked ){ juten = "ENERC_KCAL"; }
+	if( document.getElementById( "para_WATER" ).checked ){ juten = "WATER"; }
+	if( document.getElementById( "para_PROTV" ).checked ){ juten = "PROTV"; }
+	if( document.getElementById( "para_FATV" ).checked ){ juten = "FATV"; }
+	if( document.getElementById( "para_FASAT" ).checked ){ juten = "FASAT"; }
+	if( document.getElementById( "para_CHOV" ).checked ){ juten = "CHOV"; }
+	if( document.getElementById( "para_FIB" ).checked ){ juten = "FIB"; }
+	if( document.getElementById( "para_CA" ).checked ){ juten = "CA"; }
+	if( document.getElementById( "para_FE" ).checked ){ juten = "FE"; }
+	if( document.getElementById( "para_CARTBEQ" ).checked ){ juten = "CARTBEQ"; }
+	if( document.getElementById( "para_THIA" ).checked ){ juten = "THIA"; }
+	if( document.getElementById( "para_RIBF" ).checked ){ juten = "RIBF"; }
+	if( document.getElementById( "para_NACL_EQ" ).checked ){ juten = "NACL_EQ"; }
+
+	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn, juten:juten }, function( data ){ $( "#L3" ).html( data );});
+};
+
+
 // Retrun to CB
-var returnCB = function(){
+const returnCB = function(){
 		flashBW();
 		dl1 = true;
 		displayBW();
@@ -1008,17 +1029,17 @@ var returnCB = function(){
 
 
 // Chomi% category
-var chomiSelect =  function(){
-	var code = document.getElementById( "recipe_code" ).value;
-	var chomi_selected = document.getElementById( "chomi_selected" ).value;
+const chomiSelect =  function(){
+	const code = document.getElementById( "recipe_code" ).value;
+	const chomi_selected = document.getElementById( "chomi_selected" ).value;
 	$.post( "cboard.cgi", { command:'chomi', code:code, chomi_selected:chomi_selected }, function( data ){ $( "#chomi_cell" ).html( data );});
 };
 
 // Chomi% add
-var chomiAdd =  function(){
-	var code = document.getElementById( "recipe_code" ).value;
-	var chomi_selected = document.getElementById( "chomi_selected" ).value;
-	var chomi_code = document.getElementById( "chomi_code" ).value;
+const chomiAdd =  function(){
+	const code = document.getElementById( "recipe_code" ).value;
+	const chomi_selected = document.getElementById( "chomi_selected" ).value;
+	const chomi_code = document.getElementById( "chomi_code" ).value;
 	$.post( "cboard.cgi", { command:'chomis', code:code, chomi_selected:chomi_selected, chomi_code:chomi_code }, function( data ){ $( "#L1" ).html( data );});
 };
 

@@ -27,6 +27,8 @@ def language_pack( language )
 		'weight' 	=> "重量",\
 		'fn' 		=> "食品番号",\
 		'name' 		=> "食品名",\
+		'juten' 	=> "重点",\
+		'flat' 		=> "均等",\
 		'change'	=> "<img src='bootstrap-dist/icons/hammer.svg' style='height:1.2em; width:1.2em;'>",\
 		'signpost'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",
 		'parallel'	=> "<img src='bootstrap-dist/icons/wrench-adjustable.svg' style='height:2em; width:2em;'>"
@@ -54,6 +56,8 @@ food_weight = @cgi['food_weight']
 food_no = @cgi['food_no']
 base = @cgi['base']
 base_fn = @cgi['base_fn']
+juten = @cgi['juten'].to_s
+juten = 'FLAT' if juten == ''
 if @debug
 	puts "food_key: #{food_key}<br>"
 	puts "frct_mode: #{frct_mode}<br>"
@@ -61,6 +65,7 @@ if @debug
 	puts "food_no: #{food_no}<br>"
 	puts "base: #{base}<br>"
 	puts "base_fn: #{base_fn}<br>"
+	puts "juten: #{juten}<br>"
 	puts "<hr>"
 end
 
@@ -137,7 +142,7 @@ when 'init', 'weight', 'cb', 'cbp'
 	end
 
 
-	r = db.query( "SELECT FN, para FROM #{$MYSQL_TB_PARA} WHERE FN='#{base_fn}';", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_PARA} WHERE FN='#{base_fn}' AND JUTEN='#{juten}';", false )
 	if r.first
 		rr = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FN IN (#{r.first['para']});", false )
 		rr.each do |e|
@@ -150,6 +155,15 @@ when 'init', 'weight', 'cb', 'cbp'
 			tag5_list << e['tag5']
 		end
 	end
+
+	puts 'Display items<br>' if @debug
+	juten_html = ''
+	@fct_para.each do |e|
+		juten_html << "<th>"
+		juten_html << "<input class='form-check-input' type='radio' name='para_juten' id='para_#{e}' onchange=\"cb_detail_para_juten('#{food_key}','#{food_weight}','#{base_fn}')\" #{$CHECK[ e == juten ]}>"
+		juten_html << "</th>"
+	end
+
 
 	puts 'Display items<br>' if @debug
 	fc_items_html = ''
@@ -203,6 +217,13 @@ when 'init', 'weight', 'cb', 'cbp'
 
 	<table class="table table-sm table-hover">
 		<thead>
+			<tr>
+	  			<th>#{l['juten']}</th>
+	  			<th>#{@fct_name[juten]}</th>
+				<th></th>
+	  			<th><span class="badge bg-success" onclick="cb_detail_para('#{food_key}','#{food_weight}','#{base_fn}')">#{l['flat']}</span></th>
+				#{juten_html}
+    		</tr>
 			<tr>
 	  			<th>#{l['fn']}</th>
 	  			<th>#{l['name']}</th>
