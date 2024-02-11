@@ -1,4 +1,4 @@
-//guild.js ver 0.37b (2023/09/02)
+//guild.js ver 0.38b (2024/02/04)
 
 kp = 'koyomi/'
 
@@ -753,7 +753,7 @@ var initPathology = function(){
 // Food rank //////////////////////////////////////////////////////////////
 
 // Dosplaying recipe by scatter plott
-var foodRank = function(){
+const foodRank = function(){
 	$.post( "food-rank.cgi", { command:'init' }, function( data ){
 		$( "#L1" ).html( data );
 
@@ -764,16 +764,19 @@ var foodRank = function(){
 };
 
 // Dosplaying recipe by scatter plott
-var foodRankList = function(){
-	var main_item = document.getElementById( "main_item" ).value;
-	var comp_item = document.getElementById( "comp_item" ).value;
-	var rank_order = document.getElementById( "rank_order" ).value;
-	var rank_display = document.getElementById( "rank_display" ).value;
+const foodRankList = function(){
+	const main_item = document.getElementById( "main_item" ).value;
+	const comp_item = document.getElementById( "comp_item" ).value;
+	const rank_order = document.getElementById( "rank_order" ).value;
+	const rank_display = document.getElementById( "rank_display" ).value;
+	const fg = document.getElementById( "fg" ).value;
 
-	if( document.getElementById( "ex_inf" ).checked ){ var ex_inf = 1; }else{ var ex_inf = 0; }
-	if( document.getElementById( "ex_zero" ).checked ){ var ex_zero = 1; }else{ var ex_zero = 0; }
+	let ex_inf = 0;
+	let ex_zero = 0;
+	if( document.getElementById( "ex_inf" ).checked ){ ex_inf = 1; }
+	if( document.getElementById( "ex_zero" ).checked ){ ex_zero = 1; }
 
-	$.post( "food-rank.cgi", { command:'list', main_item:main_item, comp_item:comp_item, rank_order:rank_order, rank_display:rank_display, ex_inf:ex_inf, ex_zero:ex_zero }, function( data ){
+	$.post( "food-rank.cgi", { command:'list', fg:fg, main_item:main_item, comp_item:comp_item, rank_order:rank_order, rank_display:rank_display, ex_inf:ex_inf, ex_zero:ex_zero }, function( data ){
 		$( "#L1" ).html( data );
 	});
 };

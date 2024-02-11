@@ -1,4 +1,4 @@
-//shun.js ver 0.00b (2023/01/08)
+//shun.js ver 0.01b (2024/02/06)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Cooking school //////////////////////////////////////////////////////////////
@@ -724,7 +724,7 @@ var initJsonlist = function(){
 
 // Media list init
 var initMedialist = function(){
-	$.post( "medial.cgi", { command:'init' }, function( data ){
+	$.post( "media-list.cgi", { command:'init' }, function( data ){
 		$( "#L1" ).html( data );
 
 		flashBW();
@@ -753,6 +753,21 @@ var changeAstral = function(){
 	if( document.getElementById( "astral_sw" ).checked ){ astral_sw = 1; }
 
 	$.post( "astral.cgi", { command:'change', astral_sw:astral_sw }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Food flow //////////////////////////////////////////////////////////////
+
+// Astral body init
+var initFFlow = function(){
+	$.post( "astral.cgi", { command:'init' }, function( data ){
 		$( "#L1" ).html( data );
 
 		flashBW();
