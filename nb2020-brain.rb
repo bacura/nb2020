@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.33b (2023/08/20)
+#Nutrition browser 2020 brain 0.34b (2024/02/05)
 
 #==============================================================================
 #STATIC
@@ -198,13 +198,13 @@ def menu2rc_( db, code )
 end
 
 
-def recipe2fns( uname, code, rate, unit, ew_mode )
+def recipe2fns( db, code, rate, unit, ew_mode )
   ew_mode = 0 if ew_mode == nil
   fns = []
   fws = []
   tw = []
 
-  r = $DB.query( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{uname}' AND code='#{code}';" )
+  r = $DB.query( "SELECT sum, dish FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' AND code='#{code}';" )
   if r.first
     fns, fws, tw = extract_sum( r.first['sum'], r.first['dish'], ew_mode )
 
@@ -212,6 +212,14 @@ def recipe2fns( uname, code, rate, unit, ew_mode )
       fws.map! do |x|
         x * rate / 100 if x != '-' && x != '+'
       end
+
+    elsif unit == 'kcal'
+      rr = db.query( "SELECT ENERC_KCAL FROM #{$MYSQL_TB_FCZ} WHERE user='#{db.user.name}' AND base='recipe' AND origin='#{code}';", false )
+      rate = ( rate / BigDecimal( rr.first['ENERC_KCAL'] ))
+      fws.map! do |x|
+        x * rate if x != '-' && x != '+'
+      end
+
     else
       fws.map! do |x|
         x * rate / tw if x != '-' && x != '+'

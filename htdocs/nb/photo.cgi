@@ -53,7 +53,7 @@ def view_series( user, code, l, size )
 				puts "&nbsp;&nbsp;<span onclick=\"photoMove( '#{code}', '#{e}', #{i + 1} )\">#{l['right-ca']}</span>" if i != media.series.size - 1
 			end
 			puts '<br>'
-			puts "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a><br>"
+ 			puts "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a><br>"
 			puts "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{l['trash']}</span>" if recipe.protect != 1 && media.muser == user.name
 			puts "</div>"
 		end
@@ -67,13 +67,11 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
 db = Db.new( user, @debug, false )
-
 
 # POST
 command = @cgi['command']
@@ -81,6 +79,14 @@ base = @cgi['base']
 code = @cgi['code']
 mcode = @cgi['mcode']
 zidx = @cgi['zidx']
+iso = @cgi['iso']
+
+unless iso
+	html_init( nil )
+else
+	iso_init( nil )
+end
+
 if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"

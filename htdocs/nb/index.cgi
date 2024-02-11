@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.27b (2024/01/02)
+#Nutrition browser 2020 index page 0.28b (2024/02/04)
 
 
 #==============================================================================
@@ -73,6 +73,7 @@ def language_pack( language )
     'memorya'   => "記憶管理",\
     'senior'  => "黄昏管理",\
     'condition' => "状態管理",\
+    'fflow' => "食品フロー"
   }
 
   return l[language]
@@ -302,7 +303,8 @@ html = <<-"HTML"
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['senior']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['condition']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['mjl']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['medial']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initMedialist()">#{l['medial']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initFFlow()">#{l['fflow']}</button>
 </nav>
 <nav class='container-fluid' id='gm_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{l['unit']}</button>

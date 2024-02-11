@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.4b (2024/01/02)
+#Nutrition browser 2020 soul 1.4b (2024/02/06)
 
 #==============================================================================
 # LIBRARY
@@ -67,6 +67,7 @@ $MYSQL_TB_USER = 'user'
 
 $PHOTO = 'photo_'
 $PHOTO_PATH = "#{$HTDOCS_PATH}/#{$PHOTO}"
+$PHOTO_PATHS = "#{$SERVER_PATH}/#{$PHOTO}"
 $SIZE_MAX = 20000000
 $TN_SIZE = 400
 $TNS_SIZE = 40
@@ -114,6 +115,17 @@ require "#{$SERVER_PATH}/nb2020-local-#{soul_language}"
 #### HTML init
 def html_init( cookie )
   puts "Content-type: text/html\n"
+  puts "Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
+  puts "Cache-Control: post-check=0, pre-check=0, false\n"
+  puts "Pragma: no-cache\n"
+  puts cookie unless cookie == nil
+  puts "\n"
+end
+
+
+#### Isolation photo init
+def iso_init( cookie )
+  puts "Content-type: image/jpeg\n"
   puts "Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
   puts "Cache-Control: post-check=0, pre-check=0, false\n"
   puts "Pragma: no-cache\n"
@@ -211,7 +223,7 @@ def generate_code( uname, c )
   code = uname[0, 2]
 
   10.times do
-    code = "#{code}-#{c}-#{SecureRandom.hex( 10 )}"
+    code = "#{code}-#{c}-#{SecureRandom.alphanumeric( 20 )}"
     query = ''
     case c
     when 'm'
@@ -234,8 +246,6 @@ def generate_code( uname, c )
       break unless r.first
     end
   end
-
-#  db.close
 
   return code
 end
