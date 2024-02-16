@@ -1,12 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 parallel foods 0.10b (2024/01/02)
+#Nutrition browser 2020 parallel foods 0.10b (2024/01/05)
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './nb2020-soul'
+require './nb2020-local-jp'
 
 
 #==============================================================================
@@ -58,8 +59,8 @@ para_fcts.each do |ea|
 	fctsn << ea.map do |x| (( x - mean_ ) / sd_) end
 end
 
-#ユークリッド距離の算出(FLAT)
 dista = Hash.new
+#ユークリッド距離の算出(FLAT)
 fn.each.with_index do |e, i|
 	base_name = food_name[e]
 	dista = {}
@@ -82,7 +83,7 @@ fn.each.with_index do |e, i|
 
 	near_mem = "flat\t#{e}\t"
 	dista_near.to_h.each_key do |k|
-  		near_mem << "'#{k}',"
+  		near_mem << "#{k},"
   	end
 	near_mem.chop!
 	puts near_mem
@@ -104,7 +105,7 @@ end
 					if juten != ee
 						d += ( fctsn[k][i] - fctsn[k][j] ) ** 2
 					else
-						d += (( fctsn[k][i] - fctsn[k][j] ) / 3 ) ** 2
+						d += (( fctsn[k][i] - fctsn[k][j] ) * 10 ) ** 2
 					end
 				end
 				dista[fn[j]] = Math.sqrt( d )
@@ -116,10 +117,9 @@ end
 
 		near_mem = "#{juten}\t#{e}\t"
 		dista_near.to_h.each_key do |k|
-	  		near_mem << "'#{k}',"
+	  		near_mem << "#{k},"
 	  	end
 		near_mem.chop!
 		puts near_mem
 	end
 end
-

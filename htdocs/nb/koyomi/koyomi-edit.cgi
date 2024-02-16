@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.22b (2023/10/04)
+#Nutrition browser 2020 koyomi editor 0.24b (2024/02/16)
 
 
 #==============================================================================
@@ -174,17 +174,13 @@ end
 
 
 #### View photos series
-def view_series( user, code, del_icon, size, dd )
-	media = Media.new( user )
-	media.code = code
-	media.load_series()
-
+def view_series( media, l, size, dd )
 	html = ''
 	if media.series.size > 0
 		html << "<div class='row'>"
 		media.series.each do |e|
 			html << "<div class='col'>"
-			html << "<span onclick=\"koyomiPhotoDel( '#{code}', '#{e}', '#{dd}' )\">#{del_icon}</span><br>"
+			html << "<span onclick=\"koyomiPhotoDel( '#{media.origin}', '#{e}', '#{dd}' )\">#{l['trashf']}</span><br>"
 			html << "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a>"
 			html << "</div>"
 		end
@@ -312,7 +308,7 @@ palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 puts 'Updaing media<br>' if @debug
 4.times do |tdiv|
-	r = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{yyyy}-#{mm}-#{dd}-#{tdiv}';", false )
+	r = db.query( "SELECT code FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}';", false )
 	if r.first
 		rr = db.query( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 		db.query( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}', koyomi='?P';", true ) unless rr.first
@@ -363,8 +359,6 @@ r.each do |e|
 
 				if /\?/ =~ code
 
-
-
 				elsif /\-z\-/ =~ code
 					puts 'FIX<br>' if @debug
 					fct.load_fcz( user.name, code, 'fix' )
@@ -381,7 +375,7 @@ r.each do |e|
 					food_weights = []
 					recipe_codes.each do |e|
 						if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
-							fns, fws = recipe2fns( user.name, e, rate, unit, 1 )[0..1]
+							fns, fws = recipe2fns( db, e, rate, unit, 1 )[0..1]
 							food_nos.concat( fns )
 							food_weights.concat( fws )
 						else
@@ -460,7 +454,7 @@ disabled = 'DISABLED' if freeze_flag == 1
 	form_photo[c] = "<form method='post' enctype='multipart/form-data' id='photo_form#{c}'>"
 	form_photo[c] << '<div class="input-group input-group-sm">'
 	form_photo[c] << "<label class='input-group-text'>#{l['camera']}</label>"
-	form_photo[c] << "<input type='file' class='form-control' name='photo' onchange=\"koyomiPhotoSave( '#{yyyy}-#{mm}-#{dd}-#{c}', '#photo_form#{c}', '#{dd}' )\" #{disabled}></div>"
+	form_photo[c] << "<input type='file' class='form-control' name='photo' onchange=\"koyomiPhotoSave( '#{yyyy}-#{mm}-#{dd}-#{c}', '#{yyyy}-#{mm}-#{dd}-#{c}', '#photo_form#{c}', '#{dd}' )\" #{disabled}></div>"
 	form_photo[c] << '</form>'
 end
 
@@ -469,7 +463,13 @@ puts 'photo frame<br>' if @debug
 photo_frame = []
 disabled = ''
 disabled = 'DISABLED' if freeze_flag == 1
-0.upto( 3 ) do |c| photo_frame[c] = view_series( user, "#{yyyy}-#{mm}-#{dd}-#{c}", l['trashf'], 200, dd ) end
+0.upto( 3 ) do |c|
+	media = Media.new( user )
+	media.origin = "#{yyyy}-#{mm}-#{dd}-#{c}"
+	media.load_series()
+
+	photo_frame[c] = view_series( media, l, 200, dd )
+end
 
 
 ####

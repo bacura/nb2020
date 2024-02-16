@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.4b (2024/02/06)
+#Nutrition browser 2020 soul 1.5b (2024/02/13)
 
 #==============================================================================
 # LIBRARY
@@ -709,9 +709,9 @@ class Recipe
   end
 
   def load_media()
-    res = $DB.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}' ORDER BY zidx;" )
+    res = $DB.query( "SELECT code FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and origin='#{@code}' ORDER BY zidx;" )
     @media = []
-    res.each do |e| @media << e['mcode'] end
+    res.each do |e| @media << e['code'] end
   end
 
   def delete_db()
@@ -859,9 +859,9 @@ class Menu
   end
 
   def load_media()
-    res = $DB.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" )
+    res = $DB.query( "SELECT code FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and origin='#{@origin}';" )
     @media = []
-    res.each do |e| @media << e['mcode'] end
+    res.each do |e| @media << e['code'] end
   end
 
   def insert_db()
@@ -874,7 +874,7 @@ class Menu
 
   def delete_db()
     $DB.query( "DELETE FROM #{$MYSQL_TB_MENU} WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == 7
-    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == 7
+    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and origin='#{@code}';" ) unless @user.status == 7
   end
 
   def debug()
@@ -892,74 +892,96 @@ class Menu
 end
 
 class Media
-  attr_accessor :user, :code, :mcode, :muser, :series, :origin, :type, :date, :zidx
+  attr_accessor :user, :code, :muser, :series, :base, :origin, :alt, :type, :date, :zidx
 
   def initialize( user )
     @code = nil
     @user = user
-    @mcode = nil
     @muser = nil
+    @base = nil
     @origin = nil
     @type = nil
+    @alt = nil
     @date = nil
     @zidx = 0
     @series = []
   end
 
-  def load_db( mcode )
-    res = $DB.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE mcode='#{mcode}';" )
+  def load_db( code )
+    res = $DB.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE code='#{code}';" )
 
     if res.first
-      @mcode = res.first['mcode'].to_s
-      @muser = res.first['user'].to_s
       @code = res.first['code'].to_s
+      @muser = res.first['user'].to_s
+      @base = res.first['base'].to_s
       @origin = res.first['origin'].to_s
       @type = res.first['type'].to_s
+      @alt = res.first['alt'].to_s
       @date = res.first['date']
       @zidx = res.first['zidx'].to_i
     else
       puts "<span class='error'>[Media load]ERROR!!<br>"
-      puts "mcode:#{@mcode}</span><br>"
+      puts "code:#{@code}</span><br>"
     end
 
   end
 
   def save_db()
     @zidx = @series.size
-    $DB.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user.name}', code='#{@code}', mcode='#{@mcode}', origin='#{@origin}', type='#{@type}', date='#{@date}', zidx='#{@zidx}';" ) unless @user.status == 7
+    $DB.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user.name}', code='#{@code}', base='#{@base}', origin='#{@origin}', type='#{@type}', alt='#{@alt}', date='#{@date}', zidx='#{@zidx}';" ) unless @user.status == 7
   end
 
   def delete_db()
-    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and mcode='#{@mcode}';" ) unless @user.status == 7
+    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
   end
 
   def load_series()
-    unless @code == '' || @code == nil
-      res = $DB.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE code='#{@code}' ORDER BY zidx;" )
+    unless @origin == '' || @origin == nil
+      res = $DB.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE origin='#{@origin}' ORDER BY zidx;" )
       @muser = res.first['user'] if res.first
-      res.each do |e| @series << e['mcode'] end
+      res.each do |e|
+        @series << e['code'] end
     end
   end
 
   def move_series()
-    @series.delete( @mcode )
-    @series.insert( @zidx.to_i, @mcode )
+    @series.delete( @code )
+    @series.insert( @zidx.to_i, @code )
     @series.each.with_index do |e, i|
-      $DB.query( "UPDATE #{$MYSQL_TB_MEDIA} SET zidx='#{i}' WHERE mcode='#{e}' AND code='#{@code}';" ) unless @user.status == 7
+      $DB.query( "UPDATE #{$MYSQL_TB_MEDIA} SET zidx='#{i}' WHERE code='#{e}' AND origin='#{@origin}';" ) unless @user.status == 7
     end
   end
 
   def delete_series()
-    if @code != nil
-      $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
+    unless @origin == '' || @origin == nil
+      $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and origin='#{@origin}';" ) unless @user.status == 7
     end
+  end
+
+  def count()
+    res = $DB.query( "SELECT COUNT(code), MIN(date), MAX(date) FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}';" )
+    count = res.first['COUNT(code)']
+    min = res.first['MIN(date)'].strftime( "%Y" ).to_i
+    max = res.first['MAX(date)'].strftime( "%Y" ).to_i
+
+    return count, min, max
+  end
+
+  def bases()
+    bases = []
+    res = $DB.query( "SELECT DISTINCT base FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}';" )
+    res.each do |r| bases << r['base'] end
+
+    return bases
   end
 
   def debug()
     puts "user:#{@user.name}<br>"
     puts "code:#{@code}<br>"
-    puts "mcode:#{@mcode}<br>"
+    puts "base:#{@base}<br>"
     puts "origin:#{@origin}<br>"
+    puts "type:#{@type}<br>"
+    puts "alt:#{@alt}<br>"
     puts "date:#{@date}<br>"
     puts "series:#{@series}<br>"
     puts "<hr>"

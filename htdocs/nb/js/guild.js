@@ -111,11 +111,12 @@ const editKoyomiR = function( yyyy, mm ){
 
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-const koyomiPhotoSave = function( code, form, dd ){
+const koyomiPhotoSave = function( origin, alt, form, dd ){
 	form_data = new FormData( $( form )[0] );
 	form_data.append( 'command', 'upload' );
-	form_data.append( 'code', code );
+	form_data.append( 'origin', origin );
 	form_data.append( 'base', 'koyomi' );
+	form_data.append( 'alt', alt );
 	$.ajax( "photo.cgi",
 		{
 			type: 'post',
@@ -130,8 +131,8 @@ const koyomiPhotoSave = function( code, form, dd ){
 
 
 // delete photo from media db
-const koyomiPhotoDel = function( code, mcode, dd ){
-	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'koyomi' }, function( data ){
+const koyomiPhotoDel = function( origin, code, dd ){
+	$.post( "photo.cgi", { command:'delete', origin:origin, code:code, base:'koyomi' }, function( data ){
 		editKoyomi( 'init', dd );
 	});
 };
@@ -786,7 +787,7 @@ const foodRankList = function(){
 // Note //////////////////////////////////////////////////////////////
 
 // Note book
-var initNote = function(){
+const initNote = function(){
 	$.post( "note.cgi", { command:'init' }, function( data ){
 		$( "#L1" ).html( data );
 
@@ -797,8 +798,8 @@ var initNote = function(){
 };
 
 // Note book
-var writeNote = function(){
-	var note = document.getElementById( "note" ).value;
+const writeNote = function(){
+	const note = document.getElementById( "note" ).value;
 	if( note != '' ){
 		$.post( "note.cgi", { command:'write', note:note }, function( data ){ $( "#L1" ).html( data );});
 	}
@@ -817,11 +818,11 @@ var deleteNote = function( code ){
 };
 
 // Note book
-var deleteNoteP = function( code, mcode ){
+var deleteNoteP = function( origin, code ){
 	if( document.getElementById( code ).checked ){
-		$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:'note' }, function( data ){
+		$.post( "photo.cgi", { command:'delete', origin:origin, code:code, base:'note' }, function( data ){
 			$( '#LM' ).html( data );
-			$.post( "note.cgi", { command:'delete', code:code }, function( data ){
+			$.post( "note.cgi", { command:'delete', code:origin }, function( data ){
 				$( "#L1" ).html( data );}
 			);
 		});
@@ -833,11 +834,12 @@ var deleteNoteP = function( code, mcode ){
 
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-var photoNoteSave = function( code ){
+var photoNoteSave = function( origin, alt, form, base ){
 	form_data = new FormData( $( "#photo_form" )[0] );
 	form_data.append( 'command', 'upload' );
-	form_data.append( 'code', code );
-	form_data.append( 'base', 'note' );
+	form_data.append( 'origin', origin );
+	form_data.append( 'base', base );
+	form_data.append( 'alt', alt );
 	$.ajax( "photo.cgi",
 		{
 			type: 'post',
@@ -846,7 +848,7 @@ var photoNoteSave = function( code ){
 			data: form_data,
 			dataype: 'html',
 			success: function( data ){
-				$.post( "note.cgi", { command:'photo' }, function( z ){});
+				$.post( "note.cgi", { command:'photo' }, function( data ){});
 			}
 		}
 	);

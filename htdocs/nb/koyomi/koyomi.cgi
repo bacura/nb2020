@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.22b (2023/12/24)
+#Nutrition browser 2020 koyomi 0.24b (2024/02/16)
 
 
 #==============================================================================
@@ -127,9 +127,9 @@ end
 
 def media_html( yyyy, mm, dd, tdiv, db )
 	html = ''
-	r = db.query( "SELECT mcode, zidx FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{yyyy}-#{mm}-#{dd}-#{tdiv}' AND type='jpg' ORDER BY zidx;", false )
+	r = db.query( "SELECT code, zidx FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}' AND type='jpg' ORDER BY zidx;", false )
 	r.each do |e|
-		html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='media'><img src='#{$PHOTO}/#{e['mcode']}-tns.jpg' class='photo_tns'></a>"
+		html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='media'><img src='#{$PHOTO}/#{e['code']}-tns.jpg' class='photo_tns'></a>"
 	end
 
 	return html
@@ -291,7 +291,7 @@ puts "koyomi matrix calc<br>" if @debug
 							food_weights = []
 							recipe_codes.each do |e|
 								if /\-r\-/ =~ e || /\w+\-\h{4}\-\h{4}/ =~ e
-									fns, fws = recipe2fns( user.name, e, rate, unit, 1 )[0..1]
+									fns, fws = recipe2fns( db, e, rate, unit, 1 )[0..1]
 									food_nos.concat( fns )
 									food_weights.concat( fws )
 								else

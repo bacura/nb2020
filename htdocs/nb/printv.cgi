@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.24b (2023/09/27)
+#Nutrition browser 2020 print web page 0.25b (2024/02/16)
 
 #==============================================================================
 # STATIC
@@ -25,10 +25,10 @@ require 'rqrcode'
 #### html_header for printv
 def html_head_pv( recipe )
 	code = recipe.code
-	mcode = recipe.media
+	media_code = recipe.media
 	recipe_name = recipe.name
 	tw_image = ''
-	tw_image = "<meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/#{mcode[0]}-tn.jpg' />" if mcode.size > 0
+	tw_image = "<meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/#{media_code[0]}-tn.jpg' />" if media_code.size > 0
 
 	html = <<-"HTML"
 <!DOCTYPE html>
@@ -306,16 +306,16 @@ end
 #### 写真構成
 def arrange_photo( recipe )
 	code = recipe.code
-	mcode = recipe.media
+	media_code = recipe.media
 	main_photo = ''
-	main_photo = "<a href='#{$PHOTO}/#{mcode[0]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[0]}.jpg' width='100%' height='100%' class='img-thumbnail'></a>\n" if mcode.size > 0
+	main_photo = "<a href='#{$PHOTO}/#{media_code[0]}.jpg' target='Photo'><img src='#{$PHOTO}/#{media_code[0]}.jpg' width='100%' height='100%' class='img-thumbnail'></a>\n" if media_code.size > 0
 
 	sub_photos = ''
-	if mcode.size > 1
-		spw = ( 100 / ( mcode.size - 1 )).to_i
+	if media_code.size > 1
+		spw = ( 100 / ( media_code.size - 1 )).to_i
 		spw = 25 if spw < 25
-		1.upto( mcode.size - 1 ) do |c|
-			sub_photos << "<a href='#{$PHOTO}/#{mcode[c]}.jpg' target='Photo'><img src='#{$PHOTO}/#{mcode[c]}-tn.jpg' width='#{spw}%' height='#{spw}%' class='img-thumbnail'></a>\n"
+		1.upto( media_code.size - 1 ) do |c|
+			sub_photos << "<a href='#{$PHOTO}/#{media_code[c]}.jpg' target='Photo'><img src='#{$PHOTO}/#{media_code[c]}-tn.jpg' width='#{spw}%' height='#{spw}%' class='img-thumbnail'></a>\n"
 		end
 	end
 

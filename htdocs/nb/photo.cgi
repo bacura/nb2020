@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.4b (2024/01/02)
+#Nutrition browser 2020 recipe photo 0.5b (2024/01/013)
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 tmp_delete = false
 #script = File.basename( $0, '.cgi' )
 
@@ -35,26 +35,25 @@ def language_pack( language )
 end
 
 
-def view_series( user, code, l, size )
-	media = Media.new( user.name )
-	media.code = code
+def view_series( media, l, size )
+	puts "view_series:#{},#{}" if @debug
 	media.load_series()
 	protect = true
 
-	recipe = Recipe.new( user )
-	recipe.load_db( code, true ) if /\-r/ =~ code
+	recipe = Recipe.new( media.user )
+	recipe.load_db( media.origin, true ) if /\-r\-/ =~ media.origin
 
 	if media.series.size > 0
 		puts "<div class='row'>"
 		media.series.each.with_index( 0 ) do |e, i|
 			puts "<div class='col'>"
-			if recipe.protect != 1 && media.muser == user.name
-				puts "<span onclick=\"photoMove( '#{code}', '#{e}', #{i - 1} )\">#{l['left-ca']}</span>" if i != 0
-				puts "&nbsp;&nbsp;<span onclick=\"photoMove( '#{code}', '#{e}', #{i + 1} )\">#{l['right-ca']}</span>" if i != media.series.size - 1
+			if recipe.protect != 1 && media.muser == media.user.name
+				puts "<span onclick=\"photoMove( '#{media.origin}', '#{e}', #{i - 1} )\">#{l['left-ca']}</span>" if i != 0
+				puts "&nbsp;&nbsp;<span onclick=\"photoMove( '#{media.origin}', '#{e}', #{i + 1} )\">#{l['right-ca']}</span>" if i != media.series.size - 1
 			end
 			puts '<br>'
- 			puts "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a><br>"
-			puts "<span onclick=\"photoDel( '#{code}', '#{e}', 'recipe' )\">#{l['trash']}</span>" if recipe.protect != 1 && media.muser == user.name
+ 			puts "<img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail' onclick=\"modalPhotoOn( '#{e}' )\"><br>"
+			puts "<span onclick=\"photoDel( '#{media.origin}', '#{e}', '#{media.base}' )\">#{l['trash']}</span>" if recipe.protect != 1 && media.muser == media.user.name
 			puts "</div>"
 		end
 		puts "</div>"
@@ -67,39 +66,42 @@ end
 #==============================================================================
 # Main
 #==============================================================================
+	html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
 db = Db.new( user, @debug, false )
+media = Media.new( user )
 
 # POST
 command = @cgi['command']
 base = @cgi['base']
+origin = @cgi['origin']
 code = @cgi['code']
-mcode = @cgi['mcode']
+alt = @cgi['alt']
 zidx = @cgi['zidx']
 iso = @cgi['iso']
 
 unless iso
-	html_init( nil )
+#	html_init( nil )
 else
-	iso_init( nil )
+#	iso_init( nil )
 end
 
 if @debug
 	puts "command: #{command}<br>"
 	puts "code: #{code}<br>"
-	puts "mcode: #{mcode}<br>"
-	puts "zidx: #{zidx}<br>"
 	puts "base: #{base}<br>"
+	puts "origin: #{origin}<br>"
+	puts "zidx: #{zidx}<br>"
 	puts "PHOTO_PATH: #{$PHOTO_PATH}<br>"
 	puts "<hr>"
 end
 
 
-puts 'base code<br>' if @debug
-if code == ''
+puts 'base origin<br>' if @debug
+if origin == ''
 	query = ''
 	case base
 	when 'menu'
@@ -109,26 +111,28 @@ if code == ''
 	end
 	if query != ''
 		r = db.query( query, false )
-		code = r.first['code']
+		origin = r.first['code']
 	end
 end
+media.origin = origin
+media.base = base
 
 
 case command
 when 'upload'
 	puts 'Upload<br>' if @debug
 	if user.status != 7
-		media = Media.new( user )
 		media.code = code
+		media.alt = alt
 		media.type = 'jpg'
 		media.date = @datetime
 
-		media.origin = @cgi['photo'].original_filename
+		tmp_file = @cgi['photo'].original_filename
 		photo_type = @cgi['photo'].content_type
 		photo_body = @cgi['photo'].read
 		photo_size = photo_body.size.to_i
 		if @debug
-			puts "#{media.origin}<br>"
+			puts "#{tmp_file}<br>"
 			puts "#{photo_type}<br>"
 			puts "#{photo_size}<br>"
 			puts "<hr>"
@@ -140,11 +144,11 @@ when 'upload'
 			require 'rmagick'
 
 			puts "temporary file<br>" if @debug
-			f = open( "#{$TMP_PATH}/#{media.origin}", 'w' )
+			f = open( "#{$TMP_PATH}/#{tmp_file}", 'w' )
 			f.puts photo_body
 			f.close
-			media.mcode = generate_code( user.name, 'p' )
-			photo = Magick::ImageList.new( "#{$TMP_PATH}/#{media.origin}" )
+			media.code = generate_code( user.name, 'p' )
+			photo = Magick::ImageList.new( "#{$TMP_PATH}/#{tmp_file}" )
 
 			puts "Resize<br>" if @debug
 			photo_x = photo.columns.to_f
@@ -162,17 +166,17 @@ when 'upload'
 
 			puts "medium SN resize<br>" if @debug
 			tn_file = photo.thumbnail( tn_ratio )
-			tn_file.write( "#{$PHOTO_PATH}/#{media.mcode}-tn.jpg" )
+			tn_file.write( "#{$PHOTO_PATH}/#{media.code}-tn.jpg" )
 
 			puts "small SN resize<br><br>" if @debug
 			tns_file = photo.thumbnail( tns_ratio )
-			tns_file.write( "#{$PHOTO_PATH}/#{media.mcode}-tns.jpg" )
+			tns_file.write( "#{$PHOTO_PATH}/#{media.code}-tns.jpg" )
 
 			puts "resize 2k<br>" if @debug
 			photo = photo.thumbnail( photo_ratio ) if photo_ratio != 1.0
 
 #			puts "water mark<br>" if @debug
-#			wm_text = "Nutrition Browser:#{media.mcode}"
+#			wm_text = "Nutrition Browser:#{media.code}"
 #			wm_img = Magick::Image.new( photo.columns, photo.rows )
 #			wm_drew = Magick::Draw.new
 #			wm_drew.annotate( wm_img, 0, 0, 0, 0, wm_text ) do
@@ -184,22 +188,20 @@ when 'upload'
 #			end
 #			wm_img = wm_img.shade( true, 315 )
 #			photo.composite!( wm_img, Magick::CenterGravity, Magick::HardLightCompositeOp )
-			photo.write( "#{$PHOTO_PATH}/#{media.mcode}.jpg" )
+			photo.write( "#{$PHOTO_PATH}/#{media.code}.jpg" )
 
 			puts "insert DB<br>" if @debug
 			media.load_series()
 			media.save_db
 
-			File.unlink "#{$TMP_PATH}/#{media.origin}" if File.exist?( "#{$TMP_PATH}/#{media.origin}" ) && tmp_delete
+			File.unlink "#{$TMP_PATH}/#{tmp_file}" if File.exist?( "#{$TMP_PATH}/#{tmp_file}" ) && tmp_delete
 		end
 	end
 
 when 'move'
 	if user.status != 7
 		puts 'Move<br>' if @debug
-		media = Media.new( user )
 		media.code = code
-		media.mcode = mcode
 		media.zidx = zidx
 
 		puts "Update DB<br>" if @debug
@@ -209,17 +211,39 @@ when 'move'
 
 when 'delete'
 	if user.status != 7
-		puts 'Delete<br>' if @debug
-		File.unlink "#{$PHOTO_PATH}/#{mcode}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{mcode}-tns.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{mcode}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{mcode}-tn.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{mcode}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{mcode}.jpg" )
-
 		puts "delete item DB<br>" if @debug
-		media = Media.new( user )
-		media.mcode = mcode
-		media.delete_db
+		media.code = code
+		if( media.delete_db )
+			puts 'Delete<br>' if @debug
+			File.unlink "#{$PHOTO_PATH}/#{code}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-tns.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{code}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}-tn.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{code}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{code}.jpg" )
+		end
 	end
+
+when 'modal'
+#	puts '<div class="modal" tabindex="-1">'
+#  	puts '	<div class="modal-dialog">'
+#    puts '		<div class="modal-content">'
+#    puts '			<div class="modal-header">'
+#    puts '				<h5 class="modal-title">Modal title</h5>'
+#    puts '				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
+#    puts '			</div>'
+#    puts '			<div class="modal-body">'
+#    puts '				<p>Modal body text goes here.</p>'
+#    puts '			</div>'
+#    puts '		</div>'
+#  	puts '	</div>'
+#	puts '</div>'
+
+
+
+#	puts '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
+#	puts "<img src='#{$PHOTO}/#{code}.jpg' width='95%' align='center'>"
+#	puts '</div>'
+
+	exit
 end
 
-view_series( user, code, l, 200 )
-puts "	<div align='right' class='code'>#{code}</div>"
+view_series( media, l, 200 )
+puts "	<div align='right' class='code'>#{origin}</div>"

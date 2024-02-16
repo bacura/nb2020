@@ -19,6 +19,7 @@ hlf = false;
 hlm = false;
 hline = false;
 
+world = null
 bwl1 = null;
 bwl2 = null;
 bwl3 = null;
@@ -36,12 +37,14 @@ help_tp = '1154';
 menu_status = 0;
 general_ = '';
 
+
 /////////////////////////////////////////////////////////////////////////////////
 // Paging /////////////////////////////////////////////////////////////////////////
 
 // initialization
 window.onload = function(){
 	if( !!document.getElementById( "L1" )){
+		world = document.getElementById( "WORLD" );
 		bwl1 = document.getElementById( "L1" );
 		bwl2 = document.getElementById( "L2" );
 		bwl3 = document.getElementById( "L3" );
@@ -73,7 +76,7 @@ closeBroseWindows = function( num ){
 	case 4: document.getElementById( "L5" ).style.display = 'none';
 	case 5: document.getElementById( "LF" ).style.display = 'none';
  	}
-};
+}
 
 
 // Reopening browse windows
@@ -86,7 +89,7 @@ displayBW = function(){
 	if( dlf ){ bwlf.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
 	if( dlm ){ bwlm.style.display = 'block'; }else{ bwlm.style.display = 'none'; }
 	if( dline ){ line.style.display = 'block'; }else{ line.style.display = 'none'; }
-};
+}
 
 
 // Resetting level status
@@ -112,7 +115,7 @@ pushBW = function(){
 	hlf = dlf;
 	hlm = dlm;
 	hline = dline;
-};
+}
 
 
 // Pulling level status from hide
@@ -125,7 +128,7 @@ pullHW = function(){
 	dlf = hlf;
 	dlm = hlm;
 	dline = hline;
-};
+}
 
 
 // Opning menu LINE
@@ -151,7 +154,20 @@ displayVIDEO = function( msg ){
 		video.style.display = 'none';
 	};
 	setTimeout( fx, 2000 );
-};
+}
+
+
+// Displaying message on VIDEO
+displayMODAL = function( msg ){
+	if( msg == 'on' ){
+		line.style.display = 'block';
+	}else if( msg == 'off' ){
+		line.style.display = 'none';
+	}else{
+		line.style.display = 'block';
+		line.innerHTML = msg;
+	}
+}
 
 
 // Exchanging menu sets
@@ -200,7 +216,7 @@ toHelp = function( page ){
 chageAccountM = function(){
 	var login_mv = document.getElementById( "login_mv" ).value;
 	location.href = "login.cgi?mode=family" + "&login_mv=" + login_mv;
-};
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -710,11 +726,12 @@ var configForm = function( mod ){
 // Photo //////////////////////////////////////////////////////////////////////////
 
 // レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-const photoSave = function( code, form, base ){
+const photoSave = function( origin, alt, form, base ){
 	form_data = new FormData( $( form )[0] );
 	form_data.append( 'command', 'upload' );
-	form_data.append( 'code', code );
+	form_data.append( 'origin', origin );
 	form_data.append( 'base', base );
+	form_data.append( 'alt', alt );
 
 	$.ajax( "photo.cgi",
 		{
@@ -729,13 +746,22 @@ const photoSave = function( code, form, base ){
 };
 
 // Moving photo position( zidx )
-const photoMove = function( code, mcode, zidx){
-	$.post( "photo.cgi", { command:'move', code:code, mcode:mcode, zidx:zidx }, function( data ){ $( '#LM' ).html( data );});
+const photoMove = function( origin, code, zidx){
+	$.post( "photo.cgi", { command:'move', origin:origin, code:code, zidx:zidx }, function( data ){ $( '#LM' ).html( data );});
 }
 
 // delete photo from media db
-const photoDel = function( code, mcode, base ){
-	$.post( "photo.cgi", { command:'delete', code:code, mcode:mcode, base:base }, function( data ){ $( '#LM' ).html( data );});
+const photoDel = function( origin, code, base ){
+	$.post( "photo.cgi", { command:'delete', origin:origin, code:code, base:base }, function( data ){ $( '#LM' ).html( data );});
+};
+
+// delete photo from media db
+const modalPhotoOn = function( code ){
+	$.post( "photo.cgi", { command:'modal', code:code }, function( data ){
+		$( '#MODAL' ).html( data );
+
+
+	});
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -1054,7 +1080,7 @@ const recipeEdit = function( com, code ){
 		dl2 = true;
 		displayBW();
 	});
-	$.post( "photo.cgi", { command:'view_series', code:code, base:'recipe' }, function( data ){
+	$.post( "photo.cgi", { command:'view_series', origin:code, base:'recipe' }, function( data ){
 		$( "#LM" ).html( data );
 		dlm = true;
 		displayBW();

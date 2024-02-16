@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser note 0.0b (2023/08/11)
+#Nutritoin browser note 0.1b (2024/02/16)
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 #script = File.basename( $0, '.cgi' )
 
 
@@ -66,6 +66,7 @@ when 'write'
 	end
 	p @datetime, note_code, aliasm,note if @debug
 	db.query( "INSERT INTO #{$MYSQL_TB_NOTE} SET code='#{note_code}', user='#{user.name}', aliasm='#{aliasm}', note='#{note}', datetime='#{@datetime}';", true )
+
 when 'photo'
 	aliasm = ''
 	if user.name != user.mom and user.mom != ''
@@ -79,11 +80,11 @@ when 'photo'
 	note_code = generate_code( user.name, 'n' )
 	db.query( "UPDATE #{$MYSQL_TB_MEDIA} SET code='#{note_code}' WHERE code='note_tmp_new' AND user='#{user.name}';", true )
 
-	r = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{note_code}';", false )
+	r = db.query( "SELECT code FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND origin='#{note_code}';", false )
 	if r.first
-		db.query( "INSERT INTO #{$MYSQL_TB_NOTE} SET code='#{note_code}', mcode='#{r.first['mcode']}', user='#{user.name}', aliasm='#{aliasm}', note='', datetime='#{@datetime}';", true )
+		db.query( "INSERT INTO #{$MYSQL_TB_NOTE} SET origin='#{note_code}', code='#{r.first['code']}', user='#{user.name}', aliasm='#{aliasm}', note='', datetime='#{@datetime}';", true )
 	else
-		db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE code='note_tmp_new' AND user='#{user.name}';", true )
+		db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE origin='note_tmp_new' AND user='#{user.name}';", true )
 	end
 
 	exit()
@@ -106,10 +107,11 @@ r.each do |e|
 	note_date =  "#{e['datetime'].year}-#{e['datetime'].month}-#{e['datetime'].day} #{e['datetime'].hour}:#{e['datetime'].min}"
 
 	note = e['note'].gsub( "\n", '<br>' )
-
+puts e['code']
 	note_html << '<div class="row">'
+p e['aliasm']
 
-	if e['mcode'] == nil
+	if e['media'] == nil
 		if e['aliasm'] == ''
 			note_html << '<div class="col-2"></div>'
 			note_html << "<div class='col-9' >"
@@ -134,25 +136,26 @@ r.each do |e|
 			note_html << '<div class="col-2"></div>'
 		end
 	else
+
 		if e['aliasm'] == ''
 			note_html << '<div class="col-2"></div>'
 			note_html << "<div class='col-9' align='right'>"
-			note_html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['mcode']}-tn.jpg' class='img-thumbnail'></a><br>"
+			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['code']}-tn.jpg' class='img-thumbnail'></a><br>"
 			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if daughter_delete
 				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
-				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['mcode']}' )\">#{l['trash']}</span>"
+				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div>'
 			note_html << "<div class='col-1'>#{user.aliasu}</div>"
 		else
 			note_html << "<div class='col-1'>#{e['aliasm']}</div>"
 			note_html << "<div class='col-9' align='left'>"
-			note_html << "<a href='#{$PHOTO}/#{e['mcode']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['mcode']}-tn.jpg' class='img-thumbnail'></a><br>"
+			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['code']}-tn.jpg' class='img-thumbnail'></a><br>"
 			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if user.mid != nil
 				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
-				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['mcode']}' )\">#{l['trash']}</span>"
+				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div>'
 			note_html << '<div class="col-2"></div>'
@@ -176,7 +179,7 @@ html = <<-"HTML"
 					<form method='post' enctype='multipart/form-data' id='photo_form'>
 						<div class="input-group input-group-sm">
 							<label class='input-group-text'>#{l['camera']}</label>
-							<input type='file' class='form-control' name='photo' onchange="photoNoteSave( 'note_tmp_new' )">
+							<input type='file' class='form-control' name='photo' onchange="photoNoteSave( 'note_tmp_new', '', '', 'note' )">
 						</div>
 					</form>
 				</div>

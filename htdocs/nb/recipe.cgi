@@ -176,25 +176,26 @@ when 'save', 'division'
 			end
 
 			puts "checking media<br>" if @debug
-			rr = ''
-			if original_user == nil
-				rr = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
-			else
-				rr = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{original_user}' and code='#{code}';", false )
-			end
+			media = Media.new( user )
+			media.origin = code
+			media.load_series()
 
-			if rr.first
-				puts "Copying photo<br>" if @debug
-				rr.each do |e|
-					new_media_code = generate_code( user.name, 'p' )
+			puts "Copying photo<br>" if @debug
+			media.series.each do |e|
+				new_media_code = generate_code( user.name, 'p' )
 
-					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
-					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-					FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
+				FileUtils.cp( "#{$PHOTO_PATH}/#{e}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['code']}-tns.jpg" )
+				FileUtils.cp( "#{$PHOTO_PATH}/#{e}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['code']}-tn.jpg" )
+				FileUtils.cp( "#{$PHOTO_PATH}/#{e}.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['code']}.jpg" )
 
-					puts "Inserting into DB<br>" if @debug
-					db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{recipe.code}', mcode='#{new_media_code}', origin='#{e['origin']}', date='#{@datetime}';", true )
-				end
+				puts "Inserting into DB<br>" if @debug
+				new_media = Media.new( user )
+				new_media.origin = recipe.code
+				new_media.code = new_media_code
+				new_media.date = @datetime
+				new_media.base = 'recipe'
+				new_media.alt = recipe.name
+				new_media.save_db()
 			end
 
 			recipe.insert_db
@@ -273,7 +274,7 @@ form_photo << "<label class='input-group-text'>#{l['camera']}</label>"
 if recipe.code == nil || file_disabled
 	form_photo << "<input type='file' class='form-control' DISABLED>"
 else
-	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{recipe.code}', '#photo_form', 'recipe' )\">"
+	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{recipe.code}', '#{recipe.name}', '#photo_form', 'recipe' )\">"
 end
 form_photo << '</form></div>'
 

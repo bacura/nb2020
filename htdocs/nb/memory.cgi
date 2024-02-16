@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.21b (2022/11/27)
+#Nutrition browser 2020 memory editor 0.22b (2024/02/16)
 
 #==============================================================================
 #STATIC
@@ -265,10 +265,10 @@ def extend_linker( db, res, depth )
 		code = generate_code( db.user.name, 'k' )
 		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET code='#{code}' WHERE category='#{category}' AND pointer='#{pointer}';", true )
 	else
-		r = db.query( "SELECT mcode, type FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND code='#{code}';", false )
+		r = db.query( "SELECT code, type FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND origin='#{code}';", false )
 		r.each do |e|
-			p e['mcode']
-			memory_ << "<a href='#{$PHOTO}/#{e['mcode']}.#{e['type']}' target='blank_'><img src='#{$PHOTO}/#{e['mcode']}-tn.#{e['type']}'></a>"	
+			p e['code']
+			memory_ << "<a href='#{$PHOTO}/#{e['code']}.#{e['type']}' target='blank_'><img src='#{$PHOTO}/#{e['code']}-tn.#{e['type']}'></a>"	
 		end
 	end
 	####

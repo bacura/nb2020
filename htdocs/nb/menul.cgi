@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu list 0.05b
+#Nutrition browser 2020 menu list 0.06b (2024/02/16)
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 
 #==============================================================================
@@ -160,11 +160,11 @@ end
 
 if command == 'delete'
 	puts 'Deleting menu' if @debug
-	r = mdb( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false, @debug )
+	r = mdb( "SELECT code FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and orign='#{code}';", false, @debug )
 	r.each do |e|
-		File.unlink "#{$PHOTO_PATH}/#{e.mcode}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e.mcode}-tns.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e.mcode}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e.mcode}-tn.jpg" )
-		File.unlink "#{$PHOTO_PATH}/#{e.mcode}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e.mcode}.jpg" )
+		File.unlink "#{$PHOTO_PATH}/#{e.code}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e.code}-tns.jpg" )
+		File.unlink "#{$PHOTO_PATH}/#{e.code}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e.code}-tn.jpg" )
+		File.unlink "#{$PHOTO_PATH}/#{e.code}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e.code}.jpg" )
 	end
 
 	#レシピデータベースのの更新（削除）

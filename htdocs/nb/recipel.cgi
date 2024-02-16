@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.34b (2023/8/07)
+#Nutrition browser 2020 recipe list 0.35b (2024/02/16)
 
 
 #==============================================================================
@@ -420,13 +420,16 @@ when 'refer'
 when 'delete'
 	puts "Deleting photos<br>" if @debug
 	if user.status != 7
-		r = db.query( "SELECT mcode FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
-		r.each do |e|
-			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
-			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-			File.unlink "#{$PHOTO_PATH}/#{e['mcode']}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}.jpg" )
+		target_media = Media.new( user )
+		target_media.origin = code
+		target_media.load_series()
+
+		target_media.series.each do |e|
+			File.unlink "#{$PHOTO_PATH}/#{e}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e}-tns.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{e}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e}-tn.jpg" )
+			File.unlink "#{$PHOTO_PATH}/#{e}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e}.jpg" )
 		end
-		db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND code='#{code}';", true )
+		target_media.delete_series()
 
 		puts "Deleting recipe from DB<br>" if @debug
 		recipe = Recipe.new( user )
@@ -446,12 +449,23 @@ when 'subspecies'
 		# Copying phots
 		new_media_code = generate_code( user.name, 'p' )
 		new_recipe_code = generate_code( user.name, 'r' )
-		r = db.query( "SELECT mcode, origin FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' and code='#{code}';", false )
-		r.each do |e|
-			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tns.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-			FileUtils.cp( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['mcode']}-tn.jpg" )
-			db.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{user.name}', code='#{new_recipe_code}', mcode='#{new_media_code}', origin='#{r.first['origin']}', date='#{@datetime}';", true )
+
+		source_media = Media.new( user )
+		source_media.origin = code
+		source_media.load_series()
+
+		source_media.series.each do |e|
+			FileUtils.cp( "#{$PHOTO_PATH}/#{e}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['code']}-tns.jpg" )
+			FileUtils.cp( "#{$PHOTO_PATH}/#{e}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tn.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['code']}-tn.jpg" )
+			FileUtils.cp( "#{$PHOTO_PATH}/#{e}-tn.jpg", "#{$PHOTO_PATH}/#{new_media_code}.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['code']}-tn.jpg" )
+			
+			new_media = Media.new( user )
+			new_media.origin = new_recipe_code
+			new_media.code = new_media_code
+			new_media.date = @datetime
+			new_media.base = 'recipe'
+			new_media.alt = recipe.name
+			new_media.save_db()
 		end
 
 		# Insertinbg recipe into DB
