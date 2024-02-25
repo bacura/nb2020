@@ -4,19 +4,20 @@
 
 
 #==============================================================================
-#STATIC
+# STATIC
 #==============================================================================
 @debug = false
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
-#LIBRARY
+# LIBRARY
 #==============================================================================
 require '../soul'
 require '../brain'
+require '../body'
 
 #==============================================================================
-#DEFINITION
+# DEFINITION
 #==============================================================================
 
 # Language pack
@@ -353,6 +354,8 @@ puts "Day process<br>" if @debug
 date_html = ''
 week_count = calendar.wf
 weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
+photo = Media.new( user )
+photo.base = 'koyomi'
 1.upto( calendar.ddl ) do |day|
 	puts "Day #{day}<br>" if @debug
 	freeze_flag = false
@@ -367,7 +370,11 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 			if kmrd[tdiv] != nil
 				if tdiv < 4
 					tmp = meals_html( kmrd[tdiv], db )
-					tmp << media_html( calendar.yyyy, calendar.mm, day, tdiv, db  )
+
+					photo.origin = "#{calendar.yyyy}-#{calendar.mm}-#{day}-#{tdiv}"
+					photo.get_series()
+					photo.html_series_mini()
+					tmp << photo.html_series_mini()
 				else
 					tmp = kmrd[4]['koyomi']
 				end

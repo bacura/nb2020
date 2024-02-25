@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.50b (2024/01/06)
+// Nutorition Browser 2020 core.js 0.50b (2024/02/16)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -7,7 +7,6 @@ dl3 = false;
 dl4 = false;
 dl5 = false;
 dlf = false;
-dlm = false;
 dline = false;
 
 hl1 = false;
@@ -16,7 +15,6 @@ hl3 = false;
 hl4 = false;
 hl5 = false;
 hlf = false;
-hlm = false;
 hline = false;
 
 world = null
@@ -26,7 +24,6 @@ bwl3 = null;
 bwl4 = null;
 bwl5 = null;
 bwlf = null;
-bwlm = null;
 line = null;
 video = null;
 modal = null;
@@ -51,7 +48,6 @@ window.onload = function(){
 		bwl4 = document.getElementById( "L4" );
 		bwl5 = document.getElementById( "L5" );
 		bwlf = document.getElementById( "LF" );
-		bwlm = document.getElementById( "LM" );
 		line = document.getElementById( "LINE" );
 		video = document.getElementById( "VIDEO" );
 		modal = document.getElementById( "MODAL" );
@@ -87,7 +83,6 @@ displayBW = function(){
 	if( dl4 ){ bwl4.style.display = 'block'; }else{ bwl4.style.display = 'none'; }
 	if( dl5 ){ bwl5.style.display = 'block'; }else{ bwl5.style.display = 'none'; }
 	if( dlf ){ bwlf.style.display = 'block'; }else{ bwlf.style.display = 'none'; }
-	if( dlm ){ bwlm.style.display = 'block'; }else{ bwlm.style.display = 'none'; }
 	if( dline ){ line.style.display = 'block'; }else{ line.style.display = 'none'; }
 }
 
@@ -100,7 +95,6 @@ flashBW = function(){
 	dl4 = false;
 	dl5 = false;
 	dlf = false;
-	dlm = false;
 	dline = false;
 }
 
@@ -113,20 +107,18 @@ pushBW = function(){
 	hl4 = dl4;
 	hl5 = dl5;
 	hlf = dlf;
-	hlm = dlm;
 	hline = dline;
 }
 
 
 // Pulling level status from hide
-pullHW = function(){
+pullBW = function(){
 	dl1 = hl1;
 	dl2 = hl2;
 	dl3 = hl3;
 	dl4 = hl4;
 	dl5 = hl5;
 	dlf = hlf;
-	dlm = hlm;
 	dline = hline;
 }
 
@@ -341,7 +333,7 @@ var detailWeight = function( fn ){
 
 // 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
 var detailReturn = function(){
-	pullHW();
+	pullBW();
 	displayBW();
 };
 
@@ -371,7 +363,7 @@ const search = function(){
 			});
 			break;
 		case '2':
-			$.post( "memory.cgi", { command:'refer', pointer:words, depth:1 }, function( data ){
+			$.post( "memory.cgi", { command:'refer', words:words, depth:1 }, function( data ){
 				$( "#L1" ).html( data );
 		 		dl1 = true;
 		 		pushBW();
@@ -604,30 +596,115 @@ var bookOpen = function( url, depth ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// Memory ///////////////////////////////////////////////////////////////////////
+// Memory list ///////////////////////////////////////////////////////////////////////
 
-// Memory init
-const initMemory_ = function(){
-	$.post( "memory.cgi", { command:'init' }, function( data ){
-		$( "#L2" ).html( data );
+const initMemoryList = function(){
+	$.post( "memory-list.cgi", { command:'init' }, function( data ){
+		$( "#L1" ).html( data );
 
 		flashBW();
-		dl2 = true;
+		dl1 = true;
 		displayBW();
 	});
 };
 
+// Save New category
+const newCategory = function(){
+	const category = document.getElementById( 'new_category' ).value;
+	if( category != '' ){
+		$.post( "memory-list.cgi", { command:'save', category:category }, function( data ){ $( "#L1" ).html( data );});
+	}else{
+		displayVIDEO( 'Category name!(>_<)' );
+	}
+};
+
+// Delete category
+const deleteCategory = function( category, delete_check_no ){
+	if( document.getElementById( delete_check_no ).checked ){
+		$.post( "memory-list.cgi", { command:'delete', category:category }, function( data ){ $( "#L1" ).html( data );});
+	}else{
+		displayVIDEO( 'Check!' );
+	}
+};
+
+// Change category name
+const changeCategory = function( category ){
+	let new_category = document.getElementById( category ).value;
+	if( category != '' ){
+		$.post( "memory-list.cgi", { command:'change', category:category, new_category:new_category }, function( data ){ $( "#L1" ).html( data );});
+	}else{
+		displayVIDEO( 'Category name!(>_<)' );
+	}
+};
 
 // List each pointer
-const listPointer = function( category ){
-	$.post( "memory.cgi", { command:'list_pointer', category:category }, function( data ){
-		$( "#L2" ).html( data );
+const listPointers = function( category ){
+	$.post( "memory-list.cgi", { command:'pointers', category:category }, function( data ){ $( "#L1" ).html( data );});
+};
 
-		dl2 = true;
+/////////////////////////////////////////////////////////////////////////////////
+// Memory edit///////////////////////////////////////////////////////////////////////
+
+// Add new memory
+const newMemory = function( category_, pointer, mode ){
+	let category = category_
+	if( category_ == '' && mode == 'refer' ){ category = document.getElementById( 'ref_new_categoly' ).value; }
+	$.post( "memory-edit.cgi", { command:'new', category:category, pointer:pointer, mode:mode, depth:2 }, function( data ){
+		$( "#LF" ).html( data );
+		pushBW();
+		flashBW();
+		dlf = true;
 		displayBW();
 	});
 };
 
+const editMemory = function( code, mode ){
+	$.post( "memory-edit.cgi", { command:'edit', code:code, mode:mode, depth:2 }, function( data ){
+		$( "#LF" ).html( data );
+		pushBW();
+		flashBW();
+		dlf = true;
+		displayBW();
+	});
+};
+
+const saveMemory = function( code, mode ){
+	const category = document.getElementById( 'edit_category' ).value;
+	const pointer = document.getElementById( 'edit_pointer' ).value;
+	const content = document.getElementById( 'edit_content' ).value;
+
+	if( pointer != '' ){
+		$.post( "memory-edit.cgi", { command:'save', code:code, category:category, pointer:pointer, content:content, mode:mode, depth:2 }, function( data ){
+			$( "#LF" ).html( data );
+			listPointers( category );
+
+			pullBW();
+			dlf = false;
+			displayBW();
+		});
+	}else{
+		displayVIDEO( 'Pointer! (>_<)' );
+	}
+};
+
+const deleteMemory = function( code, mode, category ){
+	if( document.getElementById( 'edit_delete_check' ).checked ){
+		$.post( "memory-edit.cgi", { command:'delete', code:code, mode:mode, depth:2 }, function( data ){
+			$( "#LF" ).html( data );
+			listPointers( category );
+
+			pullBW();
+			dlf = false;
+			displayBW();
+		});
+	}else{
+		displayVIDEO( 'Check! (>_<)' );
+	}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Memory ///////////////////////////////////////////////////////////////////////
 
 // Open memory
 const memoryOpen = function( code ){
@@ -642,20 +719,20 @@ const memoryOpen = function( code ){
 
 
 // Open memory code
-const memoryOpenCode = function( code ){
-	$.post( "memory.cgi", { command:'refer_code', code, depth:2 }, function( data ){
-		$( "#L2" ).html( data );
-
-		dl2 = true;
-		pushBW();
-		displayBW();
-	});
-};
+//const memoryOpenCode = function( code ){
+//	$.post( "memory.cgi", { command:'refer_code', code, depth:2 }, function( data ){
+//		$( "#L2" ).html( data );
+//
+//		dl2 = true;
+//		pushBW();
+//		displayBW();
+//	});
+//};
 
 
 // Open memory link
-const memoryOpenLink = function( pointer, depth ){
-	$.post( "memory.cgi", { command:'refer', pointer:pointer, depth:depth }, function( data ){
+const memoryOpenLink = function( words, depth ){
+	$.post( "memory.cgi", { command:'refer', words:words, depth:depth }, function( data ){
 		$( "#L" + depth ).html( data );
 		displayVIDEO( depth );
 		switch( depth ){
@@ -678,7 +755,7 @@ const memoryOpenLink = function( pointer, depth ){
 		pushBW();
 		displayBW();
 
-		words = document.getElementById( "words" ).value = pointer;
+		words = document.getElementById( "words" ).value = words;
 		qcate = document.getElementById( "qcate" ).value = 2;
 	});
 };
@@ -725,42 +802,10 @@ var configForm = function( mod ){
 /////////////////////////////////////////////////////////////////////////////////
 // Photo //////////////////////////////////////////////////////////////////////////
 
-// レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-const photoSave = function( origin, alt, form, base ){
-	form_data = new FormData( $( form )[0] );
-	form_data.append( 'command', 'upload' );
-	form_data.append( 'origin', origin );
-	form_data.append( 'base', base );
-	form_data.append( 'alt', alt );
-
-	$.ajax( "photo.cgi",
-		{
-			type: 'post',
-			processData: false,
-			contentType: false,
-			data: form_data,
-			dataype: 'html',
-			success: function( data ){ $( '#LM' ).html( data ); }
-		}
-	);
-};
-
-// Moving photo position( zidx )
-const photoMove = function( origin, code, zidx){
-	$.post( "photo.cgi", { command:'move', origin:origin, code:code, zidx:zidx }, function( data ){ $( '#LM' ).html( data );});
-}
-
-// delete photo from media db
-const photoDel = function( origin, code, base ){
-	$.post( "photo.cgi", { command:'delete', origin:origin, code:code, base:base }, function( data ){ $( '#LM' ).html( data );});
-};
-
 // delete photo from media db
 const modalPhotoOn = function( code ){
 	$.post( "photo.cgi", { command:'modal', code:code }, function( data ){
 		$( '#MODAL' ).html( data );
-
-
 	});
 };
 
@@ -1078,11 +1123,6 @@ const recipeEdit = function( com, code ){
 	$.post( "recipe.cgi", { command:com, code:code }, function( data ){
 		$( "#L2" ).html( data );
 		dl2 = true;
-		displayBW();
-	});
-	$.post( "photo.cgi", { command:'view_series', origin:code, base:'recipe' }, function( data ){
-		$( "#LM" ).html( data );
-		dlm = true;
 		displayBW();
 	});
 };

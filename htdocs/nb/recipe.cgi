@@ -1,21 +1,21 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.18b (2023/11/26)
+#Nutrition browser 2020 recipe editor 0.20b (2024/02/17)
 
 #==============================================================================
 #COMMON LIBRARY
 #==============================================================================
 require './soul'
 require './brain'
-
+require './body'
+require 'natto'
 
 #==============================================================================
 #STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
 #$UDIC = '/usr/local/share/mecab/dic/ipadic/sys.dic'
-
 
 #==============================================================================
 #DEFINITION
@@ -50,6 +50,7 @@ def language_pack( language )
 
 	return l[language]
 end
+
 
 #==============================================================================
 # Main
@@ -88,7 +89,6 @@ when 'protocol'
 	exit
 
 when 'save', 'division'
-	require 'fileutils'
 	recipe.load_cgi( @cgi )
 
 	# Avoiding loop
@@ -203,6 +203,34 @@ when 'save', 'division'
 	end
 
 	db.query( "UPDATE #{$MYSQL_TB_SUM} SET name='#{recipe.name}', code='#{recipe.code}', protect='#{recipe.protect}' WHERE user='#{user.name}';", true )
+
+when 'photo_upload'
+	new_photo = Media.new( user )
+	new_photo.load_cgi( @cgi )
+	new_photo.save_photo( @cgi )
+    new_photo.get_series()
+    new_photo.save_db()
+
+	code = @cgi['origin']
+	recipe.load_db( code, true )
+
+when 'photo_mv'
+	target_photo = Media.new( user )
+	target_photo.load_cgi( @cgi )
+    target_photo.get_series()
+    target_photo.move_series()
+ 
+	code = @cgi['origin']
+	recipe.load_db( code, true )
+
+when 'photo_del'
+	target_photo = Media.new( user )
+	target_photo.load_cgi( @cgi )
+	target_photo.delete_file( true )
+	target_photo.delete_db( true )
+
+	code = @cgi['origin']
+	recipe.load_db( code, true )
 end
 
 
@@ -267,14 +295,13 @@ html_cost << '</select>'
 
 
 puts "HTML Photo upload form<br>" if @debug
-form_photo = ''
-form_photo = "<form method='post' enctype='multipart/form-data' id='photo_form'>"
+form_photo = "<form method='post' enctype='multipart/form-data' id='recipe_puf'>"
 form_photo << '<div class="input-group input-group-sm">'
-form_photo << "<label class='input-group-text'>#{l['camera']}</label>"
+form_photo << "<label class='input-group-text' for='photo' >#{l['camera']}</label>"
 if recipe.code == nil || file_disabled
-	form_photo << "<input type='file' class='form-control' DISABLED>"
+	form_photo << "<input type='file' class='form-control' id='photo' DISABLED>"
 else
-	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoSave( '#{recipe.code}', '#{recipe.name}', '#photo_form', 'recipe' )\">"
+	form_photo << "<input type='file' class='form-control' id='photo' name='photo' onchange=\"PhotoUpload( '#{recipe.code}', '#{recipe.name}' )\">"
 end
 form_photo << '</form></div>'
 
@@ -314,6 +341,13 @@ else
     branche	<< '</div>'
 end
 branche << '</div>'
+
+
+puts "Photo series parts<br>" if @debug
+photo = Media.new( user )
+photo.origin = code
+photo.base = 'recipe'
+photo.get_series()
 
 
 puts "HTML FORM recipe<br>" if @debug
@@ -385,6 +419,9 @@ html = <<-"HTML"
 		#{branche}
 	</div>
 
+	<hr>
+	#{photo.html_series( '-tn', 200, recipe.protect )}
+
 	<div class='row'>
 		<div align='right' class='col code'>#{recipe.code}</div>
 	</div>
@@ -412,7 +449,6 @@ if command == 'save'
 end
 
 if command == 'save'
-	require 'natto'
 	mecab = Natto::MeCab.new()
 
 	puts "Makeing alias dictionary<br>" if @debug
@@ -492,8 +528,7 @@ end
 #FRONT SCRIPT
 #==============================================================================
 
-if command == 'view'
-	js = <<-"JS"
+js = <<-"JS"
 <script type='text/javascript'>
 
 // Public button
@@ -542,7 +577,38 @@ var words2Root = function(){
 	document.getElementById( 'root' ).value = document.getElementById( 'words' ).value;
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+var PhotoUpload = function(){
+	form_data = new FormData( $( '#recipe_puf' )[0] );
+	form_data.append( 'command', 'photo_upload' );
+	form_data.append( 'origin', '#{recipe.code}' );
+	form_data.append( 'base', 'recipe' );
+	form_data.append( 'alt', '#{recipe.name}' );
+	form_data.append( 'secure', '0' );
+
+	$.ajax( "#{script}.cgi",
+		{
+			type: 'post',
+			processData: false,
+			contentType: false,
+			data: form_data,
+			dataype: 'html',
+			success: function( data ){ $( '#L2' ).html( data ); }
+		}
+	);
+};
+var photoMove = function( code, zidx ){
+	displayVIDEO( code );
+
+	$.post( "#{script}.cgi", { command:'photo_mv', origin:'#{recipe.code}', code:code, zidx:zidx, base:'recipe' }, function( data ){ $( '#L2' ).html( data );});
+};
+
+var photoDel = function( code ){
+	$.post( "#{script}.cgi", { command:'photo_del', origin:'#{recipe.code}', code:code, base:'recipe' }, function( data ){ $( '#L2' ).html( data );});
+};
+
 </script>
 JS
-	puts js
-end
+
+puts js

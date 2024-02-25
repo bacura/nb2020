@@ -84,19 +84,19 @@ nav {
 
 .shun_color{
   background: indigo;
-  color: silver;
+  color: springgreen;
   font-weight: bold;
 }
 
 .master_color{
   background: indigo;
-  color: gold;
+  color: azure;
   font-weight: bold;
 }
 
 .guild_color{
   background: indigo;
-  color: chocolate;
+  color: gold;
   font-weight: bold;
 }
 
@@ -113,6 +113,18 @@ nav {
 
 .ref_error{
   background: tomato;
+  color: black;
+  font-weight: bold;
+}
+
+.worning{
+  background: yellow;
+  color: black;
+  font-weight: bold;
+}
+
+.sprite{
+  background: lime;
   color: black;
   font-weight: bold;
 }

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM memory 0.00b (2024/02/23)
+#Nutrition browser 2020 memory list 0.00b (2024/02/23)
 
 #==============================================================================
 # STATIC
@@ -12,9 +12,9 @@ tmp = 'tmp_tmp'
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require '../soul'
-require '../brain'
-require '../body'
+require './soul'
+require './brain'
+require './body'
 
 #==============================================================================
 # DEFINITION
@@ -35,11 +35,10 @@ def language_pack( language )
 		'new_reg' 	=> "新規ポインタ登録",\
 		'key'	=> "ポインタ",\
 		'memory'	=> "記憶",\
-		'rank' 	=> "ランク",\
-		'move' 	=> "移動",\
 		'save' 	=> "保存",\
-		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>",\
-		'memory_edit' => "記憶管理GM:"
+		'media' 	=> "メディア",\
+		'return'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
+		'memory_edit' => "記憶管理:"
 	}
 
 	return l[language]
@@ -57,10 +56,16 @@ def html_category_list( memory, l )
 	categories = memory.get_categories()
 	categories.each.with_index do |e, i|
 		html << "<tr>"
-		html << "<td><input type='text' size='32' id='#{e}' value='#{e}' onchange=\"changeCategory( '#{e}' )\"></td>"
-		html << "<td><button type='button' class='btn btn-primary btn-sm' onclick=\"listPointers( '#{e}' )\"\">#{l['list']}</button></td>"
-		html << "<td><input type='checkbox' id='delete_check#{i}'>&nbsp;"
-		html << "<button type='button' class='btn btn-danger btn-sm' onclick=\"deleteCategory( '#{e}', 'delete_check#{i}' )\">#{l['delete']}</button></td>"
+		if memory.user.status >= 8
+			html << "<td><input type='text' size='32' id='#{e}' value='#{e}' onchange=\"changeCategory( '#{e}' )\"></td>"
+			html << "<td><button type='button' class='btn btn-primary btn-sm' onclick=\"listPointers( '#{e}', 'front' )\">#{l['list']}</button></td>"
+			html << "<td><input type='checkbox' id='delete_check#{i}'>&nbsp;"
+			html << "<button type='button' class='btn btn-danger btn-sm' onclick=\"deleteCategory( '#{e}', 'delete_check#{i}' )\">#{l['delete']}</button></td>"
+		else
+			html << "<td>#{e}</td>"
+			html << "<td><button type='button' class='btn btn-primary btn-sm' onclick=\"listPointers( '#{e}', 'front' )\"\">#{l['list']}</button></td>"
+			html << "<td></td>"
+		end
 		html << "</tr>"
 	end
 
@@ -80,37 +85,22 @@ l = language_pack( user.language )
 db = Db.new( user, @debug, false )
 memory = Memory.new( user )
 
-puts 'GM check<br>' if @debug
-if user.status < 8
-	puts "GM error."
-	exit
-end
-
-
 puts 'Getting POST data<br>' if @debug
 command = @cgi['command']
 mode = @cgi['mode']
 code = @cgi['code']
 category = @cgi['category']
 new_category = @cgi['new_category']
-#mvcategory = @cgi['mvcategory']
 pointer = @cgi['pointer']
-#rank = @cgi['rank'].to_i
-#post_process = @cgi['post_process']
 content = @cgi['content']
-#memory_solid = @cgi['memory']
-#memory_solid.gsub!( ',', "\t" ) if memory_solid != nil && memory_solid != ''
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "mode:#{mode}<br>\n"
+	puts "code:#{code}<br>\n"
 	puts "category:#{category}<br>\n"
 	puts "new_category:#{new_category}<br>\n"
-#	puts "mvcategory:#{mvcategory}<br>\n"
 	puts "pointer:#{pointer}<br>\n"
-#	puts "rank:#{rank}<br>\n"
-#	puts "post_process:#{post_process}<br>\n"
-#	puts "memory:#{memory}<br>\n"
-#	puts "memory_solid:#{memory_solid}<br>\n"
+	puts "content:#{content.size}<br>\n"
 	puts "<hr>\n"
 end
 
@@ -144,54 +134,77 @@ when 'delete'
 
 when 'pointers'
 	html_list = "<div class='row'>"
-	html_list << "<div class='col' align='right'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newPMemoryGM( '', '#{category}', '', 'front' )\">#{l['new_reg']}</button></div>"
+	html_list << "<div class='col' align='right'><button type='button' class='btn btn-success btn-sm nav_button' onclick=\"newMemory( '#{category}', '', 'front' )\">#{l['new_reg']}</button></div>"
 	html_list << "</div>"
-	html_list << "</div>"
+	html_list << "<br>"
 
 	html_list << "<table class='table table-sm table-striped'>"
 	html_list << "<thead>"
 	html_list << "<th>#{l['key']}</th>"
 	html_list << "<th>#{l['memory']}</th>"
+	html_list << "<th>#{l['media']}</th>"
 	html_list << "<th>#{l['user']}</th>"
 	html_list << "</thead>"
 
 	memory.load_cgi( @cgi )
-	memory_solid = memory.get_solid()
+
+########### Temp
+	range = 'user'
+	range = '' if user.status >= 8
+###########
+	photo = Media.new( user )
+
+	memory_solid = memory.get_solid( range )
 	memory_solid.each do |e|
-		code, pointer, content, uname = e.split( '::' )
-		content = '' if content == nil
+		unless e['content'] == tmp
+			photo.origin = e['code']
+			photo.base = 'memory'
+			pp = photo.get_series().size
 
-		html_list << "<tr onclick=\"newPMemoryGM( '#{code}', '#{memory.category}', '#{pointer}', 'front' )\">"
-		html_list << "<td>#{pointer}</td>"
+			e['content'] = '' if e['content'] == nil
 
-		if content.size > 80
-			html_list << "<td>#{content[0, 80]}...</td>"
-		else
-			html_list << "<td>#{content}</td>"
+			html_list << "<tr onclick=\"editMemory( '#{e['code']}', 'list' )\">"
+			html_list << "<td>#{e['pointer']}</td>"
+
+			if e['content'].size > 80
+				html_list << "<td>#{e['content'][0, 80]}...</td>"
+			else
+				html_list << "<td>#{e['content']}</td>"
+			end
+			html_list << "<td>#{pp}</td>"
+			html_list << "<td>#{e['user']}</td>"
+			html_list << "</tr>"
 		end
-		html_list << "<td>#{uname}</td>"
-		html_list << "</tr>"
 	end
 	html_list << "</table>"
 end
 
+
+html_return = ''
+html_return = "<div align='center' class='col joystic_koyomi' onclick=\"initMemoryList()\">#{l['return']}</div>" if command == 'pointers'
+
+html_new_category = ''
+if user.status >= 8
+	html_new_category << '<div class="col-7"></div>'
+	html_new_category << '<div class="col-5">'
+	html_new_category << '<div class="input-group input-group-sm">'
+	html_new_category << "	<span class='input-group-text' id='inputGroup-sizing-sm'>#{l['new_cate']}</span>"
+	html_new_category << '	<input type="text" class="form-control" id="new_category">'
+	html_new_category << "	<button type='button' class='btn btn-success' onclick=\"newCategory()\">#{l['regist']}</button>"
+	html_new_category << '</div></div>'
+end
 
 puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
 		<div class='col'><h5>#{l['memory_edit']} #{category}</h5></div>
+		#{html_return}
 	</div>
+	<br>
 
 	<div class='row'>
-		<div class='col-7'></div>
-		<div class='col-5'>
-			<div class="input-group input-group-sm">
-				<span class='input-group-text' id='inputGroup-sizing-sm'>#{l['new_cate']}</span>
- 				<input type='text' class='form-control' id='new_category'>
-				<button type='button' class='btn btn-success' onclick="newCategory()">#{l['regist']}</button>
-			</div>
-		</div>
+		#{html_new_category}
 	</div>
 	<br>
 

@@ -14,6 +14,7 @@
 #==============================================================================
 require '../soul'
 require '../brain'
+require '../body'
 
 #==============================================================================
 # DEFINITION
@@ -156,7 +157,7 @@ def meals( e, l, db, freeze_flag )
 			mb_html << "	</div>"
 
 			mb_html << "<div class='col-6'>"
-			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{code}', '#{c}' )\">#{l['trash']}</span>"
+			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{code}', '#{c}' )\">#{l['trash']}</span>" if /^\?/ !~ code
 			mb_html << "</div>"
 
 			mb_html << "</div>"
@@ -172,27 +173,6 @@ def meals( e, l, db, freeze_flag )
 	return mb_html
 end
 
-
-#### View photos series
-def view_series( media, l, size, dd )
-	html = ''
-	if media.series.size > 0
-		html << "<div class='row'>"
-		media.series.each do |e|
-			html << "<div class='col'>"
-			html << "<span onclick=\"koyomiPhotoDel( '#{media.origin}', '#{e}', '#{dd}' )\">#{l['trashf']}</span><br>"
-			html << "<a href='#{$PHOTO}/#{e}.jpg' target='photo'><img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail'></a>"
-			html << "</div>"
-		end
-		html << "</div>"
-	else
-		html << 'No photo'
-	end
-
-	return html
-end
-
-
 #==============================================================================
 # Main
 #==============================================================================
@@ -205,29 +185,38 @@ db = Db.new( user, @debug, false )
 
 puts 'Getting POST' if @debug
 command = @cgi['command']
-yyyy = @cgi['yyyy'].to_i
-mm = @cgi['mm'].to_i
-dd = @cgi['dd'].to_i
-yyyy_mm = @cgi['yyyy_mm']
-unless yyyy_mm == ''
-	a = yyyy_mm.split( '-' )
+if /photo/ !~ command
+	yyyy = @cgi['yyyy'].to_i
+	mm = @cgi['mm'].to_i
+	dd = @cgi['dd'].to_i
+	yyyy_mm = @cgi['yyyy_mm']
+	unless yyyy_mm == ''
+		a = yyyy_mm.split( '-' )
+		yyyy = a[0].to_i
+		mm = a[1].to_i
+	end
+
+	yyyy_mm_dd = @cgi['yyyy_mm_dd']
+	unless yyyy_mm_dd == ''
+		a = yyyy_mm_dd.split( '-' )
+		yyyy = a[0].to_i
+		mm = a[1].to_i
+		dd = a[2].to_i if dd == 0
+	end
+
+	tdiv = @cgi['tdiv'].to_i
+	order = @cgi['order'].to_i
+	code = @cgi['code']
+	memo = @cgi['memo']
+	some = @cgi['some']
+else
+	a = @cgi['origin'].split( '-' )
 	yyyy = a[0].to_i
 	mm = a[1].to_i
+	dd = a[2].to_i
+	tdiv = a[3].to_i
 end
 
-yyyy_mm_dd = @cgi['yyyy_mm_dd']
-unless yyyy_mm_dd == ''
-	a = yyyy_mm_dd.split( '-' )
-	yyyy = a[0].to_i
-	mm = a[1].to_i
-	dd = a[2].to_i if dd == 0
-end
-
-tdiv = @cgi['tdiv'].to_i
-code = @cgi['code']
-memo = @cgi['memo']
-order = @cgi['order'].to_i
-some = @cgi['some']
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "yyyy:#{yyyy}<br>\n"
@@ -248,6 +237,7 @@ when 'delete'
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 	a = r.first['koyomi'].split( "\t" )
 	new_meal = ''
+
 	a.size.times do |c|
 		new_meal << "#{a[c]}\t" if c != order
 	end
@@ -291,6 +281,34 @@ when 'clear'
 		db.query( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code IN(#{code_in});", true )
 	end
 	db.query( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}';", true )
+
+	photo = Media.new( user )
+	photo.base = 'koyomi'
+	0.upto( 3 ) do |c|
+		photo.origin = "#{yyyy}-#{mm}-#{dd}-#{c}"
+		photo.delete_file( true )
+		photo.delete_series( true )
+	end
+
+when 'photo_upload'
+	new_photo = Media.new( user )
+	new_photo.load_cgi( @cgi )
+	new_photo.save_photo( @cgi )
+    new_photo.get_series()
+    new_photo.save_db()
+
+when 'photo_mv'
+	target_photo = Media.new( user )
+	target_photo.load_cgi( @cgi )
+    target_photo.get_series()
+    target_photo.move_series()
+
+when 'photo_del'
+	target_photo = Media.new( user )
+	target_photo.load_cgi( @cgi )
+	target_photo.delete_file( true )
+	target_photo.delete_db( true )
+
 end
 
 
@@ -307,9 +325,12 @@ palette.set_bit( $PALETTE_DEFAULT_NAME[user.language][0] )
 
 
 puts 'Updaing media<br>' if @debug
+target_photo = Media.new( user )
+target_photo.base = 'koyomi'
 4.times do |tdiv|
-	r = db.query( "SELECT code FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}';", false )
-	if r.first
+	target_photo.origin = "#{yyyy}-#{mm}-#{dd}-#{tdiv}"
+	target_photo.get_series()
+	if target_photo.series.size > 0
 		rr = db.query( "SELECT koyomi FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}' AND tdiv='#{tdiv}';", false )
 		db.query( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', date='#{yyyy}-#{mm}-#{dd}', tdiv='#{tdiv}', koyomi='?P';", true ) unless rr.first
 	else
@@ -430,7 +451,7 @@ end
 puts 'Setting something<br>' if @debug
 some_html = [ '', '', '' ]
 if freeze_flag == 0
-	0.upto( 2 ) do |c|
+	0.upto( 3 ) do |c|
 		some_html[c] = <<-"SOME"
 		<select class='form-select form-select-sm' id='some#{c}' onchange="koyomiSaveSome( '#{yyyy}', '#{mm}', '#{dd}', #{c}, 'some#{c}' )">
 			<option value='' selected>#{l['some']}</option>
@@ -447,28 +468,18 @@ end
 
 
 puts 'photo upload form<br>' if @debug
-form_photo = []
 disabled = ''
 disabled = 'DISABLED' if freeze_flag == 1
-0.upto( 3 ) do |c|
-	form_photo[c] = "<form method='post' enctype='multipart/form-data' id='photo_form#{c}'>"
-	form_photo[c] << '<div class="input-group input-group-sm">'
-	form_photo[c] << "<label class='input-group-text'>#{l['camera']}</label>"
-	form_photo[c] << "<input type='file' class='form-control' name='photo' onchange=\"koyomiPhotoSave( '#{yyyy}-#{mm}-#{dd}-#{c}', '#{yyyy}-#{mm}-#{dd}-#{c}', '#photo_form#{c}', '#{dd}' )\" #{disabled}></div>"
-	form_photo[c] << '</form>'
-end
 
 
 puts 'photo frame<br>' if @debug
 photo_frame = []
-disabled = ''
-disabled = 'DISABLED' if freeze_flag == 1
 0.upto( 3 ) do |c|
-	media = Media.new( user )
-	media.origin = "#{yyyy}-#{mm}-#{dd}-#{c}"
-	media.load_series()
-
-	photo_frame[c] = view_series( media, l, 200, dd )
+	photo = Media.new( user )
+	photo.base = "koyomi"
+	photo.origin = "#{yyyy}-#{mm}-#{dd}-#{c}"
+	photo.get_series()
+	photo_frame[c] = photo.html_series( '-tn', 100, freeze_flag )
 end
 
 
@@ -491,9 +502,8 @@ else
 MEMO2
 end
 
-
-
-
+disabled = ''
+disabled = 'DISABLED' if freeze_flag == 1 
 
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -501,7 +511,7 @@ html = <<-"HTML"
 		<div class='col-2'><h5>#{yyyy} / #{mm} / #{dd}</h5></div>
 		<div align='center' class='col-8 joystic_koyomi' onclick="editKoyomiR( '#{yyyy}', '#{mm}' )">#{l['return']}</div>
 		<div align='center' class='col-2'>
-			<input type='checkbox' id='check_kc'>&nbsp;
+			<input type='checkbox' id='check_kc' #{disabled}>&nbsp;
 			<span class='badge rounded-pill npill' onclick="clearKoyomi( '#{yyyy}', '#{mm}', '#{dd}' )">#{l['clear']}</span>
 		</div>
 
@@ -517,7 +527,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col-3'></div>
-		<div class='col-5'>#{form_photo[0]}</div>
+		<div class='col-5'>#{}</div>
 	</div>
 	<div class='row'>
 		<div class='col-7'>#{koyomi_html[0]}</div>
@@ -534,7 +544,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col-3'></div>
-		<div class='col-5'>#{form_photo[1]}</div>
+		<div class='col-5'>#{}</div>
 	</div>
 	<div class='row'>
 		<div class='col-7'>#{koyomi_html[1]}</div>
@@ -551,7 +561,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col-3'></div>
-		<div class='col-5'>#{form_photo[2]}</div>
+		<div class='col-5'>#{}</div>
 	</div>
 	<div class='row'>
 		<div class='col-7'>#{koyomi_html[2]}</div>
@@ -568,7 +578,7 @@ html = <<-"HTML"
 			</div>
 		</div>
 		<div class='col-3'></div>
-		<div class='col-5'>#{form_photo[3]}</div>
+		<div class='col-5'>#{}</div>
 	</div>
 	<div class='row'>
 		<div class='col-7'>#{koyomi_html[3]}</div>
@@ -580,8 +590,76 @@ html = <<-"HTML"
 		<div class='col-1'><h5>#{l['memo']}</h5></div>
 		#{memo_html}
 	</div>
+	<br>
+
+	<div class='row'>
+		<form method='post' enctype='multipart/form-data' id='koyomi_puf'>
+		<div class="input-group input-group-sm">
+			<div class='col-2'>
+				<div class="input-group input-group-sm">
+					<label class='input-group-text'>#{l['camera']}</label>
+					<select class='form-select form-select-sm' id='photo_tdiv' #{disabled}>
+						<option value='0'>朝食</option>
+						<option value='1'>昼食</option>
+						<option value='2'>夕食</option>
+						<option value='3'>間食/捕食</option>
+					</select>
+				</div>
+			</div>
+			<div class='col-4'>
+				<input type='file' class='form-control form-control-sm' name='photo' onchange="PhotoUpload()" #{disabled}>
+			</div>
+		</div>
+		</form>
+	</div>
 </div>
 
 HTML
 
 puts html
+
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
+
+js = <<-"JS"
+<script type='text/javascript'>
+var base = 'koyomi';
+var layer = '#L2';
+
+var PhotoUpload = function(){
+	var photo_tdiv = document.getElementById( 'photo_tdiv' ).value;
+	var origin = '#{yyyy}-#{mm}-#{dd}-' + photo_tdiv;
+
+	form_data = new FormData( $( '#koyomi_puf' )[0] );
+	form_data.append( 'command', 'photo_upload' );
+	form_data.append( 'origin', origin );
+	form_data.append( 'base', base );
+	form_data.append( 'alt', '' );
+	form_data.append( 'secure', '0' );
+
+	$.ajax( "koyomi/koyomi-edit.cgi",
+		{
+			type: 'post',
+			processData: false,
+			contentType: false,
+			data: form_data,
+			dataype: 'html',
+			success: function( data ){ $( layer ).html( data ); }
+		}
+	);
+};
+var photoMove = function( code, zidx ){
+	displayVIDEO( code );
+
+	$.post( "koyomi/koyomi-edit.cgi", { command:'photo_mv', origin:'#{yyyy}-#{mm}-#{dd}-#{tdiv}', code:code, zidx:zidx, base:base }, function( data ){ $( layer ).html( data );});
+};
+
+var photoDel = function( code ){
+	$.post( "koyomi/koyomi-edit.cgi", { command:'photo_del', origin:'#{yyyy}-#{mm}-#{dd}-#{tdiv}', code:code, base:base }, function( data ){ $( layer ).html( data );});
+};
+
+</script>
+JS
+
+puts js

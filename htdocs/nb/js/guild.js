@@ -414,7 +414,7 @@ var modifysaveKoyomiFC = function( code, origin ){
 
 // Return from Koyomi
 var koyomiReturn = function(){
-	pullHW();
+	pullBW();
 	displayBW();
 };
 
@@ -423,7 +423,7 @@ var koyomiReturn2KE = function( yyyy, mm, dd ){
 	$.post( kp + "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){
 		$( "#L2" ).html( data );
 
-		pullHW();
+		pullBW();
 		displayBW();
 	});
 };

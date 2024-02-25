@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory linker & remarker 0.00b
+#Nutrition browser 2020 memory linker 0.00b
 
 #==============================================================================
 #CHANGE LOG
@@ -36,7 +36,6 @@ db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}"
 # Main
 #==============================================================================
 
-
 category_list = []
 pointer_list = []
 memory = []
@@ -48,14 +47,12 @@ r.each do |e|
 	pointer_list << e['pointer']
 	category_list << e['category']
 end
-pointer_list.uniq!
-category_list.uniq!
 
 
 #### Adding pointer mark
 puts "Adding pointer mark.\n"
 r.each do |e|
-	memory = e['memory']
+	memory = e['content']
 
 	pointer_sub_list = []
 	pointer_list.each do |ee| pointer_sub_list << memory.scan( ee ) end
@@ -80,41 +77,41 @@ r.each do |e|
 	end
 	memory.gsub!( '{{{{', '{{' )
 	memory.gsub!( '}}}}', '}}' )
-	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET memory='#{memory}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
+	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET content='#{memory}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
 end
 
 #### Evaluating Rank
-puts "Counting.\n"
-each_count = []
+#puts "Counting.\n"
+#each_count = []
 
-r.each do |e| each_count << ( e['know'].to_f / e['count'].to_f ) end
+#r.each do |e| each_count << ( e['know'].to_f / e['count'].to_f ) end
 
-puts "Evaluating total rank.\n"
-total_rank = each_count.map { |v| each_count.count { |a| a > v } + 1 }
+#puts "Evaluating total rank.\n"
+#total_rank = each_count.map { |v| each_count.count { |a| a > v } + 1 }
 
-c = 0
-r.each do |e|
-	trank = 11 - ( total_rank[c].to_f / total_rank.size * 10 ).ceil
-	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET total_rank='#{trank}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
-	c += 1
-end
+#c = 0
+#r.each do |e|
+#	trank = 11 - ( total_rank[c].to_f / total_rank.size * 10 ).ceil
+#	db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET total_rank='#{trank}' WHERE category='#{e['category']}' AND pointer='#{e['pointer']}';" )
+#	c += 1
+#end
 
-puts "Evaluating category rank.\n"
-category_list.each do |e|
-	rr = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{e}';" )
+#puts "Evaluating category rank.\n"
+#category_list.each do |e|
+#	rr = db.query( "SELECT * FROM #{$MYSQL_TB_MEMORY} WHERE category='#{e}';" )
+#
+#	each_count = []
+#	rr.each do |e| each_count << ( e['know'].to_f / e['count'].to_f ) end
 
-	each_count = []
-	rr.each do |e| each_count << ( e['know'].to_f / e['count'].to_f ) end
+#	puts "#{e} rank.\n"
+#	category_rank = each_count.map { |v| each_count.count { |a| a > v } + 1 }
 
-	puts "#{e} rank.\n"
-	category_rank = each_count.map { |v| each_count.count { |a| a > v } + 1 }
-
-	c = 0
-	rr.each do |ee|
-		rank = 11 - ( category_rank[c].to_f / category_rank.size * 10 ).ceil
-		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET rank='#{rank}' WHERE category='#{ee['category']}' AND pointer='#{ee['pointer']}';" )
-		c += 1
-	end
-end
+#	c = 0
+#	rr.each do |ee|
+#		rank = 11 - ( category_rank[c].to_f / category_rank.size * 10 ).ceil
+#		db.query( "UPDATE #{$MYSQL_TB_MEMORY} SET rank='#{rank}' WHERE category='#{ee['category']}' AND pointer='#{ee['pointer']}';" )
+#		c += 1
+#	end
+#end
 
 puts "Done.\n"

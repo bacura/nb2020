@@ -92,8 +92,34 @@ when 'delete'
 	note_code = @cgi['code']
 	p note_code if @debug
 	db.query( "DELETE FROM #{$MYSQL_TB_NOTE} WHERE code='#{note_code}';", true )
-else
 
+when 'photo_upload'
+	new_photo = Media.new( user )
+	new_photo.load_cgi( @cgi )
+	new_photo.save_photo( @cgi )
+    new_photo.get_series()
+    new_photo.save_db()
+
+	code = @cgi['origin']
+	recipe.load_db( code, true )
+
+when 'photo_mv'
+	target_photo = Media.new( user )
+	target_photo.load_cgi( @cgi )
+    target_photo.get_series()
+    target_photo.move_series()
+ 
+	code = @cgi['origin']
+	recipe.load_db( code, true )
+
+when 'photo_del'
+	target_photo = Media.new( user )
+	target_photo.load_cgi( @cgi )
+	target_photo.delete_file( true )
+	target_photo.delete_db( true )
+
+	code = @cgi['origin']
+	recipe.load_db( code, true )
 end
 
 
@@ -196,3 +222,8 @@ html = <<-"HTML"
 HTML
 
 puts html
+
+
+
+
+

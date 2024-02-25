@@ -249,7 +249,7 @@ def html_nav( user, l, db )
   gm_account = ''
   if user.status == 9
     gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button master_color' onclick=\"initAccount( 'init' )\">#{l['user']}</button>"
-    gm_account << "<button type='button' class='btn btn-dark btn-sm nav_button master_color' onclick=\"initBond( 'init' )\">#{l['bond']}</button>"
+    gm_account << "<button type='button' class='btn btn-warning btn-sm nav_button master_color' onclick=\"initBond( 'init' )\">#{l['bond']}</button>"
 
   end
 
@@ -291,8 +291,8 @@ html = <<-"HTML"
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initGinmi()">#{l['ginmi']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initPhysique()">#{l['pysique']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMomChai()">#{l['momchai']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initNote()">#{l['note']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initFCZlist()">#{l['fczl']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMemoryList( 'init' )">#{l['memorya']}</button>
 </nav>
 <nav class='container-fluid' id='gs_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAccountM()">#{l['accountm']}</button>
@@ -300,21 +300,21 @@ html = <<-"HTML"
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="recipe3ds()">#{l['recipe3d']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{l['school']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{l['toker']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initNote()">#{l['note']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initMedialist()">#{l['medial']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initFFlow()">#{l['fflow']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['senior']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['condition']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['mjl']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initMedialist()">#{l['medial']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initFFlow()">#{l['fflow']}</button>
 </nav>
 <nav class='container-fluid' id='gm_menu' style='display:none;'>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{l['unit']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initColor( 'init' )">#{l['color']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initAllergen()">#{l['allergen']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initGYCV( 'init' )">#{l['gycv']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initShun( 'init' )">#{l['shun']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initDic( 'init' )">#{l['dic']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initSlogf( 'init' )">#{l['slog']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button master_color" onclick="initMemory( 'init' )">#{l['memorya']}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button master_color" onclick="initUnit( 'init' )">#{l['unit']}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button master_color" onclick="initColor( 'init' )">#{l['color']}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button master_color" onclick="initAllergen()">#{l['allergen']}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button master_color" onclick="initGYCV( 'init' )">#{l['gycv']}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button master_color" onclick="initShun( 'init' )">#{l['shun']}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button master_color" onclick="initDic( 'init' )">#{l['dic']}</button>
+    <button type="button" class="btn btn-warning btn-sm nav_button master_color" onclick="initSlogf( 'init' )">#{l['slog']}</button>
     #{gm_account}
 </nav>
 HTML
