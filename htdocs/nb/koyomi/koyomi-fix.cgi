@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.12b (2023/08/27)
+#Nutrition browser koyomi fix fct editer 0.13b (2024/02/26)
 
 #==============================================================================
 # STATIC
@@ -13,6 +13,7 @@
 #==============================================================================
 require '../soul'
 require '../brain'
+require '../body'
 
 #==============================================================================
 # DEFINITION
