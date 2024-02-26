@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition mother & child tools 0.00b (2023/07/05)
+#Nutrition browser 2020 nutrition mother & child tools 0.01b (2024/02/26)
 
 
 #==============================================================================
@@ -14,6 +14,7 @@
 #==============================================================================
 require './soul'
 require './brain'
+require './body'
 
 #==============================================================================
 #DEFINITION

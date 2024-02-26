@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition physical tools 0.04b (2023/07/06)
+#Nutrition browser 2020 nutrition physical tools 0.05b (2024/02/26)
 
 
 #==============================================================================
@@ -15,6 +15,7 @@ $mod_path = 'physique_'
 #==============================================================================
 require './soul'
 require './brain'
+require './body'
 
 #==============================================================================
 #DEFINITION
