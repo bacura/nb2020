@@ -115,7 +115,7 @@ when 'photo_mv'
 when 'photo_del'
 	target_photo = Media.new( user )
 	target_photo.load_cgi( @cgi )
-	target_photo.delete_file( true )
+	target_photo.delete_photo( true )
 	target_photo.delete_db( true )
 
 	code = @cgi['origin']

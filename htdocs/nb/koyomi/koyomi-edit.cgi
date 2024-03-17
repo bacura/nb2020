@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.25b (2024/03/02)
+#Nutrition browser 2020 koyomi editor 0.25b (2024/03/18)
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -282,12 +282,10 @@ when 'clear'
 		db.query( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND code IN(#{code_in});", true )
 	end
 	db.query( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{yyyy}-#{mm}-#{dd}';", true )
-
 	photo = Media.new( user )
 	photo.base = 'koyomi'
 	0.upto( 3 ) do |c|
 		photo.origin = "#{yyyy}-#{mm}-#{dd}-#{c}"
-		photo.delete_file( true )
 		photo.delete_series( true )
 	end
 
