@@ -37,7 +37,7 @@ end
 
 def view_series( media, l, size )
 	puts "view_series:#{},#{}" if @debug
-	media.load_series()
+	media.get_series()
 	protect = true
 
 	recipe = Recipe.new( media.user )
@@ -191,7 +191,7 @@ when 'upload'
 			photo.write( "#{$PHOTO_PATH}/#{media.code}.jpg" )
 
 			puts "insert DB<br>" if @debug
-			media.load_series()
+			media.get_series()
 			media.save_db
 
 			File.unlink "#{$TMP_PATH}/#{tmp_file}" if File.exist?( "#{$TMP_PATH}/#{tmp_file}" ) && tmp_delete
@@ -205,7 +205,7 @@ when 'move'
 		media.zidx = zidx
 
 		puts "Update DB<br>" if @debug
-		media.load_series()
+		media.get_series()
 		media.move_series()
 	end
 

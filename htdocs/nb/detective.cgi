@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Detective input 0.05b (2022/10/16)
+#Nutrition browser Detective input 0.06b (2024/03/16)
 
 #==============================================================================
 #STATIC
@@ -583,7 +583,7 @@ else
 
 	if code != ''
 		puts "FCZ import<br>" if @debug
-		r = db.query( "SELECT origin, ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}' AND user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT origin, ENERC_KCAL, PROTV, FATV, CHOV, NACL_EQ FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}' AND user='#{user.name}';", false )
 		if r.first
 			volume = r.first['origin'].to_i
 			energy = r.first['ENERC_KCAL'].to_f

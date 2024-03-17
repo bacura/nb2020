@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.24b (2024/02/16)
+#Nutrition browser 2020 koyomi editor 0.25b (2024/03/02)
 
 
 #==============================================================================
@@ -45,6 +45,7 @@ def language_pack( language )
 		'plus'		=> "＋",\
 		'copy'		=> "複製",\
 		'move'		=> "移動",\
+		'fixcpmv'	=> "複製・移動",\
 		'memo'		=> "メモ",\
 		'clear'		=> "お片付け",\
 		'return'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
@@ -101,7 +102,7 @@ def meals( e, l, db, freeze_flag )
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
 				onclick = " onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\"" if freeze_flag == 0
-				fix_copy_button = "<span onclick=\"modifysaveKoyomiFC( '#{code}', '#{origin}' )\">#{l['move']}</span>"
+				fix_copy_button = "<span class='badge bg-primary' onclick=\"cpmvFix( '#{code}', '#{origin}' )\">#{l['fixcpmv']}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
 				onclick = ''
@@ -157,7 +158,7 @@ def meals( e, l, db, freeze_flag )
 			mb_html << "	</div>"
 
 			mb_html << "<div class='col-6'>"
-			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{code}', '#{c}' )\">#{l['trash']}</span>" if /^\?/ !~ code
+			mb_html << "	<span onclick=\"deleteKoyomi( '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{code}', '#{c}' )\">#{l['trash']}</span>" if /^\?P/ !~ code
 			mb_html << "</div>"
 
 			mb_html << "</div>"

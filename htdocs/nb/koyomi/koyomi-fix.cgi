@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.13b (2024/02/26)
+#Nutrition browser koyomi fix fct editer 0.14b (2024/03/05)
 
 #==============================================================================
 # STATIC
@@ -345,8 +345,8 @@ his_w1 = ( @time_now - ( 60 * 60 * 24 * 7 )).strftime( "%Y-%m-%d" )
 his_w1_ = ( @time_now - ( 60 * 60 * 24 * 8 )).strftime( "%Y-%m-%d" )
 his_m1 = ( @time_now - ( 60 * 60 * 24 * 30 )).strftime( "%Y-%m-%d" )
 
-r = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_w1}' AND '#{his_today}';", false )
-rr = db.query( "SELECT * FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_m1}' AND '#{his_w1_}';", false )
+r = db.query( "SELECT code, name, origin FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_w1}' AND '#{his_today}' GROUP BY name;", false )
+rr = db.query( "SELECT code, name, origin FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='fix' AND date BETWEEN '#{his_m1}' AND '#{his_w1_}' GROUP BY name;", false )
 fix_his_html << "<div class='input-group input-group-sm'>"
 
 fix_his_html << "<label class='input-group-text'>#{l['history']}</label>"

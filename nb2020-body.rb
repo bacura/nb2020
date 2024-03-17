@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.34b (2024/02/05)
+#Nutrition browser 2020 body 0.01b (2024/03/16)
 
 #==============================================================================
 #STATIC
@@ -245,6 +245,15 @@ class Media
   def delete_series( real )
     if @flesh
       if real
+        case @type
+        when 'jpg', 'jpeg'
+          @series.each do |e|
+            File.unlink "#{$PHOTO_PATH}/#{@code}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tns.jpg" )
+            File.unlink "#{$PHOTO_PATH}/#{@code}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tn.jpg" )
+            File.unlink "#{$PHOTO_PATH}/#{@code}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}.jpg" )
+          end
+        end
+
         $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' AND origin='#{@origin}' AND base='#{@base}';" )
       else
         $DB.query( "UPDATE FROM #{$MYSQL_TB_MEDIA} SET base='lost' WHERE user='#{@user.name}' AND origin='#{@origin}' AND base='#{@base}';" )
@@ -326,7 +335,7 @@ def save_photo( cgi )
     end
   end
 
-  def delete_file( real )
+  def delete_photo( real )
     if @flesh && real
       File.unlink "#{$PHOTO_PATH}/#{@code}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tns.jpg" )
       File.unlink "#{$PHOTO_PATH}/#{@code}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tn.jpg" )

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.35b (2024/02/16)
+#Nutrition browser 2020 recipe list 0.36b (2024/03/16)
 
 
 #==============================================================================
@@ -12,8 +12,8 @@
 #==============================================================================
 # LIBRARY
 #==============================================================================
-require 'fileutils'
 require './soul'
+require './body'
 
 #==============================================================================
 # DEFINITION
@@ -307,9 +307,9 @@ def recipe_line( recipe, user, page, color, l )
 
 	html << "&nbsp;<span onclick=\"print_templateSelect( '#{recipe.code}' )\">#{l['printer']}</span>&nbsp;&nbsp;"
 	if user.status >= 1 && recipe.user.name == user.name && ( recipe.root == nil || recipe.root == '' )
-		html << "&nbsp;<span onclick=\"recipeImport( 'subspecies', '#{recipe.code}', '#{page}' )\">#{l['diagram']}</span>"
+		html << "&nbsp;<span onclick=\"recipeImport( 'subspecies', '#{recipe.code}', '#{page}' )\">#{l['diagram']}&nbsp;&nbsp;</span>"
 	elsif user.status >= 1 && recipe.user.name == user.name
-		html << "&nbsp;<span onclick=\"initCB( 'load', '#{recipe.root}', '#{recipe.user.name}' )\">#{l['root']}</span>"
+		html << "&nbsp;<span onclick=\"initCB( 'load', '#{recipe.root}', '#{recipe.user.name}' )\">#{l['root']}&nbsp;&nbsp;</span>"
 	end
 
 	if user.status >= 1 && recipe.user.name == user.name
@@ -420,16 +420,11 @@ when 'refer'
 when 'delete'
 	puts "Deleting photos<br>" if @debug
 	if user.status != 7
+		puts "Deleting media from DB, Real<br>" if @debug
 		target_media = Media.new( user )
 		target_media.origin = code
-		target_media.load_series()
-
-		target_media.series.each do |e|
-			File.unlink "#{$PHOTO_PATH}/#{e}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e}-tns.jpg" )
-			File.unlink "#{$PHOTO_PATH}/#{e}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e}-tn.jpg" )
-			File.unlink "#{$PHOTO_PATH}/#{e}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{e}.jpg" )
-		end
-		target_media.delete_series()
+		target_media.get_series()
+		target_media.delete_series( true )
 
 		puts "Deleting recipe from DB<br>" if @debug
 		recipe = Recipe.new( user )
@@ -452,7 +447,7 @@ when 'subspecies'
 
 		source_media = Media.new( user )
 		source_media.origin = code
-		source_media.load_series()
+		source_media.get_series()
 
 		source_media.series.each do |e|
 			FileUtils.cp( "#{$PHOTO_PATH}/#{e}-tns.jpg", "#{$PHOTO_PATH}/#{new_media_code}-tns.jpg" ) if File.exist?( "#{$PHOTO_PATH}/#{e['code']}-tns.jpg" )

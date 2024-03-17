@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.11b (2024/02/26)
+#Nutrition browser 2020 koyomi menu copy / move 0.12b (2024/02/29)
 
 
 #==============================================================================
@@ -155,7 +155,7 @@ if command == 'save'
 					db.query( "UPDATE tmp SET code='#{fzcode}', origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}' WHERE base='fix' AND user='#{user.name}';", true )
 					db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SELECT * FROM tmp;", true )
 					db.query( "DROP TABLE tmp;", true )
-					db.close
+
 					t << "#{fzcode}~#{aa[1]}~#{aa[2]}~#{hh_mm}~#{meal_time}\t"
 				end
 			else

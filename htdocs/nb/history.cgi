@@ -117,7 +117,7 @@ def get_histry( db, l, sub_fg )
 
 				# buttons
 				add_button = "<span onclick=\"addingCB( '#{e}', '', '#{food_name}' )\">#{l['cboard']}</span>" if db.user.name
-				koyomi_button = "<span onclick=\"addKoyomi( '#{e}', 1 )\">#{l['calendar']}</span>" if db.user.status >= 2
+				koyomi_button = "<span onclick=\"addKoyomi( '#{e}' )\">#{l['calendar']}</span>" if db.user.status >= 2
 
 				html << "<tr class='fct_value'><td class='link_cursor' onclick=\"detailView_his( '#{e}' )\">#{tags}</td><td>#{add_button}&nbsp;#{koyomi_button}</td></tr>\n"
 			end

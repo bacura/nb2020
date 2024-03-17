@@ -178,7 +178,7 @@ when 'save', 'division'
 			puts "checking media<br>" if @debug
 			media = Media.new( user )
 			media.origin = code
-			media.load_series()
+			media.get_series()
 
 			puts "Copying photo<br>" if @debug
 			media.series.each do |e|

@@ -245,7 +245,7 @@ when 'init', 'weight', 'cb', 'cbp'
 
 		# Koyomi button
 		if user.status >= 2 && base != 'cb'
-			koyomi_button = "<span onclick=\"addKoyomi( '#{food_no_list[c]}', -5 )\">#{l['calendar']}</span>"
+			koyomi_button = "<span onclick=\"addKoyomi( '#{food_no_list[c]}' )\">#{l['calendar']}</span>"
 		else
 			koyomi_button = ''
 		end

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.28b (2024/02/26)
+#Nutrition browser 2020 koyomi adding panel 0.29b (2024/03/17)
 
 #==============================================================================
 # STATIC
@@ -123,6 +123,7 @@ dd = 1 if dd == 0
 ev = 100 if ev == 0 || ev == '' || ev == nil
 origin_date = origin.split( ':' )
 origin = "#{yyyy}:#{mm}:#{dd}:#{tdiv}:#{order}" if ( command == 'modify' || command == 'fzcopy' ) && origin == ''
+
 if @debug
 	puts "command:#{command}<br>\n"
 	puts "code:#{code}<br>\n"
@@ -178,7 +179,8 @@ meal_time = 20 if meal_time == nil || meal_time == '' || meal_time == 0
 
 
 new_solid = ''
-if command == 'move' && copy != 1
+#Removing pre-koyomi
+if command == 'move' || command == 'fixcopy' && copy != 1
 	puts 'Move food (deleting origin )<br>' if @debug
 	a = origin.split( ':' )
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false )
@@ -193,8 +195,18 @@ if command == 'move' && copy != 1
 	db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{new_solid}' WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", true )
 end
 
+#Saving post-koyomi
+if command == 'save' || command == 'move' || command == 'fixcopy' || command == 'fzcopy'
 
-if command == 'save' || command == 'move' || command == 'fzcopy'
+	if command == 'fixcopy' && copy == 1
+		puts 'Duplicate fix<br>' if @debug
+		db.query( "CREATE TEMPORARY TABLE tt AS SELECT * FROM #{$MYSQL_TB_FCZ} WHERE code='#{code}';", true )
+		new_fix_code = generate_code( user.name, 'z' )
+		db.query( "UPDATE tt SET code='#{new_fix_code}' WHERE code='#{code}';", true )
+		db.query( "INSERT INTO #{$MYSQL_TB_FCZ} SELECT * FROM tt WHERE code='#{new_fix_code}';", true )
+		code = new_fix_code
+	end
+
 	puts 'Save food<br>' if @debug
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", false )
 	if r.first
@@ -212,20 +224,18 @@ if command == 'save' || command == 'move' || command == 'fzcopy'
 		koyomi << "#{delimiter}#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
 
 		db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET koyomi='#{koyomi}' WHERE user='#{user.name}' AND date='#{sql_ymd}' AND tdiv='#{tdiv}';", true )
-		origin = "#{org_ymd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move'
+		origin = "#{org_ymd}:#{tdiv}:#{koyomi.split( "\t" ).size - 1}" if command == 'move' || command == 'fixcopy'
 	else
 		koyomi = "#{code}~#{ev}~#{eu}~#{hh_mm}~#{meal_time}"
 		db.query( "INSERT INTO #{$MYSQL_TB_KOYOMI} SET user='#{user.name}', fzcode='', freeze='0', koyomi='#{koyomi}', date='#{sql_ymd}', tdiv='#{tdiv}';", true )
-		origin = "#{org_ymd}:#{tdiv}:0" if command == 'move'
+		origin = "#{org_ymd}:#{tdiv}:0" if command == 'move' || command == 'fixcopy'
 	end
 end
 
 copy_html = ''
 save_button = "<button class='btn btn-sm btn-info' type='button' onclick=\"saveKoyomiAdd( 'save', '#{code}', '#{origin}' )\">#{l['save']}</button>"
-
-
 ####
-if command == 'modify' || command == 'move' || command == 'move_fix'
+if command == 'modify' || command == 'move' || command == 'fix_direct' || command == 'fixcopy'
 	copy_html << "<div class='form-group form-check'>"
     copy_html << "<input type='checkbox' class='form-check-input' id='copy' #{checked( copy )}>"
     copy_html << "<label class='form-check-label'>#{l['copy']}</label>"
@@ -284,43 +294,38 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 	onclick = "onclick=\"editKoyomi2( 'init', '#{day_}' )\""
 	date_html << "<td style='#{style}' #{onclick}>#{day_} (#{weeks[week_count]})</td>"
 
-	if kmrd.size != 0
-		unless kfreeze_flags[day_]
-			4.times do |tdiv_|
-				koyomi_c = '-'
-				kmre = koyomi_mx[day_][tdiv_]
+	unless kfreeze_flags[day_]
+		4.times do |tdiv_|
+			koyomi_c = '-'
+			kmre = koyomi_mx[day_][tdiv_]
 
-				onclick = ''
-				if command == 'modify' || command == 'move' || command == 'move_fix'
-					onclick = "onclick=\"k2Koyomi_direct( 'move', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
-				elsif command == 'fzc_mode' || command == 'fzcopy'
-					onclick = "onclick=\"k2Koyomi_direct( 'fzcopy', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
-				else
-					onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
-				end
+			onclick = ''
+			case command
+			when 'modify', 'move'
+				onclick = "onclick=\"k2Koyomi_direct( 'move', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+			when 'fix_direct', 'fixcopy'
+				onclick = "onclick=\"k2Koyomi_direct( 'fixcopy', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+			when 'fzc_mode', 'fzcopy'
+				onclick = "onclick=\"k2Koyomi_direct( 'fzcopy', '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+			else
+				onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
+			end
 
-				bs_class = 'table-light'
-
-				if kmre
-					if kmre['koyomi'] != ''
-						koyomi_c = kmre['koyomi'].split( "\t" ).size
-						if dd == day_ and tdiv == tdiv_
-							bs_class = 'table-warning'
-						else
-							bs_class = 'table-info'
-						end
+			bs_class = 'table-light'
+			if kmre
+				if kmre['koyomi'] != ''
+					koyomi_c = kmre['koyomi'].split( "\t" ).size
+					if dd == day_ and tdiv == tdiv_
+						bs_class = 'table-warning'
+					else
+						bs_class = 'table-info'
 					end
 				end
-				date_html << "<td class='#{bs_class}' align='center' #{onclick}>#{koyomi_c}</td>"
 			end
-		else
-			4.times do date_html << "<td class='table-secondary'></td>" end
+			date_html << "<td class='#{bs_class}' align='center' #{onclick}>#{koyomi_c}</td>"
 		end
 	else
-		4.times do |tdiv_|
-			onclick = "onclick=\"saveKoyomiAdd_direct( '#{code}','#{calendar.yyyy}','#{calendar.mm}', '#{day_}', '#{tdiv_}', '#{origin}' )\""
-			date_html << "<td class='table-light' align='center' #{onclick}>-</td>"
-		end
+		4.times do date_html << "<td class='table-secondary'></td>" end
 	end
 
 	date_html << "</tr>"
@@ -359,7 +364,10 @@ eat_time_html << "</div>"
 #### Rate HTML
 rate_selected = ''
 rate_html = ''
-if command != 'move_fix' && /\-f\-/ !~ code
+if command == 'fix_direct' || 'fix_copy' || /\-f\-/ =~ code
+	rate_html << "	<input type='hidden' id='ev' value='#{ev}'>"
+	rate_html << "	<input type='hidden' id='eu' value='#{eu}'>"
+else
 	rate_selected = 'SELECTED' if /^[UP]?\d{5}/ =~ code
 	rate_html << "<div class='input-group input-group-sm'>"
 	rate_html << "	<label class='input-group-text'>#{l['volume']}</label>"
@@ -379,11 +387,11 @@ end
 
 #### Return button
 return_joystic = ''
-if command == 'modify' || command == 'move' || command == 'fzc_mode' || command == 'fzcopy'
-	return_joystic = "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{origin_date[0]}', '#{origin_date[1]}', '#{origin_date[2]}' )\">#{l['return2']}</div>"
-	return_joystic << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{l['return']}</div>"
-else
+if command == 'modify' || command == 'move' || command == 'fix_direct' || command == 'fzc_mode' || command == 'fzcopy'
 	return_joystic = "<div align='center' class='col-4 joystic_koyomi' onclick=\"koyomiReturn()\">#{l['return']}</div>"
+else
+	return_joystic = "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{origin_date[0]}', '#{origin_date[1]}', '#{origin_date[2]}' )\">#{l['return']}</div>"
+	return_joystic << "<div align='center' class='col-2 joystic_koyomi' onclick=\"koyomiReturn2KE( '#{calendar.yyyy}', '#{calendar.mm}', '#{calendar.dd}' )\">#{l['return2']}</div>"
 end
 
 
@@ -406,19 +414,18 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-3 form-inline'>
+		<div class='col-2 form-inline'>
 			<input type='date' class='form-control form-control-sm' id='yyyy_mm_dd' min='#{calendar.yyyyf}-01-01' max='#{calendar.yyyy + 2}-12-31' value='#{calendar.yyyy}-#{calendar.mms}-#{calendar.dds}' #{onchange}>
 		</div>
-		<div class='col-3 form-inline'>#{tdiv_html}</div>
+		<div class='col-2 form-inline'>#{tdiv_html}</div>
 		<div class='col-4 form-inline'>#{eat_time_html}</div>
 		<div class='col-2 form-check'>#{carry_on_html}</div>
+		<div class='col-2 form-check'>#{copy_html}</div>
 	</div>
 	<br>
 
 	<div class='row'>
 		<div class='col-4 form-inline'>#{rate_html}</div>
-		<div class='col'>#{copy_html}</div>
-
 	</div>
 	<br>
 
