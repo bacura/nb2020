@@ -51,6 +51,32 @@ def config_module( cgi, db )
 		db.query( "UPDATE #{$MYSQL_TB_CFG} SET bio='#{bio_}' WHERE user='#{db.user.name}';", true )
 	end
 
+	photo = Media.new( db.user )
+	if step == 'photo_upload'
+		photo.load_cgi( cgi )
+    	photo.get_series()
+		photo.delete_series( true )
+		photo.save_photo( cgi )
+    	photo.save_db()
+	end
+
+	if step == 'photo_del'
+		photo.load_cgi( cgi )
+		photo.delete_photo( true )
+		photo.delete_db( true )
+	end
+
+	photo.base = 'bio'
+	photo.origin = db.user.name
+	photo_code = photo.get_series().first
+	if photo_code != nil
+		profile_photo = "<img src='photo.cgi?iso=Q&code=#{photo_code}&tn=-tn' width='120px' class='img-thumbnail'>"
+		photo_trash = "<span onclick=\"photoDel( '#{photo_code}' )\">#{l['trash']}</span>"
+	else
+		profile_photo = "<img src='#{$PHOTO}/nobody.jpg' width='100px' class='img-thumbnail'>"
+		photo_trash = ''
+	end
+
 	male_check = ''
 	female_check = ''
 	if sex == 0
@@ -88,37 +114,60 @@ def config_module( cgi, db )
 	html = <<-"HTML"
     <div class="container">
     	<div class='row'>
-	    	<div class='col-2'>#{l['sex']}</div>
-			<div class='col-4'>
-				<div class='form-check form-check-inline'>
-					<input class='form-check-input' type='radio' name='sex' id='male' #{male_check}>
-					<label class='form-check-label' for='male'>#{l['male']}</label>
+			<div class='col-6'>
+		    	<div class='row'>
+			    	<div class='col-4'>#{l['sex']}</div>
+					<div class='col-8'>
+						<div class='form-check form-check-inline'>
+							<input class='form-check-input' type='radio' name='sex' id='male' #{male_check}>
+							<label class='form-check-label' for='male'>#{l['male']}</label>
+						</div>
+						<div class='form-check form-check-inline'>
+							<input class='form-check-input' type='radio' name='sex' id='female' #{female_check}>
+							<label class='form-check-label' for='female'>#{l['female']}</label>
+						</div>
+					</div>
 				</div>
-				<div class='form-check form-check-inline'>
-					<input class='form-check-input' type='radio' name='sex' id='female' #{female_check}>
-					<label class='form-check-label' for='female'>#{l['female']}</label>
+				<br>
+
+		    	<div class='row'>
+			    	<div class='col-4'>#{l['birth']}</div>
+					<div class='col-6'><input type="date" id='birth' class="form-control login_input" value="#{birth}"></div>
+				</div>
+
+		    	<div class='row'>
+			    	<div class='col-4'>#{l['height']}</div>
+					<div class='col-6'><input type="text" maxlength="5" id="height" class="form-control login_input" value="#{height}"></div>
+				</div>
+
+		    	<div class='row'>
+			    	<div class='col-4'>#{l['weight']}</div>
+					<div class='col-6'><input type="text" maxlength="5" id="weight" class="form-control login_input" value="#{weight}"></div>
 				</div>
 			</div>
-		</div>
-		<br>
-    	<div class='row'>
-	    	<div class='col-2'>#{l['age']}</div>
-			<div class='col-3'><input type="number" min="0" id="age" class="form-control login_input" value="#{age}"></div>
-		</div>
+			<div class='col-6'>
 
-    	<div class='row'>
-	    	<div class='col-2'>#{l['birth']}</div>
-			<div class='col-3'><input type="date" id='birth' class="form-control login_input" value="#{birth}"></div>
-		</div>
+		    	<div class='row'>
+					<div class='col-8'>
+						<form method='post' enctype='multipart/form-data' id='bio_puf'>
+							<div class="input-group input-group-sm">
+								<label class='input-group-text' for='photo' >#{l['camera']}</label>
+								<input type='file' class='form-control' id='photo' name='photo' onchange="PhotoUpload( '#{db.user.name}' )">
+							</div>
+						</form>
+					</div>
+				</div>
+				<br>
 
-    	<div class='row'>
-	    	<div class='col-2'>#{l['height']}</div>
-			<div class='col-3'><input type="text" maxlength="5" id="height" class="form-control login_input" value="#{height}"></div>
-		</div>
+		    	<div class='row'>
+					<div class='col'>
+					#{profile_photo}&nbsp;&nbsp;
+		    		#{photo_trash}
 
-    	<div class='row'>
-	    	<div class='col-2'>#{l['weight']}</div>
-			<div class='col-3'><input type="text" maxlength="5" id="weight" class="form-control login_input" value="#{weight}"></div>
+				</div>
+				</div>
+
+			</div>
 		</div>
 		<hr>
 
@@ -231,6 +280,31 @@ var bio_cfg = function( step ){
 	displayBW();
 };
 
+var PhotoUpload = function( uname ){
+	form_data = new FormData( $( '#bio_puf' )[0] );
+	form_data.append( 'mod', 'bio' );
+	form_data.append( 'step', 'photo_upload' );
+	form_data.append( 'origin', uname );
+	form_data.append( 'base', 'bio' );
+	form_data.append( 'alt', 'profile_image' );
+	form_data.append( 'secure', '1' );
+
+	$.ajax( "config.cgi",
+		{
+			type: 'post',
+			processData: false,
+			contentType: false,
+			data: form_data,
+			dataype: 'html',
+			success: function( data ){ $( '#L1' ).html( data ); }
+		}
+	);
+};
+
+var photoDel = function( code ){
+	$.post( "config.cgi", { mod:'bio', step:'photo_del', code:code, base:'bio', secure:1 }, function( data ){ $( '#L1' ).html( data );});
+};
+
 </script>
 JS
 	puts js
@@ -255,7 +329,9 @@ def module_lp( language )
 		'lst' => "昼食",\
 		'dst' => "夕食",\
 		'meal_time' => "分間",\
-		'meal_start' => "開始"
+		'meal_start' => "開始",\
+		'trash'		=> "<img src='bootstrap-dist/icons/trash-fill.svg' style='height:2em; width:2em;'>",\
+		'camera'	=> "<img src='bootstrap-dist/icons/camera.svg' style='height:1.2em; width:1.2em;'>"
 	}
 
 	return l[language]

@@ -66,8 +66,9 @@ $MYSQL_TB_TAG = 'tag'
 $MYSQL_TB_USER = 'user'
 
 $PHOTO = 'photo_'
+$SPHOTO = 'sphoto_'
 $PHOTO_PATH = "#{$HTDOCS_PATH}/#{$PHOTO}"
-$PHOTO_PATHS = "#{$SERVER_PATH}/#{$PHOTO}"
+$SPHOTO_PATH = "#{$SERVER_PATH}/#{$SPHOTO}"
 $SIZE_MAX = 20000000
 $TN_SIZE = 400
 $TNS_SIZE = 40
@@ -115,17 +116,6 @@ require "#{$SERVER_PATH}/nb2020-local-#{soul_language}"
 #### HTML init
 def html_init( cookie )
   puts "Content-type: text/html\n"
-  puts "Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
-  puts "Cache-Control: post-check=0, pre-check=0, false\n"
-  puts "Pragma: no-cache\n"
-  puts cookie unless cookie == nil
-  puts "\n"
-end
-
-
-#### Isolation photo init
-def iso_init( cookie )
-  puts "Content-type: image/jpeg\n"
   puts "Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
   puts "Cache-Control: post-check=0, pre-check=0, false\n"
   puts "Pragma: no-cache\n"

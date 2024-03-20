@@ -1,4 +1,4 @@
-#Nutrition browser 2020 body 0.01b (2024/03/16)
+#Nutrition browser 2020 body 0.02b (2024/03/20)
 
 #==============================================================================
 #STATIC
@@ -16,6 +16,17 @@ require 'time'
 #==============================================================================
 #DEFINITION
 #==============================================================================
+
+#### Isolation photo init
+def iso_init( cookie )
+  puts "Content-type: image/jpeg\n"
+  puts "Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
+  puts "Cache-Control: post-check=0, pre-check=0, false\n"
+  puts "Pragma: no-cache\n"
+  puts cookie unless cookie == nil
+  puts "\n"
+end
+
 
 class Bio
   attr_accessor :sex, :birth, :age, :height, :weight, :kexow, :pgene
@@ -127,7 +138,7 @@ end
 
 
 class Media
-  attr_accessor :user, :code, :series, :base, :origin, :alt, :type, :date, :zidx
+  attr_accessor :user, :owner, :code, :series, :base, :origin, :alt, :type, :date, :zidx
 
   def initialize( user )
     @code = nil
@@ -196,17 +207,19 @@ class Media
     @date = cgi['date']
     @zidx = cgi['zidx']
     @zidx = 0 unless @zidx
-    @secure = cgi['secure']
+    @secure = cgi['secure'].to_i
     @secure = 0 unless @secure
   end
 
   def save_db()
-    @zidx = @series.size
-    $DB.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user.name}', code='#{@code}', base='#{@base}', origin='#{@origin}', type='#{@type}', alt='#{@alt}', date='#{@date}', zidx='#{@zidx}', secure='#{@secure}';" ) if @flesh
+    if @code != nil
+      @zidx = @series.size
+      $DB.query( "INSERT INTO #{$MYSQL_TB_MEDIA} SET user='#{@user.name}', code='#{@code}', base='#{@base}', origin='#{@origin}', type='#{@type}', alt='#{@alt}', date='#{@date}', zidx='#{@zidx}', secure='#{@secure}';" ) if @flesh
+    end
   end
 
   def delete_db( real )
-    if @flesh
+    if @flesh && @code != nil
       if real
         $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" )
       else
@@ -234,23 +247,41 @@ class Media
     return @bases
   end
 
-  def move_series()
-    @series.delete( @code )
-    @series.insert( @zidx.to_i, @code )
-    @series.each.with_index do |e, i|
-      $DB.query( "UPDATE #{$MYSQL_TB_MEDIA} SET zidx='#{i}' WHERE code='#{e}' AND origin='#{@origin}' AND base='#{@base}';" ) if @flesh
+
+  def get_path_code()
+    if @secure == 1
+      return "#{$SPHOTO_PATH}/#{@code}"
+    else
+      return "#{$PHOTO_PATH}/#{@code}"
     end
   end
 
+
+  def move_series()
+    if @series.size > 1
+      @series.delete( @code )
+      @series.insert( @zidx.to_i, @code )
+      @series.each.with_index do |e, i|
+        $DB.query( "UPDATE #{$MYSQL_TB_MEDIA} SET zidx='#{i}' WHERE code='#{e}' AND origin='#{@origin}' AND base='#{@base}';" ) if @flesh
+      end
+      end
+  end
+
   def delete_series( real )
-    if @flesh
+    if @flesh && @series.size > 0
       if real
         case @type
         when 'jpg', 'jpeg'
+          if @secure == 1
+            path = $SPHOTO_PATH
+          else
+            path = $PHOTO_PATH
+          end
+
           @series.each do |e|
-            File.unlink "#{$PHOTO_PATH}/#{@code}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tns.jpg" )
-            File.unlink "#{$PHOTO_PATH}/#{@code}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tn.jpg" )
-            File.unlink "#{$PHOTO_PATH}/#{@code}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}.jpg" )
+            File.unlink "#{photo}/#{@code}-tns.jpg" if File.exist?( "#{photo}/#{@code}-tns.jpg" )
+            File.unlink "#{photo}/#{@code}-tn.jpg" if File.exist?( "#{photo}/#{@code}-tn.jpg" )
+            File.unlink "#{photo}/#{@code}.jpg" if File.exist?( "#{photo}/#{@code}.jpg" )
           end
         end
 
@@ -324,22 +355,34 @@ def save_photo( cgi )
       @date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
       @type = 'jpeg'
 
+      if @secure == 1
+        path = $SPHOTO_PATH
+      else
+        path = $PHOTO_PATH
+      end
+
       tn_file = photo.thumbnail( tn_ratio )
-      tn_file.write( "#{$PHOTO_PATH}/#{@code}-tn.jpg" )
+      tn_file.write( "#{path}/#{@code}-tn.jpg" )
       tns_file = photo.thumbnail( tns_ratio )
-      tns_file.write( "#{$PHOTO_PATH}/#{@code}-tns.jpg" )
+      tns_file.write( "#{path}/#{@code}-tns.jpg" )
       photo = photo.thumbnail( photo_ratio ) if photo_ratio != 1.0
-      photo.write( "#{$PHOTO_PATH}/#{@code}.jpg" )
+      photo.write( "#{path}/#{@code}.jpg" )
 
       File.unlink "#{$TMP_PATH}/#{tmp_file}" if File.exist?( "#{$TMP_PATH}/#{tmp_file}" )
     end
   end
 
   def delete_photo( real )
-    if @flesh && real
-      File.unlink "#{$PHOTO_PATH}/#{@code}-tns.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tns.jpg" )
-      File.unlink "#{$PHOTO_PATH}/#{@code}-tn.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}-tn.jpg" )
-      File.unlink "#{$PHOTO_PATH}/#{@code}.jpg" if File.exist?( "#{$PHOTO_PATH}/#{@code}.jpg" )
+    if @flesh && real && @code != nil
+      if @secure == 1
+        path = $SPHOTO_PATH
+      else
+        path = $PHOTO_PATH
+      end
+
+      File.unlink "#{path}/#{@code}-tns.jpg" if File.exist?( "#{path}/#{@code}-tns.jpg" )
+      File.unlink "#{path}/#{@code}-tn.jpg" if File.exist?( "#{path}/#{@code}-tn.jpg" )
+      File.unlink "#{path}/#{@code}.jpg" if File.exist?( "#{path}/#{@code}.jpg" )
     end
   end
 

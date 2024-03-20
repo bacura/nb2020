@@ -301,7 +301,7 @@ form_photo << "<label class='input-group-text' for='photo' >#{l['camera']}</labe
 if recipe.code == nil || file_disabled
 	form_photo << "<input type='file' class='form-control' id='photo' DISABLED>"
 else
-	form_photo << "<input type='file' class='form-control' id='photo' name='photo' onchange=\"PhotoUpload( '#{recipe.code}', '#{recipe.name}' )\">"
+	form_photo << "<input type='file' class='form-control' id='photo' name='photo' onchange=\"PhotoUpload()\">"
 end
 form_photo << '</form></div>'
 

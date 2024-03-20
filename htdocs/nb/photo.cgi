@@ -13,7 +13,7 @@ tmp_delete = false
 #LIBRARY
 #==============================================================================
 require './soul'
-require 'fileutils'
+require './body'
 
 #==============================================================================
 #DEFINITION
@@ -66,13 +66,43 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-	html_init( nil )
+
+#### GET data
+get_data = get_data()
+iso = get_data['iso']
+code = get_data['code']
+code.gsub!( '/', '' ) if code != nil
+code = '' if code == nil
+tn = get_data['tn']
+tn.gsub!( '/', '' ) if tn != nil
+tn = '' if tn == nil
 
 user = User.new( @cgi )
-user.debug if @debug
 l = language_pack( user.language )
 db = Db.new( user, @debug, false )
 media = Media.new( user )
+
+if iso == 'Q'
+	iso_init( nil )
+	media.code = code
+	media.load_db()
+	photo_file = media.get_path_code() + tn + ".jpg"
+
+ 	if File.exist?( photo_file ) && user.name == media.owner
+		File.open( photo_file, 'rb' ) do |f|
+			f.each do |l| puts l end
+		end
+	else
+
+
+
+	end
+	exit
+else
+	html_init( nil )
+end
+
+user.debug if @debug
 
 # POST
 command = @cgi['command']
@@ -82,12 +112,6 @@ code = @cgi['code']
 alt = @cgi['alt']
 zidx = @cgi['zidx']
 iso = @cgi['iso']
-
-unless iso
-#	html_init( nil )
-else
-#	iso_init( nil )
-end
 
 if @debug
 	puts "command: #{command}<br>"
