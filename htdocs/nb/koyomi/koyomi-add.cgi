@@ -5,7 +5,7 @@
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = false
+@debug = true
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -364,7 +364,7 @@ eat_time_html << "</div>"
 #### Rate HTML
 rate_selected = ''
 rate_html = ''
-if command == 'fix_direct' || 'fix_copy' || /\-f\-/ =~ code
+if command == 'fix_direct' || command == 'fix_copy' || /\-f\-/ =~ code
 	rate_html << "	<input type='hidden' id='ev' value='#{ev}'>"
 	rate_html << "	<input type='hidden' id='eu' value='#{eu}'>"
 else
