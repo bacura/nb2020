@@ -1,12 +1,10 @@
-# Weight loss module for Physique 0.29b (2023/07/21)
+# Weight loss module for Physique 0.30b (2024/03/26)
 #encoding: utf-8
 
 @module = 'weight-loss'
-@debug = false
 @period = 96
 
-def physique_module( cgi, db )
-	l = module_lp( db.user.language )
+def physique_module( cgi, db, l )
 	today_p = Time.parse( @datetime )
 
 	puts "LOAD bio config<br>" if @debug
@@ -462,7 +460,7 @@ drawChart();
 
 </script>
 JS
-	puts js
+	return js
 end
 
 

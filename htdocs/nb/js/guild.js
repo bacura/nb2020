@@ -1,4 +1,4 @@
-//guild.js ver 0.38b (2024/02/04)
+//guild.js ver 0.39b (2024/03/26)
 
 kp = 'koyomi/'
 
@@ -693,12 +693,20 @@ var initPhysique = function(){
 };
 
 var PhysiqueForm = function( mod ){
-	$.post( "physique.cgi", { mod:mod, step:'form' }, function( data ){ $( "#L1" ).html( data ); });
-	$.post( "physique.cgi", { mod:mod, step:'chart' }, function( data ){
-		$( "#L2" ).html( data );
+	$.post( "physique.cgi", { mod:mod, step:'form' }, function( data ){
+		$( "#L1" ).html( data );
 
-		dl2 = true;
-		displayBW();
+		$.post( "physique.cgi", { mod:mod, step:'chart' }, function( data ){
+			$( "#L2" ).html( data );
+
+			$.post( "physique.cgi", { mod:mod, step:'notice', jsf:"1" }, function( data ){
+				$( "#L3" ).html( data );
+			
+				dl2 = true;
+				dl3 = true;
+				displayBW();
+			});
+		});
 	});
 };
 

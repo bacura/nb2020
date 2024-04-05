@@ -14,6 +14,7 @@
 # LIBRARY
 #==============================================================================
 require './soul'
+require './body'
 
 #==============================================================================
 # DEFINITION
@@ -122,8 +123,20 @@ when 'photo_del'
 	recipe.load_db( code, true )
 end
 
-
 daughter_delete = true
+
+photo = Media.new( user )
+photo.base = 'bio'
+photo.origin = user.name
+photo_code = photo.get_series().first
+if photo_code != nil
+	profile_photo = "<img src='photo.cgi?iso=Q&code=#{photo_code}&tn=-tns' width='50px' class='img-thumbnail'>"
+else
+	profile_photo = "<img src='#{$PHOTO}/nobody.jpg' width='50px' class='img-thumbnail'>"
+end
+
+mom_photo = "<img src='#{$PHOTO}/nobody.jpg' width='50px' class='img-thumbnail'>"
+
 
 ####
 puts 'Extract note<br>' if @debug
@@ -131,16 +144,13 @@ note_html = ''
 r = db.query( "SELECT * FROM #{$MYSQL_TB_NOTE} WHERE user='#{user.name}' ORDER BY datetime DESC;", false )
 r.each do |e|
 	note_date =  "#{e['datetime'].year}-#{e['datetime'].month}-#{e['datetime'].day} #{e['datetime'].hour}:#{e['datetime'].min}"
-
 	note = e['note'].gsub( "\n", '<br>' )
-puts e['code']
 	note_html << '<div class="row">'
-p e['aliasm']
 
 	if e['media'] == nil
 		if e['aliasm'] == ''
 			note_html << '<div class="col-2"></div>'
-			note_html << "<div class='col-9' >"
+			note_html << "<div class='col-8' >"
 			note_html << "	<div class='alert alert-light'>#{note}<br><br>"
 			note_html << "		<div align='right'>#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if daughter_delete
@@ -148,10 +158,10 @@ p e['aliasm']
 				note_html << "			<span onclick=\"deleteNote( '#{e['code']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div></div></div>'
-			note_html << "<div class='col-1'>#{user.aliasu}</div>"
+			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
 		else
-			note_html << "<div class='col-1'>#{e['aliasm']}</div>"
-			note_html << "<div class='col-9' >"
+			note_html << "<div class='col-2'>#{mom_photo}<br>#{e['aliasm']}</div>"
+			note_html << "<div class='col-8' >"
 			note_html << "	<div class='alert alert-success'>#{note}<br><br>"
 			note_html << "		<div align='right'>#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if user.mid != nil
@@ -159,13 +169,13 @@ p e['aliasm']
 				note_html << "	<span onclick=\"deleteNote( '#{e['code']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div></div></div>'
-			note_html << '<div class="col-2"></div>'
+			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
 		end
 	else
 
 		if e['aliasm'] == ''
 			note_html << '<div class="col-2"></div>'
-			note_html << "<div class='col-9' align='right'>"
+			note_html << "<div class='col-8' align='right'>"
 			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['code']}-tn.jpg' class='img-thumbnail'></a><br>"
 			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if daughter_delete
@@ -173,10 +183,10 @@ p e['aliasm']
 				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div>'
-			note_html << "<div class='col-1'>#{user.aliasu}</div>"
+			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
 		else
-			note_html << "<div class='col-1'>#{e['aliasm']}</div>"
-			note_html << "<div class='col-9' align='left'>"
+			note_html << "<div class='col-2'>#{mom_photo}<br>#{e['aliasm']}</div>"
+			note_html << "<div class='col-8' align='left'>"
 			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['code']}-tn.jpg' class='img-thumbnail'></a><br>"
 			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if user.mid != nil
@@ -184,7 +194,7 @@ p e['aliasm']
 				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div>'
-			note_html << '<div class="col-2"></div>'
+			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
 		end
 	end
 	note_html << '</div><br>'
@@ -195,28 +205,31 @@ end
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class="row">
-		<div class="col-10">
+		<div class="col-2"></div>
+		<div class="col-8">
 			<div class="row">
 				<textarea  class="form-control" id='note' value=''></textarea><br>
 			</div>
 			<br>
 			<div class="row">
 				<div class='col-5'>
-					<form method='post' enctype='multipart/form-data' id='photo_form'>
+					<form method='post' enctype='multipart/form-data' id='note_puf'>
 						<div class="input-group input-group-sm">
 							<label class='input-group-text'>#{l['camera']}</label>
-							<input type='file' class='form-control' name='photo' onchange="photoNoteSave( 'note_tmp_new', '', '', 'note' )">
+							<input type='file' class='form-control' name='photo' onchange="PhotoUpload()">
 						</div>
 					</form>
 				</div>
 			</div>
 			<br>
-			#{note_html}
 		</div>
 
 		<div class="col-2">
 			<button class='btn btn-sm btn-success' onclick="writeNote()">#{l['pencil']}</button>
 		</div>
+
+		#{note_html}
+
 	</div>
 </div>
 HTML
@@ -224,6 +237,52 @@ HTML
 puts html
 
 
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
 
+js = <<-"JS"
+<script type='text/javascript'>
 
+var PhotoUpload = function(){
+	var date_o = new Date();
+    var yyyy = now.getFullYear();
+    var mm = now.getMonth() + 1;
+    var dd = now.getDate();
+    var hh = now.getHours();
+    var m60 = now.getMinutes();
+    var s60 = now.getSeconds();
+    var origin = yyyy + "-" +  mm + "-" + dd + "-" + hh + "-" + m60 + "-" + s60
 
+	form_data = new FormData( $( '#note_puf' )[0] );
+	form_data.append( 'command', 'photo_upload' );
+	form_data.append( 'origin', origin );
+	form_data.append( 'base', 'note' );
+	form_data.append( 'alt', 'Photo' );
+	form_data.append( 'secure', '1' );
+
+	$.ajax( "#{script}.cgi",
+		{
+			type: 'post',
+			processData: false,
+			contentType: false,
+			data: form_data,
+			dataype: 'html',
+			success: function( data ){ $( '#L1' ).html( data ); }
+		}
+	);
+};
+var photoMove = function( origin, code, zidx ){
+	displayVIDEO( code );
+
+	$.post( "#{script}.cgi", { command:'photo_mv', origin:origin, code:code, zidx:zidx, base:'note' }, function( data ){ $( '#L1' ).html( data );});
+};
+
+var photoDel = function( origin, code ){
+	$.post( "#{script}.cgi", { command:'photo_del', origin:origin, code:code, base:'note' }, function( data ){ $( '#L1' ).html( data );});
+};
+
+</script>
+JS
+
+puts js

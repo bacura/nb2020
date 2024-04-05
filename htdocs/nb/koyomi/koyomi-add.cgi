@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.29b (2024/03/17)
+#Nutrition browser 2020 koyomi adding panel 0.30b (2024/03/26)
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = true
+@debug = false
 #script = File.basename( $0, '.cgi' )
 
 #==============================================================================
@@ -452,4 +452,4 @@ puts html
 #==============================================================================
 
 #### Adding history
-add_his( user, code ) if /^[UP]?\d{5}/ =~ code
+add_his( user, code ) if /\d{5}/ =~ code || /\-r\-/ =~ code

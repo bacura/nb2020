@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.5b (2024/02/13)
+#Nutrition browser 2020 soul 1.5b (2024/03/23)
 
 #==============================================================================
 # LIBRARY
@@ -180,7 +180,7 @@ end
 
 #### 履歴追加
 def add_his( user, code )
-  return if user.status == 7 || user.status == 0
+  return if user.status == $ASTRAL || user.status == 0
 
   his_max = 200
   r = $DB.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';" )
@@ -396,7 +396,7 @@ class Db
   def query( query, barrier )
     puts "<span class='dbq'>[db]#{query}</span><br>" if @debug
     begin
-      if @status == 7 && barrier
+      if @status == $ASTRAL && barrier
           puts "<span class='ref_error'>[db]Astral user barrier!</span><br>"
           exit( 9 )
       end
@@ -432,7 +432,7 @@ class User
     res = $DB.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{@name}' and cookie='#{@uid}' and status>0;" )
 
     if res.first
-      if res.first['status'].to_i == 7
+      if res.first['status'].to_i == $ASTRAL
         entity_name = @name.sub( '~', '' )
 
         res2 = $DB.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{entity_name}' and astral=1 and status>0;" )
@@ -443,7 +443,7 @@ class User
           @uid = nil
           @mom = nil
           @mid = nil
-          @status = 7
+          @status = $ASTRAL
           @aliasu = nil
           @switch = 0
           @astral = 0
@@ -470,6 +470,9 @@ class User
         @language = res.first['language']
         @language = $DEFAULT_LP if @language == nil
       end
+
+      @aliasu = @name if @aliasu == nil
+
     else
       @name = nil
       @uid = nil
@@ -481,6 +484,7 @@ class User
       @astral = 0
       @language = $DEFAULT_LP
     end
+
   end
 
   def load_lp( script )
@@ -574,7 +578,7 @@ class Sum
   end
 
   def update_db()
-    $DB.query( "UPDATE #{$MYSQL_TB_SUM} set code='#{@code}', name='#{@name}', dish='#{@dish}', meal='#{@meal}', protect='#{@protect}', fn='#{@fn}', weight='#{@weight}', unit='#{@unit}', unitv='#{@unitv}', check='#{@check}', init='#{@init}', rr='#{@rr}', ew='#{@ew}' WHERE user='#{@user}';" ) unless @user.status == 7
+    $DB.query( "UPDATE #{$MYSQL_TB_SUM} set code='#{@code}', name='#{@name}', dish='#{@dish}', meal='#{@meal}', protect='#{@protect}', fn='#{@fn}', weight='#{@weight}', unit='#{@unit}', unitv='#{@unitv}', check='#{@check}', init='#{@init}', rr='#{@rr}', ew='#{@ew}' WHERE user='#{@user}';" ) unless @user.status == $ASTRAL
   end
 
   def debug()
@@ -688,14 +692,14 @@ class Recipe
     @name.gsub!( ';', '' )
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
-    $DB.query( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{@code}', user='#{@user.name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', favorite=#{@favorite}, draft=#{@draft}, protect=#{@protect}, public=#{@public}, name='#{@name}', type=#{@type}, role=#{@role}, tech=#{tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', date='#{@date}';" ) unless @user.status == 7
+    $DB.query( "INSERT INTO #{$MYSQL_TB_RECIPE} SET code='#{@code}', user='#{@user.name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', favorite=#{@favorite}, draft=#{@draft}, protect=#{@protect}, public=#{@public}, name='#{@name}', type=#{@type}, role=#{@role}, tech=#{tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', date='#{@date}';" ) unless @user.status == $ASTRAL
   end
 
   def update_db()
     @name.gsub!( ';', '' )
     @protocol.gsub!( ';', '' )
     @date = @date.strftime( "%Y-%m-%d %H:%M:%S" ) unless @date.kind_of?( String )
-    $DB.query( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{@name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', type=#{@type}, role=#{@role}, tech=#{@tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', public=#{@public}, favorite=#{@favorite}, protect=#{@protect}, draft=#{@draft}, date='#{@date}' WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
+    $DB.query( "UPDATE #{$MYSQL_TB_RECIPE} SET name='#{@name}', dish=#{@dish}, branch='#{@branch}', root='#{@root}', type=#{@type}, role=#{@role}, tech=#{@tech}, time=#{@time}, cost=#{@cost}, sum='#{@sum}', protocol='#{@protocol}', public=#{@public}, favorite=#{@favorite}, protect=#{@protect}, draft=#{@draft}, date='#{@date}' WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == $ASTRAL
   end
 
   def load_media()
@@ -705,8 +709,8 @@ class Recipe
   end
 
   def delete_db()
-    $DB.query( "DELETE FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
-    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == 7
+    $DB.query( "DELETE FROM #{$MYSQL_TB_RECIPE} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == $ASTRAL
+    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user.name}' and code='#{@code}';" ) unless @user.status == $ASTRAL
   end
 
   def tag()
@@ -780,7 +784,7 @@ class Meal
 
   def update_db()
     @name.gsub!( ';', '' )
-    $DB.query( "UPDATE #{$MYSQL_TB_MEAL} set code='#{@code}', name='#{@name}', meal='#{@meal}', protect='#{@protect}' WHERE user='#{@user}';" ) unless @user.status == 7
+    $DB.query( "UPDATE #{$MYSQL_TB_MEAL} set code='#{@code}', name='#{@name}', meal='#{@meal}', protect='#{@protect}' WHERE user='#{@user}';" ) unless @user.status == $ASTRAL
   end
 
   def debug()
@@ -855,16 +859,16 @@ class Menu
   end
 
   def insert_db()
-    $DB.query( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{@code}', user='#{@user}',public='#{@public}',protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', memo='#{@memo}';" ) unless @user.status == 7
+    $DB.query( "INSERT INTO #{$MYSQL_TB_MENU} SET code='#{@code}', user='#{@user}',public='#{@public}',protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', memo='#{@memo}';" ) unless @user.status == $ASTRAL
   end
 
   def update_db()
-    $DB.query( "UPDATE #{$MYSQL_TB_MENU} SET public='#{@public}', protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', memo='#{@memo}' WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == 7
+    $DB.query( "UPDATE #{$MYSQL_TB_MENU} SET public='#{@public}', protect='#{@protect}', label='#{@label}', name='#{@name}', meal='#{@meal}', memo='#{@memo}' WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == $ASTRAL
   end
 
   def delete_db()
-    $DB.query( "DELETE FROM #{$MYSQL_TB_MENU} WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == 7
-    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and origin='#{@code}';" ) unless @user.status == 7
+    $DB.query( "DELETE FROM #{$MYSQL_TB_MENU} WHERE user='#{@user}' and code='#{@code}';" ) unless @user.status == $ASTRAL
+    $DB.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE user='#{@user}' and origin='#{@code}';" ) unless @user.status == $ASTRAL
   end
 
   def debug()

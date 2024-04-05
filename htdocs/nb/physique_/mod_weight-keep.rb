@@ -1,11 +1,9 @@
-# Weight keep module for Physique 0.04b (2022/09/16)
+# Weight keep module for Physique 0.05b (2024/03/26)
 #encoding: utf-8
 
 @module = 'weight-keep'
-@debug = false
 
-def physique_module( cgi, db )
-	l = module_lp( db.user.language )
+def physique_module( cgi, db, l )
 	today_p = Time.parse( @datetime )
 
 	puts "LOAD bio config<br>" if @debug
@@ -27,18 +25,24 @@ def physique_module( cgi, db )
 		exit( 0 )
 	end
 
-	html = ''
-	case cgi['step']
-	when 'form'
-		module_js( l )
-		start_date = $DATE
-		pal = 1.50
+	start_date = cgi['start_date']
+	pal = cgi['pal'].to_f
 
+	if pal == 0.0
 		res = db.query( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' and module='#{@module}';", false )
 		if res.first
 			mod_cfg_h = JSON.parse( res.first['json'] )
 			start_date = mod_cfg_h[@module]['start_date']
 			pal = mod_cfg_h[@module]['pal'].to_f
+		end
+	end
+
+	html = ''
+	case cgi['step']
+	when 'form'
+		if pal == ''
+			start_date = $DATE
+			pal = 1.50
 		end
 
 		sex_ = [l['male'], l['female']]
@@ -69,26 +73,16 @@ html = <<-"HTML"
 	<div class='col-3'>
 		<div class="input-group input-group-sm">
 			<label class="input-group-text">#{l['pal']}</label>
-			<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
+			<input type='number' min='0.5' max='2.5' step='0.01' class='form-control' id='pal' value='#{pal}' onchange='noticeEER()'>
 		</div>
 	</div>
 </div>
 HTML
 ########
 		####
-
 	when 'raw'
 		puts "SET date<br>" if @debug
-		start_date = cgi['start_date']
-		pal = cgi['pal'].to_f
 
-		json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal }} )
-		res = db.query( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' AND module='#{@module}';", false )
-		if res.first
-			db.query( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{db.user.name}' AND module='#{@module}';", true )
-		else
-			db.query( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{db.user.name}', module='#{@module}';", true )
-		end
 		start_date_p = Time.parse( start_date )
 		p start_date if @debug
 
@@ -133,11 +127,36 @@ HTML
 			end
 		end
 
+		raw = []
+		raw[0] = x_day.unshift( 'x_day' ).join( ',' )
+		raw[1] = measured_weight.unshift( l['data_weight'] ).join( ',' )
+		raw[2] = bfr.unshift( l['data_bfr'] ).join( ',' )
 
+		puts raw.join( ':' )
+		exit
+
+	when 'chart'
+		html = '<div class="row">'
+		html << "<div class='col-9'><div id='physique_#{@module}-chart' align='center'></div></div>"
+		html << "<div class='col-3'><div id='physique_#{@module}-chart-sub' align='center'></div>"
+		html << '</div>'
+
+
+	when 'notice'
 		puts "CALC energy<br>" if @debug
-		m_energy = calc_energy( recent_weight, height, age, sex, pal )
+
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND date>='#{start_date}';", false )
+		r.each do |e|
+			if e['cell'] != nil
+				kexc = JSON.parse( e['cell'] )
+				recent_weight = kexc['体重'].to_f if kexc['体重'] != nil
+			end
+		end
+
+		m_energy = calc_energy( weight, height, age, sex, pal )
 		delta_weight = recent_weight - weight
 		delta_energy = 0.0
+
 		if delta_weight > 0
 			if delta_weight > 1
 				delta_energy = 7200 / 24
@@ -157,29 +176,21 @@ HTML
 		end
 		m_energy -= 200 if pgene == 1
 
-		raw = []
-		raw[0] = x_day.unshift( 'x_day' ).join( ',' )
-		raw[1] = measured_weight.unshift( l['data_weight'] ).join( ',' )
-		raw[2] = bfr.unshift( l['data_bfr'] ).join( ',' )
-		raw[9] = m_energy.to_i
-
-		puts raw.join( ':' )
-		exit
-
-	when 'chart'
-		html = '<div class="row">'
-		html << "<div class='col-9'><div id='physique_#{@module}-chart' align='center'></div></div>"
-		html << "<div class='col-3'><div id='physique_#{@module}-chart-sub' align='center'></div>"
-		html << '</div>'
-
-	when 'notice'
 		html << '<div class="row">'
-		html << '<div class="col-3">'
+		html << '<div class="col-4">'
 		html << "<div class='input-group input-group-sm'>"
 		html << "  <span class='input-group-text'>#{l['menergy']}</span>"
-		html << "  <input type='text' class='form-control form-control-sm' id='menergy' value='' DISABLED>"
+		html << "  <input type='text' class='form-control form-control-sm' id='menergy' value='#{m_energy}' DISABLED>"
 		html << "</div>"
 		html << '</div>'
+	end
+
+	json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal }} )
+	res = db.query( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' AND module='#{@module}';", false )
+	if res.first
+		db.query( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{db.user.name}' AND module='#{@module}';", true )
+	else
+		db.query( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{db.user.name}', module='#{@module}';", true )
 	end
 
 	return html
@@ -210,8 +221,6 @@ var drawChart = function(){
 
 	var start_date = document.getElementById( "start_date" ).value;
 	var pal = document.getElementById( "pal" ).value;
-
-	$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){ $( "#L3" ).html( data );});
 //	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal }, function( raw ){ $( "#L4" ).html( raw );});
 	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal }, function( raw ){
 
@@ -353,18 +362,21 @@ var drawChart = function(){
 			point: { show: true, r: 4 },
 			tooltip: { show: false }
 		});
-
-		var menergy = column[9];
-		document.getElementById( 'menergy' ).value = menergy;
 	});
 
+};
+
+var noticeEER = function(){
+	var start_date = document.getElementById( "start_date" ).value;
+	var pal = document.getElementById( "pal" ).value;
+	$.post( "physique.cgi", { mod:'#{@module}', step:'notice', start_date:start_date, pal:pal }, function( data ){ $( "#L3" ).html( data );});
 };
 
 drawChart();
 
 </script>
 JS
-	puts js
+	return js
 end
 
 

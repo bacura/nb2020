@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition physical tools 0.05b (2024/02/26)
+#Nutrition browser 2020 nutrition physical tools 0.06b (2024/03/26)
 
 
 #==============================================================================
@@ -70,9 +70,10 @@ elsif mod == ''
 	html =  "<div align='center'>Physique</div>"
 else
 	require "#{$HTDOCS_PATH}/physique_/mod_#{mod}.rb"
-	html = physique_module( @cgi, db )
+	l = module_lp( user.language )
+	html = physique_module( @cgi, db, l )
 end
 html << "</div>"
 
-
 puts html
+puts module_js( l ) if @cgi['jsf'] == '1'

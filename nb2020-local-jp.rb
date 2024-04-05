@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.20b (2024/02/04)
+#Nutrition browser 2020 soul Japanese pack 0.20b (2024/03/23)
 
 #==============================================================================
 # STATIC
@@ -47,6 +47,7 @@ $PALETTE_DEFAULT = { 'jp' => @palette_default }
 
 #             0      1   2     3     4         5        6  7   8      9
 @account = %w( 退会 一般 ギルメン guest ギルメン・萌 ギルメン・旬 娘 幽体 サブマス ギルマス )
+$ASTRAL = 7
 
 #             0                1                   2                 3                4             5                 6                7                     8              9               10                   11                  12                  13                14               15                   16                     17                     18             19             20             21             22             23
 @kex_std = { '身長'=>'cm', '体重'=>'kg', 'BMI'=>'', '体脂肪率'=>'%', '腹囲'=>'cm', 'ブリストルスケール'=>'','歩数'=>'歩', 'METs'=>'', 'Δエネルギー'=>'kcal', '収縮期血圧'=>'mmHg', '拡張期血圧'=>'mmHg', '空腹時血糖'=>'mg/dl', 'HbA1c'=>'%', '中性脂肪'=>'mg/dL', '総コレステロール'=>'mg/dL', 'LDL'=>'mg/dL', 'HDL'=>'mg/dL', '尿酸'=>'mg/dL',  'AST'=>'IU/L',  'ALT'=>'IU/L',  'ALP'=>'IU/L',  'LDH'=>'IU/L',  'γ-GTP'=>'IU/L' }
