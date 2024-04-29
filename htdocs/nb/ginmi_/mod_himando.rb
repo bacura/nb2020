@@ -1,8 +1,8 @@
-# Ginmi module for BMI 0.00
+# Ginmi module for himando 0.00b (2024/04/09)
 #encoding: utf-8
 
-def ginmi_module( cgi, user )
-	uname, uid, status = login_check( cgi )
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
 	command = cgi['command']
 
 	html = ''
@@ -95,4 +95,42 @@ def ginmi_module( cgi, user )
 	end
 
 	return html
+end
+
+
+def module_js()
+	js = <<-"JS"
+<script type='text/javascript'>
+
+var ginmiBMIres = function(){
+	var age = document.getElementById( "age" ).value;
+	var height = document.getElementById( "height" ).value;
+	var weight = document.getElementById( "weight" ).value;
+	$.post( "ginmi.cgi", { mod:"bmi", command:'result', age:age, height:height, weight:weight }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+
+};
+
+
+</script>
+JS
+	puts js
+end
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'mod_name' => "肥満度",\
+		'title' => "BMI計算",\
+		'age' => "年齢",\
+		'height' => "身長(m)",\
+		'weight' => "体重(kg)",\
+		'calc' => "計　算"
+	}
+
+	return l[language]
 end

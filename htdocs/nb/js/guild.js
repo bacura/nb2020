@@ -1,4 +1,4 @@
-//guild.js ver 0.39b (2024/03/26)
+//guild.js ver 0.42b (2024/04/20)
 
 kp = 'koyomi/'
 
@@ -72,7 +72,8 @@ const deleteKoyomi = function( yyyy, mm, dd, tdiv, code, order ){
 // Koyomi memo
 const memoKoyomi = function( yyyy, mm, dd ){
 	const memo = document.getElementById( "memo" ).value;
-	$.post( kp + "koyomi-edit.cgi", { command:'memo', yyyy:yyyy, mm:mm, dd:dd, memo:memo }, function( data ){
+	if( document.getElementById( "bind2n" ).checked ){ var bind2n = 1; }else{ var bind2n = 0; };
+	$.post( kp + "koyomi-edit.cgi", { command:'memo', yyyy:yyyy, mm:mm, dd:dd, memo:memo, bind2n:bind2n }, function( data ){
 		$( "#L2" ).html( data );
 		displayVIDEO( 'memo saved');
 	});
@@ -106,34 +107,6 @@ const editKoyomiR = function( yyyy, mm ){
 		dl1 = true;
 		dl2 = false;
 		displayBW();
-	});
-};
-
-
-// レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-const koyomiPhotoSave = function( origin, alt, form, dd ){
-	form_data = new FormData( $( form )[0] );
-	form_data.append( 'command', 'upload' );
-	form_data.append( 'origin', origin );
-	form_data.append( 'base', 'koyomi' );
-	form_data.append( 'alt', alt );
-	$.ajax( "photo.cgi",
-		{
-			type: 'post',
-			processData: false,
-			contentType: false,
-			data: form_data,
-			dataype: 'html',
-			success: function( data ){ setTimeout( editKoyomi( 'init', dd ), 1000 ); }
-		}
-	);
-};
-
-
-// delete photo from media db
-const koyomiPhotoDel = function( origin, code, dd ){
-	$.post( "photo.cgi", { command:'delete', origin:origin, code:code, base:'koyomi' }, function( data ){
-		editKoyomi( 'init', dd );
 	});
 };
 
@@ -647,7 +620,7 @@ var calcKoyomiCompo = function(){
 // Ginmi init
 const initGinmi = function(){
 	flashBW();
-	$.post( "ginmi.cgi", { mod:'line' }, function( data ){
+	$.post( "ginmi.cgi", { mod:'menu' }, function( data ){
 		$( "#LINE" ).html( data );
 
 		flashBW();
@@ -814,52 +787,15 @@ const writeNote = function(){
 };
 
 // Note book
-var deleteNote = function( code ){
+const deleteNote = function( code ){
 	if( document.getElementById( code ).checked ){
-		$.post( "note.cgi", { command:'delete', code:code }, function( data ){
+		$.post( "note.cgi", { command:'delete', code:code, base:'note', secure:'1' }, function( data ){
 			$( "#L1" ).html( data );}
 		);
 		displayVIDEO( 'Deleted' );
 	}else{
 		displayVIDEO( 'Check!(>_<)' );
 	}
-};
-
-// Note book
-var deleteNoteP = function( origin, code ){
-	if( document.getElementById( code ).checked ){
-		$.post( "photo.cgi", { command:'delete', origin:origin, code:code, base:'note' }, function( data ){
-			$( '#LM' ).html( data );
-			$.post( "note.cgi", { command:'delete', code:origin }, function( data ){
-				$( "#L1" ).html( data );}
-			);
-		});
-		displayVIDEO( 'Deleted' );
-	}else{
-		displayVIDEO( 'Check!(>_<)' );
-	}
-};
-
-
-// レシピ編集の写真をアップロードして保存、そしてL3に写真を再表示
-var photoNoteSave = function( origin, alt, form, base ){
-	form_data = new FormData( $( "#photo_form" )[0] );
-	form_data.append( 'command', 'upload' );
-	form_data.append( 'origin', origin );
-	form_data.append( 'base', base );
-	form_data.append( 'alt', alt );
-	$.ajax( "photo.cgi",
-		{
-			type: 'post',
-			processData: false,
-			contentType: false,
-			data: form_data,
-			dataype: 'html',
-			success: function( data ){
-				$.post( "note.cgi", { command:'photo' }, function( data ){});
-			}
-		}
-	);
 };
 
 
@@ -1018,4 +954,76 @@ var fczlReturn = function(){
 	dl1 = true;
 	dl2 = false;
 	displayBW();
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ref instake //////////////////////////////////////////////////////////////
+
+// Ref instake init
+var initRefIntake = function(){
+	$.post( "ref-intake.cgi", { command:'menu' }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+// Ref instake init
+var viewRefIntake = function(){
+	var rits_item = document.getElementById( "rits_item" ).value;
+	$.post( "ref-intake.cgi", { command:'view_item', rits_item:rits_item }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+
+// Ref instake personal
+var viewRefIntakeP = function(){
+	var ritp_age = document.getElementById( "ritp_age" ).value;
+	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
+	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
+	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
+	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
+	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
+	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
+	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
+	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
+
+	$.post( "ref-intake.cgi", { command:'personal', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+// Ref instake personal
+var saveRefIntake = function(){
+	var ritp_age = document.getElementById( "ritp_age" ).value;
+	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
+	var fcz_name = document.getElementById( "fcz_name" ).value;
+	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
+	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
+	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
+	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
+	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
+	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
+	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
+
+	if( fcz_name != '' ){
+		$.post( "ref-intake.cgi", { command:'save', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c, fcz_name:fcz_name }, function( data ){
+//			$( "#L4" ).html( data );
+
+//			dl4 = true;
+//			displayBW();
+			displayVIDEO( 'Saved FCZ' );
+		});
+	}else{
+		displayVIDEO( 'FCZ name!(>_<)' );
+	}
 };

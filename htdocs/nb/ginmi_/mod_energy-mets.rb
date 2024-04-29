@@ -1,11 +1,11 @@
-# Ginmi module for METs 0.01b (2020/09/12)
+# Ginmi module for METs 0.10b (2024/04/11)
 #encoding: utf-8
 
 @debug = false
 
-def ginmi_module( cgi, user )
-	l = module_lp( user.language )
-	module_js()
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
+	module_js( cgi['mod'] )
 
 	command = cgi['command']
 	weight = cgi['weight']
@@ -26,7 +26,7 @@ def ginmi_module( cgi, user )
 		puts "Load bio config" if @debug
 		weight = 0.0
 		kexow = 0
-		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		if r.first
 			if r.first['bio'] != nil && r.first['bio'] != ''
 				bio = JSON.parse( r.first['bio'] )
@@ -38,7 +38,7 @@ def ginmi_module( cgi, user )
 		puts "IMPORT height & weight from KEX" if @debug
 		if kexow == 1
 			weight_flag = true
-			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r = db.query( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false )
 			r.each do |e|
 				kexc = JSON.parse( e['cell'] )
 				if weight_flag && e['体重'] != nil
@@ -53,15 +53,15 @@ def ginmi_module( cgi, user )
 	when 'result', 'display'
 		mets_mm = hh * 60 + mm
 		mets = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{db.user.name}' and name='default';", false )
 		if r.first
 			mets = r.first['mets']
 			if command == 'result'
 				mets = "#{mets}\t#{active}:#{mets_mm}"
-				mdb( "UPDATE #{$MYSQL_TB_METS} SET mets='#{mets}' WHERE user='#{user.name}' and name='default';", false, false )
+				db.query( "UPDATE #{$MYSQL_TB_METS} SET mets='#{mets}' WHERE user='#{db.user.name}' and name='default';", true )
 			end
 		elsif command == 'result'
-			mdb( "INSERT INTO #{$MYSQL_TB_METS} SET user='#{user.name}', name='default',mets='#{active}:#{mets_mm}';", false, false )
+			db.query( "INSERT INTO #{$MYSQL_TB_METS} SET user='#{db.user.name}', name='default',mets='#{active}:#{mets_mm}';", true )
 			mets << "#{active}:#{mets_mm}"
 		end
 
@@ -93,7 +93,7 @@ def ginmi_module( cgi, user )
 		mets_table_html << '</thead>'
 
 		code_set.size.times do |c|
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_METST} WHERE code='#{code_set[c]}';", false, false )
+			r = db.query( "SELECT * FROM #{$MYSQL_TB_METST} WHERE code='#{code_set[c]}';", false )
 			if r.first
 				mets = BigDecimal( r.first['mets'] )
 				d_mets = BigDecimal( r.first['mets'] ) - 1
@@ -174,7 +174,7 @@ RESULT_HTML
 
 
 		if command == 'result'
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{user.name}' AND name='history';", false, false )
+			r = db.query( "SELECT * FROM #{$MYSQL_TB_METS} WHERE user='#{db.user.name}' AND name='history';", false )
 			if r.first
 				a = r.first['mets'].split( "\t" )
 				a.unshift( active ).uniq!
@@ -185,19 +185,19 @@ RESULT_HTML
 				else
 					new_history = a[0..limit].join( "\t" )
 				end
-				mdb( "UPDATE #{$MYSQL_TB_METS} SET mets='#{new_history}' WHERE user='#{user.name}' AND name='history';", false, false )
+				db.query( "UPDATE #{$MYSQL_TB_METS} SET mets='#{new_history}' WHERE user='#{db.user.name}' AND name='history';", true )
 			else
-				mdb( "INSERT INTO #{$MYSQL_TB_METS} SET user='#{user.name}', name='history', mets='#{active}';", false, false )
+				db.query( "INSERT INTO #{$MYSQL_TB_METS} SET user='#{db.user.name}', name='history', mets='#{active}';", true )
 			end
 		end
 		exit( 0 )
 
 	when 'reset'
-		mdb( "delete from #{$MYSQL_TB_METS} WHERE user='#{user.name}' and name='default';", false, false )
+		db.query( "delete from #{$MYSQL_TB_METS} WHERE user='#{db.user.name}' and name='default';", true )
 		exit( 0 )
 
 	when 'kexout'
-		r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		if r.first
 			if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 				koyomi = JSON.parse( r.first['koyomi'] )
@@ -206,8 +206,8 @@ RESULT_HTML
 			end
 		end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{user.name}', date='#{yyyy_mm_dd}';", false, false ) unless r.first
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND date='#{yyyy_mm_dd}';", false )
+		db.query( "INSERT INTO #{$MYSQL_TB_KOYOMIEX} SET user='#{db.user.name}', date='#{yyyy_mm_dd}';", true ) unless r.first
 
 		cell = Hash.new
 		cell = JSON.parse( r.first['cell'] ) if r.first['cell'] != nil
@@ -215,14 +215,14 @@ RESULT_HTML
 		cell[l['denergy']] = denergy if kex_active[l['denergy']] == '1'
 
 		cell_ = JSON.generate( cell )
-		mdb( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}' WHERE user='#{user.name}' AND date='#{yyyy_mm_dd}';", false, false )
+		db.query( "UPDATE #{$MYSQL_TB_KOYOMIEX} SET cell='#{cell_}' WHERE user='#{db.user.name}' AND date='#{yyyy_mm_dd}';", true )
 		exit( 0 )
 	end
 
 
 	####
 	heading_select = ''
-	r = mdb( "SELECT DISTINCT heading FROM #{$MYSQL_TB_METST};", false, false )
+	r = db.query( "SELECT DISTINCT heading FROM #{$MYSQL_TB_METST};", false )
 	heading = r.first['heading'] if heading == ''
 	r.each do |e|
 		if e['heading'] == heading
@@ -234,7 +234,7 @@ RESULT_HTML
 
 	####
 	sub_heading_select = ''
-	r = mdb( "SELECT DISTINCT sub_heading FROM #{$MYSQL_TB_METST} WHERE heading='#{heading}';", false, false )
+	r = db.query( "SELECT DISTINCT sub_heading FROM #{$MYSQL_TB_METST} WHERE heading='#{heading}';", false )
 	sub_heading = r.first['sub_heading'] if sub_heading == ''
 	r.each do |e|
 		if e['sub_heading'] == sub_heading
@@ -247,7 +247,7 @@ RESULT_HTML
 	####
 	active_select = ''
 	mets_value = '0.0'
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_METST} WHERE sub_heading='#{sub_heading}';", false, false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_METST} WHERE sub_heading='#{sub_heading}';", false )
 	mets_value = r.first['mets']
 	r.each do |e|
 		if e['code'] == active
@@ -261,17 +261,17 @@ RESULT_HTML
 
 	####
 	history_select = "<option value='0'>↓↓</option>"
-	r = mdb( "SELECT mets FROM #{$MYSQL_TB_METS} WHERE user='#{user.name}' AND name='history';", false, false )
+	r = db.query( "SELECT mets FROM #{$MYSQL_TB_METS} WHERE user='#{db.user.name}' AND name='history';", false )
 	if r.first
 		a = r.first['mets'].split( "\t" )
 		a.each do |e|
-			rr = mdb( "SELECT * FROM #{$MYSQL_TB_METST} WHERE code='#{e}';", false, false )
+			rr = db.query( "SELECT * FROM #{$MYSQL_TB_METST} WHERE code='#{e}';", false )
 			history_select << "<option value='#{e}'>[#{e}] #{rr.first['active']}</option>"
 		end
 	end
 
 
-	r = mdb( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT koyomi FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 			koyomi = JSON.parse( r.first['koyomi'] )
@@ -367,12 +367,12 @@ HTML
 end
 
 
-def module_js()
+def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
 
 var ginmiEnergyMETskex = function(){
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'koyomiex' }, function( data ){ $( "#L1" ).html( data );});
 
 	flashBW();
 	dl1 = true;
@@ -388,14 +388,14 @@ var ginmiEnergyMETs = function( select ){
 
 	if( select == 'sub_heading'){
 		sub_heading = document.getElementById( "sub_heading" ).value;
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "ginmi.cgi", { mod:'#{mod}', command:'', weight:weight, heading:heading, sub_heading:sub_heading }, function( data ){ $( "#L1" ).html( data );});
 	} else if( select == 'active'){
 		sub_heading = document.getElementById( "sub_heading" ).value;
 		active = document.getElementById( "active" ).value;
 		displayVIDEO( active );
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading, sub_heading:sub_heading, active:active }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "ginmi.cgi", { mod:'#{mod}', command:'', weight:weight, heading:heading, sub_heading:sub_heading, active:active }, function( data ){ $( "#L1" ).html( data );});
 	} else{
-		$.post( "ginmi.cgi", { mod:"energy-mets", command:'', weight:weight, heading:heading }, function( data ){ $( "#L1" ).html( data );});
+		$.post( "ginmi.cgi", { mod:'#{mod}', command:'', weight:weight, heading:heading }, function( data ){ $( "#L1" ).html( data );});
 	}
 };
 
@@ -409,9 +409,9 @@ var ginmiEnergyMETsres = function(){
 	if( weight != '' && weight != '0'){
 		if( hh == '0' && mm == '0'){
 			displayVIDEO( 'Time! (>_<)' );
-			$.post( "ginmi.cgi", { mod:"energy-mets", command:'display', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
+			$.post( "ginmi.cgi", { mod:'#{mod}', command:'display', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
 		}else{
-			$.post( "ginmi.cgi", { mod:"energy-mets", command:'result', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
+			$.post( "ginmi.cgi", { mod:'#{mod}', command:'result', weight:weight, active:active, history:history, hh:hh, mm:mm }, function( data ){ $( "#L2" ).html( data );});
 			setTimeout( ginmiEnergyMETs( 'active' ), 1000 );
 		}
 	}else{
@@ -424,14 +424,14 @@ var ginmiEnergyMETsres = function(){
 
 var ginmiEnergyMETsreset = function(){
 	displayVIDEO( 'METs reset' );
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'reset' }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'reset' }, function( data ){ $( "#L2" ).html( data );});
 	dl2 = false;
 	displayBW();
 };
 
 var ginmiKEXout = function( mets, denergy ){
 	const yyyy_mm_dd = document.getElementById( 'yyyy_mm_dd' ).value;
-	$.post( "ginmi.cgi", { mod:"energy-mets", command:'kexout', mets:mets, denergy:denergy, yyyy_mm_dd:yyyy_mm_dd}, function( data ){
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'kexout', mets:mets, denergy:denergy, yyyy_mm_dd:yyyy_mm_dd}, function( data ){
 //		$( "#L3" ).html( data );
 //		dl3 = true;
 //		displayBW();
@@ -448,6 +448,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name' => "METs計算",\
 		'title' => "BMI 計算フォーム",\
 		'age' => "年齢",\
 		'height' => "身長(m)",\

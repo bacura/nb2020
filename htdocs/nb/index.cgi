@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 index page 0.30b (2024/02/14)
+#Nutrition browser 2020 index page 0.40b (2024/04/29)
 
 
 #==============================================================================
@@ -73,6 +73,7 @@ def language_pack( language )
     'memorya'   => "記憶管理",\
     'senior'  => "黄昏管理",\
     'condition' => "状態管理",\
+    'intake' => "食事摂取基準",\
     'fflow' => "食品フロー"
   }
 
@@ -288,11 +289,13 @@ html = <<-"HTML"
 <nav class='container-fluid' id='guild_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initKoyomi()">#{l['koyomi']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="foodRank()">#{l['foodrank']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initRefIntake()">#{l['intake']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initGinmi()">#{l['ginmi']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initPhysique()">#{l['pysique']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMomChai()">#{l['momchai']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initFCZlist()">#{l['fczl']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initMemoryList( 'init' )">#{l['memorya']}</button>
+    <button type="button" class="btn btn-dark btn-sm nav_button guild_color" onclick="initNote()">#{l['note']}</button>
 </nav>
 <nav class='container-fluid' id='gs_menu' style='display:none;'>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initAccountM()">#{l['accountm']}</button>
@@ -300,7 +303,6 @@ html = <<-"HTML"
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="recipe3ds()">#{l['recipe3d']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initSchool()">#{l['school']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initToker()">#{l['toker']}</button>
-    <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initNote()">#{l['note']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initMedialist()">#{l['medial']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="initFFlow()">#{l['fflow']}</button>
     <button type="button" class="btn btn-dark btn-sm nav_button shun_color" onclick="">#{l['senior']}</button>
@@ -326,14 +328,14 @@ end
 
 
 #### HTML working space
-def html_working( dummy )
+def html_working( title )
   ##
 ##
 html = <<-"HTML"
 <div class="bw_frame" id='WORLD' aligh="center">
   <div class="video" id='VIDEO' style="display: none;"></div>
   <div class="line" id='LINE' style="display: none;"></div>
-  <div class="browse_window" id='L1' style="display: block;"></div>
+  <div class="browse_window" id='L1' style="display: block;">#{title}</div>
   <div class="browse_window" id='L2' style="display: none;"></div>
   <div class="browse_window" id='L3' style="display: none;"></div>
   <div class="browse_window" id='L4' style="display: none;"></div>
@@ -342,7 +344,18 @@ html = <<-"HTML"
   <div class="browse_window" id='LM' style="display: none;"></div>
 </div>
 
-<div id='MODAL' style="display: none;"></div>
+<!-- Modal -->
+<div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal_label"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id='modal_body'></div>
+    </div>
+  </div>
+</div>
 
 HTML
 ##
@@ -387,6 +400,6 @@ if user.status >= 3 && ifix == 1
   puts "<button type='button' class='btn btn btn-outline-light btn-sm nav_button'> </button><br>"
 end
 
-html_working( nil )
+html_working( html_title() )
 
 html_foot()

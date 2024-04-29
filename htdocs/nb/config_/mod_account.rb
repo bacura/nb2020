@@ -6,6 +6,7 @@
 def config_module( cgi, db )
 	module_js()
 	l = module_lp( db.user.language )
+p 'vv'
 
 	step = cgi['step']
 
@@ -14,6 +15,7 @@ def config_module( cgi, db )
 	mail = res.first['mail']
 	pass = res.first['pass']
 	language = res.first['language']
+p 'vv'
 
 	if step ==  'change'
 		new_mail = cgi['new_mail']
@@ -36,7 +38,7 @@ def config_module( cgi, db )
 			puts "<span class='msg_small_red'>#{l['no_save']}</span><br>"
 		end
 	end
-
+p 'vv'
   	option_language = ''
   	$LP.each do |e| option_language << "<option value='#{e}'>#{e}</option>" end
 

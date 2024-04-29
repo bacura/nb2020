@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.22b (2024/02/24)
+#Nutrition browser 2020 memory editor 0.23b (2024/04/21)
 
 #==============================================================================
 #STATIC
@@ -286,12 +286,18 @@ when 'refer'
 			memory_html << "</div>"
 
 			memory_solid.each do |ee|
+				r = db.query( "SELECT aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{ee['user']}';", false )
+				if r.first
+					radio_name = r.first['aliasu'] if r.first['aliasu'] != ''
+				else
+					radio_name = ee['aliasu']
+				end
+
 				edit_button = ''
 				edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"editMemory( '#{ee['code']}', 'refer' )\">#{l['edit']}</button>"
 				memory_html << extend_linker( user, ee, depth )
-				memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day} (#{ee['user']}) #{edit_button}</div>"
+				memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day} (#{radio_name}) #{edit_button}</div>"
 				db.query( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='9', date='#{@datetime}';", true )
-
 			end
 		else
 			puts "No finding in DB<br>" if @debug
@@ -299,6 +305,13 @@ when 'refer'
 			unless a_pointer == ''
 				memory.pointer = a_pointer
 				memory_solid = memory.get_solid( '' )
+
+				r = db.query( "SELECT aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{ee['user']}';", false )
+				if r.first
+					radio_name = r.fisrst['aliasu'] if r.fisrst['aliasu'] != ''
+				else
+					radio_name = ee['aliasu']
+				end
 
 				pointer = ''
 				memory_html << "<div class='row'>"
@@ -312,7 +325,7 @@ when 'refer'
 					edit_button = ''
 					edit_button = "&nbsp;<button type='button' class='btn btn-outline-danger btn-sm nav_button' onclick=\"editMemory( '#{ee['code']}', 'refer' )\">#{l['edit']}</button>"
 					memory_html << extend_linker( user, ee, depth )
-					memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day} (#{ee['user']}) #{edit_button}</div>"
+					memory_html << "<div align='right'>#{ee['category']} / #{ee['date'].year}/#{ee['date'].month}/#{ee['date'].day} (#{radio_name}) #{edit_button}</div>"
 				end
 			end
 			db.query( "INSERT INTO #{$MYSQL_TB_SLOGM} SET user='#{user.name}', words='#{e}', score='#{score}', date='#{@datetime}';", true )

@@ -30,9 +30,9 @@ def config_module( cgi, db )
 	if r.first
 		if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 			koyomi = JSON.parse( r.first['koyomi'] )
-			start = koyomi['start'].to_i
-			kexu = koyomi['kexu']
-			kexa = koyomi['kexa']
+			start = koyomi['start'].to_i unless koyomi['start'] == nil
+			kexu = koyomi['kexu'] unless koyomi['kexu'] == nil
+			kexa = koyomi['kexa'] unless koyomi['kexa'] == nil
 		end
 	end
 
@@ -67,7 +67,7 @@ def config_module( cgi, db )
 		koyomi['kexu'] = kexu
 		koyomi['kexa'] = kexa
 		koyomi_ = JSON.generate( koyomi )
-		db.query( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{user.name}';", true )
+		db.query( "UPDATE #{$MYSQL_TB_CFG} SET koyomi='#{koyomi_}' WHERE user='#{db.user.name}';", true )
 	end
 
 
@@ -79,6 +79,7 @@ def config_module( cgi, db )
 		start_select << "<option value='#{c}' #{selected}>#{c}</option>"
 	end
   	start_select << "</select>"
+
 
 	####
 ####
@@ -100,6 +101,7 @@ html[10] = <<-"HTML10"
 HTML10
 ####
 	####
+
 
 	puts 'HTML20<br>' if @debug
 	ht = ''
@@ -136,6 +138,7 @@ HTML10
 		@kex_std.each do |k, v|
 			option << "<option value='#{k}'>#{k} (#{v})</option>" unless kexu.key?( k )
 		end
+
 
 		########
 ########
@@ -238,6 +241,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name'	=> "こよみ",\
 		'start' => "こよみ開始年",\
 		'menu_title' => "こよみ拡張:",\
 		'item' => "項目名",\

@@ -1,11 +1,11 @@
-# Ginmi module for basal metabolism reference 0.12b  (2023/07/08)
+# Ginmi module for basal metabolism reference 0.20b  (2024/04/11)
 #encoding: utf-8
 
 @debug = false
 
-def ginmi_module( cgi, user )
-	l = module_lp( user.language )
-	module_js()
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
+	module_js( cgi['mod'] )
 
 	command = cgi['command']
 	html = ''
@@ -17,7 +17,8 @@ def ginmi_module( cgi, user )
 		age = 0
 		weight = 0.0
 		kexow = 0
-		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+
+		r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		if r.first
 			if r.first['bio'] != nil && r.first['bio'] != ''
 				bio = JSON.parse( r.first['bio'] )
@@ -32,7 +33,7 @@ def ginmi_module( cgi, user )
 		puts "IMPORT height & weight from KEX" if @debug
 		if kexow == 1
 			weight_flag = true
-			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r = db.query( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false )
 			r.each do |e|
 				kexc = JSON.parse( e['cell'] )
 				if weight_flag && e['体重'] != nil
@@ -115,7 +116,7 @@ html = <<-"HTML"
 		<br>
 
 		<div class='row'>
-			<button class='btn btn-sm btn-info' onclick="ginmiEnergyRefres()">計算</button>
+			<button class='btn btn-sm btn-info' onclick="ginmiEnergyRefres()">#{l['calc']}</button>
 		</div>
 HTML
 	when 'result'
@@ -223,7 +224,7 @@ HTML
 end
 
 
-def module_js()
+def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
 
@@ -233,7 +234,7 @@ var ginmiEnergyRefres = function(){
 	var weight = document.getElementById( "weight" ).value;
 	var pal = document.getElementById( "pal" ).value;
 	var pregnancy = document.getElementById( "pregnancy" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-ref", command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'result', sex:sex, age:age, weight:weight, pal:pal, pregnancy:pregnancy }, function( data ){ $( "#L2" ).html( data );});
 
 	dl2 = true;
 	displayBW();
@@ -247,6 +248,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name' => "基礎代謝量（参照値）",\
 		'title' => "基礎代謝量計算（参照値）",\
 		'age' => "年齢",\
 		'sex' => "代謝的性別",\
@@ -255,7 +257,7 @@ def module_lp( language )
 		'height' => "身長(m)",\
 		'weight' => "体重(kg)",\
 		'pal' => "身体活動係数",\
-		'calc' => "計算"
+		'calc' => "計 算"
 	}
 
 	return l[language]

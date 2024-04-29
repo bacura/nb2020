@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi food component 0.01b (2023/08/27)
+#Nutrition browser 2020 koyomi food component 0.02b (2024/04/29)
 
 
 #==============================================================================
@@ -122,17 +122,11 @@ end
 
 puts "Multi calc process<br>" if @debug
 day_list = []
-dtiv0 = Hash.new
-dtiv1 = Hash.new
-dtiv2 = Hash.new
-dtiv3 = Hash.new
-koyomi_box = [dtiv0, dtiv1, dtiv2, dtiv3 ]
+koyomi_box = [ Hash.new, Hash.new, Hash.new, Hash.new ]
 r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND tdiv != 4 AND date BETWEEN '#{yyyymmdds}' AND '#{yyyymmdde}';", false )
 r.each do |e|
-	if e['freeze'].to_i == 1
-		koyomi_box[e['tdiv'].to_i][e['date'].to_s] = e['koyomi']
-		day_list << e['date'].to_s
-	end
+	koyomi_box[e['tdiv'].to_i][e['date'].to_s] = e['koyomi']
+	day_list << e['date'].to_s
 end
 day_list.uniq!
 day_count = day_list.size

@@ -1,4 +1,4 @@
-#Nutrition browser 2020 body 0.02b (2024/03/20)
+#Nutrition browser 2020 body 0.04b (2024/04/29)
 
 #==============================================================================
 #STATIC
@@ -279,9 +279,9 @@ class Media
           end
 
           @series.each do |e|
-            File.unlink "#{photo}/#{@code}-tns.jpg" if File.exist?( "#{photo}/#{@code}-tns.jpg" )
-            File.unlink "#{photo}/#{@code}-tn.jpg" if File.exist?( "#{photo}/#{@code}-tn.jpg" )
-            File.unlink "#{photo}/#{@code}.jpg" if File.exist?( "#{photo}/#{@code}.jpg" )
+            File.unlink "#{path}/#{e}-tns.jpg" if File.exist?( "#{path}/#{e}-tns.jpg" )
+            File.unlink "#{path}/#{e}-tn.jpg" if File.exist?( "#{path}/#{e}-tn.jpg" )
+            File.unlink "#{path}/#{e}.jpg" if File.exist?( "#{path}/#{e}.jpg" )
           end
         end
 
@@ -303,7 +303,7 @@ class Media
           html << "&nbsp;&nbsp;<span onclick=\"photoMove( '#{e}', '#{i + 1}' )\">#{@l['right-ca']}</span>" if i != @series.size - 1
         end
         html << '<br>'
-        html << "<img src='#{$PHOTO}/#{e}#{tn}.jpg' width='#{size}px' class='img-thumbnail' onclick=\"modalPhotoOn( '#{e}' )\"><br>"
+        html << "<img src='#{$PHOTO}/#{e}#{tn}.jpg' width='#{size}px' class='img-thumbnail' onclick=\"modalPhoto( '#{e}' )\"><br>"
         unless protect == 1
           html << "<span onclick=\"photoDel( '#{e}' )\">#{@l['trash']}</span>"
         end
@@ -320,7 +320,7 @@ class Media
   def html_series_mini()
     html = ''
     @series.each do |e|
-      html << "<img src='#{$PHOTO}/#{e}-tns.jpg' class='img-thumbnail' onclick=\"modalPhotoOn( '#{e}' )\">"
+      html << "<img src='#{$PHOTO}/#{e}-tns.jpg' class='img-thumbnail' onclick=\"modalPhoto( '#{e}' )\">"
     end
 
     return html

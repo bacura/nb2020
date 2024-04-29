@@ -1,4 +1,4 @@
-# Ginmi module for basal metabolism of athlete 0.01b  (2020/09/12)
+# Ginmi module for basal metabolism of athlete 0.10b  (2024/04/11)
 #encoding: utf-8
 
 @debug = false
@@ -9,9 +9,9 @@ game =		%w(2.00 2.00 2.00 2.00 1.75)
 @pal_set =	[off, training, game]
 
 
-def ginmi_module( cgi, user )
-	l = module_lp( user.language )
-	module_js()
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
+	module_js( cgi['mod'] )
 
 	command = cgi['command']
 	html = ''
@@ -22,7 +22,7 @@ def ginmi_module( cgi, user )
 		weight = 0.0
 		body_fat = 10.0
 		kexow = 0
-		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		if r.first
 			if r.first['bio'] != nil && r.first['bio'] != ''
 				bio = JSON.parse( r.first['bio'] )
@@ -35,7 +35,7 @@ def ginmi_module( cgi, user )
 		if kexow == 1
 			body_fat_flag = true
 			weight_flag = true
-			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r = db.query( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false )
 			r.each do |e|
 				kexc = JSON.parse( e['cell'] )
 				if body_fat_flag && e['体脂肪率'] != nil
@@ -166,7 +166,7 @@ HTML
 end
 
 
-def module_js()
+def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
 
@@ -175,8 +175,10 @@ var ginmiEnergyAthres = function(){
 	var body_fat = document.getElementById( "body_fat" ).value;
 	var period = document.getElementById( "period" ).value;
 	var event = document.getElementById( "event" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-ath", command:'result', weight:weight, body_fat:body_fat, period:period, event:event }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'result', weight:weight, body_fat:body_fat, period:period, event:event }, function( data ){ $( "#L2" ).html( data );});
+
+	dl2 = true;
+	displayBW();
 };
 
 </script>
@@ -187,7 +189,8 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
-		'title' => "BMI 計算フォーム",\
+		'mod_name' => "基礎代謝量（アスリート）",\
+		'title' => "基礎代謝量（アスリート）",\
 		'age' => "年齢",\
 		'height' => "身長(m)",\
 		'weight' => "体重(kg)",\

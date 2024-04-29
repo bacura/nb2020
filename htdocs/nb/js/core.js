@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.50b (2024/02/16)
+// Nutorition Browser 2020 core.js 0.62b (2024/04/29)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -50,13 +50,9 @@ window.onload = function(){
 		bwlf = document.getElementById( "LF" );
 		line = document.getElementById( "LINE" );
 		video = document.getElementById( "VIDEO" );
-		modal = document.getElementById( "MODAL" );
 		help = document.getElementById( "HELP" );
 
 		toHelp();
-
-		bookOpen( 'books/about.html', 1 );
-		bookOpen( 'books/information.html', 2 );
 	}
 };
 
@@ -200,6 +196,17 @@ toHelp = function( page ){
 	}else{
 		help.innerHTML = "<a href='https://bacura.jp/?page_id=" + page + "'' target='manual'><img src='bootstrap-dist/icons/question-circle-ndsk.svg' style='height:3em; width:2em;'></a>";
 	}
+}
+
+//
+modalPhoto = function( code ){
+	$.post( "photo.cgi", { command:'modal_body', code:code }, function( data ){
+		$( "#modal_body" ).html( data );
+		$.post( "photo.cgi", { command:'modal_label', code:code }, function( data ){
+			$( "#modal_label" ).html( data );
+			$( '#modal' ).modal( 'show' );
+		});
+	});
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1734,76 +1741,3 @@ var menuReAnalysis = function( code ){
 	});
 };
 
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ref instake //////////////////////////////////////////////////////////////
-
-// Ref instake init
-var initRefIntake = function(){
-	$.post( "ref-intake.cgi", { command:'menu' }, function( data ){
-		$( "#L2" ).html( data );
-
-		flashBW();
-		dl1 = true;
-		dl2 = true;
-		displayBW();
-	});
-};
-
-// Ref instake init
-var viewRefIntake = function(){
-	var rits_item = document.getElementById( "rits_item" ).value;
-	$.post( "ref-intake.cgi", { command:'view_item', rits_item:rits_item }, function( data ){
-		$( "#L3" ).html( data );
-
-		dl3 = true;
-		displayBW();
-	});
-};
-
-
-// Ref instake personal
-var viewRefIntakeP = function(){
-	var ritp_age = document.getElementById( "ritp_age" ).value;
-	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
-	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
-	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
-	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
-	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
-	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
-	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
-	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
-
-	$.post( "ref-intake.cgi", { command:'personal', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c }, function( data ){
-		$( "#L3" ).html( data );
-
-		dl3 = true;
-		displayBW();
-	});
-};
-
-// Ref instake personal
-var saveRefIntake = function(){
-	var ritp_age = document.getElementById( "ritp_age" ).value;
-	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
-	var fcz_name = document.getElementById( "fcz_name" ).value;
-	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
-	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
-	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
-	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
-	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
-	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
-	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
-
-	if( fcz_name != '' ){
-		$.post( "ref-intake.cgi", { command:'save', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c, fcz_name:fcz_name }, function( data ){
-//			$( "#L4" ).html( data );
-
-//			dl4 = true;
-//			displayBW();
-			displayVIDEO( 'Saved FCZ' );
-		});
-	}else{
-		displayVIDEO( 'FCZ name!(>_<)' );
-	}
-};

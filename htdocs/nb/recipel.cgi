@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.36b (2024/03/16)
+#Nutrition browser 2020 recipe list 0.37b (2024/04/29)
 
 
 #==============================================================================
@@ -257,7 +257,7 @@ def recipe_line( recipe, user, page, color, l )
 	html = "<tr style='font-size:medium; background-color:#{color};'>"
 
 	if recipe.media[0] != nil
-		html << "<td><a href='#{$PHOTO}/#{recipe.media[0]}.jpg' target='photo'><img src='#{$PHOTO}/#{recipe.media[0]}-tns.jpg' class='photo_tns'></a></td>"
+		html << "<td><img src='#{$PHOTO}/#{recipe.media[0]}-tns.jpg' class='photo_tns' onclick=\"modalPhoto( '#{recipe.media[0]}' )\"></td>"
 	else
 		html << "<td>-</td>"
 	end

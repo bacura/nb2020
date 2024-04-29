@@ -1,8 +1,9 @@
-# Ginmi module for Estimated height 0.00
+# Ginmi module for Estimated height 0.00b (2024/04/11)
 #encoding: utf-8
 
-def ginmi_module( cgi, user )
-	module_js()
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
+	module_js( cgi['mod'] )
 
 	command = cgi['command']
 	html = ''
@@ -17,7 +18,7 @@ def ginmi_module( cgi, user )
 		sex = 0
 		age = 18
 		kexow = 0
-		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		if r.first
 			if r.first['bio'] != nil && r.first['bio'] != ''
 				bio = JSON.parse( r.first['bio'] )
@@ -113,22 +114,35 @@ HTML
 end
 
 
-def module_js()
+def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
-
-/////////////////////////////////////////////////////////////////////////////////
-// Ginmi Estimated height //////////////////////////////////////////////////////////////
 
 var Calculate = function(){
 	var sex = document.getElementById( "sex" ).value;
 	var age = document.getElementById( "age" ).value;
 	var knee_height = document.getElementById( "knee_height" ).value;
-	$.post( "ginmi.cgi", { mod:"es-height", command:'result', age:age, sex:sex, knee_height:knee_height }, function( data ){ $( "#L2" ).html( data );});
-	document.getElementById( "L2" ).style.display = 'block';
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'result', age:age, sex:sex, knee_height:knee_height }, function( data ){ $( "#L2" ).html( data );});
+	dl2 = true;
+	displayBW();
 };
 
 </script>
 JS
 	puts js
+end
+
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'mod_name' => "身長推定",\
+		'title' => "BMI計算",\
+		'age' => "年齢",\
+		'height' => "身長(m)",\
+		'weight' => "体重(kg)",\
+		'calc' => "計　算"
+	}
+
+	return l[language]
 end

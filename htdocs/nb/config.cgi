@@ -38,7 +38,7 @@ def menu( user )
 		ml = module_lp( user.language )
 		bclass = 'ppill'
 		bclass = 'bg-danger' if i == mods.size
-		html << "<span class='btn badge rounded-pill #{bclass}' onclick='configForm( \"#{e}\" )'>#{ml['mod_name']}</span>"
+		html << "<span class='btn badge rounded-pill #{bclass}' onclick='configForm( \"#{e}\" )'>#{ml['mod_name']}</span>&nbsp;"
 	end
 
 	return html

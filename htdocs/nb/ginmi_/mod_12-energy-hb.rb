@@ -1,11 +1,11 @@
-# Ginmi module for basal metabolism Harris-Benedict Equation 0.11b (2022/09/12)
+# Ginmi module for basal metabolism Harris-Benedict Equation 0.20b (2024/04/11)
 #encoding: utf-8
 
 @debug = false
 
-def ginmi_module( cgi, user )
-	l = module_lp( user.language )
-	module_js()
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
+	module_js( cgi['mod'])
 
 	command = cgi['command']
 	html = ''
@@ -18,7 +18,7 @@ def ginmi_module( cgi, user )
 		height = 0.0
 		weight = 0.0
 		kexow = 0
-		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+		r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		if r.first
 			if r.first['bio'] != nil && r.first['bio'] != ''
 				bio = JSON.parse( r.first['bio'] )
@@ -35,7 +35,7 @@ def ginmi_module( cgi, user )
 		if kexow == 1
 			height_flag = true
 			weight_flag = true
-			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r = db.query( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false )
 			r.each do |e|
 				kexc = JSON.parse( e['cell'] )
 				if height_flag && e['身長'] != nil
@@ -246,7 +246,7 @@ HTML
 end
 
 
-def module_js()
+def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
 
@@ -258,7 +258,7 @@ var ginmiEnergyHBres = function(){
 	var active = document.getElementById( "active" ).value;
 	var stress = document.getElementById( "stress" ).value;
 	var btm = document.getElementById( "btm" ).value;
-	$.post( "ginmi.cgi", { mod:"energy-hb", command:'result', sex:sex, age:age, height:height, weight:weight, active:active, stress:stress, btm:btm }, function( data ){ $( "#L2" ).html( data );});
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'result', sex:sex, age:age, height:height, weight:weight, active:active, stress:stress, btm:btm }, function( data ){ $( "#L2" ).html( data );});
 	document.getElementById( "L2" ).style.display = 'block';
 };
 
@@ -270,7 +270,8 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
-		'title' => "基礎代謝量計算（Harris-Benedict式）",\
+		'mod_name' => "基礎代謝量（Harris-Benedict式）",\
+		'title' => "基礎代謝量（Harris-Benedict式）",\
 		'age' => "年齢",\
 		'sex' => "代謝的性別",\
 		'male' => "男性",\

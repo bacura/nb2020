@@ -1,11 +1,11 @@
-# Ginmi module for Kaup index 0.11b (2022/09/12)
+# Ginmi module for Kaup index 0.20b (2024/04/09)
 #encoding: utf-8
 
 @debug = false
 
-def ginmi_module( cgi, user )
-	l = module_lp( user.language )
-	module_js()
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
+	module_js( cgi['mod'] )
 
 	command = cgi['command']
 	html = ''
@@ -17,7 +17,8 @@ def ginmi_module( cgi, user )
 		height = 0.0
 		weight = 0.0
 		kexow = 0
-		r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+
+		r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 		if r.first
 			if r.first['bio'] != nil && r.first['bio'] != ''
 				bio = JSON.parse( r.first['bio'] )
@@ -33,7 +34,7 @@ def ginmi_module( cgi, user )
 		if kexow == 1
 			height_flag = true
 			weight_flag = true
-			r = mdb( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false, @debug )
+			r = db.query( "SELECT cell FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND cell !='' AND cell IS NOT NULL ORDER BY date DESC;", false )
 			r.each do |e|
 				kexc = JSON.parse( e['cell'] )
 				if height_flag && e['身長'] != nil
@@ -371,7 +372,7 @@ HTML
 end
 
 
-def module_js()
+def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
 
@@ -379,7 +380,7 @@ var ginmiKaupres = function(){
 	var age = document.getElementById( "age" ).value;
 	var height = document.getElementById( "height" ).value;
 	var weight = document.getElementById( "weight" ).value;
-	$.post( "ginmi.cgi", { mod:"kaupi", command:'result', age:age, height:height, weight:weight }, function( data ){
+	$.post( "ginmi.cgi", { mod:'#{mod}', command:'result', age:age, height:height, weight:weight }, function( data ){
 		$( "#L2" ).html( data );
 
 		dl2 = true;
@@ -395,6 +396,7 @@ end
 def module_lp( language )
 	l = Hash.new
 	l['jp'] = {
+		'mod_name' => "カウプ指数",\
 		'title' => "カウプ指数計算",\
 		'age' => "年齢",\
 		'height' => "身長(cm)",\

@@ -1,7 +1,8 @@
-# Ginmi module for Estimated muscle 0.01b (2020/09/12)
+# Ginmi module for Estimated muscle 0.10b (2024/04/09)
 #encoding: utf-8
 
-def ginmi_module( cgi, user )
+def ginmi_module( cgi, db )
+	l = module_lp( db.user.language )
 	module_js()
 
 	command = cgi['command']
@@ -80,4 +81,19 @@ var ginmiEsMuscleres = function(){
 </script>
 JS
 	puts js
+end
+
+
+def module_lp( language )
+	l = Hash.new
+	l['jp'] = {
+		'mod_name' => "筋量推定",\
+		'title' => "BMI計算",\
+		'age' => "年齢",\
+		'height' => "身長(m)",\
+		'weight' => "体重(kg)",\
+		'calc' => "計　算"
+	}
+
+	return l[language]
 end

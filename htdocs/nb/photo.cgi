@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.5b (2024/01/013)
+#Nutrition browser 2020 recipe photo 0.51b (2024/04/019)
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = true
+@debug = false
 tmp_delete = false
 #script = File.basename( $0, '.cgi' )
 
@@ -52,7 +52,11 @@ def view_series( media, l, size )
 				puts "&nbsp;&nbsp;<span onclick=\"photoMove( '#{media.origin}', '#{e}', #{i + 1} )\">#{l['right-ca']}</span>" if i != media.series.size - 1
 			end
 			puts '<br>'
- 			puts "<img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail' onclick=\"modalPhotoOn( '#{e}' )\"><br>"
+
+
+ 			puts "<img src='#{$PHOTO}/#{e}-tn.jpg' width='#{size}px' class='img-thumbnail' id='iid_#{e}' onclick=\"modalPhoto( '#{e}' )\"><br>"
+
+
 			puts "<span onclick=\"photoDel( '#{media.origin}', '#{e}', '#{media.base}' )\">#{l['trash']}</span>" if recipe.protect != 1 && media.muser == media.user.name
 			puts "</div>"
 		end
@@ -88,7 +92,7 @@ if iso == 'Q'
 	media.load_db()
 	photo_file = media.get_path_code() + tn + ".jpg"
 
- 	if File.exist?( photo_file ) && user.name == media.owner
+ 	if File.exist?( photo_file ) && ( user.name == media.owner || user.mom == media.owner )
 		File.open( photo_file, 'rb' ) do |f|
 			f.each do |l| puts l end
 		end
@@ -245,26 +249,16 @@ when 'delete'
 		end
 	end
 
-when 'modal'
-#	puts '<div class="modal" tabindex="-1">'
-#  	puts '	<div class="modal-dialog">'
-#    puts '		<div class="modal-content">'
-#    puts '			<div class="modal-header">'
-#    puts '				<h5 class="modal-title">Modal title</h5>'
-#    puts '				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
-#    puts '			</div>'
-#    puts '			<div class="modal-body">'
-#    puts '				<p>Modal body text goes here.</p>'
-#    puts '			</div>'
-#    puts '		</div>'
-#  	puts '	</div>'
-#	puts '</div>'
+when 'modal_body'
+	puts "<img src='#{$PHOTO}/#{code}.jpg' width='100%'>"
 
-
-
-#	puts '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
-#	puts "<img src='#{$PHOTO}/#{code}.jpg' width='95%' align='center'>"
-#	puts '</div>'
+	exit
+when 'modal_label'
+	media.code = code
+	media.load_db()
+	caption = media.alt
+	caption = code if caption == ''
+	puts caption
 
 	exit
 end

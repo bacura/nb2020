@@ -3,7 +3,7 @@
 
 
 def config_module( cgi, db )
-	module_js()
+	module_js( cgi['mod'] )
 	l = module_lp( db.user.language )
 
 	time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120]
@@ -120,11 +120,11 @@ def config_module( cgi, db )
 					<div class='col-8'>
 						<div class='form-check form-check-inline'>
 							<input class='form-check-input' type='radio' name='sex' id='male' #{male_check}>
-							<label class='form-check-label' for='male'>#{l['male']}</label>
+							<label class='form-check-label'>#{l['male']}</label>
 						</div>
 						<div class='form-check form-check-inline'>
 							<input class='form-check-input' type='radio' name='sex' id='female' #{female_check}>
-							<label class='form-check-label' for='female'>#{l['female']}</label>
+							<label class='form-check-label'	>#{l['female']}</label>
 						</div>
 					</div>
 				</div>
@@ -238,7 +238,7 @@ HTML
 end
 
 
-def module_js()
+def module_js( mod )
 	js = <<-"JS"
 <script type='text/javascript'>
 
@@ -258,7 +258,6 @@ var bio_cfg = function( step ){
 	let pgene = 0;
 
 	if( step == 'change' ){
-		age = document.getElementById( "age" ).value;
 		birth = document.getElementById( "birth" ).value;
 		height = document.getElementById( "height" ).value;
 		weight = document.getElementById( "weight" ).value;
@@ -272,7 +271,7 @@ var bio_cfg = function( step ){
 		if( document.getElementById( "kexow" ).checked ){ kexow = 1; }
 		if( document.getElementById( "pgene" ).checked ){ pgene = 1; }
 	}
-	$.post( "config.cgi", { mod:'bio', step:step, sex:sex, age:age, birth:birth, height:height, weight:weight, kexow:kexow, pgene:pgene, bst:bst, lst:lst, dst:dst, bti:bti, lti:lti, dti:dti }, function( data ){ $( "#L1" ).html( data );});
+	$.post( "config.cgi", { mod:'#{mod}', step:step, sex:sex, age:age, birth:birth, height:height, weight:weight, kexow:kexow, pgene:pgene, bst:bst, lst:lst, dst:dst, bti:bti, lti:lti, dti:dti }, function( data ){ $( "#L1" ).html( data );});
 
 	flashBW();
 	dl1 = true;
@@ -282,7 +281,7 @@ var bio_cfg = function( step ){
 
 var PhotoUpload = function( uname ){
 	form_data = new FormData( $( '#bio_puf' )[0] );
-	form_data.append( 'mod', 'bio' );
+	form_data.append( 'mod', '#{mod}' );
 	form_data.append( 'step', 'photo_upload' );
 	form_data.append( 'origin', uname );
 	form_data.append( 'base', 'bio' );
@@ -302,7 +301,7 @@ var PhotoUpload = function( uname ){
 };
 
 var photoDel = function( code ){
-	$.post( "config.cgi", { mod:'bio', step:'photo_del', code:code, base:'bio', secure:1 }, function( data ){ $( '#L1' ).html( data );});
+	$.post( "config.cgi", { mod:'#{mod}', step:'photo_del', code:code, base:'bio', secure:1 }, function( data ){ $( '#L1' ).html( data );});
 };
 
 </script>

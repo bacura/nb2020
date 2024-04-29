@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi extra 0.22b (2024/03/26)
+#Nutrition browser 2020 koyomi extra 0.23b (2024/04/29)
 
 
 #==============================================================================
@@ -118,10 +118,12 @@ if r.first
 	if r.first['koyomi'] != nil && r.first['koyomi'] != ''
 		koyomi = JSON.parse( r.first['koyomi'] ) if r.first['koyomi'] != ''
 		start = koyomi['start'].to_i
-		kexu = koyomi['kexu']
-		kexa = koyomi['kexa']
+		kexu = koyomi['kexu'] unless koyomi['kexu'] == nil
+		kexa = koyomi['kexa'] unless koyomi['kexa'] == nil
 	end
 end
+
+
 
 
 puts "HTML Header<br>" if @debug
@@ -177,6 +179,7 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 			date_html << "<td><input type='text' id='#{k}#{c}' value='#{cells_day[c][k]}' onChange=\"updateKoyomiex( '#{k}', '#{c}' )\"></td>" if v == '1'
 		end
 	end
+
 	date_html << "</tr>"
 	week_count += 1
 	week_count = 0 if week_count > 6

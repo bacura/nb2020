@@ -1,13 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser note 0.1b (2024/02/16)
+#Nutritoin browser note 0.2b (2024/04/29)
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
-@debug = true
-#script = File.basename( $0, '.cgi' )
+@debug = false
+script = File.basename( $0, '.cgi' )
 
 
 #==============================================================================
@@ -47,83 +47,52 @@ db = Db.new( user, @debug, false )
 
 #### Getting POST
 command = @cgi['command']
+note = @cgi['note']
+note_code = @cgi['code']
+
 if @debug
 	puts "command: #{command}<br>"
 	puts "<hr>"
 end
 
 
+aliasm = ''
+if user.mid != nil
+	r = db.query( "SELECT aliasu from #{$MYSQL_TB_USER} WHERE user='#{user.mom}';", false )
+	if r.first
+		aliasm = r.first['aliasu']
+		aliasm = user.mom if aliasm == '' || aliasm == nil
+	end
+end
+
 case command
 when 'write'
-	note = @cgi['note']
 	note_code = generate_code( user.name, 'n' )
-	aliasm = ''
-	if user.name != user.mom and user.mom != ''
-		r = db.query( "SELECT aliasu from #{$MYSQL_TB_USER} WHERE user='#{user.mom}';", false )
-		if r.first
-			aliasm = r.first['aliasu']
-			aliasm = user.mom if aliasm == '' || aliasm == nil
-		end
-	end
 	p @datetime, note_code, aliasm,note if @debug
 	db.query( "INSERT INTO #{$MYSQL_TB_NOTE} SET code='#{note_code}', user='#{user.name}', aliasm='#{aliasm}', note='#{note}', datetime='#{@datetime}';", true )
 
-when 'photo'
-	aliasm = ''
-	if user.name != user.mom and user.mom != ''
-		r = db.query( "SELECT aliasu from #{$MYSQL_TB_USER} WHERE user='#{user.mom}';", false )
-		if r.first
-			aliasm = r.first['aliasu']
-			aliasm = user.mom if aliasm == '' || aliasm == nil
-		end
-	end
-
-	note_code = generate_code( user.name, 'n' )
-	db.query( "UPDATE #{$MYSQL_TB_MEDIA} SET code='#{note_code}' WHERE code='note_tmp_new' AND user='#{user.name}';", true )
-
-	r = db.query( "SELECT code FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' AND origin='#{note_code}';", false )
-	if r.first
-		db.query( "INSERT INTO #{$MYSQL_TB_NOTE} SET origin='#{note_code}', code='#{r.first['code']}', user='#{user.name}', aliasm='#{aliasm}', note='', datetime='#{@datetime}';", true )
-	else
-		db.query( "DELETE FROM #{$MYSQL_TB_MEDIA} WHERE origin='note_tmp_new' AND user='#{user.name}';", true )
-	end
-
-	exit()
 when 'delete'
-	note_code = @cgi['code']
 	p note_code if @debug
+	target_photo = Media.new( user )
+	target_photo.load_cgi( @cgi )
+	target_photo.origin = note_code
+	target_photo.type = 'jpg'
+	target_photo.get_series()
+	target_photo.delete_series( true )
+
 	db.query( "DELETE FROM #{$MYSQL_TB_NOTE} WHERE code='#{note_code}';", true )
 
 when 'photo_upload'
+	puts 'photo_upload' if @debug
+	note_code = generate_code( user.name, 'n' )
 	new_photo = Media.new( user )
 	new_photo.load_cgi( @cgi )
+	new_photo.origin = note_code
 	new_photo.save_photo( @cgi )
-    new_photo.get_series()
-    new_photo.save_db()
+	new_photo.save_db()
 
-	code = @cgi['origin']
-	recipe.load_db( code, true )
-
-when 'photo_mv'
-	target_photo = Media.new( user )
-	target_photo.load_cgi( @cgi )
-    target_photo.get_series()
-    target_photo.move_series()
- 
-	code = @cgi['origin']
-	recipe.load_db( code, true )
-
-when 'photo_del'
-	target_photo = Media.new( user )
-	target_photo.load_cgi( @cgi )
-	target_photo.delete_photo( true )
-	target_photo.delete_db( true )
-
-	code = @cgi['origin']
-	recipe.load_db( code, true )
+	db.query( "INSERT INTO #{$MYSQL_TB_NOTE} SET code='#{note_code}', media='#{new_photo.code}', user='#{user.name}', aliasm='#{aliasm}', note='', datetime='#{@datetime}';", true )
 end
-
-daughter_delete = true
 
 photo = Media.new( user )
 photo.base = 'bio'
@@ -135,33 +104,59 @@ else
 	profile_photo = "<img src='#{$PHOTO}/nobody.jpg' width='50px' class='img-thumbnail'>"
 end
 
-mom_photo = "<img src='#{$PHOTO}/nobody.jpg' width='50px' class='img-thumbnail'>"
-
+mom_photo = "<img src='#{$PHOTO}/mom.jpg' width='50px' class='img-thumbnail'>"
+if user.mid != nil || user.mom != ''
+	photo.origin = user.mom
+	photo_code = photo.get_series().first
+	mom_photo = "<img src='photo.cgi?iso=Q&code=#{photo_code}&tn=-tns' width='50px' class='img-thumbnail'>" if photo_code != nil
+end
 
 ####
 puts 'Extract note<br>' if @debug
+daughter_delete = true
+daughter_delete = false if user.mid != nil
+
+
 note_html = ''
 r = db.query( "SELECT * FROM #{$MYSQL_TB_NOTE} WHERE user='#{user.name}' ORDER BY datetime DESC;", false )
 r.each do |e|
 	note_date =  "#{e['datetime'].year}-#{e['datetime'].month}-#{e['datetime'].day} #{e['datetime'].hour}:#{e['datetime'].min}"
 	note = e['note'].gsub( "\n", '<br>' )
-	note_html << '<div class="row">'
+	note_html << '<div class="row" style="padding:1rem;">'
 
-	if e['media'] == nil
-		if e['aliasm'] == ''
-			note_html << '<div class="col-2"></div>'
-			note_html << "<div class='col-8' >"
-			note_html << "	<div class='alert alert-light'>#{note}<br><br>"
-			note_html << "		<div align='right'>#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
+
+	if e['aliasm'] == ''
+		puts 'me' if @debug
+		note_html << '<div class="col-3"></div>'
+
+		if e['media'] == nil
+			note_html << "<div class='col-7' >"
+			note_html << "<div class='alert alert-light'>#{note}<br><br>"
+			note_html << "<div align='right'>#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if daughter_delete
-				note_html << "			<input type='checkbox' id='#{e['code']}'>&nbsp;"
-				note_html << "			<span onclick=\"deleteNote( '#{e['code']}' )\">#{l['trash']}</span>"
+				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
+				note_html << "<span onclick=\"deleteNote( '#{e['code']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div></div></div>'
-			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
+			note_html << "<div align='center' class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
 		else
-			note_html << "<div class='col-2'>#{mom_photo}<br>#{e['aliasm']}</div>"
-			note_html << "<div class='col-8' >"
+			secure_photo = "<img src='photo.cgi?iso=Q&code=#{e['media']}&tn=-tn' class='img-thumbnail'>"
+
+			note_html << "<div class='col-7' align='right'>"
+			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'>#{secure_photo}</a>&nbsp;&nbsp;&nbsp;&nbsp;"
+			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
+			if daughter_delete
+				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
+				note_html << "<span onclick=\"deleteNote( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
+			end
+			note_html << '</div>'
+		end
+	else
+		puts 'mom' if @debug
+		note_html << "<div align='center' class='col-2'>#{mom_photo}<br>#{e['aliasm']}</div>"
+
+		if e['media'] == nil
+			note_html << "<div class='col-7'>"
 			note_html << "	<div class='alert alert-success'>#{note}<br><br>"
 			note_html << "		<div align='right'>#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if user.mid != nil
@@ -169,35 +164,21 @@ r.each do |e|
 				note_html << "	<span onclick=\"deleteNote( '#{e['code']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div></div></div>'
-			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
-		end
-	else
-
-		if e['aliasm'] == ''
-			note_html << '<div class="col-2"></div>'
-			note_html << "<div class='col-8' align='right'>"
-			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['code']}-tn.jpg' class='img-thumbnail'></a><br>"
-			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
-			if daughter_delete
-				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
-				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
-			end
-			note_html << '</div>'
-			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
 		else
-			note_html << "<div class='col-2'>#{mom_photo}<br>#{e['aliasm']}</div>"
-			note_html << "<div class='col-8' align='left'>"
-			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'><img src='#{$PHOTO}/#{e['code']}-tn.jpg' class='img-thumbnail'></a><br>"
+			secure_photo = "<img src='photo.cgi?iso=Q&code=#{e['media']}&tn=-tn' class='img-thumbnail'>"
+
+			note_html << "<div class='col-7' align='left'>"
+			note_html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='photo'>#{secure_photo}</a>&nbsp;&nbsp;&nbsp;&nbsp;"
 			note_html << "#{note_date}&nbsp;&nbsp;&nbsp;&nbsp;"
 			if user.mid != nil
 				note_html << "<input type='checkbox' id='#{e['code']}'>&nbsp;"
-				note_html << "<span onclick=\"deleteNoteP( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
+				note_html << "<span onclick=\"deleteNote( '#{e['code']}', '#{e['media']}' )\">#{l['trash']}</span>"
 			end
 			note_html << '</div>'
-			note_html << "<div class='col-2'>#{profile_photo}<br>#{user.aliasu}</div>"
+
 		end
 	end
-	note_html << '</div><br>'
+	note_html << '</div>'
 end
 
 
@@ -227,6 +208,7 @@ html = <<-"HTML"
 		<div class="col-2">
 			<button class='btn btn-sm btn-success' onclick="writeNote()">#{l['pencil']}</button>
 		</div>
+		<hr>
 
 		#{note_html}
 
@@ -245,7 +227,7 @@ js = <<-"JS"
 <script type='text/javascript'>
 
 var PhotoUpload = function(){
-	var date_o = new Date();
+	var now = new Date();
     var yyyy = now.getFullYear();
     var mm = now.getMonth() + 1;
     var dd = now.getDate();
@@ -256,7 +238,7 @@ var PhotoUpload = function(){
 
 	form_data = new FormData( $( '#note_puf' )[0] );
 	form_data.append( 'command', 'photo_upload' );
-	form_data.append( 'origin', origin );
+	form_data.append( 'origin', '' );
 	form_data.append( 'base', 'note' );
 	form_data.append( 'alt', 'Photo' );
 	form_data.append( 'secure', '1' );
@@ -271,15 +253,6 @@ var PhotoUpload = function(){
 			success: function( data ){ $( '#L1' ).html( data ); }
 		}
 	);
-};
-var photoMove = function( origin, code, zidx ){
-	displayVIDEO( code );
-
-	$.post( "#{script}.cgi", { command:'photo_mv', origin:origin, code:code, zidx:zidx, base:'note' }, function( data ){ $( '#L1' ).html( data );});
-};
-
-var photoDel = function( origin, code ){
-	$.post( "#{script}.cgi", { command:'photo_del', origin:origin, code:code, base:'note' }, function( data ){ $( '#L1' ).html( data );});
 };
 
 </script>

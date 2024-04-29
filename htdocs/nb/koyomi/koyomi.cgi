@@ -51,6 +51,7 @@ def language_pack( language )
 		'palette'	=> "パレット",\
 		'snow'		=> "<img src='bootstrap-dist/icons/snow2.svg' style='height:1.2em; width:1.2em;'>",\
 		'visionnerz'=> "<img src='bootstrap-dist/icons/graph-up.svg' style='height:2em; width:1.0em;'>",\
+		'chat-dots'=> "<img src='bootstrap-dist/icons/chat-dots.svg' style='height:2em; width:1.0em;'>",\
 		'return'	=> "<img src='bootstrap-dist/icons/geo.svg' style='height:2em; width:2em;'>"
 	}
 
@@ -61,13 +62,10 @@ end
 def sub_menu( l )
 	html = <<-"MENU"
 <div class='container-fluid'>
-	<div class='row'>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomi()">#{l['foodrec']}</span></div>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomiex()">#{l['exrec']}</span></div>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomiCalc()">#{l['calc']}</span></div>
-		<div class='col-2'><span class='btn badge rounded-pill ppill' onclick="initKoyomiCompo()">#{l['compo']}</span></div>
-		<div class='col-2'></div>
-	</div>
+	<span class='btn badge rounded-pill ppill' onclick="initKoyomi()">#{l['foodrec']}</span>&nbsp;
+	<span class='btn badge rounded-pill ppill' onclick="initKoyomiex()">#{l['exrec']}</span>&nbsp;
+	<span class='btn badge rounded-pill ppill' onclick="initKoyomiCalc()">#{l['calc']}</span>&nbsp;
+	<span class='btn badge rounded-pill ppill' onclick="initKoyomiCompo()">#{l['compo']}</span>&nbsp;
 </div>
 
 MENU
@@ -130,7 +128,7 @@ def media_html( yyyy, mm, dd, tdiv, db )
 	html = ''
 	r = db.query( "SELECT code, zidx FROM #{$MYSQL_TB_MEDIA} WHERE user='#{db.user.name}' AND origin='#{yyyy}-#{mm}-#{dd}-#{tdiv}' AND type='jpg' ORDER BY zidx;", false )
 	r.each do |e|
-		html << "<a href='#{$PHOTO}/#{e['code']}.jpg' target='media'><img src='#{$PHOTO}/#{e['code']}-tns.jpg' class='photo_tns'></a>"
+		html << "<img src='#{$PHOTO}/#{e['code']}-tns.jpg' class='photo_tns' onclick=\"modalPhoto( '#{e['code']}' )\">"
 	end
 
 	return html
@@ -339,7 +337,8 @@ puts "koyomi matrix calc<br>" if @debug
 			if pfc.size == 3
 				t << "&nbsp;&nbsp;<span style='color:crimson'>P</span>:<span style='color:green'>F</span>:<span style='color:blue'>C</span> (%) = "
 				t << "<span style='color:crimson'>#{pfc[0]}</span> : <span style='color:green'>#{pfc[1]}</span> : <span style='color:blue'>#{pfc[2]}</span>"
-				t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{day}' )\">#{l['visionnerz']}</span>" if user.status >= 5
+#				t << "&nbsp;&nbsp;<span onclick=\"visionnerz( '#{sql_ym}-#{day}' )\">#{l['visionnerz']}</span>" if user.status >= 5
+#				t << "&nbsp;&nbsp;<span onclick=\"bridgeNote( '#{sql_ym}-#{day}', '' )\">#{l['chat-dots']}</span>" if user.status >= 5
 			end
 			fct_day_htmls << t
 		end
@@ -366,10 +365,12 @@ photo.base = 'koyomi'
 	tmp_html = ''
 	if kmrd.size != 0
 		5.times do |tdiv|
-			tmp = '-'
+			tmp = "<div class='row' #{onclick}><div class='col'>-</div></div>"
 			if kmrd[tdiv] != nil
 				if tdiv < 4
-					tmp = meals_html( kmrd[tdiv], db )
+					tmp = "<div class='row' #{onclick}><div class='col'>"
+					tmp << meals_html( kmrd[tdiv], db )
+					tmp << '</div></div>'
 
 					photo.origin = "#{calendar.yyyy}-#{calendar.mm}-#{day}-#{tdiv}"
 					photo.get_series()
@@ -381,7 +382,7 @@ photo.base = 'koyomi'
 
 				freeze_flag = true if kmrd[tdiv]['freeze'] == 1
 			end
-			tmp_html << "<td #{onclick}>#{tmp}</td>"
+			tmp_html << "<td>#{tmp}</td>"
 		end
 	else
 		5.times do tmp_html << "<td #{onclick}>-</td>" end
@@ -398,7 +399,7 @@ photo.base = 'koyomi'
 	date_html << "</tr>"
 
 	date_html << "<tr>"
-	date_html << "<td colspan='5' #{onclick}>#{fct_day_htmls[day]}</td>" if fct_day_htmls[day] != nil
+	date_html << "<td colspan='5'>#{fct_day_htmls[day]}</td>" if fct_day_htmls[day] != nil
 	date_html << "</tr>"
 
 	week_count += 1
@@ -450,3 +451,25 @@ puts html
 
 #### Deleting Empty koyomi
 db.query( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi IS NULL OR koyomi='';", true )
+
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
+
+js = <<-"JS"
+<script type='text/javascript'>
+
+// Note book bridge
+var bridgeNote = function( code, origin ){
+	$.post( "note-bridge.cgi", { command:'text', base:'koyomi', origin:origin, code:code }, function( data ){ $( "#LF" ).html( data );});
+
+	displayVIDEO( 'Briged' );
+
+	flashBW();
+	dlf = true;
+	displayBW();
+};
+
+JS
+
+puts js
