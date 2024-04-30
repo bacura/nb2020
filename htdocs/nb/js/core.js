@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.62b (2024/04/29)
+// Nutorition Browser 2020 core.js 0.63b (2024/04/30)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -1442,8 +1442,11 @@ var savePseudo_R2F = function( code ){
 			food_name:food_name, food_group:food_group, class1:class1, class2:class2, class3:class3, tag1:tag1,
 			tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5
 		}, function( data ){
-			$( "#L2" ).html( data );
+//			$( "#L2" ).html( data );
 			displayVIDEO( 'Foodized' );
+
+			dl2 = false;
+			displayBW();
 		});
 	}else{
 		displayVIDEO( 'Food name! (>_<)' );

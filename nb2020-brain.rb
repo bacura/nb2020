@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.34b (2024/02/05)
+#Nutrition browser 2020 brain 0.35b (2024/04/30)
 
 #==============================================================================
 #STATIC
@@ -61,6 +61,7 @@ def food_weight_check( food_weight )
   fw.sub!( '。', '.' )
   fw.sub!( '／', '/')
   fw.sub!( '＋', '+')
+  fw.sub!( 'ー', '-')
   uv = BigDecimal( '0' )
 
   begin

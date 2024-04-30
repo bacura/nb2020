@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.5b (2024/03/23)
+#Nutrition browser 2020 soul 1.6b (2024/05/30)
 
 #==============================================================================
 # LIBRARY
@@ -12,14 +12,14 @@ require 'json'
 #==============================================================================
 #STATIC
 #==============================================================================
-
 $GM = 'gm'
+
+$NBURL = 'https://bacura.jp/nb/'
+$MYURL = 'https://bacura.jp/nb/'
 
 $SERVER_PATH = '/var/www'
 $HTDOCS_PATH = "#{$SERVER_PATH}/htdocs/nb"
 $TMP_PATH = '/tmp'
-$NBURL = 'https://bacura.jp/nb/'
-$MYURL = 'http://localhost/nb/'
 
 $COOKIE_UID = 'UID2020'
 
