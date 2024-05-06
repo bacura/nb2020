@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe photo 0.51b (2024/04/019)
+#Nutrition browser 2020 recipe photo 0.52b (2024/05/05)
 
 #==============================================================================
 # STATIC
@@ -250,9 +250,15 @@ when 'delete'
 	end
 
 when 'modal_body'
-	puts "<img src='#{$PHOTO}/#{code}.jpg' width='100%'>"
-
+	media.code = code
+	media.load_db()
+	if media.secure()
+		puts "<img src='photo.cgi?iso=Q&code=#{code}' width='100%'>"
+	else
+		puts "<img src='#{$PHOTO}/#{code}.jpg' width='100%'>"
+	end
 	exit
+
 when 'modal_label'
 	media.code = code
 	media.load_db()

@@ -733,22 +733,6 @@ const initMedialist = function(){
 	});
 };
 
-// Media list change
- changeMedialist = function( page ){
-	const base = document.getElementById( "base" ).value;
-	const type = document.getElementById( "type" ).value;
-
- 	let mode_rb = 0;
- 	if( document.getElementById( "mode_rb2" ).checked ){ mode_rb = 1; }
-
-	$.post( "media-list.cgi", { command:'change', page:page, base:base, type:type, mode:mode_rb }, function( data ){
-		$( "#L1" ).html( data );
-
-		flashBW();
-		dl1 = true;
-		displayBW();
-	});
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Astral body projection //////////////////////////////////////////////////////////////

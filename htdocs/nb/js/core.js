@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.63b (2024/04/30)
+// Nutorition Browser 2020 core.js 0.6.3b (2024/04/30)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -144,18 +144,6 @@ displayVIDEO = function( msg ){
 	setTimeout( fx, 2000 );
 }
 
-
-// Displaying message on VIDEO
-displayMODAL = function( msg ){
-	if( msg == 'on' ){
-		line.style.display = 'block';
-	}else if( msg == 'off' ){
-		line.style.display = 'none';
-	}else{
-		line.style.display = 'block';
-		line.innerHTML = msg;
-	}
-}
 
 
 // Exchanging menu sets
@@ -1197,73 +1185,6 @@ const recipeList = function( com ){
 		flashBW();
 		dl1 = true;
 		displayBW();
-	});
-};
-
-
-// Displaying recipe list with narrow down
-const recipeListP = function( page ){
-	const range = document.getElementById( "range" ).value;
-	const type = document.getElementById( "type" ).value;
-	const role = document.getElementById( "role" ).value;
-	const tech = document.getElementById( "tech" ).value;
-	const time = document.getElementById( "time" ).value;
-	const cost = document.getElementById( "cost" ).value;
-	const words = document.getElementById( "words" ).value;
-	const page_limit = document.getElementById( "page_limit" ).value;
-
-	let family = 0;
-	if( document.getElementById( "family" ).checked ){ family = 1; }
-
-	$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, words:words, family:family, page_limit:page_limit }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// Displaying recipe list after delete
-const recipeDelete = function( code, page ){
-	const range = document.getElementById( "range" ).value;
-	const type = document.getElementById( "type" ).value;
-	const role = document.getElementById( "role" ).value;
-	const tech = document.getElementById( "tech" ).value;
-	const time = document.getElementById( "time" ).value;
-	const cost = document.getElementById( "cost" ).value;
-	const page_limit = document.getElementById( "page_limit" ).value;
-
-	let family = 0;
-	if( document.getElementById( "family" ).checked ){ family = 1; }
-
-	if( document.getElementById( code ).checked ){
-		$.post( "recipel.cgi", { command:'delete', code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family, page_limit:page_limit }, function( data ){
-			$.post( "recipel.cgi", { command:'limit', range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family, page_limit:page_limit }, function( data ){
-				$( "#L1" ).html( data );
-				displayVIDEO( 'Removed' );
-			});
-		});
-	} else{
-		displayVIDEO( 'Check! (>_<)' );
-	}
-};
-
-
-// Generationg subSpecies
-const recipeImport = function( com, code, page ){
-	const range = document.getElementById( "range" ).value;
-	const type = document.getElementById( "type" ).value;
-	const role = document.getElementById( "role" ).value;
-	const tech = document.getElementById( "tech" ).value;
-	const time = document.getElementById( "time" ).value;
-	const cost = document.getElementById( "cost" ).value;
-	const page_limit = document.getElementById( "page_limit" ).value;
-
-	let family = 0;
-	if( document.getElementById( "family" ).checked ){ family = 1; }
-
-	$.post( "recipel.cgi", { command:com, code:code, range:range, type:type, role:role, tech:tech, time:time, cost:cost, page:page, family:family, page_limit:page_limit }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Recipe has branched' );
-
-//		var code_user = data.split( ':' );
-//		initCB( 'view', code_user[0], code_user[1] );
 	});
 };
 

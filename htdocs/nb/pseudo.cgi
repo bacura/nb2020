@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 pseudo food editer 0.21b (2023/01/14)
+#Nutrition browser 2020 pseudo food editer 0.22b (2024/04/30)
 
 #==============================================================================
 # STATIC
@@ -42,6 +42,7 @@ html_init( nil )
 user = User.new( @cgi )
 user.debug if @debug
 l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 fct = FCT.new( @fct_item, @fct_name, @fct_unit, @fct_frct, 1, 1 )
@@ -73,7 +74,7 @@ food_weight = 100 if food_weight == nil || food_weight == ''|| food_weight == '0
 food_weight = BigDecimal( food_weight )
 
 code = '' if code == nil
-code = '' unless /P|U\d{5}/ =~ code
+code = '' unless /P|U|C\d{5}/ =~ code
 
 fg_key, class1_key, class2_key, class3_key, food_name_key = food_key.split( ':' ) if food_key unless nil
 food_group = fg_key unless fg_key == nil
@@ -112,7 +113,7 @@ puts "Loading tag<br>" if @debug
 tag_user = nil
 public_bit = 0
 if command == 'init' && code != ''
-	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{user.name}' OR user='#{$GM}' );", false, @debug )
+	r = db.query(  "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND ( user='#{user.name}' OR user='#{$GM}' );", false )
 	if r.first
 		tag_user = r.first['user']
 		class1 = r.first['class1']
@@ -126,10 +127,10 @@ if command == 'init' && code != ''
 		public_bit = r.first['public']
 	end
 elsif command == 'save' && code != ''
-	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+	r = db.query(  "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false )
 	tag_user = r.first['user'] if r.first
 elsif command == 'delete' && code != ''
-	r = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+	r = db.query(  "select * from #{$MYSQL_TB_TAG} WHERE FN='#{code}' AND user='#{user.name}';", false )
 	public_bit = r.first['public']
 end
 
@@ -178,18 +179,22 @@ if command == 'save'
 	fct_set << ",Notice='#{notice}'"
 
 	puts 'Generating new Food number:' if @debug
+p $NBURL
+p $MYURL
+
+
 	if user.status >= 8 && $NBURL == $MYURL
 		puts 'Public>' if @debug
 		public_bit = 1
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
+		r = db.query(  "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'P%';", false, @debug )
+			rr = db.query(  "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'P%';", false )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "P#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'P%');", false, @debug )
+				rrr = db.query(  "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'P%');", false )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -201,15 +206,15 @@ if command == 'save'
 	elsif user.status >= 8 && $NBURL != $MYURL
 		puts 'Community' if @debug
 		public_bit = 1
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false, @debug )
+		r = db.query(  "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=1;", false )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'C%';", false, @debug )
+			rr = db.query(  "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public='3' AND FN LIKE 'C%';", false )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "C#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'C%');", false, @debug )
+				rrr = db.query(  "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND public=1 AND FN LIKE 'C%');", false )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -220,15 +225,15 @@ if command == 'save'
 		end
 	else
 		puts 'Private>' if @debug
-		r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0 AND user='#{user.name}' ;", false, @debug )
+		r = db.query(  "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND FN='#{code}' AND public=0 AND user='#{user.name}' ;", false )
 		unless r.first
-			rr = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2' AND FN LIKE 'U%';", false, @debug )
+			rr = db.query(  "select FN from #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public='2' AND FN LIKE 'U%';", false )
 			if rr.first
 				code = rr.first['FN']
 				puts "Recycle:#{code}>" if @debug
 			else
 				code = "U#{food_group}001"
-				rrr = mdb( "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0 AND FN LIKE 'U%');", false, @debug )
+				rrr = db.query(  "select * from #{$MYSQL_TB_TAG} WHERE FN=(SELECT MAX(FN) FROM #{$MYSQL_TB_TAG} WHERE FG='#{food_group}' AND user='#{user.name}' AND public=0 AND FN LIKE 'U%');", false )
 				if rrr.first
 					puts "Detect:#{rrr.first['FN']}>" if @debug
 					last_code = rrr.first['FN'][-3,3].to_i
@@ -248,16 +253,16 @@ if command == 'save'
 	unit = JSON.generate( unith_ )
 
 	puts 'Checking Food number<br>' if @debug
-	r = mdb( "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
+	r = db.query(  "select FN from #{$MYSQL_TB_TAG} WHERE user='#{user.name}' AND FN='#{code}';", false )
 	if r.first
 		# 擬似食品テーブルの更新
-		mdb( "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
-		mdb( "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
-		mdb( "UPDATE #{$MYSQL_TB_EXT} SET user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0', unit='#{unit}' WHERE FN='#{code}' AND user='#{user.name}';", false, @debug )
+		db.query(  "UPDATE #{$MYSQL_TB_FCTP} SET FG='#{food_group}',Tagnames='#{tagnames_new}',#{fct_set} WHERE FN='#{code}' AND user='#{user.name}';", true )
+		db.query(  "UPDATE #{$MYSQL_TB_TAG} SET FG='#{food_group}',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',public='#{public_bit}' WHERE FN='#{code}' AND user='#{user.name}';", true )
+		db.query(  "UPDATE #{$MYSQL_TB_EXT} SET user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0', unit='#{unit}' WHERE FN='#{code}' AND user='#{user.name}';", true )
 	else
-		mdb( "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',user='#{user.name}',Tagnames='#{tagnames_new}',#{fct_set};", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", false, @debug )
-		mdb( "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0', unit='#{unit}';", false, @debug )
+		db.query(  "INSERT INTO #{$MYSQL_TB_FCTP} SET FG='#{food_group}',FN='#{code}',user='#{user.name}',Tagnames='#{tagnames_new}',#{fct_set};", true )
+		db.query(  "INSERT INTO #{$MYSQL_TB_TAG} SET FG='#{food_group}',FN='#{code}',SID='',name='#{food_name}',class1='#{class1}',class2='#{class2}',class3='#{class3}',tag1='#{tag1}',tag2='#{tag2}',tag3='#{tag3}',tag4='#{tag4}',tag5='#{tag5}',user='#{user.name}',public='#{public_bit}';", true )
+		db.query(  "INSERT INTO #{$MYSQL_TB_EXT} SET FN='#{code}', user='#{user.name}',color1='0', color2='0', color1h='0', color2h='0', unit='#{unit}';", true )
 	end
 
 	food_weight = 100
@@ -269,7 +274,7 @@ if command == 'delete'
 	puts "DELETE<br>" if @debug
 	public_bit = 2 if public_bit == 0
 	public_bit = 3 if public_bit == 1
-	mdb( "UPDATE #{$MYSQL_TB_TAG} SET public='#{public_bit}' WHERE user='#{user.name}' AND FN='#{code}';", false, @debug )
+	db.query(  "UPDATE #{$MYSQL_TB_TAG} SET public='#{public_bit}' WHERE user='#{user.name}' AND FN='#{code}';", true )
 	code = ''
 end
 

@@ -1,4 +1,4 @@
-#Nutrition browser 2020 body 0.04b (2024/04/29)
+#Nutrition browser 2020 body 0.05b (2024/05/04)
 
 #==============================================================================
 #STATIC
@@ -181,6 +181,7 @@ class Media
     }
   end
 
+
   def load_db()
     res = $DB.query( "SELECT * from #{$MYSQL_TB_MEDIA} WHERE code='#{@code}';" )
     if res.first
@@ -237,6 +238,23 @@ class Media
     end
 
     return @series
+  end
+
+  def get_count()
+    return @count
+  end
+
+  def get_yyyy()
+    return @yyyy_min, @yyyy_max
+  end
+
+
+  def secure()
+    if @secure == 1
+      return true
+    else
+      return false
+    end
   end
 
   def get_bases()
@@ -320,7 +338,11 @@ class Media
   def html_series_mini()
     html = ''
     @series.each do |e|
-      html << "<img src='#{$PHOTO}/#{e}-tns.jpg' class='img-thumbnail' onclick=\"modalPhoto( '#{e}' )\">"
+      if e['secure'] == 1
+        html << "<img src='photo.cgi?iso=Q&code=#{e}&tn=-tns' class='img-thumbnail' onclick=\"modalPhoto( '#{e}' )\">"
+      else
+        html << "<img src='#{$PHOTO}/#{e}-tns.jpg' class='img-thumbnail' onclick=\"modalPhoto( '#{e}' )\">"
+      end
     end
 
     return html

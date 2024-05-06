@@ -1,19 +1,20 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 media list 0.00b (2024/02/12)
+#Nutrition browser 2020 media list 0.0.0b (2024/05/05)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-@debug = true
-#script = File.basename( $0, '.cgi' )
+@debug = false
+script = File.basename( $0, '.cgi' )
 page_limit = 50
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
+require './body'
 
 #==============================================================================
 #DEFINITION
@@ -32,12 +33,14 @@ def language_pack( language )
 		'type' 	=> "Type",\
 		'date' => "Date",\
 		'zidx' => "zidx",\
+		'secure' => "Secure",\
 		'base' => "Base",\
 		'yyyy' => "Year",\
 		'list' => "<img src='bootstrap-dist/icons/list-task.svg' style='height:1.8em; width:1.8em;'>",\
 		'tile' => "<img src='bootstrap-dist/icons/grid-3x3-gap.svg' style='height:1.8em; width:1.8em;'",\
 		'datedele' 	=> "起源",\
-		'pad' 		=> "<img src='bootstrap-dist/icons/dpad.svg' style='height:1.8em; width:1.2em;'>&nbsp;操作",\
+		'pad' 		=> "<img src='bootstrap-dist/icons/dpad.svg' style='height:2.4em; width:2.4em;'>",\
+		'pad_small' => "<img src='bootstrap-dist/icons/dpad.svg' style='height:1.2em; width:1.2em;'>",\
 		'pre' 		=> "前項",\
 		'next' 		=> "次項",\
 		'text'		=> "<img src='bootstrap-dist/icons/filetype-txt.svg' style='height:1.8em; width:1.2em;'>",\
@@ -92,37 +95,60 @@ db = Db.new( user, @debug, false )
 
 
 all_media = Media.new( user )
-( item_num, yyyy_min, yyyy_max ) = all_media.count()
-bases = all_media.bases()
+item_num = all_media.get_count()
+( yyyy_min, yyyy_max ) = all_media.get_yyyy()
+bases = all_media.get_bases()
 
-#### POST
+
+puts 'POST<br>' if @debug
 command = @cgi['command']
 page = @cgi['page'].to_i
 base = @cgi['base'].to_s
 type = @cgi['type'].to_s
 mode = @cgi['mode'].to_i
 mcode = @cgi['mcode'].to_s
+yyyy = @cgi['yyyy'].to_i
+
 
 media_cfg = Hash.new
-r = db.query( "SELECT media FROM cfg WHERE user='#{user.name}';", false )
-if r.first
-	if r.first['media'] != nil
-		media_cfg = JSON.parse( r.first['media'] )
-		puts media_cfg if @debug
-		page = media_cfg['page'].to_i if page == 0
-		base = media_cfg['base'] if base == ''
-		type = media_cfg['type'] if type == ''
-		mode = media_cfg['mode'] if mode == ''
+if command == 'init'
+	r = db.query( "SELECT media FROM cfg WHERE user='#{user.name}';", false )
+	if r.first
+		if r.first['media'] != nil
+			media_cfg = JSON.parse( r.first['media'] )
+			puts media_cfg if @debug
+			page = media_cfg['page'].to_i if page == 0
+			base = media_cfg['base'] if base == ''
+			type = media_cfg['type'] if type == ''
+			mode = media_cfg['mode'].to_i if mode == 0
+			yyyy = media_cfg['yyyy'].to_i if yyyy == 0
+		end
 	end
+	puts command, page, base, type, mode, '<hr>' if @debug
 end
 base = 'all' if base == nil || base == ''
-puts command, page, base, type, mode, '<hr>' if @debug
 
 
 case command
 when 'delete'
-	puts "Deleting FCZ<br>" if @debug
-	db.query( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='#{base}' AND code='#{fcz_code}';", true )
+	puts "Deleting media<br>" if @debug
+#	db.query( "DELETE FROM #{$MYSQL_TB_FCZ} WHERE user='#{user.name}' AND base='#{base}' AND code='#{fcz_code}';", true )
+
+when 'modal_body'
+	modal_body = <<-"MB"
+	<div class='input-group'>
+	<span class="input-group-text" id="alt">#{l['alt']}</span>
+	<input type="text" class="form-control" id='alt'>
+	</div>
+MB
+
+	puts modal_body
+
+	exit
+when 'modal_label'
+	puts mcode
+
+	exit
 end
 
 
@@ -154,15 +180,15 @@ html_paging = pageing_html( page, page_start, page_end, page_max, l )
 puts "year html<br>" if @debug
 year_html = ''
 year_html << "<option value='all'>All</option>"
-yyyy_min.upto( yyyy_max ) do |yyyy|
-	year_html << "<option value='#{yyyy}'>#{yyyy}</option>"
+yyyy_min.upto( yyyy_max ) do |yyyy_|
+	year_html << "<option value='#{yyyy_}' #{$SELECT[yyyy == yyyy_]}>#{yyyy_}</option>"
 end
 
 
 puts "base html<br>" if @debug
 base_html = ''
 base_html << "<option value='all'>All</option>"
-bases.each do |e| base_html << "<option value='#{e}'>#{e}</option>" end
+bases.each do |e| base_html << "<option value='#{e}' #{$SELECT[e == base]}>#{e}</option>" end
 
 
 media_html = ''
@@ -176,7 +202,8 @@ if mode == 0
 	media_html << "	<td>#{l['origin']}</td>"
 	media_html << "	<td>#{l['code']}</td>"
 	media_html << "	<td>#{l['date']}</td>"
-	media_html << "	<td>#{l['pad']}</td>"
+	media_html << "	<td>#{l['secure']}</td>"
+	media_html << "	<td></td>"
 	media_html << '</tr>'
 	media_html << '</thead>'
 
@@ -185,13 +212,17 @@ if mode == 0
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' ORDER BY date LIMIT #{offset}, #{page_limit};", false )
 	r.each do |e|
 		media_html << '<tr style="font-size:medium;">'
-		media_html << "<td><img src='#{$PHOTO}/#{e['code']}-tns.jpg'></td>"
+		if e['secure'] == 1
+			media_html << "<td><img src='photo.cgi?iso=Q&code=#{e['code']}&tn=-tns' class='img-thumbnail' onclick=\"modalPhoto( '#{e['code']}' )\"></td>"
+		else
+			media_html << "<td><img src='#{$PHOTO}/#{e['code']}-tns.jpg'></td>"
+		end
 		media_html << "<td>#{e['alt']}</td>"
 		media_html << "<td>#{e['origin']}</td>"
 		media_html << "<td>#{e['code']}</td>"
 		media_html << "<td>#{e['date'].strftime( "%Y-%m-%d" )}</td>"
-		media_html << "<td>#{l['text']}</td>"
-		media_html << "</td>"
+		media_html << "<td>#{e['secure']}</td>"
+		media_html << "<td onclick=\"modalTip( '#{e['code']}' )\">#{l['pad']}</td>"
 		media_html << '</tr>'
 	end
 	media_html << '</table>'
@@ -203,16 +234,17 @@ else
 	media_html << '<div class="row">'
 	r.each do |e|
 		media_html << '<div class="col-1">'
-		media_html << "<img src='#{$PHOTO}/#{e['code']}-tns.jpg'><br><br>"
-		media_html << "#{e['alt']}"
+		if e['secure'] == 1
+			media_html << "<img src='photo.cgi?iso=Q&code=#{e['code']}&tn=-tn' class='img-thumbnail' onclick=\"modalPhoto( '#{e['code']}' )\">"
+		else
+			media_html << "<img src='#{$PHOTO}/#{e['code']}-tn.jpg'><br><br>"
+		end
+		media_html << "#{e['alt']}<br>"
+		media_html << "<span onclick=\"modalTip( '#{e['code']}' )\">#{l['pad_small']}</span>"
 		media_html << "</div>"
 	end
 	media_html << '</div>'
 end
-
-checkd = [ 'CHECKED', '' ]
-checkd = [ '', 'CHECKED' ] if mode == 1
-
 
 
 puts "HTML<br>" if @debug
@@ -227,11 +259,11 @@ html = <<-"HTML"
 	<div class='row'>
 		<div class='col-2'>
 			<div class="form-check form-check-inline">
-				<input class="form-check-input" type="radio" name="mode" id="mode_rb1" onchange="changeMedialist( '#{page}' )" #{checkd[0]}>
+				<input class="form-check-input" type="radio" name="mode" id="mdida_mode1" onchange="changeMedialist( '#{page}' )" #{$CHECK[mode == 0]}>
 				<label class="form-check-label">#{l['list']}</label>
 			</div>
 			<div class="form-check form-check-inline">
-				<input class="form-check-input" type="radio" name="mode" id="mode_rb2" onchange="changeMedialist( '#{page}' )" #{checkd[1]}>
+				<input class="form-check-input" type="radio" name="mode" id="media_mode2" onchange="changeMedialist( '#{page}' )" #{$CHECK[mode == 1]}>
 				<label class="form-check-label">#{l['tile']}</label>
 			</div>
 
@@ -239,7 +271,7 @@ html = <<-"HTML"
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text">#{l['base']}</label>
-				<select class="form-select" id="base" onchange="changeMedialist( '#{page}' )">
+				<select class="form-select" id="media_base" onchange="changeMedialist( '#{page}' )">
 					#{base_html}
 				</select>
 			</div>
@@ -247,7 +279,7 @@ html = <<-"HTML"
 		<div class='col-2'>
 			<div class='input-group input-group-sm'>
 				<label class="input-group-text">#{l['type']}</label>
-				<select class="form-select" id="type" onchange="changeMedialist( '#{page}' )">
+				<select class="form-select" id="media_type" onchange="changeMedialist( '#{page}' )">
 					<option value="jpg">jpeg</option>
 				</select>
 			</div>
@@ -274,6 +306,57 @@ HTML
 
 puts html
 
+#==============================================================================
+# POST PROCESS
+#==============================================================================
+
 #### 検索設定の保存
-media_ = JSON.generate( { "page" => page, "base" => base, "type" => type, "mode" => mode } )
+media_ = JSON.generate( { "page" => page, "base" => base, "type" => type, "mode" => mode, "yyyy" => yyyy } )
 db.query( "UPDATE #{$MYSQL_TB_CFG} SET media='#{media_}' WHERE user='#{user.name}';", true )
+
+#==============================================================================
+# FRONT SCRIPT START
+if command == 'init'
+#==============================================================================
+js = <<-"JS"
+<script type='text/javascript'>
+
+// Media list change
+ changeMedialist = function( page ){
+	const base = document.getElementById( "media_base" ).value;
+	const type = document.getElementById( "media_type" ).value;
+	const yyyy = document.getElementById( "media_yyyy" ).value;
+
+ 	let mode = 0;
+ 	if( document.getElementById( "media_mode2" ).checked ){ mode = 1; }
+
+	$.post( "media-list.cgi", { command:'change', page:page, base:base, type:type, mode:mode, yyyy:yyyy }, function( data ){
+		$( "#L1" ).html( data );
+
+		flashBW();
+		dl1 = true;
+		displayBW();
+	});
+};
+
+// Modal Tip for media list
+var modalTip = function( code ){
+	$.post( "#{script}.cgi", { command:'modal_body', mcode:code }, function( data ){
+		$( "#modal_tip_body" ).html( data );
+		$.post( "#{script}.cgi", { command:'modal_label', mcode:code }, function( data ){
+			$( "#modal_tip_label" ).html( data );
+			$( '#modal_tip' ).modal( 'show' );
+		});
+	});
+}
+
+</script>
+
+JS
+
+puts js
+#==============================================================================
+# FRONT SCRIPT END
+end
+#==============================================================================
+

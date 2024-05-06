@@ -344,15 +344,28 @@ html = <<-"HTML"
   <div class="browse_window" id='LM' style="display: none;"></div>
 </div>
 
-<!-- Modal -->
+<!-- Modal large -->
 <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal_label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modal_label"></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id='modal_body'></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal tip -->
+<div class="modal fade" id="modal_tip" tabindex="-2" aria-labelledby="modal_tip_label" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal_tip_label"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id='modal_tip_body'></div>
     </div>
   </div>
 </div>
