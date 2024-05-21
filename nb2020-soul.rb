@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.6b (2024/05/30)
+#Nutrition browser 2020 soul 1.6.1 (2024/05/08)
 
 #==============================================================================
 # LIBRARY
@@ -194,11 +194,9 @@ def add_his( user, code )
 
   current_his = []
   r = $DB.query( "SELECT his FROM #{$MYSQL_TB_HIS} WHERE user='#{user.name}';" )
-  if r.first
-    current_his = r.first['his'].split( "\t" )
-  end
+  current_his = r.first['his'].split( "\t" ) if r.first
 
-  current_his.unshift << code
+  current_his.unshift( code )
   current_his.delete( '' )
   current_his.uniq!
   new_his = current_his.take( his_max ).join( "\t" )

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.25b (2023/9/27)
+#Nutrition browser 2020 cutting board 0.2.6 (2024/5/21)
 
 #==============================================================================
 #STATIC
@@ -45,7 +45,7 @@ def language_pack( language )
 		'rrate' 	=> "摂食率",\
 		'up' 		=> "<img src='bootstrap-dist/icons/chevron-up.svg' style='height:1.5em; width:1.5em;'>",\
 		'down' 		=> "<img src='bootstrap-dist/icons/chevron-down.svg' style='height:1.5em; width:1.5em;'>",\
-		'trash' 	=> "<img src='bootstrap-dist/icons/trash.svg' style='height:1.8em; width:1.8em;'>",\
+		'eraser' 	=> "<img src='bootstrap-dist/icons/eraser.svg' style='height:1.8em; width:1.8em;'>",\
 		'recipe'	=> "レシピ",\
 		'calc' 		=> "栄養",\
 		'price' 	=> "原価",\
@@ -880,12 +880,12 @@ food_list.each do |e|
  	if e.fn == '-'
 	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}></div>"
 		html << "<div class='col-9'><hr></div>"
-		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
+		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['eraser']}</span></div>"
  	elsif e.fn == '+'
 	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}></div>"
 		html << "<div class='col-3 text-secondary cb_food_label' align='right'>( #{e.init} )</div>"
 		html << "<div class='col-6'><hr></div>"
-		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
+		html << "<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['eraser']}</span></div>"
   	else
 
 	  	html << "&nbsp;&nbsp;&nbsp;<input class='form-check-input' type='checkbox' id='food_cb#{c}' onchange=\"checkCB( '#{c}', '#{code}', 'food_cb#{c}' )\" #{check}>&nbsp;#{e.fn}</div>"
@@ -911,7 +911,7 @@ food_list.each do |e|
 		html << "				</select>"
 		html << "			</div>"
   		html << "			<div class='col-2'><input type='text' maxlength='3' class='form-control form-control-sm' id='food_rr_#{c}' value='#{e.rr}' onchange=\"weightCB( '#{c}', 'unitv_#{c}', 'unit_#{c}', 'food_init_#{c}', 'food_rr_#{c}', '#{code}' )\"></div>"
-  		html << "			<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['trash']}</span></div>"
+  		html << "			<div class='col-1'><span onclick=\"clearCB( '#{c}', '#{code}' )\">#{l['eraser']}</span></div>"
 		html << "		</div>"
 		html << "	</div>"
 	end

@@ -1,25 +1,44 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 meal 0.12b
-
-
-#==============================================================================
-#LIBRARY
-#==============================================================================
-require './probe'
-
+#Nutrition browser 2020 meal 0.1.2 (2024/05/21)
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'meal'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 
+#==============================================================================
+#LIBRARY
+#==============================================================================
+require './soul'
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'meal' 		=> "お膳",\
+		'reset' 	=> "お片付け",\
+		'command' 	=> "操作",\
+		'photo' 	=> "写真",\
+		'name' 		=> "献立名",\
+		'tag' 		=> "属性",\
+		'edit' 		=> "献立編集",\
+		'calc' 		=> "栄養計算",\
+		'analysis' 	=> "基本解析",\
+		'up' 		=> "<img src='bootstrap-dist/icons/chevron-up.svg' style='height:1.5em; width:1.5em;'>",\
+		'down' 		=> "<img src='bootstrap-dist/icons/chevron-down.svg' style='height:1.5em; width:1.5em;'>",\
+		'eraser' 	=> "<img src='bootstrap-dist/icons/eraser.svg' style='height:1.8em; width:1.8em;'>",\
+	}
+
+	return l[language]
+end
 
 #==============================================================================
 # Main
@@ -28,7 +47,8 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST data
@@ -53,7 +73,7 @@ puts "Loading recipe<br>" if @debug
 recipe_list = []
 if meal_o.meal
 	meal_o.meal.split( "\t" ).each do |e|
-		recipe = Recipe.new( user.name )
+		recipe = Recipe.new( user )
 		recipe.load_db( e, true )
 		recipe.load_media
 		recipe_list << recipe
@@ -101,19 +121,19 @@ puts "HTML part<br>" if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-10'><h5>#{lp[1]}: #{meal_o.name}</h5></div>
+		<div class='col-10'><h5>#{l['meal']}: #{meal_o.name}</h5></div>
 		<div class='col-2' align='right'>
 			<input type='checkbox' id='meal_all_check'>&nbsp;
-			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clear_meal( 'all', '#{meal_o.code}' )\">#{lp[2]}</button>
+			<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"clear_meal( 'all', '#{meal_o.code}' )\">#{l['reset']}</button>
 		</div>
 	</div>
 	<hr>
 
 	<div class='row'>
-		<div class='col-1 meal_header'>#{lp[3]}</div>
-		<div class='col-1 meal_header'>#{lp[4]}</div>
-		<div class='col-4 meal_header'>#{lp[5]}</div>
-		<div class='col-2 meal_header'>#{lp[6]}</div>
+		<div class='col-1 meal_header'>#{l['name']}</div>
+		<div class='col-1 meal_header'>#{l['photo']}</div>
+		<div class='col-4 meal_header'>#{l['name']}</div>
+		<div class='col-2 meal_header'>#{l['tag']}</div>
 	</div>
 	<br>
 HTML
@@ -122,8 +142,8 @@ c = 0
 recipe_list.each do |e|
 	html << "	<div class='row'>"
  	html << "		<div class='col-1'>"
- 	html << "			<span onclick=\"upper_meal( '#{c}', '#{e.code}' )\">#{lp[10]}</span>"
- 	html << "			<span onclick=\"lower_meal( '#{c}', '#{e.code}' )\">#{lp[11]}</span>"
+ 	html << "			<span onclick=\"upper_meal( '#{c}', '#{e.code}' )\">#{l['up']}</span>"
+ 	html << "			<span onclick=\"lower_meal( '#{c}', '#{e.code}' )\">#{l['down']}</span>"
  	html << "		</div>"
 	if e.media[0] != nil
   		html << "		<div class='col-1' align='center'><img src='#{$PHOTO}/#{e.media[0]}-tns.jpg'></div>"
@@ -140,16 +160,16 @@ recipe_list.each do |e|
   	html << "		<div class='col-3'>"
   	html << "			#{@recipe_tech[e.tech]}&nbsp;" unless e.tech == 0
   	html << "		</div>"
-  	html << "		<div class='col-1' align='right'><span onclick=\"clear_meal( '#{c}', '#{e.code}' )\">#{lp[12]}</span></div>"
+  	html << "		<div class='col-1' align='right'><span onclick=\"clear_meal( '#{c}', '#{e.code}' )\">#{l['eraser']}</span></div>"
 	html << "	</div>"
 	c += 1
 end
 
 html << "	<br>"
 html << "	<div class='row'>"
-html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuEdit( 'view', '#{meal_o.code}' )\">#{lp[7]}</button></div>"
-html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuCalcView( '#{meal_o.code}' )\">#{lp[8]}</button></div>"
-html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuAnalysis( '#{meal_o.code}' )\">#{lp[9]}</button></div>"
+html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuEdit( 'view', '#{meal_o.code}' )\">#{l['edit']}</button></div>"
+html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuCalcView( '#{meal_o.code}' )\">#{l['calc']}</button></div>"
+html << "		<div class='col-2'><button type='button' class='btn btn-primary btn-sm' onclick=\"menuAnalysis( '#{meal_o.code}' )\">#{l['analysis']}</button></div>"
 html << "	</div>"
 html << "	<div class='code'>#{meal_o.code}</div>"
 html << "</div>"

@@ -179,10 +179,6 @@ if command == 'save'
 	fct_set << ",Notice='#{notice}'"
 
 	puts 'Generating new Food number:' if @debug
-p $NBURL
-p $MYURL
-
-
 	if user.status >= 8 && $NBURL == $MYURL
 		puts 'Public>' if @debug
 		public_bit = 1

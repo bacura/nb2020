@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 fcz editer 0.01b (2023/01/08)
+#Nutrition browser 2020 fcz editer 0.0.0 (2024/05/19)
 
 #==============================================================================
 # STATIC
@@ -210,3 +210,24 @@ html = <<-"HTML"
 HTML
 
 puts html
+
+#==============================================================================
+# FRONT SCRIPT START
+#==============================================================================
+if command == 'init'
+	js = <<-"JS"
+<script type='text/javascript'>
+
+
+// FCZ edit return
+var fczlReturn = function(){
+	dl1 = true;
+	dl2 = false;
+	displayBW();
+};
+
+</script>
+JS
+
+	puts js
+end

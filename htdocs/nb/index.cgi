@@ -344,7 +344,7 @@ html = <<-"HTML"
   <div class="browse_window" id='LM' style="display: none;"></div>
 </div>
 
-<!-- Modal large -->
+<!-- Modal window -->
 <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal_label" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">

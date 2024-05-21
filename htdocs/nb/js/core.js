@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.6.3b (2024/04/30)
+// Nutorition Browser 2020 core.js 0.6.3 (2024/04/30)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -26,7 +26,6 @@ bwl5 = null;
 bwlf = null;
 line = null;
 video = null;
-modal = null;
 
 help = null;
 help_tp = '1154';
@@ -137,6 +136,7 @@ displayLINE = function( msg ){
 displayVIDEO = function( msg ){
 	video.innerHTML = msg;
 	video.style.display = 'block';
+	video.style.color = 'lime';
 	var fx = function(){
 		video.innerHTML = "";
 		video.style.display = 'none';
@@ -144,6 +144,18 @@ displayVIDEO = function( msg ){
 	setTimeout( fx, 2000 );
 }
 
+
+// Displaying message on VIDEO rec mode
+displayVIDEOr = function( msg ){
+	video.innerHTML = msg;
+	video.style.display = 'block';
+	video.style.color = 'red';
+	var fx = function(){
+		video.innerHTML = "";
+		video.style.display = 'none';
+	};
+	setTimeout( fx, 2000 );
+}
 
 
 // Exchanging menu sets
@@ -405,7 +417,7 @@ cp2words = function( words, qcate ){
 	document.getElementById( "words" ).value = words;
 	if( qcate != '' ){ document.getElementById( "qcate" ).value = qcate; }
 
-	displayVIDEO( 'Copied' );
+	displayVIDEO( 'Picked' );
 };
 
 
@@ -413,27 +425,21 @@ cp2words = function( words, qcate ){
 // history /////////////////////////////////////////////////////////////////////////
 
 // Display history
-var historyInit = function(){
+const historyInit = function(){
 	flashBW();
 	$.post( "history.cgi", { command:'menu' }, function( data ){
 		$( "#LINE" ).html( data );
-		dline = true;
-		displayBW();
+
+		$.post( "history.cgi", { command:'init', sub_fg:'init' }, function( data ){
+			$( "#L1" ).html( data );
+
+			dline = true;
+			dl1 = true;
+			displayBW();
+			pushBW();
+		});
 	});
-	$.post( "history.cgi", { command:'sub', sub_fg:'init' }, function( data ){
-		$( "#L1" ).html( data );
-		dl1 = true;
-		displayBW();
-	});
-	pushBW();
-
-
 };
-
-var historySub = function( sub_fg ){
-	$.post( "history.cgi", { command:'sub', sub_fg:sub_fg }, function( data ){ $( "#L1" ).html( data );});
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Puseudo food //////////////////////////////////////////////////////////////////////
@@ -1381,6 +1387,7 @@ var savePseudo_R2F = function( code ){
 var print_templateSelect = function( code ){
 	$.post( "print.cgi", { command:'select', code:code }, function( data ){
 		$( "#L2" ).html( data );
+		$( '#modal_tip' ).modal( 'hide' );
 
 		flashBW();
 		dl2 = true;
@@ -1421,6 +1428,8 @@ var openPrint = function( uname, code, template, dish ){
 var addingMeal = function( recipe_code, recipe_name ){
 	$.post( "mealm.cgi", { recipe_code:recipe_code }, function( data ){
 		$( "#MBN" ).html( data );
+		$( '#modal_tip' ).modal( 'hide' );
+
 		if( recipe_code != '' ){ displayVIDEO( '+' + recipe_name); }
 	});
 };
@@ -1582,6 +1591,7 @@ var menuDelete = function( code, menu_name ){
 var menuImport = function( code ){
 	$.post( "menul.cgi", { command:'import', code:code }, function( data ){
 		$( "#L1" ).html( data );
+		
 		displayVIDEO( code );
 	});
 };

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 japanese intake standard view 0.00b (2023/01/08)
+#Nutrition browser 2020 japanese intake standard view 0.0.1 (2024/05/13)
 
 
 #==============================================================================
@@ -61,11 +61,11 @@ def language_pack( language )
 end
 
 ####
-def menu( user, l )
+def menu( db, l )
 	age = 18
 	sex = 0
 
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = db.query(  "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -76,7 +76,7 @@ def menu( user, l )
 	end
 
 	options = ''
-	r = mdb( "SELECT DISTINCT name FROM #{$MYSQL_TB_REFITS};", false, @debug )
+	r = db.query(  "SELECT DISTINCT name FROM #{$MYSQL_TB_REFITS};", false )
 	r.each do |e|
 		if e['name'] == 'FE_M'
 			options << "<option value=''FE_M'>#{l['fe_m']}</option>"
@@ -86,12 +86,6 @@ def menu( user, l )
 			options << "<option value='#{e['name']}'>#{@fct_name[e['name']]}</option>"
 		end
 	end
-
-	selected_am = ''
-	selected_am = 'SELECTED' if age < 1
-
-	checked_m = [ 'CHECKED', '' ]
-	checked_f = [ '', 'CHECKED' ]
 
 	html = <<-"MENU"
 <div class='container-fluid'>
@@ -114,7 +108,7 @@ def menu( user, l )
 			  	<input type="number" min=0 class="form-control" id='ritp_age' value='#{age}'>
 				<select class="form-select" id="ritp_age_mode">
 					<option value='y'>#{l['year']}</option>
-					<option value='m' #{selected_am}>#{l['month']}</option>
+					<option value='m' #{$SELECT[ age < 1 ]}>#{l['month']}</option>
 				</select>
 			</div>
 		</div>
@@ -122,11 +116,11 @@ def menu( user, l )
 		<div class='col-8'>
 			<label class="form-check-label">#{l['sex']}</label>&nbsp;
 			<div class="form-check form-check-inline">
-			  <input class="form-check-input" type="radio" name="sex" id="sex_m" onclick="changeRISex( 0 )" #{checked_m[sex]}>
+			  <input class="form-check-input" type="radio" name="sex" id="sex_m" onclick="changeRISex( 0 )" #{$CHECK[sex == 0]}>
 			  <label class="form-check-label">#{l['male']}</label>
 			</div>
 			<div class="form-check form-check-inline">
-			  <input class="form-check-input" type="radio" name="sex" id="sex_f" onclick="changeRISex( 1 )" #{checked_f[sex]}>
+			  <input class="form-check-input" type="radio" name="sex" id="sex_f" onclick="changeRISex( 1 )" #{$CHECK[sex == 1]}>
 			  <label class="form-check-label">#{l['female']}</label>
 			</div>
 			<div class="form-check form-check-inline">
@@ -167,8 +161,8 @@ def menu( user, l )
 </div>
 
 MENU
-	puts html
-	exit()
+
+	return html
 end
 
 
@@ -207,13 +201,8 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
+db = Db.new( user, @debug, false )
 l = language_pack( user.language )
-
-#### Guild member check
-if user.status < 8
-	puts "Guild member error."
-	exit
-end
 
 
 command = @cgi['command']
@@ -241,7 +230,7 @@ when 'view_item'
 	puts '[DG]<br>' if @debug
 	if rits_item == 'PROTV' || rits_item == 'FATV' || rits_item == 'CHOV' || rits_item == 'FASAT' || rits_item == 'FIB' || rits_item == 'NACL_EQ' || rits_item == 'NA' || rits_item == 'K'
 		ref_m = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='0';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='0';", false )
 		unit = r.first['unit']
 		dg_unit = ''
 		dg_unit = r.first['DG_unit'] if  rits_item == 'PROTV' || rits_item == 'FATV' || rits_item == 'CHOV'
@@ -252,17 +241,17 @@ when 'view_item'
 		end
 
 		ref_f = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND ( period_class='m' OR period_class='y' );", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND ( period_class='m' OR period_class='y' );", false )
 		r.each do |e|
 			kara = ''
 			kara = '-' if e['DG_min'] != ''
 			ref_f << "<tr><td>#{e['periods']}~#{e['periode']}#{l[e['period_class']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td><td>#{e['DG_min']}#{kara}#{e['DG_max']}&nbsp;#{dg_unit}</td></tr>"
 		end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='p';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='p';", false )
 		r.each do |e| ref_f << "<tr><td>#{l[e['periods']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td><td>#{e['DG_min']}-#{e['DG_max']}&nbsp;#{dg_unit}</td></tr>" end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='l';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='l';", false )
 		r.each do |e| ref_f << "<tr><td>#{l['lactation']}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td><td>#{e['DG_min']}-#{e['DG_max']}&nbsp;#{dg_unit}</td></tr>" end
 
 		html = <<-"HTML"
@@ -273,12 +262,12 @@ when 'view_item'
 			<h6>#{l['male']}</h6>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['age']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
-					<td>#{l['dg']}</td>
+					<td align='right'>#{l['age']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
+					<td align='right'>#{l['dg']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_m}
@@ -290,12 +279,12 @@ when 'view_item'
 			<h6>#{l['female']}</h6>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['age']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
-					<td>#{l['dg']}</td>
+					<td align='right'>#{l['age']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
+					<td align='right'>#{l['dg']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_f}
@@ -309,30 +298,30 @@ HTML
 	elsif rits_item == 'FE'
 	puts '[FE]<br>' if @debug
 		ref_m = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='0';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='0';", false )
 		unit = r.first['unit']
 		r.each do |e| ref_m << "<tr><td>#{e['periods']}~#{e['periode']}#{l[e['period_class']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
 
 		ref_f = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND ( period_class='m' OR period_class='y' );", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND ( period_class='m' OR period_class='y' );", false )
 		r.each do |e| ref_f << "<tr><td>#{e['periods']}~#{e['periode']}#{l[e['period_class']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='p';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='p';", false )
 		r.each do |e| ref_f << "<tr><td>#{l[e['periods']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='l';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='l';", false )
 		r.each do |e| ref_f << "<tr><td>#{l['lactation']}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
 
 		ref_fm = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='FE_M' AND ( period_class='m' OR period_class='y' );", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='FE_M' AND ( period_class='m' OR period_class='y' );", false )
 		r.each do |e| ref_fm << "<tr><td>#{e['periods']}~#{e['periode']}#{l[e['period_class']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='FE_M' AND period_class='p';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='FE_M' AND period_class='p';", false )
 		r.each do |e| ref_fm << "<tr><td>#{l[e['periods']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='FE_M' AND period_class='l';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='FE_M' AND period_class='l';", false )
 		r.each do |e| ref_fm << "<tr><td>#{l['lactation']}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
 		html = <<-"HTML"
@@ -343,11 +332,11 @@ HTML
 			<h6>#{l['male']}</h6>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['age']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
+					<td align='right'>#{l['age']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_m}
@@ -359,11 +348,11 @@ HTML
 			<h6>#{l['female']}</h6>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['age']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
+					<td align='right'>#{l['age']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_f}
@@ -375,11 +364,11 @@ HTML
 			<h6>#{l['femalem']}</h6>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['age']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
+					<td align='right'>#{l['age']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_fm}
@@ -393,18 +382,18 @@ HTML
 	else
 	puts 'View items<br>' if @debug
 		ref_m = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='0';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='0';", false )
 		unit = r.first['unit']
 		r.each do |e| ref_m << "<tr><td>#{e['periods']}~#{e['periode']}#{l[e['period_class']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
 		ref_f = ''
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND ( period_class='m' OR period_class='y' );", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND ( period_class='m' OR period_class='y' );", false )
 		r.each do |e| ref_f << "<tr><td>#{e['periods']}~#{e['periode']}#{l[e['period_class']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='p';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='p';", false )
 		r.each do |e| ref_f << "<tr><td>#{l[e['periods']]}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='l';", false, @debug )
+		r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE name='#{rits_item}' AND sex='1' AND period_class='l';", false )
 		r.each do |e| ref_f << "<tr><td>#{l['lactation']}</td><td>#{e['EAR']}</td><td>#{e['RDA']}</td><td>#{e['AI']}</td><td>#{e['UL']}</td></tr>" end
 
 		html = <<-"HTML"
@@ -415,11 +404,11 @@ HTML
 			<h6>#{l['male']}</h6>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['age']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
+					<td align='right'>#{l['age']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_m}
@@ -431,11 +420,11 @@ HTML
 			<h6>#{l['female']}</h6>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['age']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
+					<td align='right'>#{l['age']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_f}
@@ -457,21 +446,21 @@ when 'personal', 'save'
 		when 0
 			rs= []
 		when 1
-			rs = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='p' AND periods='0';", false, @debug )
+			rs = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='p' AND periods='0';", false )
 		when 2
-			rs = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='p' AND periods='16';", false, @debug )
+			rs = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='p' AND periods='16';", false )
 		when 3
-			rs = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='p' AND periods='28';", false, @debug )
+			rs = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='p' AND periods='28';", false )
 		when 4
-			rs = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='l';", false, @debug )
+			rs = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='1' AND period_class='l';", false )
 		end
 		rff = []
 		rs.each do |e| rff << e end
 	end
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='#{sex}' AND period_class='#{ritp_age_mode}' AND periods<=#{ritp_age} AND periode>=#{ritp_age};", false, @debug )
+	r = db.query(  "SELECT * FROM #{$MYSQL_TB_REFITS} WHERE sex='#{sex}' AND period_class='#{ritp_age_mode}' AND periods<=#{ritp_age} AND periode>=#{ritp_age};", false )
 	r.each_with_index do |e, i|
-		if sex == 0
+		if sex == 0 || rff.size == 0
 			@ear = e['EAR']
 			@rda = e['RDA']
 			@ai = e['AI']
@@ -522,12 +511,12 @@ when 'personal', 'save'
 
 	if command == 'save'
 		puts '[SAVE]<br>' if @debug
-		r = mdb( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE base='ref_intake' AND user='#{user.name}' AND name='#{fcz_name}';", false, @debug )
+		r = db.query(  "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE base='ref_intake' AND user='#{user.name}' AND name='#{fcz_name}';", false )
 		if r.first
-			mdb( "UPDATE #{$MYSQL_TB_FCZ} #{set_sql} date='#{@date}' WHERE base='ref_intake' AND user='#{user.name}' AND name='#{fcz_name}';", false, @debug )
+			db.query(  "UPDATE #{$MYSQL_TB_FCZ} #{set_sql} date='#{@date}' WHERE base='ref_intake' AND user='#{user.name}' AND name='#{fcz_name}';", true )
 		else
 			new_code = generate_code( user.name, 'z' )
-			mdb( "INSERT INTO #{$MYSQL_TB_FCZ} #{set_sql} code='#{new_code}', origin='#{@datetime}', base='ref_intake', user='#{user.name}', name='#{fcz_name}', date='#{@date}';", false, @debug )
+			db.query(  "INSERT INTO #{$MYSQL_TB_FCZ} #{set_sql} code='#{new_code}', origin='#{@datetime}', base='ref_intake', user='#{user.name}', name='#{fcz_name}', date='#{@date}';", true )
 		end
 		exit( 0 )
 	end
@@ -556,14 +545,14 @@ when 'personal', 'save'
 		<div class='col'>
 			<table class='table table-striped table-sm'>
 				<thead class='fct_item align_c'>
-					<td>#{l['nutrients']}</td>
-					<td>#{l['unit']}</td>
-					<td>#{l['ear']}</td>
-					<td>#{l['rda']}</td>
-					<td>#{l['ai']}</td>
-					<td>#{l['ul']}</td>
-					<td>#{l['dg']}</td>
-					<td>#{l['fcz']}</td>
+					<td align='right'>#{l['nutrients']}</td>
+					<td align='right'>#{l['unit']}</td>
+					<td align='right'>#{l['ear']}</td>
+					<td align='right'>#{l['rda']}</td>
+					<td align='right'>#{l['ai']}</td>
+					<td align='right'>#{l['ul']}</td>
+					<td align='right'>#{l['dg']}</td>
+					<td align='right'>#{l['fcz']}</td>
 				</thead>
 				<tbody class='align_r'>
 					#{ref_p}
@@ -575,7 +564,7 @@ when 'personal', 'save'
 HTML
 
 else
-	menu( user, l )
+	html = menu( db, l )
 end
 
 puts html
@@ -608,8 +597,68 @@ var changeRISex = function( sex ){
 };
 
 var changeRIP = function(){
-		document.getElementById( 'ff_m' ).checked = false;
+	document.getElementById( 'ff_m' ).checked = false;
 };
+
+// Ref instake init
+var viewRefIntake = function(){
+	const rits_item = document.getElementById( "rits_item" ).value;
+	$.post( "ref-intake.cgi", { command:'view_item', rits_item:rits_item }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+
+// Ref instake personal
+var viewRefIntakeP = function(){
+	const ritp_age = document.getElementById( "ritp_age" ).value;
+	const ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
+	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
+	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
+	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
+	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
+	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
+	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
+	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
+
+	$.post( "ref-intake.cgi", { command:'personal', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c }, function( data ){
+		$( "#L2" ).html( data );
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+// Ref instake personal
+var saveRefIntake = function(){
+	const ritp_age = document.getElementById( "ritp_age" ).value;
+	const ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
+	const fcz_name = document.getElementById( "fcz_name" ).value;
+	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
+	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
+	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
+	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
+	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
+	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
+	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
+
+	if( fcz_name != '' ){
+		$.post( "ref-intake.cgi", { command:'save', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c, fcz_name:fcz_name }, function( data ){
+//			$( "#L4" ).html( data );
+
+//			dl4 = true;
+//			displayBW();
+			displayVIDEO( 'Saved FCZ' );
+		});
+	}else{
+		displayVIDEO( 'FCZ name!(>_<)' );
+	}
+};
+
+
 </script>
 JS
 	puts js

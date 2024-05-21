@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser account mother 0.10b (2024/04/17)
+#Nutrition browser account mother 0.1.1 (2024/05/10)
 
 
 #==============================================================================
@@ -33,7 +33,8 @@ def language_pack( language )
 		'save'	=> "保存",\
 		'update'	=> "更新",\
 		'user'	=> "ユーザー",\
-		'last'	=> "最終",\
+		'last'	=> "最終ログイン日",\
+		'reg_date'	=> "登録日",\
 		'edit'	=> "編集",\
 		'new_reg'	=> "新規登録",\
 		'delete'	=> "削除",\
@@ -65,6 +66,10 @@ def new_account( db, user )
 
 	# Inserting new meal
 	db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{user.name}', meal='';", true )
+
+	# Inserting new config
+	db.query( "INSERT INTO #{$MYSQL_TB_CFG} SET user='#{user.name}', icache=1;", true )
+
 end
 
 #==============================================================================
@@ -209,8 +214,8 @@ else
 	account_html << "<th>#{l['mail']}</th>"
 	account_html << "<th>#{l['alias']}</th>"
 	account_html << "<th>#{l['last']}</th>"
-	account_html << "<th>#{l['pass']}</th>"
-	account_html << "<th>#{l['pass']}</th>"
+	account_html << "<th>#{l['login_date']}</th>"
+	account_html << "<th>#{l['reg_date']}</th>"
 	account_html << "<th>#{l['language']}</th>"
 	account_html << "<th></th>"
 	account_html << "<th></th>"

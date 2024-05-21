@@ -23,12 +23,12 @@ require 'rqrcode'
 #==============================================================================
 
 #### html_header for printv
-def html_head_pv( recipe )
+def html_head_pv( recipe, x_account )
 	code = recipe.code
 	media_code = recipe.media
 	recipe_name = recipe.name
-	tw_image = ''
-	tw_image = "<meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/#{media_code[0]}-tn.jpg' />" if media_code.size > 0
+	x_image = ''
+	x_image = "<meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/#{media_code[0]}-tn.jpg' />" if media_code.size > 0
 
 	html = <<-"HTML"
 <!DOCTYPE html>
@@ -42,10 +42,10 @@ def html_head_pv( recipe )
 
  	<!-- Twitter card -->
  	<meta name="twitter:card" content="summary" />
- 	<meta name="twitter:site" content="@ho_meow" />
+ 	<meta name="twitter:site" content="#{x_account}" />
  	<meta name="twitter:title" content="ユビキタス栄養ツール：栄養ブラウザ" />
  	<meta name="twitter:description" content="公開レシピ紹介///#{recipe_name}" />
- 	#{tw_image}
+ 	#{tx_image}
  	<meta name="twitter:image:alt" content="ばきゅら京都Labロゴ" />
 
  	<!-- bootstrap -->
@@ -371,9 +371,9 @@ if @debug
 	puts "<hr>"
 end
 
-
+x_account = '@ho_meow'
 puts "html header<br>" if @debug
-html_head_pv( recipe )
+html_head_pv( recipe, x_account )
 
 
 puts "extract foods<br>" if @debug

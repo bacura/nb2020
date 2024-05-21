@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.30b (2024/03/26)
+#Nutrition browser 2020 koyomi adding panel 0.3.1 (2024/05/20)
 
 #==============================================================================
 # STATIC
@@ -180,7 +180,7 @@ meal_time = 20 if meal_time == nil || meal_time == '' || meal_time == 0
 
 new_solid = ''
 #Removing pre-koyomi
-if command == 'move' || command == 'fixcopy' && copy != 1
+if ( command == 'move' && copy != 1 ) || ( command == 'fixcopy' && copy != 1 )
 	puts 'Move food (deleting origin )<br>' if @debug
 	a = origin.split( ':' )
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMI} WHERE user='#{user.name}' AND date='#{a[0]}-#{a[1]}-#{a[2]}' AND tdiv='#{a[3]}';", false )

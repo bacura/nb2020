@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser history 0.23b (2023/07/16)
+#Nutritoin browser history 0.2.4 (2024/05/21)
 
 #==============================================================================
 # STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
 $ALL_LIMIT = 100
 
 #==============================================================================
@@ -250,7 +250,29 @@ HTML
 
 puts html
 
+#==============================================================================
+# POST PROCESS
+#==============================================================================
+
 #Update config
 history['sub_fg'] = sub_fg
 history_ = JSON.generate( history )
 db.query( "UPDATE #{$MYSQL_TB_CFG} SET history='#{history_}' WHERE user='#{user.name}';", false ) unless user.status == 7
+
+#==============================================================================
+# FRONT SCRIPT START
+#==============================================================================
+if command == 'init'
+	js = <<-"JS"
+<script type='text/javascript'>
+
+var historySub = function( sub_fg ){
+	$.post( "#{script}.cgi", { command:'sub', sub_fg:sub_fg }, function( data ){ $( "#L1" ).html( data );});
+};
+
+</script>
+
+JS
+
+	puts js
+end

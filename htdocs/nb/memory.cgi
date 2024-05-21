@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.23b (2024/04/21)
+#Nutrition browser 2020 memory editor 0.2.3b (2024/05/9)
 
 #==============================================================================
 #STATIC
@@ -306,11 +306,11 @@ when 'refer'
 				memory.pointer = a_pointer
 				memory_solid = memory.get_solid( '' )
 
-				r = db.query( "SELECT aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{ee['user']}';", false )
+				r = db.query( "SELECT aliasu FROM #{$MYSQL_TB_USER} WHERE user='#{user.name}';", false )
 				if r.first
-					radio_name = r.fisrst['aliasu'] if r.fisrst['aliasu'] != ''
+					radio_name = r.first['aliasu'] if r.first['aliasu'] != ''
 				else
-					radio_name = ee['aliasu']
+					radio_name = user.name
 				end
 
 				pointer = ''

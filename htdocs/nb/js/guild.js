@@ -1,4 +1,4 @@
-//guild.js ver 0.42b (2024/04/20)
+//guild.js ver 0.4.3 (2024/05/12)
 
 kp = 'koyomi/'
 
@@ -300,6 +300,7 @@ var addKoyomi = function( code ){
 	flashBW();
 	$.post( kp + "koyomi-add.cgi", { command:"init", code:code }, function( data ){
 		$( "#LF" ).html( data );
+		$( '#modal_tip' ).modal( 'hide' );
 
 		dlf = true;
 		displayBW();
@@ -813,21 +814,6 @@ var initFCZlist = function(){
 	});
 };
 
-// FCZ list change
-var baseFCZlist = function( page ){
-	var base = document.getElementById( "base_select" ).value;
-	$.post( "fcz-list.cgi", { command:'init', base:base, page:page }, function( data ){ $( "#L1" ).html( data ); });
-};
-
-// FCZ list delete
-var deleteFCZlist = function( fcz_code, page ){
-	var base = document.getElementById( "base_select" ).value;
-	if( document.getElementById( fcz_code ).checked ){
-		$.post( "fcz-list.cgi", { command:'delete', base:base, page:page, fcz_code:fcz_code }, function( data ){ $( "#L1" ).html( data ); });
-	}else{
-		displayVIDEO( 'Check!(>_<)' );
-	}
-};
 
 // FCZ editor
 var initFCZedit = function( fcz_code ){
@@ -949,19 +935,13 @@ var saveFCZedit = function( fcz_code ){
 	});
 };
 
-// FCZ edit return
-var fczlReturn = function(){
-	dl1 = true;
-	dl2 = false;
-	displayBW();
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Ref instake //////////////////////////////////////////////////////////////
 
 // Ref instake init
-var initRefIntake = function(){
-	$.post( "ref-intake.cgi", { command:'menu' }, function( data ){
+const initRefIntake = function(){
+	$.post( "ref-intake.cgi", { command:'init' }, function( data ){
 		$( "#L1" ).html( data );
 
 		flashBW();
@@ -970,60 +950,3 @@ var initRefIntake = function(){
 	});
 };
 
-// Ref instake init
-var viewRefIntake = function(){
-	var rits_item = document.getElementById( "rits_item" ).value;
-	$.post( "ref-intake.cgi", { command:'view_item', rits_item:rits_item }, function( data ){
-		$( "#L2" ).html( data );
-
-		dl2 = true;
-		displayBW();
-	});
-};
-
-
-// Ref instake personal
-var viewRefIntakeP = function(){
-	var ritp_age = document.getElementById( "ritp_age" ).value;
-	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
-	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
-	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
-	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
-	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
-	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
-	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
-	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
-
-	$.post( "ref-intake.cgi", { command:'personal', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c }, function( data ){
-		$( "#L2" ).html( data );
-
-		dl2 = true;
-		displayBW();
-	});
-};
-
-// Ref instake personal
-var saveRefIntake = function(){
-	var ritp_age = document.getElementById( "ritp_age" ).value;
-	var ritp_age_mode = document.getElementById( "ritp_age_mode" ).value;
-	var fcz_name = document.getElementById( "fcz_name" ).value;
-	if( document.getElementById( "sex_m" ).checked ){ var sex = 0; }else{ var sex = 1; }
-	if( document.getElementById( "ff_m" ).checked ){ var ff_m = 1; }else{ var ff_m = 0; }
-	if( document.getElementById( "ff_non" ).checked ){ var ff_c = 0; }
-	if( document.getElementById( "ff_p1" ).checked ){ var ff_c = 1; }
-	if( document.getElementById( "ff_p2" ).checked ){ var ff_c = 2; }
-	if( document.getElementById( "ff_p3" ).checked ){ var ff_c = 3; }
-	if( document.getElementById( "ff_l" ).checked ){ var ff_c = 4; }
-
-	if( fcz_name != '' ){
-		$.post( "ref-intake.cgi", { command:'save', ritp_age:ritp_age, ritp_age_mode:ritp_age_mode, sex:sex, ff_m:ff_m, ff_c:ff_c, fcz_name:fcz_name }, function( data ){
-//			$( "#L4" ).html( data );
-
-//			dl4 = true;
-//			displayBW();
-			displayVIDEO( 'Saved FCZ' );
-		});
-	}else{
-		displayVIDEO( 'FCZ name!(>_<)' );
-	}
-};

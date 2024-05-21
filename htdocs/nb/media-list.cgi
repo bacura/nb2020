@@ -39,8 +39,8 @@ def language_pack( language )
 		'list' => "<img src='bootstrap-dist/icons/list-task.svg' style='height:1.8em; width:1.8em;'>",\
 		'tile' => "<img src='bootstrap-dist/icons/grid-3x3-gap.svg' style='height:1.8em; width:1.8em;'",\
 		'datedele' 	=> "起源",\
-		'pad' 		=> "<img src='bootstrap-dist/icons/dpad.svg' style='height:2.4em; width:2.4em;'>",\
-		'pad_small' => "<img src='bootstrap-dist/icons/dpad.svg' style='height:1.2em; width:1.2em;'>",\
+		'command' => "<img src='bootstrap-dist/icons/command.svg' style='height:1.2em; width:1.2em;'>",\
+		'com' => "Command",\
 		'pre' 		=> "前項",\
 		'next' 		=> "次項",\
 		'text'		=> "<img src='bootstrap-dist/icons/filetype-txt.svg' style='height:1.8em; width:1.2em;'>",\
@@ -203,7 +203,7 @@ if mode == 0
 	media_html << "	<td>#{l['code']}</td>"
 	media_html << "	<td>#{l['date']}</td>"
 	media_html << "	<td>#{l['secure']}</td>"
-	media_html << "	<td></td>"
+	media_html << "	<td>#{l['com']}</td>"
 	media_html << '</tr>'
 	media_html << '</thead>'
 
@@ -211,7 +211,7 @@ if mode == 0
 	offset = 0 if offset < 0
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' ORDER BY date LIMIT #{offset}, #{page_limit};", false )
 	r.each do |e|
-		media_html << '<tr style="font-size:medium;">'
+		media_html << "<tr style='font-size:medium;' oncontextmenu=\"modalTip( '#{e['code']}' )\">"
 		if e['secure'] == 1
 			media_html << "<td><img src='photo.cgi?iso=Q&code=#{e['code']}&tn=-tns' class='img-thumbnail' onclick=\"modalPhoto( '#{e['code']}' )\"></td>"
 		else
@@ -222,7 +222,7 @@ if mode == 0
 		media_html << "<td>#{e['code']}</td>"
 		media_html << "<td>#{e['date'].strftime( "%Y-%m-%d" )}</td>"
 		media_html << "<td>#{e['secure']}</td>"
-		media_html << "<td onclick=\"modalTip( '#{e['code']}' )\">#{l['pad']}</td>"
+		media_html << "<td onclick=\"modalTip( '#{e['code']}' )\">#{l['command']}</td>"
 		media_html << '</tr>'
 	end
 	media_html << '</table>'
@@ -233,14 +233,14 @@ else
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_MEDIA} WHERE user='#{user.name}' ORDER BY date LIMIT #{offset}, #{page_limit};", false )
 	media_html << '<div class="row">'
 	r.each do |e|
-		media_html << '<div class="col-1">'
+		media_html << "<div class='col-1' oncontextmenu=\"modalTip( '#{e['code']}' )\">"
 		if e['secure'] == 1
 			media_html << "<img src='photo.cgi?iso=Q&code=#{e['code']}&tn=-tn' class='img-thumbnail' onclick=\"modalPhoto( '#{e['code']}' )\">"
 		else
 			media_html << "<img src='#{$PHOTO}/#{e['code']}-tn.jpg'><br><br>"
 		end
 		media_html << "#{e['alt']}<br>"
-		media_html << "<span onclick=\"modalTip( '#{e['code']}' )\">#{l['pad_small']}</span>"
+		media_html << "<span onclick=\"modalTip( '#{e['code']}' )\">#{l['command']}</span>"
 		media_html << "</div>"
 	end
 	media_html << '</div>'
@@ -316,9 +316,9 @@ db.query( "UPDATE #{$MYSQL_TB_CFG} SET media='#{media_}' WHERE user='#{user.name
 
 #==============================================================================
 # FRONT SCRIPT START
-if command == 'init'
 #==============================================================================
-js = <<-"JS"
+if command == 'init'
+	js = <<-"JS"
 <script type='text/javascript'>
 
 // Media list change
@@ -354,9 +354,5 @@ var modalTip = function( code ){
 
 JS
 
-puts js
-#==============================================================================
-# FRONT SCRIPT END
+	puts js
 end
-#==============================================================================
-
