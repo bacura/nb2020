@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi menu copy / move 0.12b (2024/02/29)
+#Nutrition browser 2020 koyomi menu copy / move 0.1.3 (2024/04/24)
 
 
 #==============================================================================
@@ -214,7 +214,7 @@ weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 	date_html << "<tr id='day#{day_}'>"
 	style = ''
 	style = 'color:red;' if week_count == 0
-	onclick = "onclick=\"editKoyomi2( 'init', '#{day_}' )\""
+	onclick = "onclick=\"editKoyomi( '#{calendar.yyyy}-#{calendar.mm}-#{day_}' )\""
 	date_html << "<td style='#{style}' #{onclick}>#{day_} (#{weeks[week_count]})</td>"
 
 	if kmrd.size != 0

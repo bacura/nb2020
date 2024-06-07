@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.6.1 (2024/05/08)
+#Nutrition browser 2020 soul 1.6.2 (2024/05/22)
 
 #==============================================================================
 # LIBRARY
@@ -16,6 +16,10 @@ $GM = 'gm'
 
 $NBURL = 'https://bacura.jp/nb/'
 $MYURL = 'https://bacura.jp/nb/'
+
+$JQUERY = '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>'
+$BS_CSS = '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">' 
+$BS_JS = '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>' 
 
 $SERVER_PATH = '/var/www'
 $HTDOCS_PATH = "#{$SERVER_PATH}/htdocs/nb"

@@ -333,7 +333,6 @@ def html_working( title )
 ##
 html = <<-"HTML"
 <div class="bw_frame" id='WORLD' aligh="center">
-  <div class="video" id='VIDEO' style="display: none;"></div>
   <div class="line" id='LINE' style="display: none;"></div>
   <div class="browse_window" id='L1' style="display: block;">#{title}</div>
   <div class="browse_window" id='L2' style="display: none;"></div>
@@ -369,6 +368,9 @@ html = <<-"HTML"
     </div>
   </div>
 </div>
+
+<!-- VIDEO -->
+<div class="video" id='VIDEO' style="display: none;"></div>
 
 HTML
 ##

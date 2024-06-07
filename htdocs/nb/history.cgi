@@ -188,11 +188,33 @@ end
 
 
 #### Sub group menu
-sub_menu( l ) if command == 'menu'
+case command
+when 'menu'
+	sub_menu( l )
 
+when 'modal_body'
+	code = @cgi['code']
 
-#### Sub group
-if sub_fg == 'init'
+	puts "<table class='table table-borderless'><tr>"
+	if /\-r\-/ =~ code
+		puts "<td align='center' onclick=\"addKoyomi( '#{recipe.code}' )\">#{l['calendar']}<br><br>#{l['koyomi']}</td>"
+		puts "<td align='center' onclick=\"cp2words( '#{recipe.code}', '' )\">#{l['cp2words']}<br><br>#{l['pick']}</td>"
+	else
+		puts "<td align='center' onclick=\"addKoyomi( '#{recipe.code}' )\">#{l['calendar']}<br><br>#{l['koyomi']}</td>"
+
+	end
+	puts '</tr></table>'
+
+	exit
+
+when 'modal_label'
+	code = @cgi['code']
+
+    puts code
+
+	exit
+
+else
 	puts "LOAD config<br>" if @debug
 	sub_fg = 1
 	r = db.query( "SELECT history FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
@@ -269,6 +291,18 @@ if command == 'init'
 var historySub = function( sub_fg ){
 	$.post( "#{script}.cgi", { command:'sub', sub_fg:sub_fg }, function( data ){ $( "#L1" ).html( data );});
 };
+
+
+// Modal Tip for fcz list
+var modalTip = function( code ){
+	$.post( "#{script}.cgi", { command:'modal_body', code:code }, function( data ){
+		$( "#modal_tip_body" ).html( data );
+		$.post( "#{script}.cgi", { command:'modal_label', code:code }, function( data ){
+			$( "#modal_tip_label" ).html( data );
+			$( '#modal_tip' ).modal( 'show' );
+		});
+	});
+}
 
 </script>
 

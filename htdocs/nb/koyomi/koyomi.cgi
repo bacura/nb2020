@@ -1,13 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi 0.24b (2024/02/16)
+#Nutrition browser 2020 koyomi 0.25b (2024/05/24)
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
@@ -192,6 +192,7 @@ sql_ym = "#{calendar.yyyy}-#{calendar.mm}"
 puts "Freeze process<br>" if @debug
 freeze_all_checked = ''
 case command
+when 'change'
 when 'freeze'
 	if freeze_check == 'true'
 		db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='1' WHERE user='#{user.name}' AND date='#{sql_ymd}';", true )
@@ -205,6 +206,7 @@ when 'freeze_all'
 	elsif freeze_check_all == 'false'
 		 db.query( "UPDATE #{$MYSQL_TB_KOYOMI} SET freeze='0' WHERE user='#{user.name}' AND ( date BETWEEN '#{sql_ym}-1' AND '#{sql_ym}-#{calendar.ddl}' );", true )
 	end
+else
 end
 
 
@@ -360,7 +362,8 @@ photo.base = 'koyomi'
 	freeze_flag = false
 	active_flag = true
 	kmrd = koyomi_mx[day]
-	onclick = "onclick=\"editKoyomi( 'init', '#{day}' )\""
+
+	onclick = "onclick=\"editKoyomi( '#{calendar.yyyy}-#{calendar.mm}-#{day}' )\""
 
 	tmp_html = ''
 	if kmrd.size != 0
@@ -458,6 +461,26 @@ db.query( "DELETE FROM #{$MYSQL_TB_KOYOMI} WHERE koyomi IS NULL OR koyomi='';", 
 
 js = <<-"JS"
 <script type='text/javascript'>
+
+// Koyomi change
+var changeKoyomi = function(){
+	const yyyy_mm = document.getElementById( "yyyy_mm" ).value;
+	$.post( kp + "#{script}.cgi", { command:"change", yyyy_mm:yyyy_mm }, function( data ){ $( "#L1" ).html( data );});
+};
+
+// Koyomi freeze
+var freezeKoyomi = function( dd ){
+	const yyyy_mm = document.getElementById( "yyyy_mm" ).value;
+	const freeze_check = document.getElementById( "freeze_check" + dd ).checked ;
+	$.post( kp + "#{script}.cgi", { command:'freeze', yyyy_mm:yyyy_mm, dd, freeze_check:freeze_check }, function( data ){ $( "#L1" ).html( data );});
+};
+
+// Koyomi freeze all
+var freezeKoyomiAll = function(){
+	const yyyy_mm = document.getElementById( "yyyy_mm" ).value;
+	const freeze_check_all = document.getElementById( "freeze_check_all" ).checked ;
+	$.post( kp + "#{script}.cgi", { command:'freeze_all', yyyy_mm:yyyy_mm,  freeze_check_all:freeze_check_all }, function( data ){ $( "#L1" ).html( data );});
+};
 
 // Note book bridge
 var bridgeNote = function( code, origin ){

@@ -1,4 +1,4 @@
-/* Nutorition browser 2020 core css 0.00b (2022/09/17) */
+/* Nutorition browser 2020 core css 0.01b (2024/05/31) */
 
 /* tag base */
 a {
@@ -26,7 +26,7 @@ nav {
 /*=====================*/
 .bw_frame{
   position:relative;
-  z-index: 99;
+  z-index: 0;
 }
 
 .nav_button{
@@ -48,8 +48,7 @@ nav {
   font-size: 2em;
   font-weight: bold;
   text-align: right;
-  color: lime;
-  z-index: 0
+  z-index: 99;
 }
 
 .browse_window{

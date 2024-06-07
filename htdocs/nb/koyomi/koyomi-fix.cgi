@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.14b (2024/03/05)
+#Nutrition browser koyomi fix fct editer 0.20b (2024/05/05)
 
 #==============================================================================
 # STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 # LIBRARY
@@ -359,6 +359,13 @@ fix_his_html << '</select>'
 fix_his_html << "</div>"
 
 
+fix_ref_html = ''
+fix_ref_html << '<div class="form-check form-switch">'
+fix_ref_html << "<input class='form-check-input' type='checkbox' id='fix_ref' onChange=\"koyomiFixRef()\" #{$CHECK[command == 'history']} #{$DISABLE[command != 'history']}>"
+fix_ref_html << '<label class="form-check-label" for="fix_ref">参照</label>'
+fix_ref_html << '</div>'
+
+
 puts 'HTML<br>' if @debug
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -366,7 +373,10 @@ html = <<-"HTML"
 		<div class="col-4">
 			#{fix_his_html}
 		</div>
-		<div class="col-8">
+		<div class="col-1">
+			#{fix_ref_html}
+		</div>
+		<div class="col-7">
 			<div align='center' class='joystic_koyomi' onclick="koyomiFixR()">#{l['signpost']}</div>
 		</div>
 	</div>
@@ -421,3 +431,192 @@ html = <<-"HTML"
 HTML
 
 puts html
+
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
+if command = 'init'
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// Koyomi fix save
+var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
+	const food_name = document.getElementById( "food_name" ).value;
+	const hh_mm = document.getElementById( "hh_mm_fix" ).value;
+	const meal_time = document.getElementById( "meal_time_fix" ).value;
+	const food_number = document.getElementById( "food_number" ).value;
+	let carry_on = 0;
+	if( document.getElementById( "carry_on" ).checked ){ carry_on = 1; }
+
+	if( food_name != '' ){
+		let food_weight = 100;
+		if( document.getElementById( "g100_check" ).checked){ food_weight = document.getElementById( "kffood_weight" ).value; }
+		const ENERC = document.getElementById( "kfENERC" ).value;
+		const ENERC_KCAL = document.getElementById( "kfENERC_KCAL" ).value;
+		const WATER = document.getElementById( "kfWATER" ).value;
+
+		const PROTCAA = document.getElementById( "kfPROTCAA" ).value;
+		const PROT = document.getElementById( "kfPROT" ).value;
+		const PROTV = document.getElementById( "kfPROTV" ).value;
+		const FATNLEA = document.getElementById( "kfFATNLEA" ).value;
+		const CHOLE = document.getElementById( "kfCHOLE" ).value;
+		const FAT = document.getElementById( "kfFAT" ).value;
+		const FATV = document.getElementById( "kfFATV" ).value;
+		const CHOAVLM = document.getElementById( "kfCHOAVLM" ).value;
+		const CHOAVL = document.getElementById( "kfCHOAVL" ).value;
+		const CHOAVLDF = document.getElementById( "kfCHOAVLDF" ).value;
+		const CHOV = document.getElementById( "kfCHOV" ).value;
+		const FIB = document.getElementById( "kfFIB" ).value;
+		const POLYL = document.getElementById( "kfPOLYL" ).value;
+		const CHOCDF = document.getElementById( "kfCHOCDF" ).value;
+		const OA = document.getElementById( "kfOA" ).value;
+
+		const ASH = document.getElementById( "kfASH" ).value;
+		const NA = document.getElementById( "kfNA" ).value;
+		const K = document.getElementById( "kfK" ).value;
+		const CA = document.getElementById( "kfCA" ).value;
+		const MG = document.getElementById( "kfMG" ).value;
+		const P = document.getElementById( "kfP" ).value;
+		const FE = document.getElementById( "kfFE" ).value;
+		const ZN = document.getElementById( "kfZN" ).value;
+		const CU = document.getElementById( "kfCU" ).value;
+		const MN = document.getElementById( "kfMN" ).value;
+		const ID = document.getElementById( "kfID" ).value;
+		const SE = document.getElementById( "kfSE" ).value;
+		const CR = document.getElementById( "kfCR" ).value;
+		const MO = document.getElementById( "kfMO" ).value;
+
+		const RETOL = document.getElementById( "kfRETOL" ).value;
+		const CARTA = document.getElementById( "kfCARTA" ).value;
+		const CARTB = document.getElementById( "kfCARTB" ).value;
+		const CRYPXB = document.getElementById( "kfCRYPXB" ).value;
+		const CARTBEQ = document.getElementById( "kfCARTBEQ" ).value;
+		const VITA_RAE = document.getElementById( "kfVITA_RAE" ).value;
+		const VITD = document.getElementById( "kfVITD" ).value;
+		const TOCPHA = document.getElementById( "kfTOCPHA" ).value;
+		const TOCPHB = document.getElementById( "kfTOCPHB" ).value;
+		const TOCPHG = document.getElementById( "kfTOCPHG" ).value;
+		const TOCPHD = document.getElementById( "kfTOCPHD" ).value;
+		const VITK = document.getElementById( "kfVITK" ).value;
+
+		const THIA = document.getElementById( "kfTHIA" ).value;
+		const RIBF = document.getElementById( "kfRIBF" ).value;
+		const NIA = document.getElementById( "kfNIA" ).value;
+		const NE = document.getElementById( "kfNE" ).value;
+		const VITB6A = document.getElementById( "kfVITB6A" ).value;
+		const VITB12 = document.getElementById( "kfVITB12" ).value;
+		const FOL = document.getElementById( "kfFOL" ).value;
+		const PANTAC = document.getElementById( "kfPANTAC" ).value;
+		const BIOT = document.getElementById( "kfBIOT" ).value;
+		const VITC = document.getElementById( "kfVITC" ).value;
+
+		const ALC = document.getElementById( "kfALC" ).value;
+		const NACL_EQ = document.getElementById( "kfNACL_EQ" ).value;
+
+		const FASAT = document.getElementById( "kfFASAT" ).value;
+		const FAMS = document.getElementById( "kfFAMS" ).value;
+		const FAPU = document.getElementById( "kfFAPU" ).value;
+		const FAPUN3 = document.getElementById( "kfFAPUN3" ).value;
+		const FAPUN6 = document.getElementById( "kfFAPUN6" ).value;
+
+		const FIBTG = document.getElementById( "kfFIBTG" ).value;
+		const FIBSOL = document.getElementById( "kfFIBSOL" ).value;
+		const FIBINS = document.getElementById( "kfFIBINS" ).value;
+		const FIBTDF = document.getElementById( "kfFIBTDF" ).value;
+		const FIBSDFS = document.getElementById( "kfFIBSDFS" ).value;
+		const FIBSDFP = document.getElementById( "kfFIBSDFP" ).value;
+		const FIBIDF = document.getElementById( "kfFIBIDF" ).value;
+		const STARES = document.getElementById( "kfSTARES" ).value;
+food_weight = 100;
+		$.post( kp + "koyomi-fix.cgi", {
+			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
+			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, carry_on:carry_on, order:order,
+			ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
+			PROTCAA:PROTCAA, PROT:PROT, PROTV:PROTV, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, FATV:FATV, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, CHOV:CHOV, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
+			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
+			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
+			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
+			ALC:ALC, NACL_EQ:NACL_EQ,
+			FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, FAPUN3:FAPUN3, FAPUN6:FAPUN6,
+			FIBTG:FIBTG, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTDF:FIBTDF, FIBSDFS:FIBSDFS, FIBSDFP:FIBSDFP, FIBIDF:FIBIDF, STARES:STARES
+		}, function( data ){
+//			$( "#L3" ).html( data );
+
+			const yyyy_mm_dd = yyyy + '-' + mm + '-' + dd;
+			$.post( kp + "koyomi-edit.cgi", { yyyy_mm_dd:yyyy_mm_dd }, function( data ){
+				$( "#L2" ).html( data );
+
+				dl2 = true;
+				dl3 = false;
+				displayBW();
+				displayVIDEO( food_name + ' saved' );
+			});
+
+		});
+	} else{
+		displayVIDEO( 'Food name! (>_<)' );
+	}
+};
+
+
+// Koyomi fix
+var paletteKoyomi = function( yyyy, mm, dd, tdiv, modifyf ){
+	displayVIDEO( modifyf );
+	const palette = document.getElementById( "palette" ).value;
+	$.post( kp + "koyomi-fix.cgi", { command:'palette', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, palette:palette, modifyf:modifyf }, function( data ){ $( "#L3" ).html( data );});
+};
+
+
+// Koyomi fix history
+var koyomiFixHis = function( yyyy, mm, dd, tdiv ){
+	 fix_his_code = document.getElementById( "fix_his_code" ).value;
+	if( fix_his_code != '' ){
+		$.post( kp + "koyomi-fix.cgi", { command:"history", yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, fix_his_code:fix_his_code }, function( data ){
+			$( "#L3" ).html( data );
+		});
+	}
+};
+
+
+// Koyomi modify or copy panel fix
+var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh_mm, meal_time, order ){
+	displayVIDEO( 'fix' );
+	$.post( kp + "koyomi-fix.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time, order:order }, function( data ){
+		$( "#L3" ).html( data );
+
+		dl3 = true;
+		displayBW();
+	});
+};
+
+
+// Koyomi fix reference check
+var koyomiFixRef = function(){
+	if(document.getElementById( "fix_ref" ).checked){
+		document.getElementById( "kffood_weight" ).disabled = false;
+	}else{
+		document.getElementById( "kffood_weight" ).disabled = true;
+	}
+};
+
+// Koyomi fix 100g check
+var koyomiG100check = function(){
+	if(document.getElementById( "g100_check" ).checked){
+		document.getElementById( "kffood_weight" ).disabled = false;
+	}else{
+		document.getElementById( "kffood_weight" ).disabled = true;
+	}
+};
+
+// Koyomi modify or copy panel fix
+var koyomiFixR = function(){
+	dl2 = true;
+	dl3 = false;
+	displayBW();
+};
+
+</script>
+JS
+
+	puts js
+end

@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.2.0 (2024/05/21)
+#Nutrition browser 2020 soul Japanese pack 0.2.1 (2024/05/22)
 
 #==============================================================================
 # STATIC
@@ -93,13 +93,14 @@ def html_head( interrupt, status, sub_title )
   <meta name="twitter:description" content="栄養者のユビキタスツール" />
   <meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/nb.png' />
   <meta name="twitter:image:alt" content="栄養ブラウザロゴ" />
+
   <!-- Jquery -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  #{$JQUERY}
   <!-- <script type="text/javascript" src="./jquery-3.6.0.min.js"></script> -->
 
   <!-- bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  #{$BS_CSS}
+  #{$BS_JS}
   <!-- <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css"> -->
   <!-- <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script> -->
 

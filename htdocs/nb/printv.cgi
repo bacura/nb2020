@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 print web page 0.25b (2024/02/16)
+#Nutrition browser 2020 print web page 0.2.6 (2024/05/22)
 
 #==============================================================================
 # STATIC
@@ -10,6 +10,7 @@ fct_num = 14
 frct_select = %w( 四捨五入 四捨五入 切り上げ 切り捨て )
 accu_check = %w( 通常合計 精密合計 )
 ew_check = %w( 単純g 予想g )
+x_account = '@ho_meow'
 
 #==============================================================================
 # LIBRARY
@@ -28,7 +29,7 @@ def html_head_pv( recipe, x_account )
 	media_code = recipe.media
 	recipe_name = recipe.name
 	x_image = ''
-	x_image = "<meta name='twitter:image' content='https://bacura.jp/nb/#{$PHOTO}/#{media_code[0]}-tn.jpg' />" if media_code.size > 0
+	x_image = "<meta name='twitter:image' content='#{$MYURL}#{$PHOTO}/#{media_code[0]}-tn.jpg' />" if media_code.size > 0
 
 	html = <<-"HTML"
 <!DOCTYPE html>
@@ -45,21 +46,23 @@ def html_head_pv( recipe, x_account )
  	<meta name="twitter:site" content="#{x_account}" />
  	<meta name="twitter:title" content="ユビキタス栄養ツール：栄養ブラウザ" />
  	<meta name="twitter:description" content="公開レシピ紹介///#{recipe_name}" />
- 	#{tx_image}
+ 	#{x_image}
  	<meta name="twitter:image:alt" content="ばきゅら京都Labロゴ" />
 
- 	<!-- bootstrap -->
- 	<link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css">
+  <!-- Jquery -->
+  #{$JQUERY}
+  <!-- <script type="text/javascript" src="./jquery-3.6.0.min.js"></script> -->
+
+  <!-- bootstrap -->
+  #{$BS_CSS}
+  #{$BS_JS}
+  <!-- <link rel="stylesheet" href="bootstrap-dist/css/bootstrap.min.css"> -->
+  <!-- <script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script> -->
+
  	<link rel="stylesheet" href="#{$CSS_PATH}/core.css">
-
-	<!-- Jquery -->
-  	<script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
-	<!-- bootstrap -->
-	<script type="text/javascript" src="bootstrap-dist/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="#{$JS_PATH}/core.js"></script>
-	<script type='text/javascript' src='#{$JS_PATH}/recipe.js'></script>
 
-	#{tracking}
+	#{tracking()}
 </head>
 
 <body class="body">
@@ -334,20 +337,27 @@ user = User.new( @cgi )
 puts "Getting GET<br>" if @debug
 get_data = get_data()
 code = get_data['c']
-template = get_data['t'].to_i
+
+template = get_data['t']
+template = 1 if template == nil
+template = template.to_i
+
 dish = get_data['d'].to_i
+
 palette_ = ''
 if get_data['p'] == nil
 	palette_ = @palette_default_name[1]
 else
 	palette_ = CGI.unescape( get_data['p'] )
 end
+
 frct_accu = get_data['fa']
 if frct_accu == '' || frct_accu == nil
 	frct_accu = 1
 else
 	frct_accu = frct_accu.to_i
 end
+
 ew_mode = get_data['ew'].to_i
 frct_mode = get_data['fm'].to_i
 csc = get_data['cs'].to_s
@@ -371,7 +381,6 @@ if @debug
 	puts "<hr>"
 end
 
-x_account = '@ho_meow'
 puts "html header<br>" if @debug
 html_head_pv( recipe, x_account )
 
@@ -556,7 +565,7 @@ if csc == ''
 			<a href='https://bacura.jp/nb/' class='h4 alert alert-danger'>栄養ブラウザ</a>
 		</div>
 		<div class='col-7'>
-			#{adsense_printv}
+			#{adsense_printv()}
 		</div>
 		<div class='col-2' align="right">#{code}<br>
 			<img src='#{$PHOTO}/#{code}-qr.png'>

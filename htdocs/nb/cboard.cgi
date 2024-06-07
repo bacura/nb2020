@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.2.6 (2024/5/21)
+#Nutrition browser 2020 cutting board 0.2.7 (2024/06/07)
 
 #==============================================================================
 #STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 #LIBRARY
@@ -152,6 +152,12 @@ end
 
 #### Processing weight fraction
 def proc_wf( weight )
+	negative = false
+	if weight < 0
+		negative = true
+		weight *= -1
+	end
+
 	weight_ = BigDecimal( 0 )
 	if weight <= 0.01
 		weight_ = 0.01
@@ -202,6 +208,8 @@ def proc_wf( weight )
 			weight_ += 50
 		end
 	end
+
+	weight_ *= -1 if negative
 
 	return weight_
 end
@@ -973,6 +981,11 @@ LOWER_MENU
 
 puts foot_html
 
+
+#==============================================================================
+# POST PROCESS
+#==============================================================================
+
 puts 'Updating cboard sum<br>' if @debug
 sum_new = ''
 food_list.each do |e| sum_new << "#{e.fn}:#{e.weight}:#{e.unit}:#{e.unitv}:#{e.check}:#{e.init}:#{e.rr}:#{e.ew}\t" end
@@ -981,3 +994,254 @@ sum_new.chop!
 db.query( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{user.name}';", true ) unless user.status == 7
 
 add_his( user, code ) if command == 'load'
+
+#==============================================================================
+# FRONT SCRIPT START
+#==============================================================================
+if command == 'init'
+	js = <<-"JS"
+<script type='text/javascript'>
+
+// Clear foods, and reload CB counter
+var clearCB = function( order, code ){
+	if( order == 'all' ){
+		if( document.getElementById( 'all_check' ).checked ){
+			$.post( "#{script}.cgi", { command:'clear', food_check:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
+
+			flashBW();
+			dl1 = true;
+			displayBW();
+		} else{
+			displayVIDEO( '(>_<)check!' );
+		}
+	} else{
+		$.post( "#{script}.cgi", { command:'clear', order:order, code:code }, function( data ){
+			$( "#L1" ).html( data );
+		});
+	}
+	setTimeout( refreshCBN(), 1000 );
+};
+
+
+// Move a food towrd upper
+var upperCB = function( order, code ){
+	$.post( "#{script}.cgi", { command:'upper', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+// Move a food towrd lower
+var lowerCB = function( order, code ){
+	$.post( "#{script}.cgi", { command:'lower', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+// Change dish number
+var dishCB = function( code ){
+	const dish_num = document.getElementById( "dish_num" ).value;
+	$.post( "#{script}.cgi", { command:'dish', code:code, dish_num:dish_num }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+// Adjust total food weight
+var weightAdj = function( code ){
+	const weight_adj = document.getElementById( "weight_adj" ).value;
+	$.post( "#{script}.cgi", { command:'wadj', code:code, weight_adj:weight_adj }, function( data ){ $( "#L1" ).html( data );});
+	displayVIDEO( 'Adjusted' );
+};
+
+
+// Adjust total food energy
+var energyAdj = function( code ){
+	const energy_adj = document.getElementById( "energy_adj" ).value;
+	$.post( "#{script}.cgi", { command:'eadj', code:code, energy_adj:energy_adj }, function( data ){ $( "#L1" ).html( data );});
+		displayVIDEO( 'Adjusted' );
+};
+
+
+// Adjust total food salt
+var saltAdj = function( code ){
+	const salt_adj = document.getElementById( "salt_adj" ).value;
+	$.post( "#{script}.cgi", { command:'sadj', code:code, salt_adj:salt_adj }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( 'Adjusted' );
+	});
+};
+
+
+// Switch Adjust weight mode
+var changeAdjew = function(){
+	if( document.getElementById( "adjew" ).checked ){ var adjew = 1 }else{ var adjew = 0 }
+	$.post( "#{script}.cgi", { command:'adjew', adjew:adjew }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+// Adjust feeding rate by food loss
+var lossAdj = function( code ){
+	const loss_adj = document.getElementById( "loss_adj" ).value;
+	$.post( "#{script}.cgi", { command:'ladj', code:code, loss_adj:loss_adj }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( 'Adjusted' );
+	});
+};
+
+
+// Sort sum list by food weight
+var sortCB = function( code ){
+	$.post( "#{script}.cgi", { command:'sort', code:code }, function( data ){
+		$( "#L1" ).html( data );
+		displayVIDEO( 'Sorted' );
+	});
+};
+
+
+// Add a food or a delimiter
+var recipeAdd = function( code ){
+	const fn = document.getElementById( "food_add" ).value;
+	$.post( "#{script}.cgi", { command:'add', fn:fn, code:code }, function( data ){ $( "#L1" ).html( data );});
+	setTimeout( refreshCBN(), 1000 );
+};
+
+
+// まな板の調味％ボタンを押してプリセット食品を追加してL1にリストを表示。そしてカウンターも更新
+//var seasoningAdd = function( code ){
+//	const seasoning = document.getElementById( "seasoning" ).value;
+//	$.post( "#{script}.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#L1" ).html( data );});
+//	setTimeout( refreshCBN(), 1000 );
+//};
+
+
+// Update sum
+var weightCB = function( order, unitv_id, unit_id, food_init_id, food_rr_id, code ){
+	const unitv = document.getElementById( unitv_id ).value;
+	const unit = document.getElementById( unit_id ).value;
+	const food_init = document.getElementById( food_init_id ).value;
+	const food_rr = document.getElementById( food_rr_id ).value;
+
+	$.post( "#{script}.cgi", { command:'weight', order:order, unitv:unitv, unit:unit, code:code, food_init:food_init, food_rr:food_rr }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+// Update sum by hidden
+var initCB_SS = function( order, unitv_id, unit_id, food_init_id, food_rr_id, code ){
+	const unitv = document.getElementById( unitv_id ).value;
+	const unit = document.getElementById( unit_id ).value;
+	const food_init = document.getElementById( food_init_id ).value;
+	const food_rr = document.getElementById( food_rr_id ).value;
+
+	$.post( "#{script}.cgi", { command:'weight', order:order, unitv:unitv, unit:unit, code:code, food_init:food_init, food_rr:food_rr }, function( data ){});
+};
+
+
+// Foods check process
+var checkCB = function( order, code, check_id ){
+	let checked = 0;
+	if( document.getElementById( check_id ).checked ){ checked = 1; }
+	$.post( "#{script}.cgi", { command:'check_box', order:order, food_check:checked, code:code }, function( data ){});
+};
+
+
+// Switching all check box
+var allSwitch = function( code ){
+	let allSwitch = 0;
+	if( document.getElementById( 'switch_all' ).checked ){ allSwitch = 1; }
+	$.post( "#{script}.cgi", { command:'allSwitch', code:code, allSwitch:allSwitch }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+// Quick Save
+var quickSave = function( code ){
+	$.post( "#{script}.cgi", { command:'quick_save', code:code }, function( data ){
+		$( "#L1" ).html( data );
+		displayREC();
+	});
+};
+
+
+// GN Exchange
+var gnExchange = function( code ){
+	if( document.getElementById( 'gn_check' ).checked ){
+		$.post( "#{script}.cgi", { command:'gn_exchange', code:code }, function( data ){
+			$( "#L1" ).html( data );
+			displayVIDEO( 'Adjusted' );
+		});
+	} else{
+		displayVIDEO( 'Check!!(>_<)' );
+	}
+};
+
+
+// Display sub-foods
+var cb_detail_sub = function( key, weight, base_fn ){
+	$.get( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
+		$( "#L2" ).html( data );
+
+		flashBW();
+		dl2 = true;
+		displayBW();
+	});
+};
+
+
+// Display para-foods
+var cb_detail_para = function( key, weight, base_fn ){
+	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
+		$( "#L3" ).html( data );
+
+		flashBW();
+		dl3 = true;
+		displayBW();
+	});
+};
+
+
+// Change juten in para-foods
+var cb_detail_para_juten = function( key, weight, base_fn ){
+	let juten = "FLAT";
+	if( document.getElementById( "para_ENERC_KCAL" ).checked ){ juten = "ENERC_KCAL"; }
+	if( document.getElementById( "para_WATER" ).checked ){ juten = "WATER"; }
+	if( document.getElementById( "para_PROTV" ).checked ){ juten = "PROTV"; }
+	if( document.getElementById( "para_FATV" ).checked ){ juten = "FATV"; }
+	if( document.getElementById( "para_FASAT" ).checked ){ juten = "FASAT"; }
+	if( document.getElementById( "para_CHOV" ).checked ){ juten = "CHOV"; }
+	if( document.getElementById( "para_FIB" ).checked ){ juten = "FIB"; }
+	if( document.getElementById( "para_CA" ).checked ){ juten = "CA"; }
+	if( document.getElementById( "para_FE" ).checked ){ juten = "FE"; }
+	if( document.getElementById( "para_CARTBEQ" ).checked ){ juten = "CARTBEQ"; }
+	if( document.getElementById( "para_THIA" ).checked ){ juten = "THIA"; }
+	if( document.getElementById( "para_RIBF" ).checked ){ juten = "RIBF"; }
+	if( document.getElementById( "para_NACL_EQ" ).checked ){ juten = "NACL_EQ"; }
+
+	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn, juten:juten }, function( data ){ $( "#L3" ).html( data );});
+};
+
+
+// Retrun to CB
+var returnCB = function(){
+		flashBW();
+		dl1 = true;
+		displayBW();
+};
+
+
+// Chomi% category
+var chomiSelect =  function(){
+	const code = document.getElementById( "recipe_code" ).value;
+	const chomi_selected = document.getElementById( "chomi_selected" ).value;
+	$.post( "#{script}.cgi", { command:'chomi', code:code, chomi_selected:chomi_selected }, function( data ){ $( "#chomi_cell" ).html( data );});
+};
+
+// Chomi% add
+var chomiAdd =  function(){
+	const code = document.getElementById( "recipe_code" ).value;
+	const chomi_selected = document.getElementById( "chomi_selected" ).value;
+	const chomi_code = document.getElementById( "chomi_code" ).value;
+	$.post( "#{script}.cgi", { command:'chomis', code:code, chomi_selected:chomi_selected, chomi_code:chomi_code }, function( data ){ $( "#L1" ).html( data );});
+};
+
+
+</script>
+
+JS
+
+	puts js
+end

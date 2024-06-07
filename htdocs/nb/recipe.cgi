@@ -531,6 +531,56 @@ end
 js = <<-"JS"
 <script type='text/javascript'>
 
+// Recipe save
+var recipeSave = function( com, code ){
+	const recipe_name = document.getElementById( "recipe_name" ).value;
+	if( recipe_name == '' ){
+		displayVIDEO( 'Recipe name! (>_<)');
+	}
+	else{
+		const type = document.getElementById( "type" ).value;
+		const role = document.getElementById( "role" ).value;
+		const tech = document.getElementById( "tech" ).value;
+		const time = document.getElementById( "time" ).value;
+		const cost = document.getElementById( "cost" ).value;
+		const protocol = document.getElementById( "protocol" ).value;
+
+		let favorite = 0;
+		let public = 0;
+		let protect = 0;
+		let draft = 0;
+		if( document.getElementById( "favorite" ).checked ){ favorite = 1; }
+		if( document.getElementById( "public" ).checked ){ public = 1; }
+		if( document.getElementById( "protect" ).checked ){ protect = 1; }
+		if( document.getElementById( "draft" ).checked ){ draft = 1; }
+
+		let root = '';
+		if( document.getElementById( "root" ) !== null ){ root = document.getElementById( "root" ).value; }
+
+		$.post( "#{script}.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
+			$( "#L2" ).html( data );
+			initCB( 'reload', '' );
+			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#LM" ).html( data );});
+			displayVIDEO( recipe_name );
+		});
+	}
+};
+
+
+// Recipe protocol moving save
+var recipeProtocol = function( code ){
+	let protect = 0;
+	if( document.getElementById( "protect" ).checked ){ protect = 1; }
+
+	if( code != '' && protect != 1 ){
+		const protocol = document.getElementById( "protocol" ).value;
+		$.post( "#{script}.cgi", { command:'protocol', code:code, protocol:protocol }, function( data ){
+			displayREC();
+		});
+	}
+};
+
+
 // Public button
 var recipeBit_public = function(){
 	if( document.getElementById( "public" ).checked ){

@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.6.3 (2024/04/30)
+// Nutorition Browser 2020 core.js 0.6.5 (2024/06/07)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -146,15 +146,15 @@ displayVIDEO = function( msg ){
 
 
 // Displaying message on VIDEO rec mode
-displayVIDEOr = function( msg ){
-	video.innerHTML = msg;
+displayREC = function(){
+	video.innerHTML = "●";
 	video.style.display = 'block';
-	video.style.color = 'red';
+	video.style.color = 'orangered';
 	var fx = function(){
 		video.innerHTML = "";
 		video.style.display = 'none';
 	};
-	setTimeout( fx, 2000 );
+	setTimeout( fx, 1000 );
 }
 
 
@@ -416,7 +416,7 @@ var aliasRequest = function( food_no ){
 cp2words = function( words, qcate ){
 	document.getElementById( "words" ).value = words;
 	if( qcate != '' ){ document.getElementById( "qcate" ).value = qcate; }
-
+	$( '#modal_tip' ).modal( 'hide' );
 	displayVIDEO( 'Picked' );
 };
 
@@ -424,7 +424,6 @@ cp2words = function( words, qcate ){
 /////////////////////////////////////////////////////////////////////////////////
 // history /////////////////////////////////////////////////////////////////////////
 
-// Display history
 const historyInit = function(){
 	flashBW();
 	$.post( "history.cgi", { command:'menu' }, function( data ){
@@ -585,7 +584,6 @@ var pseudoDelete = function( code ){
 /////////////////////////////////////////////////////////////////////////////////
 // Bookshelf /////////////////////////////////////////////////////////////////////////
 
-// Display Bookshelf
 var bookOpen = function( url, depth ){
 	dline = false;
 	displayBW();
@@ -765,7 +763,6 @@ const memoryOpenLink = function( words, depth ){
 /////////////////////////////////////////////////////////////////////////////////
 // Meta data //////////////////////////////////////////////////////////////////////////
 
-// Display meta data
 var metaDisplay = function( com ){
 	$.post( "meta.cgi", { command:com }, function( data ){
 		$( "#L3" ).html( data );
@@ -801,9 +798,8 @@ var configForm = function( mod ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// Photo //////////////////////////////////////////////////////////////////////////
+// Modal Photo viewer //////////////////////////////////////////////////////////////////////////
 
-// delete photo from media db
 const modalPhotoOn = function( code ){
 	$.post( "photo.cgi", { command:'modal', code:code }, function( data ){
 		$( '#MODAL' ).html( data );
@@ -814,7 +810,7 @@ const modalPhotoOn = function( code ){
 // Chopping boad interface////////////////////////////////////////////////////////////////////////
 
 // Add food into sum, and reload CB counter
-var addingCB = function( fn, weight_id, food_name ){
+const addingCB = function( fn, weight_id, food_name ){
 
 	displayVIDEO( weight_id );
 	if( weight_id != '' ){
@@ -838,7 +834,7 @@ var addingCB = function( fn, weight_id, food_name ){
 
 
 // Only reload CB number
-var refreshCBN = function(){
+const refreshCBN = function(){
 	$.post( "cboardm.cgi", { mode:'refresh' }, function( data ){ $( "#CBN" ).html( data );});
 };
 
@@ -846,14 +842,32 @@ var refreshCBN = function(){
 ////////////////////////////////////////////////////////////////////////////////////////
 // Chopping boad ////////////////////////////////////////////////////////////////////////
 
-// 変更ボタンを押してsumの食品を変更する
+// Display CB sum
+const initCB = function( com, code, recipe_user ){
+	if( com == 'reload' ){
+		$.post( "cboard.cgi", { command:'reload', code:code }, function( data ){
+			$( "#L1" ).html( data );
+		});
+	}else{
+		$.post( "cboard.cgi", { command:'init', code:code, recipe_user:recipe_user }, function( data ){
+			$( "#L1" ).html( data );
+
+			flashBW();
+			dl1 = true;
+			displayBW();
+			setTimeout( refreshCBN(), 1000 );
+		});
+	}
+};
+
+// Exchange food in sum
 const changingCB = function( fn, base_fn, weight ){
 	if( fn !='' ){
 		$.post( "cboardm.cgi", { food_no:fn, food_weight:weight, base_fn:base_fn, mode:'change' }, function( data ){
 			$( "#CBN" ).html( data );
-			displayVIDEO( fn + 'has modified' );
+			displayREC();
 
-			$.post( "cboard.cgi", { command:'refresh', code:'' }, function( data ){
+			$.post( "#{script}.cgi", { command:'refresh', code:'' }, function( data ){
 				$( "#L1" ).html( data );
 
 				flashBW();
@@ -865,261 +879,10 @@ const changingCB = function( fn, base_fn, weight ){
 };
 
 
-// Display CB sum in L1
-var initCB = function( com, code, recipe_user ){
-	$.post( "cboard.cgi", { command:com, code:code, recipe_user:recipe_user }, function( data ){
-		$( "#L1" ).html( data );
-
-		flashBW();
-		dl1 = true;
-		displayBW();
-	});
-
-	setTimeout( refreshCBN(), 1000 );
-};
-
-
-// Clear foods, and reload CB counter
-var clearCB = function( order, code ){
-	if( order == 'all'){
-		if( document.getElementById( 'all_check' ).checked ){
-			$.post( "cboard.cgi", { command:'clear', food_check:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
-
-			flashBW();
-			dl1 = true;
-			displayBW();
-		} else{
-			displayVIDEO( '(>_<)check!' );
-		}
-	} else{
-		$.post( "cboard.cgi", { command:'clear', order:order, code:code }, function( data ){
-			$( "#L1" ).html( data );
-		});
-	}
-	setTimeout( refreshCBN(), 1000 );
-};
-
-
-// 食品上ボタンを押してなま板リストを更新してL1に表示
-var upperCB = function( order, code ){
-	$.post( "cboard.cgi", { command:'upper', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// まな板の食品下ボタンを押してL1にリストを更新
-var lowerCB = function( order, code ){
-	$.post( "cboard.cgi", { command:'lower', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// Changing dish number
-var dishCB = function( code ){
-	var dish_num = document.getElementById( "dish_num" ).value;
-	$.post( "cboard.cgi", { command:'dish', code:code, dish_num:dish_num }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// Adjusting total food weight
-var weightAdj = function( code ){
-	var weight_adj = document.getElementById( "weight_adj" ).value;
-	$.post( "cboard.cgi", { command:'wadj', code:code, weight_adj:weight_adj }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( 'Adjusted' );
-};
-
-
-// Adjusting total food energy
-var energyAdj = function( code ){
-	var energy_adj = document.getElementById( "energy_adj" ).value;
-	$.post( "cboard.cgi", { command:'eadj', code:code, energy_adj:energy_adj }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( 'Adjusted' );
-};
-
-
-// Adjusting total food salt
-var saltAdj = function( code ){
-	var salt_adj = document.getElementById( "salt_adj" ).value;
-	$.post( "cboard.cgi", { command:'sadj', code:code, salt_adj:salt_adj }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Adjusted' );
-	});
-};
-
-
-// Switching Adjust weight mode
-var changeAdjew = function(){
-	if( document.getElementById( "adjew" ).checked ){ var adjew = 1 }else{ var adjew = 0 }
-	$.post( "cboard.cgi", { command:'adjew', adjew:adjew }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// Adjusting feeding rate by food loss
-var lossAdj = function( code ){
-	var loss_adj = document.getElementById( "loss_adj" ).value;
-	$.post( "cboard.cgi", { command:'ladj', code:code, loss_adj:loss_adj }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Adjusted' );
-	});
-};
-
-
-// Sorting sum list by food weight
-var sortCB = function( code ){
-	$.post( "cboard.cgi", { command:'sort', code:code }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Sorted' );
-	});
-};
-
-
-// まな板の食品番号追加ボタンを押して食品を追加してL1にリストを表示。そしてカウンターも更新
-var recipeAdd = function( code ){
-	var fn = document.getElementById( "food_add" ).value;
-	$.post( "cboard.cgi", { command:'add', fn:fn, code:code }, function( data ){ $( "#L1" ).html( data );});
-	setTimeout( refreshCBN(), 1000 );
-};
-
-
-// まな板の調味％ボタンを押してプリセット食品を追加してL1にリストを表示。そしてカウンターも更新
-var seasoningAdd = function( code ){
-	var seasoning = document.getElementById( "seasoning" ).value;
-	$.post( "cboard.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#L1" ).html( data );});
-	setTimeout( refreshCBN(), 1000 );
-};
-
-
-// まな板の重量情報更新でL1にリストを更新
-var weightCB = function( order, unitv_id, unit_id, food_init_id, food_rr_id, code ){
-	var unitv = document.getElementById( unitv_id ).value;
-	var unit = document.getElementById( unit_id ).value;
-	var food_init = document.getElementById( food_init_id ).value;
-	var food_rr = document.getElementById( food_rr_id ).value;
-
-	$.post( "cboard.cgi", { command:'weight', order:order, unitv:unitv, unit:unit, code:code, food_init:food_init, food_rr:food_rr }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// まな板の初期状態更新で裏で更新
-var initCB_SS = function( order, unitv_id, unit_id, food_init_id, food_rr_id, code ){
-	var unitv = document.getElementById( unitv_id ).value;
-	var unit = document.getElementById( unit_id ).value;
-	var food_init = document.getElementById( food_init_id ).value;
-	var food_rr = document.getElementById( food_rr_id ).value;
-
-	$.post( "cboard.cgi", { command:'weight', order:order, unitv:unitv, unit:unit, code:code, food_init:food_init, food_rr:food_rr }, function( data ){});
-};
-
-
-// まな板の食品チェックボックスを押してL1にリストを更新
-var checkCB = function( order, code, check_id ){
-	var checked = 0;
-	if( document.getElementById( check_id ).checked ){ checked = 1; }
-	$.post( "cboard.cgi", { command:'check_box', order:order, food_check:checked, code:code }, function( data ){});
-};
-
-
-// Switching all check box
-var allSwitch = function( code ){
-	var allSwitch = 0;
-	if( document.getElementById( 'switch_all' ).checked ){ allSwitch = 1; }
-	$.post( "cboard.cgi", { command:'allSwitch', code:code, allSwitch:allSwitch }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// Quick Save
-var quickSave = function( code ){
-	$.post( "cboard.cgi", { command:'quick_save', code:code }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Saved' );
-	});
-};
-
-
-// GN Exchange
-const gnExchange = function( code ){
-	if( document.getElementById( 'gn_check' ).checked ){
-		$.post( "cboard.cgi", { command:'gn_exchange', code:code }, function( data ){
-			$( "#L1" ).html( data );
-			displayVIDEO( 'Adjusted' );
-		});
-	} else{
-		displayVIDEO( 'Check!!(>_<)' );
-	}
-};
-
-
-// まな板からでL5閲覧ウインドウを表示する。
-const cb_detail_sub = function( key, weight, base_fn ){
-	$.get( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
-		$( "#L2" ).html( data );
-
-		flashBW();
-		dl2 = true;
-		displayBW();
-	});
-};
-
-
-// パラレルウインドウを表示する。
-const cb_detail_para = function( key, weight, base_fn ){
-	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
-		$( "#L3" ).html( data );
-
-		flashBW();
-		dl3 = true;
-		displayBW();
-	});
-};
-
-
-// パラレルウインドウの重点を変更する
-const cb_detail_para_juten = function( key, weight, base_fn ){
-	let juten = "FLAT";
-	if( document.getElementById( "para_ENERC_KCAL" ).checked ){ juten = "ENERC_KCAL"; }
-	if( document.getElementById( "para_WATER" ).checked ){ juten = "WATER"; }
-	if( document.getElementById( "para_PROTV" ).checked ){ juten = "PROTV"; }
-	if( document.getElementById( "para_FATV" ).checked ){ juten = "FATV"; }
-	if( document.getElementById( "para_FASAT" ).checked ){ juten = "FASAT"; }
-	if( document.getElementById( "para_CHOV" ).checked ){ juten = "CHOV"; }
-	if( document.getElementById( "para_FIB" ).checked ){ juten = "FIB"; }
-	if( document.getElementById( "para_CA" ).checked ){ juten = "CA"; }
-	if( document.getElementById( "para_FE" ).checked ){ juten = "FE"; }
-	if( document.getElementById( "para_CARTBEQ" ).checked ){ juten = "CARTBEQ"; }
-	if( document.getElementById( "para_THIA" ).checked ){ juten = "THIA"; }
-	if( document.getElementById( "para_RIBF" ).checked ){ juten = "RIBF"; }
-	if( document.getElementById( "para_NACL_EQ" ).checked ){ juten = "NACL_EQ"; }
-
-	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn, juten:juten }, function( data ){ $( "#L3" ).html( data );});
-};
-
-
-// Retrun to CB
-const returnCB = function(){
-		flashBW();
-		dl1 = true;
-		displayBW();
-};
-
-
-// Chomi% category
-const chomiSelect =  function(){
-	const code = document.getElementById( "recipe_code" ).value;
-	const chomi_selected = document.getElementById( "chomi_selected" ).value;
-	$.post( "cboard.cgi", { command:'chomi', code:code, chomi_selected:chomi_selected }, function( data ){ $( "#chomi_cell" ).html( data );});
-};
-
-// Chomi% add
-const chomiAdd =  function(){
-	const code = document.getElementById( "recipe_code" ).value;
-	const chomi_selected = document.getElementById( "chomi_selected" ).value;
-	const chomi_code = document.getElementById( "chomi_code" ).value;
-	$.post( "cboard.cgi", { command:'chomis', code:code, chomi_selected:chomi_selected, chomi_code:chomi_code }, function( data ){ $( "#L1" ).html( data );});
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
-// Recipe ////////////////////////////////////////////////////////////////////////
+// Recipe editor ////////////////////////////////////////////////////////////////////////
 
-// Recipe init
 const recipeEdit = function( com, code ){
 	$.post( "recipe.cgi", { command:com, code:code }, function( data ){
 		$( "#L2" ).html( data );
@@ -1129,60 +892,9 @@ const recipeEdit = function( com, code ){
 };
 
 
-// Recipe save
-const recipeSave = function( com, code ){
-	const recipe_name = document.getElementById( "recipe_name" ).value;
-	if( recipe_name == '' ){
-		displayVIDEO( 'Recipe name! (>_<)');
-	}
-	else{
-		const type = document.getElementById( "type" ).value;
-		const role = document.getElementById( "role" ).value;
-		const tech = document.getElementById( "tech" ).value;
-		const time = document.getElementById( "time" ).value;
-		const cost = document.getElementById( "cost" ).value;
-		const protocol = document.getElementById( "protocol" ).value;
-
-		let favorite = 0;
-		let public = 0;
-		let protect = 0;
-		let draft = 0;
-		if( document.getElementById( "favorite" ).checked ){ favorite = 1; }
-		if( document.getElementById( "public" ).checked ){ public = 1; }
-		if( document.getElementById( "protect" ).checked ){ protect = 1; }
-		if( document.getElementById( "draft" ).checked ){ draft = 1; }
-
-		let root = '';
-		if( document.getElementById( "root" ) !== null ){ root = document.getElementById( "root" ).value; }
-
-		$.post( "recipe.cgi", { command:com, code:code, recipe_name:recipe_name, type:type, role:role, tech:tech, time:time, cost:cost, protocol:protocol, root:root, favorite:favorite, public:public, protect:protect, draft:draft }, function( data ){
-			$( "#L2" ).html( data );
-			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-			$.post( "photo.cgi", { command:'view_series', code:'', base:'recipe' }, function( data ){ $( "#LM" ).html( data );});
-			displayVIDEO( recipe_name );
-		});
-	}
-};
-
-
-// Recipe protocol moving save
-const recipeProtocol = function( code ){
-	let protect = 0;
-	if( document.getElementById( "protect" ).checked ){ protect = 1; }
-
-	if( code != '' && protect != 1 ){
-		const protocol = document.getElementById( "protocol" ).value;
-		$.post( "recipe.cgi", { command:'protocol', code:code, protocol:protocol }, function( data ){
-			displayVIDEO( '●' );
-		});
-	}
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////////
 // Recipe list ////////////////////////////////////////////////////////////////////////
 
-// Dosplaying recipe list with reset
 const recipeList = function( com ){
 	$.post( "recipel.cgi", { command:com }, function( data ){
 		$( "#L1" ).html( data );
@@ -1381,11 +1093,10 @@ var savePseudo_R2F = function( code ){
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
-// 印刷用清書レシピ /////////////////////////////////////////////////////////////////
+// Print selector /////////////////////////////////////////////////////////////////
 
-// レシピ帳の印刷ボタンを押してL2に印刷画面テンプレートを表示
-var print_templateSelect = function( code ){
-	$.post( "print.cgi", { command:'select', code:code }, function( data ){
+const print_templateSelect = function( code ){
+	$.post( "print.cgi", { command:'init', code:code }, function( data ){
 		$( "#L2" ).html( data );
 		$( '#modal_tip' ).modal( 'hide' );
 
@@ -1394,32 +1105,6 @@ var print_templateSelect = function( code ){
 		displayBW();
 	});
 };
-
-// 印刷テンプレート画面の戻るボタンを押してレシピ帳に復帰
-var print_templateReturen = function(){
-		flashBW();
-		dl1 = true;
-		displayBW();
-};
-
-// 印刷テンプレート画面の印刷表示ボタンを押して新規タブに印刷画面を表示する。
-var openPrint = function( uname, code, template, dish ){
-	var palette = document.getElementById( "palette" ).value;
-	var frct_mode = document.getElementById( "frct_mode" ).value;
-	if( document.getElementById( "frct_accu" ).checked ){ var frct_accu = 1; }else{ var frct_accu = 0; }
-	if( document.getElementById( "ew_mode" ).checked ){ var ew_mode = 1; }else{ var ew_mode = 0; }
-
-	if( document.getElementById( "csc" ).checked ){
-		var csc = document.getElementById( "csc" ).value;
-		var url = 'printv.cgi?&c=' + code + '&t=' + template + '&d=' + dish + '&p=' + palette + '&fa=' + frct_accu + '&ew=' + ew_mode + '&fm=' + frct_mode + '&cs=' + csc;
-	}else{
-		var url = 'printv.cgi?&c=' + code + '&t=' + template + '&d=' + dish + '&p=' + palette + '&fa=' + frct_accu + '&ew=' + ew_mode + '&fm=' + frct_mode;
-	}
-	window.open( url, 'print' );
-	displayVIDEO( 'Printing page was opend on the another tab' );
-};
-
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Set menu ////////////////////////////////////////////////////////////////////////

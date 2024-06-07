@@ -16,46 +16,14 @@ var initKoyomi = function(){
 	displayBW();
 };
 
-// Koyomi change
-var changeKoyomi = function(){
-	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	$.post( kp + "koyomi.cgi", { command:"init", yyyy_mm:yyyy_mm }, function( data ){ $( "#L1" ).html( data );});
-};
-
-// Koyomi freeze
-var freezeKoyomi = function( dd ){
-	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	var freeze_check = document.getElementById( "freeze_check" + dd ).checked ;
-	$.post( kp + "koyomi.cgi", { command:'freeze', yyyy_mm:yyyy_mm, dd, freeze_check:freeze_check }, function( data ){ $( "#L1" ).html( data );});
-};
-
-// Koyomi freeze all
-var freezeKoyomiAll = function(){
-	var yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	var freeze_check_all = document.getElementById( "freeze_check_all" ).checked ;
-	$.post( kp + "koyomi.cgi", { command:'freeze_all', yyyy_mm:yyyy_mm,  freeze_check_all:freeze_check_all }, function( data ){ $( "#L1" ).html( data );});
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi Edit//////////////////////////////////////////////////////////////
 
 // Koyomi edit
-const editKoyomi = function( com, dd ){
-	const yyyy_mm = document.getElementById( "yyyy_mm" ).value;
-	$.post( kp + "koyomi-edit.cgi", { command:com, yyyy_mm:yyyy_mm, dd:dd }, function( data ){
-		$( "#L2" ).html( data );
-		flashBW();
-		dl2 = true;
-		dline = true;
-		displayBW();
-	});
-};
-
-// Koyomi edit 2 with yy_mm_dd
-const editKoyomi2 = function( com, dd ){
-	const yyyy_mm_dd = document.getElementById( "yyyy_mm_dd" ).value;
-	$.post( kp + "koyomi-edit.cgi", { command:com, yyyy_mm_dd:yyyy_mm_dd, dd:dd }, function( data ){
+const editKoyomi = function( yyyy_mm_dd ){
+//	const yyyy_mm = document.getElementById( "yyyy_mm" ).value;
+	$.post( kp + "koyomi-edit.cgi", { command:'init', yyyy_mm_dd:yyyy_mm_dd }, function( data ){
 		$( "#L2" ).html( data );
 		flashBW();
 		dl2 = true;
@@ -72,10 +40,10 @@ const deleteKoyomi = function( yyyy, mm, dd, tdiv, code, order ){
 // Koyomi memo
 const memoKoyomi = function( yyyy, mm, dd ){
 	const memo = document.getElementById( "memo" ).value;
-	if( document.getElementById( "bind2n" ).checked ){ var bind2n = 1; }else{ var bind2n = 0; };
-	$.post( kp + "koyomi-edit.cgi", { command:'memo', yyyy:yyyy, mm:mm, dd:dd, memo:memo, bind2n:bind2n }, function( data ){
+//	if( document.getElementById( "bind2n" ).checked ){ var bind2n = 1; }else{ var bind2n = 0; };
+	$.post( kp + "koyomi-edit.cgi", { command:'memo', yyyy:yyyy, mm:mm, dd:dd, memo:memo }, function( data ){
 		$( "#L2" ).html( data );
-		displayVIDEO( 'memo saved');
+		displayREC();
 	});
 };
 
@@ -84,7 +52,7 @@ const koyomiSaveSome = function( yyyy, mm, dd, tdiv, id ){
 	const some = document.getElementById( id ).value;
 	$.post( kp + "koyomi-edit.cgi", { command:'some', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh:99, some:some }, function( data ){
 		$( "#L2" ).html( data );
-		displayVIDEO( 'Something saved' );
+		displayREC();
 	});
 };
 
@@ -115,8 +83,8 @@ const editKoyomiR = function( yyyy, mm ){
 // Koyomi Direct fix data //////////////////////////////////////////////////////////////
 
 // Koyomi fix
-var fixKoyomi = function( com, yyyy, mm, dd, tdiv ){
-	$.post( kp + "koyomi-fix.cgi", { command:com, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){
+const fixKoyomi = function( yyyy, mm, dd, tdiv ){
+	$.post( kp + "koyomi-fix.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){
 		$( "#L3" ).html( data );
 
 		dl2 = false;
@@ -124,172 +92,6 @@ var fixKoyomi = function( com, yyyy, mm, dd, tdiv ){
 		displayBW();
 	});
 };
-
-// Koyomi fix
-var paletteKoyomi = function( yyyy, mm, dd, tdiv, modifyf ){
-	displayVIDEO( modifyf );
-	var palette = document.getElementById( "palette" ).value;
-	$.post( kp + "koyomi-fix.cgi", { command:'palette', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, palette:palette, modifyf:modifyf }, function( data ){ $( "#L3" ).html( data );});
-};
-
-// Koyomi fix 100g check
-var koyomiG100check = function(){
-	if(document.getElementById( "g100_check" ).checked){
-		document.getElementById( "kffood_weight" ).disabled = false;
-	}else{
-		document.getElementById( "kffood_weight" ).disabled = true;
-	}
-};
-
-
-// Koyomi fix save
-var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
-	var food_name = document.getElementById( "food_name" ).value;
-	var hh_mm = document.getElementById( "hh_mm_fix" ).value;
-	var meal_time = document.getElementById( "meal_time_fix" ).value;
-	var food_number = document.getElementById( "food_number" ).value;
-	var carry_on = 0;
-	if( document.getElementById( "carry_on" ).checked ){ carry_on = 1; }
-
-	if( food_name != '' ){
-		if(document.getElementById( "g100_check" ).checked){
-			var food_weight = document.getElementById( "kffood_weight" ).value;
-		}else{
-			var food_weight = 100;
-		}
-		var ENERC = document.getElementById( "kfENERC" ).value;
-		var ENERC_KCAL = document.getElementById( "kfENERC_KCAL" ).value;
-		var WATER = document.getElementById( "kfWATER" ).value;
-
-		var PROTCAA = document.getElementById( "kfPROTCAA" ).value;
-		var PROT = document.getElementById( "kfPROT" ).value;
-		var PROTV = document.getElementById( "kfPROTV" ).value;
-		var FATNLEA = document.getElementById( "kfFATNLEA" ).value;
-		var CHOLE = document.getElementById( "kfCHOLE" ).value;
-		var FAT = document.getElementById( "kfFAT" ).value;
-		var FATV = document.getElementById( "kfFATV" ).value;
-		var CHOAVLM = document.getElementById( "kfCHOAVLM" ).value;
-		var CHOAVL = document.getElementById( "kfCHOAVL" ).value;
-		var CHOAVLDF = document.getElementById( "kfCHOAVLDF" ).value;
-		var CHOV = document.getElementById( "kfCHOV" ).value;
-		var FIB = document.getElementById( "kfFIB" ).value;
-		var POLYL = document.getElementById( "kfPOLYL" ).value;
-		var CHOCDF = document.getElementById( "kfCHOCDF" ).value;
-		var OA = document.getElementById( "kfOA" ).value;
-
-		var ASH = document.getElementById( "kfASH" ).value;
-		var NA = document.getElementById( "kfNA" ).value;
-		var K = document.getElementById( "kfK" ).value;
-		var CA = document.getElementById( "kfCA" ).value;
-		var MG = document.getElementById( "kfMG" ).value;
-		var P = document.getElementById( "kfP" ).value;
-		var FE = document.getElementById( "kfFE" ).value;
-		var ZN = document.getElementById( "kfZN" ).value;
-		var CU = document.getElementById( "kfCU" ).value;
-		var MN = document.getElementById( "kfMN" ).value;
-		var ID = document.getElementById( "kfID" ).value;
-		var SE = document.getElementById( "kfSE" ).value;
-		var CR = document.getElementById( "kfCR" ).value;
-		var MO = document.getElementById( "kfMO" ).value;
-
-		var RETOL = document.getElementById( "kfRETOL" ).value;
-		var CARTA = document.getElementById( "kfCARTA" ).value;
-		var CARTB = document.getElementById( "kfCARTB" ).value;
-		var CRYPXB = document.getElementById( "kfCRYPXB" ).value;
-		var CARTBEQ = document.getElementById( "kfCARTBEQ" ).value;
-		var VITA_RAE = document.getElementById( "kfVITA_RAE" ).value;
-		var VITD = document.getElementById( "kfVITD" ).value;
-		var TOCPHA = document.getElementById( "kfTOCPHA" ).value;
-		var TOCPHB = document.getElementById( "kfTOCPHB" ).value;
-		var TOCPHG = document.getElementById( "kfTOCPHG" ).value;
-		var TOCPHD = document.getElementById( "kfTOCPHD" ).value;
-		var VITK = document.getElementById( "kfVITK" ).value;
-
-		var THIA = document.getElementById( "kfTHIA" ).value;
-		var RIBF = document.getElementById( "kfRIBF" ).value;
-		var NIA = document.getElementById( "kfNIA" ).value;
-		var NE = document.getElementById( "kfNE" ).value;
-		var VITB6A = document.getElementById( "kfVITB6A" ).value;
-		var VITB12 = document.getElementById( "kfVITB12" ).value;
-		var FOL = document.getElementById( "kfFOL" ).value;
-		var PANTAC = document.getElementById( "kfPANTAC" ).value;
-		var BIOT = document.getElementById( "kfBIOT" ).value;
-		var VITC = document.getElementById( "kfVITC" ).value;
-
-		var ALC = document.getElementById( "kfALC" ).value;
-		var NACL_EQ = document.getElementById( "kfNACL_EQ" ).value;
-
-		var FASAT = document.getElementById( "kfFASAT" ).value;
-		var FAMS = document.getElementById( "kfFAMS" ).value;
-		var FAPU = document.getElementById( "kfFAPU" ).value;
-		var FAPUN3 = document.getElementById( "kfFAPUN3" ).value;
-		var FAPUN6 = document.getElementById( "kfFAPUN6" ).value;
-
-		var FIBTG = document.getElementById( "kfFIBTG" ).value;
-		var FIBSOL = document.getElementById( "kfFIBSOL" ).value;
-		var FIBINS = document.getElementById( "kfFIBINS" ).value;
-		var FIBTDF = document.getElementById( "kfFIBTDF" ).value;
-		var FIBSDFS = document.getElementById( "kfFIBSDFS" ).value;
-		var FIBSDFP = document.getElementById( "kfFIBSDFP" ).value;
-		var FIBIDF = document.getElementById( "kfFIBIDF" ).value;
-		var STARES = document.getElementById( "kfSTARES" ).value;
-
-		$.post( kp + "koyomi-fix.cgi", {
-			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
-			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, carry_on:carry_on, order:order,
-			ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
-			PROTCAA:PROTCAA, PROT:PROT, PROTV:PROTV, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, FATV:FATV, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, CHOV:CHOV, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
-			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
-			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
-			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
-			ALC:ALC, NACL_EQ:NACL_EQ,
-			FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, FAPUN3:FAPUN3, FAPUN6:FAPUN6,
-			FIBTG:FIBTG, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTDF:FIBTDF, FIBSDFS:FIBSDFS, FIBSDFP:FIBSDFP, FIBIDF:FIBIDF, STARES:STARES
-		}, function( data ){
-//			$( "#L3" ).html( data );
-			$.post( kp + "koyomi-edit.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd }, function( data ){
-				$( "#L2" ).html( data );
-
-				dl2 = true;
-				dl3 = false;
-				displayBW();
-				displayVIDEO( food_name + ' saved' );
-			});
-
-		});
-	} else{
-		displayVIDEO( 'Food name! (>_<)' );
-	}
-};
-
-// Koyomi fix history
-var koyomiFixHis = function( yyyy, mm, dd, tdiv ){
-	var fix_his_code = document.getElementById( "fix_his_code" ).value;
-	if( fix_his_code != '' ){
-		$.post( kp + "koyomi-fix.cgi", { command:"history", yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, fix_his_code:fix_his_code }, function( data ){
-			$( "#L3" ).html( data );
-		});
-	}
-};
-
-// Koyomi modify or copy panel fix
-var koyomiFixR = function(){
-	dl2 = true;
-	dl3 = false;
-	displayBW();
-};
-
-// Koyomi modify or copy panel fix
-var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh_mm, meal_time, order ){
-	displayVIDEO( 'fix' );
-	$.post( kp + "koyomi-fix.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time, order:order }, function( data ){
-		$( "#L3" ).html( data );
-
-		dl3 = true;
-		displayBW();
-	});
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi import panel//////////////////////////////////////////////////////////////

@@ -51,7 +51,7 @@ def language_pack( language )
 		'status' 	=> "ステータス",\
 		'family' 	=> "親子集合",\
 		'display'	=> "表示数",\
-		'delete'	=> "削除<br>（要チェック）",\
+		'delete'	=> "削除",\
 		'pick'		=> "コードピック",\
 		'com' 		=> "コマンド",\
 		'menu' 		=> "献立＋",\
@@ -496,7 +496,7 @@ when 'modal_body'
 	end
 
 	if recipe.user.name == user.name && recipe.protect == 0
-		puts "<td><input type='checkbox' id='#{recipe.code}'>&nbsp;<span onclick=\"recipeDelete( '#{recipe.code}', #{page} )\">#{l['trash']}</span><br><br>#{l['delete']}</td>"
+		puts "<td align='center' ><input type='checkbox' id='#{recipe.code}'>&nbsp;<span onclick=\"recipeDelete( '#{recipe.code}', #{page} )\">#{l['trash']}</span><br><br>#{l['delete']}</td>"
 	end
 
 	puts '</tr></table>'

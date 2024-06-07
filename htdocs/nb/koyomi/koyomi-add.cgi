@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi adding panel 0.3.1 (2024/05/20)
+#Nutrition browser 2020 koyomi adding panel 0.3.2 (2024/05/24)
 
 #==============================================================================
 # STATIC
@@ -287,11 +287,10 @@ week_count = calendar.wf
 weeks = [l['sun'], l['mon'], l['tue'], l['wed'], l['thu'], l['fri'], l['sat']]
 1.upto( calendar.ddl ) do |day_|
 	kmrd = koyomi_mx[day_]
-
 	date_html << "<tr id='day#{day_}'>"
 	style = ''
 	style = 'color:red;' if week_count == 0
-	onclick = "onclick=\"editKoyomi2( 'init', '#{day_}' )\""
+	onclick = "onclick=\"editKoyomi( '#{calendar.yyyy}-#{calendar.mm}-#{day_}' )\""
 	date_html << "<td style='#{style}' #{onclick}>#{day_} (#{weeks[week_count]})</td>"
 
 	unless kfreeze_flags[day_]

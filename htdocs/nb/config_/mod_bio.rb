@@ -9,6 +9,7 @@ def config_module( cgi, db )
 	time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120]
 
 	step = cgi['step']
+
 	r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
