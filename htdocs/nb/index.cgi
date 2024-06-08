@@ -223,7 +223,7 @@ def html_nav( user, l, db )
     cb = "#{l['cboard']} <span class='badge rounded-pill bg-dark text-light' id='CBN'>#{cb_num}</span>"
     mb = "#{l['table']} <span class='badge rounded-pill bg-dark text-light' id='MBN'>#{meal_num}</span>"
     special_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' id='category0' onclick='summonL1( 0 )''>#{@category[0]}</button>"
-    his_button = "<button type='button' class='btn btn-primary btn-sm nav_button' onclick='historyInit( 'init' )'>#{l['history']}</button>"
+    his_button = "<button type='button' class='btn btn-primary btn-sm nav_button' onclick=\"historyInit( 'init' )\">#{l['history']}</button>"
     sum_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initCB( 'init' )\">#{cb}</button>"
     recipe_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"recipeList( 'init' )\">#{l['recipel']}</button>"
     menu_button = "<button type='button' class='btn btn-outline-dark btn-sm nav_button' onclick=\"initMeal( 'init' )\">#{mb}</button>"
