@@ -998,7 +998,7 @@ add_his( user, code ) if command == 'load'
 #==============================================================================
 # FRONT SCRIPT START
 #==============================================================================
-if command == 'init'
+if command == 'init' || command == 'load'
 	js = <<-"JS"
 <script type='text/javascript'>
 

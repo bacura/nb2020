@@ -849,7 +849,7 @@ const initCB = function( com, code, recipe_user ){
 			$( "#L1" ).html( data );
 		});
 	}else{
-		$.post( "cboard.cgi", { command:'init', code:code, recipe_user:recipe_user }, function( data ){
+		$.post( "cboard.cgi", { command:com, code:code, recipe_user:recipe_user }, function( data ){
 			$( "#L1" ).html( data );
 
 			flashBW();
