@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.6.5 (2024/06/07)
+// Nutorition Browser 2020 core.js 0.6.6 (2024/06/16)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -665,40 +665,6 @@ const editMemory = function( code, mode ){
 		dlf = true;
 		displayBW();
 	});
-};
-
-const saveMemory = function( code, mode ){
-	const category = document.getElementById( 'edit_category' ).value;
-	const pointer = document.getElementById( 'edit_pointer' ).value;
-	const content = document.getElementById( 'edit_content' ).value;
-
-	if( pointer != '' ){
-		$.post( "memory-edit.cgi", { command:'save', code:code, category:category, pointer:pointer, content:content, mode:mode, depth:2 }, function( data ){
-			$( "#LF" ).html( data );
-			listPointers( category );
-
-			pullBW();
-			dlf = false;
-			displayBW();
-		});
-	}else{
-		displayVIDEO( 'Pointer! (>_<)' );
-	}
-};
-
-const deleteMemory = function( code, mode, category ){
-	if( document.getElementById( 'edit_delete_check' ).checked ){
-		$.post( "memory-edit.cgi", { command:'delete', code:code, mode:mode, depth:2 }, function( data ){
-			$( "#LF" ).html( data );
-			listPointers( category );
-
-			pullBW();
-			dlf = false;
-			displayBW();
-		});
-	}else{
-		displayVIDEO( 'Check! (>_<)' );
-	}
 };
 
 

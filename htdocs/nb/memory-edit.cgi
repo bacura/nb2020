@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 memory editor 0.00b (2024/02/19)
+#Nutrition browser 2020 memory editor 0.0.1 (2024/06/16)
 
 #==============================================================================
 # STATIC
@@ -132,7 +132,7 @@ puts "select category<br>" if @debug
 category_select_html = "<select class='form-select form-select-sm' id='edit_category'>"
 category_set = memory.get_categories()
 category_set.each do |e|
-	category_select_html << "<option value='#{e}' #{$SELECT[e == category]}>#{e}</option>"
+	category_select_html << "<option value='#{e}' #{$SELECT[e == memory.category]}>#{e}</option>"
 end
 category_select_html << "</select>"
 
@@ -145,7 +145,8 @@ form_photo << "<label class='input-group-text'>#{l['camera']}</label>"
 if code == nil || code == ''
 	form_photo << "<input type='file' class='form-control' DISABLED>"
 else
-	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoUpload( '#{code}' )\">"
+	p memory.code
+	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoUpload( '#{memory.code}' )\">"
 end
 form_photo << '</form></div>'
 
@@ -219,8 +220,41 @@ puts html
 #==============================================================================
 #FRONT SCRIPT
 #==============================================================================
-js = <<-"JS"
+if command == 'new' || command == 'edit'
+	js = <<-"JS"
 <script type='text/javascript'>
+// Save memory
+var saveMemory = function( code, mode ){
+	const category = document.getElementById( 'edit_category' ).value;
+	const pointer = document.getElementById( 'edit_pointer' ).value;
+	const content = document.getElementById( 'edit_content' ).value;
+
+	if( pointer != '' ){
+		$.post( "memory-edit.cgi", { command:'save', code:code, category:category, pointer:pointer, content:content, mode:mode, depth:2 }, function( data ){
+			$( "#LF" ).html( data );
+			displayREC();
+		});
+	}else{
+		displayVIDEO( 'Pointer! (>_<)' );
+	}
+};
+
+// Delete memory
+var deleteMemory = function( code, mode, category ){
+	if( document.getElementById( 'edit_delete_check' ).checked ){
+		$.post( "memory-edit.cgi", { command:'delete', code:code, mode:mode, depth:2 }, function( data ){
+			$( "#LF" ).html( data );
+			listPointers( category );
+
+			pullBW();
+			dlf = false;
+			displayBW();
+		});
+	}else{
+		displayVIDEO( 'Check! (>_<)' );
+	}
+};
+
 //
 var memory_return = function(){
 	pullBW();
@@ -263,4 +297,5 @@ var photoDel = function( code ){
 </script>
 JS
 
-puts js
+	puts js
+end

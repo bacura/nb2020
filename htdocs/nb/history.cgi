@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutritoin browser history 0.2.4 (2024/05/21)
+#Nutritoin browser history 0.2.5 (2024/06/15)
 
 #==============================================================================
 # STATIC
@@ -192,6 +192,8 @@ case command
 when 'menu'
 	sub_menu( l )
 
+when 'sub'
+
 when 'modal_body'
 	code = @cgi['code']
 
@@ -289,6 +291,7 @@ if command == 'init'
 <script type='text/javascript'>
 
 var historySub = function( sub_fg ){
+
 	$.post( "#{script}.cgi", { command:'sub', sub_fg:sub_fg }, function( data ){ $( "#L1" ).html( data );});
 };
 
