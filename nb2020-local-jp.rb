@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.2.1 (2024/05/22)
+#Nutrition browser 2020 soul Japanese pack 0.2.2 (2024/06/07)
 
 #==============================================================================
 # STATIC
@@ -153,6 +153,14 @@ CODE
   return code
 end
 
+def adsense_info()
+  code = <<-"CODE"
+
+CODE
+
+  return code
+end
+
 def adsense_printv()
   code = <<-"CODE"
 
@@ -246,7 +254,10 @@ def html_title()
       </ol>
     </div>
 
-    <div class="col-6">[空き地]</div>
+    <div class="col-6">
+      [空き地]<br>
+      #{adsense_info()}
+    </div>
 
   </div>
 </div>

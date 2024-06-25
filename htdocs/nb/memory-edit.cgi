@@ -145,7 +145,6 @@ form_photo << "<label class='input-group-text'>#{l['camera']}</label>"
 if code == nil || code == ''
 	form_photo << "<input type='file' class='form-control' DISABLED>"
 else
-	p memory.code
 	form_photo << "<input type='file' class='form-control' name='photo' onchange=\"photoUpload( '#{memory.code}' )\">"
 end
 form_photo << '</form></div>'
@@ -231,7 +230,6 @@ var saveMemory = function( code, mode ){
 
 	if( pointer != '' ){
 		$.post( "memory-edit.cgi", { command:'save', code:code, category:category, pointer:pointer, content:content, mode:mode, depth:2 }, function( data ){
-			$( "#LF" ).html( data );
 			displayREC();
 		});
 	}else{
@@ -243,9 +241,9 @@ var saveMemory = function( code, mode ){
 var deleteMemory = function( code, mode, category ){
 	if( document.getElementById( 'edit_delete_check' ).checked ){
 		$.post( "memory-edit.cgi", { command:'delete', code:code, mode:mode, depth:2 }, function( data ){
-			$( "#LF" ).html( data );
 			listPointers( category );
 
+			displayREC();
 			pullBW();
 			dlf = false;
 			displayBW();

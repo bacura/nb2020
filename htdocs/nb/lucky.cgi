@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Lucky sum input driver 0.03b (2022/09/17)
+#Nutrition browser Lucky sum input driver 0.0.4 (2024/06/18)
 
 #==============================================================================
 #LIBRARY
@@ -19,23 +19,39 @@ script = 'lucky'
 #==============================================================================
 #DEFINITION
 #==============================================================================
-def predict_html( lucky_data )
+
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'lucky'	=> "Lucky☆",\
+		'detect'	=> "検出",\
+		'add'	=> "追　加"
+	}
+
+	return l[language]
+end
+
+
+
+def predict_html( lucky_data, db, l )
 	html = ''
 
 	# 仕上げ
 	lucky_data.gsub!( /\n+/, "\n" )
 	lucky_data.gsub!( /\t+/, '' )
 
-
 	html = '<table class="table table-sm">'
 	html << '<thead><tr>'
-  	html << '<th scope="col">検出</th>'
-  	html << '<th scope="col">食品番号</th>'
-  	html << '<th scope="col">食品</th>'
-  	html << '<th scope="col">メモ</th>'
-  	html << '<th scope="col">量</th>'
-  	html << '<th scope="col">単位</th>'
-  	html << '<th scope="col">採用</th>'
+  	html << "<th scope="col">検出</th>"
+  	html << "<th scope="col">食品番号</th>"
+  	html << "<th scope="col">食品</th>"
+  	html << "<th scope="col">メモ</th>"
+  	html << "<th scope="col">量</th>"
+  	html << "<th scope="col">単位</th>"
+  	html << "<th scope="col">採用</th>"
   	html << '</tr></thead>'
 	id_counter = 0
 	lucky_solid = lucky_data.split( "\n" )
@@ -82,7 +98,7 @@ def predict_html( lucky_data )
 		dic_hit = 0
 		if memo == '' && food.size >= 1
 			predict_food = ''
-			r = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{food}';", false, @debug )
+			r = db.query( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{food}';", false )
 			dic_hit = r.size
 			if r.first
 				if r.first['def_fn'] != ''
@@ -98,7 +114,7 @@ def predict_html( lucky_data )
 					a = n.feature.force_encoding( 'utf-8' ).split( ',' )
 		 			if a[0] == '名詞' && ( a[1] == '一般' || a[1] == '固有名詞' || a[1] == '普通名詞'  || a[1] == '人名' )
 						if n.surface.size > food_sub_max
-							rr = mdb( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{n.surface}';", false, @debug )
+							rr = db.query( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{n.surface}';", false )
 							if rr.first
 								dic_hit = rr.size
 								predict_food = rr.first['org_name']
@@ -127,7 +143,7 @@ def predict_html( lucky_data )
 			unit = 'g'
 			weight = 0
 		else
-			r = mdb( "SELECT unit from #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false, @debug )
+			r = db.query( "SELECT unit from #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false )
 			if r.first
 				unith = JSON.parse( r.first['unit'] )
 				if unith[unit] != nil
@@ -180,7 +196,7 @@ def predict_html( lucky_data )
 	html << '</table><br>'
 
 	html << '<div class="row" align="right">'
-	html << "<button class='btn btn-sm btn-success' onclick=\"luckyPush( '#{id_counter}' )\" >追加</button>"
+	html << "<button class='btn btn-sm btn-success' onclick=\"luckyPush( '#{id_counter}' )\" >#{l['add']}</button>"
 	html << '</div>'
 
 	return html
@@ -194,7 +210,8 @@ html_init( nil )
 
 user = User.new( @cgi )
 user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 puts "POST<br>" if @debug
@@ -221,7 +238,7 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<button type='button' class='btn btn-sm btn-info' onclick="luckyAnalyze()">#{lp[2]}</button>
+		<button type='button' class='btn btn-sm btn-info' onclick="luckyAnalyze()">#{l['lucky']}</button>
 	</div>
 </div>
 HTML
@@ -295,7 +312,6 @@ when 'analyze'
 		lucky_data.gsub!( 'お好み', "\t0\t[お好み]" )
 		lucky_data.gsub!( '好み', "\t0\t[お好み]" )
 
-
 		# 分数の処理
 		lucky_data = lucky_data.gsub( /(\d+)\/(\d+)/ ) do |x|
 			x = ( $1.to_f / $2.to_f ).round( 2 ).to_s
@@ -328,7 +344,7 @@ when 'analyze'
 		end
 	end
 
-	html = predict_html( lucky_data )
+	html = predict_html( lucky_data, db, l )
 
 when 'push'
 	puts "Push<br>" if @debug
@@ -336,13 +352,13 @@ when 'push'
 	lucky_solid.sub!( /^\t/, '' )
 
 	# まな板データの読み込み
-	r = mdb( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false, @debug )
+	r = db.query( "SELECT sum from #{$MYSQL_TB_SUM} WHERE user='#{user.name}';", false )
 	new_sum << r.first['sum'] if r.first
 	new_sum << "\t" if new_sum != ''
 	new_sum << lucky_solid if lucky_solid != ''
 
 	# まな板データ更新
-	mdb( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", false, @debug )
+	db.query( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", true )
 end
 
 puts html

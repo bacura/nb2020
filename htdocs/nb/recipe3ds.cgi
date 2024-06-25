@@ -1,27 +1,63 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe 3D plotter 0.00b
+#Nutrition browser 2020 recipe 3D plotter 0.0.0 (2024/06/18)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
-script = 'recipe3ds'
 @debug = false
+#script = File.basename( $0, '.cgi' )
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
-require "./language_/#{script}.lp"
 
 
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
-#### 表示範囲
+# Language pack
+def language_pack( language )
+	l = Hash.new
+
+	#Japanese
+	l['jp'] = {
+		'plot_size' => "プロットサイズ",\
+		'y_log' 	=> "Y軸Log",\
+		'dsp_label'	=> "ラベル表示",\
+		'plot'		=> "プ ロ ッ ト",\
+		'more'		=> "以上",\
+		'less'		=> "以下",\
+		'xcomp'		=> "X軸成分",\
+		'ycomp'		=> "y軸成分",\
+		'zcomp'		=> "z軸成分",\
+		'range'		=> "表示範囲",\
+		'style'		=> "料理スタイル",\
+		'role'		=> "献立区分",\
+		'tech'		=> "調理区分",\
+		'time'		=> "表目安時間(分)",\
+		'cost'		=> "目安費用(円)",\
+		'all'		=> "全て",\
+		'draft'		=> "下書き",\
+		'protect'	=> "保護",\
+		'public'	=> "公開",\
+		'no_mark'	=> "無印",\
+		'public_'	=> "公開(他ユーザー)",\
+		'no_def'	=> "未設定",\
+		'all_ns'	=> "全て（調味系除く）",\
+		'chomi'		=> "[ 調味％ ]",\
+		'reset'		=> "リセット"
+	}
+
+	return l[language]
+end
+
+
+#### Display range
 def range_html( range, l )
 	range_select = []
 	0.upto( 5 ) do |i|
@@ -134,12 +170,11 @@ end
 html_init( nil )
 
 user = User.new( @cgi )
-#user.debug if @debug
-lp = []
+user.debug if @debug
 l = language_pack( user.language )
-puts l if @debug
+db = Db.new( user, @debug, false )
 
-r = mdb( "SELECT recipe3ds FROM cfg WHERE user='#{user.name}';", false, @debug )
+r = db.query( "SELECT recipe3ds FROM cfg WHERE user='#{user.name}';", false )
 recipe3ds_cfg = Hash.new
 recipe3ds_cfg = JSON.parse( r.first['recipe3ds'] ) if r.first['recipe3ds'] != nil && r.first['recipe3ds'] != ''
 
@@ -287,7 +322,8 @@ if command == 'plott_data' || command == 'monitor'
 	codes = []
 
 	q = "SELECT #{tb1}.#{xitem}, #{tb1}.#{yitem}, #{tb1}.#{zitem}, #{tb2}.name, #{tb2}.code FROM #{tb1} INNER JOIN #{tb2} ON #{tb1}.origin=#{tb2}.code #{sql_where} ORDER BY #{tb1}.#{zitem};"
-	r = mdb( q, false, @debug )
+
+	r = db.query( q, false )
 	r.each do |e|
 		xt = e[xitem]
 		yt = e[yitem]
@@ -334,7 +370,7 @@ if command == 'plott_data' || command == 'monitor'
 
 	#### 検索設定の保存
 	recipe_ = JSON.generate( { "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "xitem" => xitem, "yitem" => yitem, "zitem" => zitem, "zml" => zml, "zrange" => zrange } )
-	mdb( "UPDATE #{$MYSQL_TB_CFG} SET recipe3ds='#{recipe_}' WHERE user='#{user.name}';", false, true )
+	db.query( "UPDATE #{$MYSQL_TB_CFG} SET recipe3ds='#{recipe_}' WHERE user='#{user.name}';", true )
 
 	exit( 0 )
 end
@@ -450,3 +486,39 @@ html = <<-"HTML"
 HTML
 
 puts html
+
+#==============================================================================
+#POST PROCESS
+#==============================================================================
+
+
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
+
+if command == 'init'
+	js = <<-"JS"
+<script type='text/javascript'>
+
+
+// Dosplaying recipe by scatter plott
+var recipe3dsReset = function(){
+	document.getElementById( "range" ).value = 0;
+	document.getElementById( "type" ).value = 99;
+	document.getElementById( "role" ).value = 99;
+	document.getElementById( "tech" ).value = 99;
+	document.getElementById( "time" ).value = 99;
+	document.getElementById( "cost" ).value = 99;
+
+	document.getElementById( "xitem" ).value = 'ENERC';
+	document.getElementById( "yitem" ).value = 'ENERC';
+
+	document.getElementById( "zitem" ).value = 'ENERC';
+	document.getElementById( "zml" ).value = 0;
+	document.getElementById( "zrange" ).value = 0;
+};
+
+JS
+
+	puts js 
+end
