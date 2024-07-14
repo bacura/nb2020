@@ -1,4 +1,4 @@
-#Nutrition browser 2020 brain 0.35b (2024/04/30)
+#Nutrition browser 2020 brain 0.40b (2024/07/14)
 
 #==============================================================================
 #STATIC
@@ -551,7 +551,7 @@ class FCT
   def save_fcz( uname, zname, base, origin )
     fct_ = ''
     @items.size.times do |i| fct_ << "#{@items[i]}='#{@total[i]}'," end
-    fct_.chop!
+    fct_ << " weightp='#{@total_weight}'"
 
     code = ''
     r = $DB.query( "SELECT code FROM #{$MYSQL_TB_FCZ} WHERE user='#{uname}' AND origin='#{origin}' AND base='#{base}';" )

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.20b (2024/02/17)
+#Nutrition browser 2020 recipe editor 0.2.0 (2024/02/17)
 
 #==============================================================================
 #COMMON LIBRARY

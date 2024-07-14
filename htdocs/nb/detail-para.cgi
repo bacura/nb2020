@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail parallel 0.00b (2023/07/31)
+#Nutrition browser 2020 food detail parallel 0.0.1 (2024/06/30)
 
 
 #==============================================================================
@@ -57,7 +57,7 @@ food_no = @cgi['food_no']
 base = @cgi['base']
 base_fn = @cgi['base_fn']
 juten = @cgi['juten'].to_s
-juten = 'FLAT' if juten == ''
+juten = 'ENERC_KCAL' if juten == ''
 if @debug
 	puts "food_key: #{food_key}<br>"
 	puts "frct_mode: #{frct_mode}<br>"
@@ -221,7 +221,7 @@ when 'init', 'weight', 'cb', 'cbp'
 	  			<th>#{l['juten']}</th>
 	  			<th>#{@fct_name[juten]}</th>
 				<th></th>
-	  			<th><span class="badge bg-success" onclick="cb_detail_para('#{food_key}','#{food_weight}','#{base_fn}')">#{l['flat']}</span></th>
+	  			<th></th>
 				#{juten_html}
     		</tr>
 			<tr>

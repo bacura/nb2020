@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul Japanese pack 0.2.2 (2024/06/07)
+#Nutrition browser 2020 soul Japanese pack 0.2.1 (2024/07/14)
 
 #==============================================================================
 # STATIC
@@ -26,7 +26,7 @@
 @fct_unit = {'FG'=>nil,     'FN'=>nil,        'SID'=>nil,       'Tagnames'=>nil,      'REFUSE'=>'%',     'ENERC'=>'kJ',           'ENERC_KCAL'=>'kcal',           'WATER'=>'g',   'PROTCAA'=>'g',                     'PROT'=>'g',         'PROTV'=>'g',             'FAT'=>'g',    'FATNLEA'=>'g',                    'FATV'=>'g',       'FASAT'=>'g',          'FAMS'=>'g',              'FAPU'=>'g',               'FAPUN3'=>'g',                    'FAPUN6'=>'g',                   'CHOLE'=>'mg',        'CHOCDF'=>'g',        'CHOAVLM'=>'g',                       'CHOAVL'=>'g',                       'CHOAVLDF'=>'g',                       'CHOV'=>'g',            'FIB'=>'g',           'FIBTG'=>'g',              'FIBSOL'=>'g',               'FIBINS'=>'g',                'FIBTDF'=>'g',              'FIBSDFS'=>'g',                       'FIBSDFP'=>'g',                       'FIBIDF'=>'g',                'STARES'=>'g',               'POLYL'=>'g',         'ASH'=>'g',    'NA'=>'mg',      'K'=>'mg',    'CA'=>'mg',      'MG'=>'mg',        'P'=>'mg',   'FE'=>'mg',  'ZN'=>'mg',   'CU'=>'mg', 'MN'=>'mg',    'ID'=>'μg',    'SE'=>'μg',   'CR'=>'μg',   'MO'=>'μg',      'RETOL'=>'μg',      'CARTA'=>'μg',      'CARTB'=>'μg',       'CRYPXB'=>'μg',             'CARTBEQ'=>'μg',          'VITA_RAE'=>'μg',             'VITD'=>'μg',     'TOCPHA'=>'mg',          'TOCPHB'=>'mg',          'TOCPHG'=>'mg',          'TOCPHD'=>'mg',          'VITK'=>'μg',     'THIA'=>'mg',      'RIBF'=>'mg',      'NIA'=>'mg',      'NE'=>'mg',           'VITB6A'=>'mg',      'VITB12'=>'μg',        'FOL'=>'μg',   'PANTAC'=>'mg',       'BIOT'=>'μg',    'VITC'=>'mg',     'OA'=>'g',      'ALC'=>'g',      'NACL_EQ'=>'g',          'Notice'=>nil}
 @fct_frct = {'FG'=>nil,     'FN'=>nil,        'SID'=>nil,       'Tagnames'=>nil,      'REFUSE'=>nil,     'ENERC'=>0,              'ENERC_KCAL'=>0,                'WATER'=>1,     'PROTCAA'=>1,                       'PROT'=>1,           'PROTV'=>1,               'FAT'=>1,      'FATNLEA'=>1,                      'FATV'=>1,         'FASAT'=>2,            'FAMS'=>2,                'FAPU'=>2,                 'FAPUN3'=>2,                      'FAPUN6'=>2,                     'CHOLE'=>0,           'CHOCDF'=>1,          'CHOAVLM'=>1,                         'CHOAVL'=>1,                         'CHOAVLDF'=>1,                         'CHOV'=>1,              'FIB'=>1,             'FIBTG'=>1,                'FIBSOL'=>1,                 'FIBINS'=>1,                  'FIBTDF'=>1,                'FIBSDFS'=>1,                        'FIBSDFP'=>1,                         'FIBIDF'=>1,                  'STARES'=>1,                 'POLYL'=>1,           'ASH'=>1,      'NA'=>0,         'K'=>0,       'CA'=>0,         'MG'=>0,           'P'=>0,      'FE'=>1,     'ZN'=>1,      'CU'=>2,    'MN'=>2,       'ID'=>0,       'SE'=>0,      'CR'=>0,      'MO'=>0,         'RETOL'=>0,         'CARTA'=>0,         'CARTB'=>0,          'CRYPXB'=>0,                'CARTBEQ'=>0,             'VITA_RAE'=>0,                'VITD'=>1,        'TOCPHA'=>1,             'TOCPHB'=>1,             'TOCPHG'=>1,             'TOCPHD'=>1,             'VITK'=>0,        'THIA'=>2,         'RIBF'=>2,         'NIA'=>1,         'NE'=>1,              'VITB6A'=>2,         'VITB12'=>1,           'FOL'=>0,      'PANTAC'=>2,          'BIOT'=>1,       'VITC'=>0,        'OA'=>1,        'ALC'=>1,        'NACL_EQ'=>1,            'Notice'=>nil}
 
-@palette_default_name = %w( 簡易表示用 基本の5成分 基本の12成分 基本の21成分 基本全て )
+@palette_default_name = %w( 簡易表示用 基本の5成分 基本の12成分 基本の21成分 全て )
 $PALETTE_DEFAULT_NAME = { 'jp' => @palette_default_name }
 @palette_default = %w( 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000010000000000000000000000000000000000000000000000001 00000010001001000000000011000000000001100100000000000001000001100000000001 00000010001001000000000011000000000001110111000000000001000001101111001011 00001111111111111111111111111111111111111111111111111111111111111111111111 )
 
@@ -63,13 +63,22 @@ def html_head( interrupt, status, sub_title )
   refresh = '<meta http-equiv="refresh" content="0; url=index.cgi">' if interrupt == 'refresh'
 
   js_guild = ''
-  js_guild = "<script type='text/javascript' src='#{$JS_PATH}/guild.js'></script>" if status >= 2
+  if status >= 2
+    js_guild = "<script type='text/javascript' src='#{$JS_PATH}/guild.js'></script>"
+  end
 
   js_shun = ''
-  js_shun = "<script type='text/javascript' src='#{$JS_PATH}/shun.js'></script>" if status >= 5
+  if status >= 5
+    js_shun << '<script src="https://d3js.org/d3.v5.min.js"></script>'
+    js_shun << "<link href='#{$CSS_PATH}/c3.css' rel='stylesheet'>"
+    js_shun << "<script type='text/javascript' src='#{$JS_PATH}/c3.min.js'></script>"
+    js_shun << "<script type='text/javascript' src='#{$JS_PATH}/shun.js'></script>" 
+  end
 
   js_master = ''
-  js_master = "<script type='text/javascript' src='#{$JS_PATH}/master.js'></script>" if status >= 8
+  if status >= 8
+    js_master = "<script type='text/javascript' src='#{$JS_PATH}/master.js'></script>"
+  end
 
   x_card = ''
 
@@ -182,16 +191,17 @@ def html_title()
 
       栄養ブラウザは栄養士・管理栄養士活動を支援するためのツールを提供するWebサービス群です。<br>
       無料で食品成分の閲覧、料理の栄養計算、レシピの管理などが出来ます。<br>
-      大半の機能はユーザーごとに機能しますので是非、ユーザー登録して使ってみて下さい。<br>
+      大半の機能はユーザーごとに機能しますので、是非ユーザー登録して使ってみて下さい。<br>
       下記のゲストアカウントを使えばお試しで登録後の状態を体験できます。<br>
       <br>
 
-      <h4>お知らせ (20230801)</h4>
+      <h4>お知らせ (20240714)</h4>
       <ul>
-        <li>公開レシピが1198品になりました。</li>
+        <li>公開レシピが1221品になりました。</li>
         <br>
+        <li>利用規定を一部変更しました。</li>
+        <li>3Dレシピ検索機能を実装しました。</li>
         <li>パラレル食品機能を実装しました。</li>
-        <li>DB関連機能を逐次更新中。少しレスポンスが良くなるかも。</li>
         <li>幽体アカウントを実装しました。</li>
         <li>食品成分データを2021年12月27日版に更新しました。</li>
         <li>日本人の食事摂取基準を2020年に更新しました。</li>
@@ -211,7 +221,7 @@ def html_title()
       <ul>
         <li>食品成分表ブラウザはインターネットへの接続が必須で、HTML5に対応したWebブラウザの使用を推奨します。</li>
         <li>Javascript機能とCookie機能を使用していますので、どちらも有効にしてください。</li>
-        <li>Windows10のVivaldi、EdgeとAndroidのGoogle chromeで動作確認しています。</li>
+        <li>Windows11でVivaldi、EdgeとAndroidのGoogle chromeで動作確認しています。</li>
         <li>PCとタブレットでの利用を想定しています。スマホは細かすぎて見づらいと思います。</li>
       </ul>
       <hr>
@@ -244,13 +254,14 @@ def html_title()
 
       <h4>利用規程</h4>
       <ol type="1" class="terms">
-        <li>栄養ブラウザの利用者は本規約の定めに従って利用しなければなりません。同意いただけない場合は本サービスを利用できません。</li>
-        <li>本サービスの管理者が必要と判断する場合、利用者に通知することなく、いつでも本規約を変更できるものとします。</li>
-        <li>本サービスに起因して利用者に生じたあらゆる損害について一切の責任を負いません。ご利用は自己責任でお願いします。</li>
-        <li>本サービスの利用によって生じたデータは統計的に処理され、再利用される場合があることをご承知おきください。</li>
-        <li>本サービスに登録したデータ、写真は本サービスが自由に使用します。承知おきください。（でないと、保存したり表示させることすら出来ません＞＜）</li>
-        <li>本サービスはばきゅら京都Lab（個人）により運営されております。ごく個人的な理由で突然サービスが停止する可能性があることをご承知おきください。</li>
-        <li>本サービスの運用に支障を与える行為を禁止します。</li>
+        <li>本サービスとはばきゅら京都Labにより運営されている「栄養ブラウザ」を指します。</li>
+        <li>利用者とは本サービスを各自の端末から利用する者を指します。</li>
+        <li>利用者は本サービスを本規約の定めに従って利用しなければなりません。</li>
+        <li>本サービスに起因して利用者に生じたあらゆる損害について、ばきゅら京都Labは一切の責任を負いません。</li>
+        <li>利用者はメールアドレス以外の一切の個人情報を本サービスに入力することを禁止します。</li>
+        <li>利用者が本サービスに登録したデータは本サービスが自由に使用できるものとします。（でないと、保存したり表示させることが出来ません＞＜）</li>
+        <li>本サービスの運用に支障を与えるあらゆる行為を禁止します。</li>
+        <li>本利用規約は利用者に通知することなく変更できるものとします。</li>
       </ol>
     </div>
 

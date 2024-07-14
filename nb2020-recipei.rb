@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe search index & fcz builder & 0.13b
+#Nutrition browser 2020 recipe search index & fcz builder & 0.2.0 (2024/07/14)
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './nb2020-soul_'
+require './nb2020-soul'
 require './nb2020-brain'
 require 'natto'
 

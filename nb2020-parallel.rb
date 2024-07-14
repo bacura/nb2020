@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 parallel foods 0.10b (2024/01/05)
+#Nutrition browser 2020 parallel foods 0.2.0 (2024/06/29)
 
 
 #==============================================================================
@@ -78,12 +78,23 @@ fn.each.with_index do |e, i|
 		end
 	end
 
+	#距離の近い順にソート
 	sorted_dista = dista.sort_by do |_, v| v end
-	dista_near = sorted_dista.first( fn_num )
+
+	#重複食品名を除外して上位fn_num個だけにする
+	dista_name_fn = Hash.new
+	count = 0
+	sorted_dista.each do |k, v|
+		unless dista_name_fn.key?( food_name[k] )
+			dista_name_fn[ food_name[k]] = k
+			count += 1
+		end
+		break if count == fn_num
+	end
 
 	near_mem = "flat\t#{e}\t"
-	dista_near.to_h.each_key do |k|
-  		near_mem << "#{k},"
+	dista_name_fn.each_value do |v|
+  		near_mem << "#{v},"
   	end
 	near_mem.chop!
 	puts near_mem
@@ -113,11 +124,22 @@ end
 		end
 
 		sorted_dista = dista.sort_by do |_, v| v end
-		dista_near = sorted_dista.first( fn_num )
+
+
+		#重複食品名を除外して上位fn_num個だけにする
+		dista_name_fn = Hash.new
+		count = 0
+		sorted_dista.each do |k, v|
+			unless dista_name_fn.key?( food_name[k] )
+				dista_name_fn[ food_name[k]] = k
+				count += 1
+			end
+			break if count == fn_num
+		end
 
 		near_mem = "#{juten}\t#{e}\t"
-		dista_near.to_h.each_key do |k|
-	  		near_mem << "#{k},"
+		dista_name_fn.each_value do |v|
+	  		near_mem << "#{v},"
 	  	end
 		near_mem.chop!
 		puts near_mem

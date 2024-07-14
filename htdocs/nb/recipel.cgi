@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.4.0 (2024/05/21)
+#Nutrition browser 2020 recipe list 0.4.1 (2024/07/13)
 	
 
 #==============================================================================
@@ -32,6 +32,7 @@ def language_pack( language )
 		'nextp' 	=> "次項",\
 		'range' 	=> "表示範囲",\
 		'all' 		=> "全て",\
+		'all_ns'	=> "全て（ー調%）",\
 		'draft' 	=> "仮組",\
 		'protect' 	=> "保護",\
 		'public' 	=> "公開",\
@@ -59,6 +60,7 @@ def language_pack( language )
 		'daughter' 	=> "娘＋",\
 		'import' 	=> "取込",\
 		'print' 	=> "印刷",\
+		'crosshair' => "<img src='bootstrap-dist/icons/crosshair.svg' style='height:1.0em; width:1.0em;'>",\
 		'command' 	=> "<img src='bootstrap-dist/icons/command.svg' style='height:1.2em; width:1.2em;'>",\
 		'globe' 	=> "<img src='bootstrap-dist/icons/globe.svg' style='height:1.2em; width:1.2em;'>",\
 		'lock'		=> "<img src='bootstrap-dist/icons/lock-fill.svg' style='height:1.2em; width:1.2em;'>",\
@@ -110,9 +112,7 @@ def type_html( type, l )
 	html << '<select class="form-select form-select-sm" id="type">'
 	html << "<option value='99'>#{l['all']}</option>"
 	@recipe_type.size.times do |c|
-		s = ''
-		s = 'SELECTED' if type == c
-		html << "<option value='#{c}' #{s}>#{@recipe_type[c]}</option>"
+		html << "<option value='#{c}' #{$SELECT[type == c]}>#{@recipe_type[c]}</option>"
 	end
 	html << '</select>'
 
@@ -124,15 +124,11 @@ end
 def role_html( role, l )
 	html = l['role']
 	html << '<select class="form-select form-select-sm" id="role">'
-	html << "<option value='99'>#{l['all']}</option>"
+	html << "<option value='99'>#{l['all_ns']}</option>"
 	@recipe_role.size.times do |c|
-		s = ''
-		s = 'SELECTED' if role == c
-		html << "<option value='#{c}' #{s}>#{@recipe_role[c]}</option>"
+		html << "<option value='#{c}' #{$SELECT[role == c]}>#{@recipe_role[c]}</option>"
 	end
-	s = ''
-	s = 'SELECTED' if role == 100
-	html << "<option value='100' #{s}>#{l['chomi']}</option>"
+	html << "<option value='100' #{$SELECT[role == 100]}>#{l['chomi']}</option>"
 	html << '</select>'
 
 	return html
@@ -145,11 +141,9 @@ def tech_html( tech, l )
 	html << '<select class="form-select form-select-sm" id="tech">'
 	html << "<option value='99'>#{l['all']}</option>"
 	@recipe_tech.size.times do |c|
-		s = ''
-		s = 'SELECTED' if tech == c
-		html << "<option value='#{c}' #{s}>#{@recipe_tech[c]}</option>"
+		html << "<option value='#{c}' #{$SELECT[tech == c]}>#{@recipe_tech[c]}</option>"
 	end
-html << '</select>'
+	html << '</select>'
 
 	return html
 end
@@ -161,9 +155,7 @@ def time_html( time, l )
 	html << '<select class="form-select form-select-sm" id="time">'
 	html << "<option value='99'>#{l['all']}</option>"
 	@recipe_time.size.times do |c|
-		s = ''
-		s = 'SELECTED' if time == c
-		html << "<option value='#{c}' #{s}>#{@recipe_time[c]}</option>"
+		html << "<option value='#{c}' #{$SELECT[time == c]}>#{@recipe_time[c]}</option>"
 	end
 	html << '</select>'
 
@@ -177,9 +169,7 @@ def cost_html( cost, l )
 	html << '<select class="form-select form-select-sm" id="cost">'
 	html << "<option value='99'>#{l['all']}</option>"
 	@recipe_cost.size.times do |c|
-		s = ''
-		s = 'SELECTED' if cost == c
-		html << "<option value='#{c}' #{s}>#{@recipe_cost[c]}</option>"
+		html << "<option value='#{c}' #{$SELECT[cost == c]}>#{@recipe_cost[c]}</option>"
 	end
 	html << '</select>'
 
@@ -689,7 +679,7 @@ end
 html = <<-"HTML"
 <div class='container-fluid'>
 	<div class='row'>
-		<div class='col-7'><h5>#{l['recipel']} (#{recipe_num}) #{ref_msg}</h5></div>
+		<div class='col-6'><h5>#{l['recipel']} <span onclick='recipe3ds()'>#{l['crosshair']}</span> (#{recipe_num}) #{ref_msg}</h5></div>
 		<div class='col-5'>#{html_paging}</div>
 	</div>
 	<br>
@@ -712,7 +702,9 @@ html = <<-"HTML"
   				<label class='form-check-label'>#{l['family']}</label>
 			</div>
 		</div>
-		<div class='col' align="right"><span class="badge rounded-pill npill" type="button" onclick="recipeList( 'reset' )">#{l['reset']}</span></div>
+		<div class='col' align="right">
+			<span class="badge rounded-pill npill" type="button" onclick="recipeList( 'reset' )">#{l['reset']}</span>
+		</div>
 	</div>
 	<br>
 
@@ -754,7 +746,22 @@ puts html
 
 #### 検索設定の保存
 #words = nil if recipe_code_list.size == 0
-recipe_ = JSON.generate( { "page" => page, "page_limit" => page_limit, "range" => range, "type" => type, "role" => role, "tech" => tech, "time" => time, "cost" => cost, "family" => family, "words" => words } )
+
+
+recipe_cfg['page'] = page
+recipe_cfg['page_limit'] = page_limit
+
+recipe_cfg['range'] = range
+recipe_cfg['type'] = type
+recipe_cfg['role'] = role
+recipe_cfg['tech'] = tech
+recipe_cfg['time'] = time
+recipe_cfg['cost'] = cost
+
+recipe_cfg['family'] = family
+recipe_cfg['words'] = words
+
+recipe_ = JSON.generate( recipe_cfg )
 r = db.query( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false )
 if r.first
 	db.query( "UPDATE #{$MYSQL_TB_CFG} SET recipe='#{recipe_}' WHERE user='#{user.name}';", true )
