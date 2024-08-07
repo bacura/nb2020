@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe 3D plotter 0.0.0 (2024/06/18)
+#Nutrition browser 2020 recipe 3D plotter 0.0.1 (2024/07/17)
 
 
 #==============================================================================
@@ -27,6 +27,7 @@ def language_pack( language )
 	#Japanese
 	l['jp'] = {
 		'all' 		=> "全て",\
+		'all_ns'	=> "全て（ー調味系）",\
 		'draft' 	=> "仮組",\
 		'protect' 	=> "保護",\
 		'public' 	=> "公開",\
@@ -42,7 +43,6 @@ def language_pack( language )
 		'time'		=> "表目安時間(分)",\
 		'cost'		=> "目安費用(円)",\
 		'no_def'	=> "未設定",\
-		'all_ns'	=> "全て（ー調%）",\
 		'plot_size' => "表示サイズ",\
 		'x_log' 	=> "X軸Log",\
 		'y_log' 	=> "Y軸Log",\
@@ -103,15 +103,12 @@ end
 def role_html( role, l )
 	html = l['role']
 	html << '<select class="form-select form-select-sm" id="role">'
-	html << "<option value='99'>#{l['all_ns']}</option>"
+	html << "<option value='99'>#{l['all']}</option>"
+	html << "<option value='98' #{$SELECT[role == 98]}>#{l['all_ns']}</option>"
 	@recipe_role.size.times do |c|
-		s = ''
-		s = 'SELECTED' if role == c
-		html << "<option value='#{c}' #{s}>#{@recipe_role[c]}</option>"
+		html << "<option value='#{c}' #{$SELECT[role == c]}>#{@recipe_role[c]}</option>"
 	end
-	s = ''
-	s = 'SELECTED' if role == 100
-	html << "<option value='100' #{s}>#{l['chomi']}</option>"
+	html << "<option value='100' #{$SELECT[role == 100]}>#{l['chomi']}</option>"
 	html << '</select>'
 
 	return html
@@ -123,9 +120,7 @@ def tech_html( tech, l )
 	html << '<select class="form-select form-select-sm" id="tech">'
 	html << "<option value='99'>#{l['all']}</option>"
 	@recipe_tech.size.times do |c|
-		s = ''
-		s = 'SELECTED' if tech == c
-		html << "<option value='#{c}' #{s}>#{@recipe_tech[c]}</option>"
+		html << "<option value='#{c}' #{$SELECT[tech == c]}>#{@recipe_tech[c]}</option>"
 	end
 	html << '</select>'
 
@@ -322,74 +317,74 @@ if @debug
 	puts "<hr>"
 end
 
-#### WHERE setting
+xitems = []
+yitems = []
+zitems = []
+names = []
+codes = []
+
+# WHERE setting
+t1 = "#{$MYSQL_TB_RECIPE}"
+t2 = "#{$MYSQL_TB_FCZ}"
+
 sql_where = 'WHERE '
 case range
 # 自分の全て
 when 0
-	sql_where << "recipe.user='#{user.name}' AND recipe.name!=''"
-# 自分の下書き
+	sql_where << "t1.user='#{user.name}' AND t1.name!=''"
+# 自分のお気に入り
 when 1
-	sql_where << "recipe.user='#{user.name}' AND recipe.name!='' AND recipe.draft='1'"
-# 自分の保護
+	sql_where << "t1.user='#{user.name}' AND t1.name!='' AND t1.favorite='1'"
+# 自分の下書き
 when 2
-	sql_where << "recipe.user='#{user.name}' AND recipe.protect='1' AND recipe.name!=''"
-# 自分の公開
+	sql_where << "t1.user='#{user.name}' AND t1.name!='' AND t1.draft='1'"
+# 自分の保護
 when 3
-	sql_where << "recipe.user='#{user.name}' AND recipe.public='1' AND recipe.name!=''"
-# 自分の無印
+	sql_where << "t1.user='#{user.name}' AND t1.name!='' AND t1.protect='1'"
+# 自分の公開
 when 4
-	sql_where << "recipe.user='#{user.name}' AND recipe.public='0' AND recipe.draft='0' AND recipe.name!=''"
-# 他の公開
+	sql_where << "t1.user='#{user.name}' AND t1.name!='' AND t1.public='1'"
+# 自分の無印
 when 5
-	sql_where << "recipe.public='1' AND recipe.user!='#{user.name}' AND recipe.name!=''"
+	sql_where << "t1.user='#{user.name}' AND t1.name!=''AND t1.public='0'AND t1.draft='0'"
+# 他の公開
+when 6
+	sql_where << "t1.user!='#{user.name}' AND t1.name!=''AND t1.public='1'"
 else
-	sql_where << "recipe.user='#{user.name}' AND recipe.name!=''"
+	sql_where << "t1.user='#{user.name}' AND t1.name!=''"
 end
 
-sql_where << " AND recipe.type='#{type}'" unless type == 99
-
-if role == 99
-	sql_where << " AND recipe.role!='100' AND recipe.role!='7'"
-else
-	sql_where << " AND recipe.role='#{role}'"
+#料理スタイル
+sql_where << " AND t1.type='#{type}'" unless type == 99
+#献立区分
+if role == 98
+	sql_where << " AND t1.role!='100' AND t1.role!='7'"
+elsif role != 99
+	sql_where << " AND t1.role='#{role}'"
 end
+sql_where << " AND t1.tech='#{tech}'" unless tech == 99
+sql_where << " AND t1.time>0 AND t1.time<=#{time}" unless time == 99
+sql_where << " AND t1.cost>0 AND t1.cost<=#{cost}" unless cost == 99
 
 #Z成分カットオフ
 if zml == 1
-	sql_where << " AND #{zitem}<#{zrange}"
+	sql_where << " AND t2.#{zitem}<#{zrange}"
 else
-	sql_where << " AND #{zitem}>=#{zrange}"
+	sql_where << " AND t2.#{zitem}>=#{zrange}"
 end
-
-sql_where << " AND recipe.tech='#{tech}'" unless tech == 99
-sql_where << " AND recipe.time='#{time}'" unless time == 99
-sql_where << " AND recipe.cost='#{cost}'" unless cost == 99
 
 case command
 when 'plott_area'
 when 'plott_data'
-	tb1 = "#{$MYSQL_TB_FCZ}"
-	tb2 = "#{$MYSQL_TB_RECIPE}"
-	xitems = []
-	yitems = []
-	zitems = []
-	names = []
-	codes = []
-
-	r = db.query( "SELECT #{tb1}.#{xitem}, #{tb1}.#{yitem}, #{tb1}.#{zitem}, #{tb2}.name, #{tb2}.code FROM #{tb1} INNER JOIN #{tb2} ON #{tb1}.origin=#{tb2}.code #{sql_where};", false )
-
+	r = db.query( "SELECT t1.name, t1.code, t2.#{xitem}, t2.#{yitem} FROM #{$MYSQL_TB_RECIPE} AS t1 LEFT JOIN #{$MYSQL_TB_FCZ} AS t2 ON t1.code=t2.origin #{sql_where};", false )
 	if  r.first
 		r.each do |e|
 			xt = e[xitem]
 			yt = e[yitem]
-			zt = e[zitem]
 			xt = 0 if xt == nil
 			yt = 0 if yt == nil
-			zt = 0 if zt == nil
 			xitems << xt.to_f
 			yitems << yt.to_f
-			zitems << zt.to_f
 			nt = e['name']
 			nt.gsub!( '(', '（')
 			nt.gsub!( ')', '）')
@@ -429,8 +424,8 @@ when 'plott_data'
 		raw = []
 		raw[0] = xitems.unshift( label_x ).join( '[]' )
 		raw[1] = yitems.unshift( label_y ).join( '[]' )
-		raw[2] = names.join( '[]' )
-		raw[3] = codes.join( '[]' )
+		raw[2] = names.unshift( 'recipe_name' ).join( '[]' )
+		raw[3] = codes.unshift( 'recipe_code' ).join( '[]' )
 		raw[4] = x_tickv.join( '[]' )
 		raw[5] = y_tickv.join( '[]' )
 
@@ -442,10 +437,26 @@ when 'plott_data'
 
 
 when 'monitor'
-#	puts "#{@fct_name[xitem]}： #{xitems.min} ～ #{xitems.max}<br>"
-#	puts "#{@fct_name[yitem]}： #{yitems.min} ～ #{yitems.max}<br>"
-#	puts "#{@fct_name[zitem]}： #{zitems.min} ～ #{zitems.max}<br>"
-#	puts "[#{xitems.size}][#{names.size}][#{codes.size}]<br>"
+	r = db.query( "SELECT t1.name, t1.code, t2.#{xitem}, t2.#{yitem} FROM #{$MYSQL_TB_RECIPE} AS t1 LEFT JOIN #{$MYSQL_TB_FCZ} AS t2 ON t1.code=t2.origin #{sql_where};", false )
+		r.each do |e|
+			xt = e[xitem]
+			yt = e[yitem]
+			xt = 0 if xt == nil
+			yt = 0 if yt == nil
+			xitems << xt.to_f.round( 1 )
+			yitems << yt.to_f.round( 1 )
+			nt = e['name']
+			nt.gsub!( '(', '（')
+			nt.gsub!( ')', '）')
+			nt.gsub!( ':', '：')
+			names << nt
+			codes << e['code']
+		end
+
+	puts "#{@fct_name[xitem]}： #{xitems.min} ～ #{xitems.max}<br>"
+	puts "#{@fct_name[yitem]}： #{yitems.min} ～ #{yitems.max}<br>"
+	puts "#{@fct_name[zitem]}： #{zitems.min} ～ #{zitems.max}<br>"
+	puts "[#{xitems.size}][#{names.size}][#{codes.size}]<br>"
 
 else
 	#### 検索条件HTML
@@ -610,11 +621,13 @@ var recipe3dsPlottDraw = function(){
 	$.post( "recipe3ds.cgi", { command:'plott_data', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
 		xitem:xitem, yitem:yitem, zitem:zitem, zml:zml, zrange:zrange, area_size:area_size, x_zoom:x_zoom, y_log:y_log }, function( raw ){
 
+		//
 		if( raw == 0 ){
 			displayVIDEO( 'No match found' );
 			return;
 		}
 
+		//
 		const column = ( String( raw )).split( '{}' );
 		const x_values = ( String( column[0] )).split('[]');
 		const y_values = ( String( column[1] )).split('[]');
@@ -623,14 +636,23 @@ var recipe3dsPlottDraw = function(){
 		const x_tickv = ( String( column[4] )).split('[]');
 		const y_tickv = ( String( column[5] )).split('[]');
 
-		const plott_size = document.documentElement.clientWidth
-		const frame_rate = document.getElementById( "area_size" ).value;
+		//
+		let names_dic = {};
+		let codes_dic = {};
+		for( let i = 0; i < x_values.length; i++ ){
+			names_dic[ x_values[i] + y_values[i]] = names[ i ]; 
+			codes_dic[ x_values[i] + y_values[i]] = codes[ i ];
+		}
 
+		//
+		const plott_size = document.documentElement.clientWidth;
+		const frame_rate = document.getElementById( "area_size" ).value;
 		if ( window.chart_recipe3d != null ){
 			window.chart_recipe3d.destroy();
 			displayVIDEO( 'Flush!' );
 		}
 
+		//
 		window.chart_recipe3d = c3.generate({
 			bindto: '#recipe3ds_plott',
 			size:{ width: plott_size * frame_rate, height: plott_size * frame_rate },
@@ -638,12 +660,13 @@ var recipe3dsPlottDraw = function(){
 			data: {
 				columns: [
 					x_values,	// x軸
-					y_values,	// y軸
+					y_values	// y軸
 				],
 			    x: x_values[0],
 				type: 'scatter',
-				onclick: function ( d ) {
-					searchDR( codes[d['index']] );
+				onclick: function ( d ){
+					var key = d.x.toFixed( 1 ) + d.value.toFixed( 1 );
+					searchDR(  codes_dic[ key ] );
                 }
 //				colors:{ x_values[0]: '#ff44FF' }
 			},
@@ -655,7 +678,7 @@ var recipe3dsPlottDraw = function(){
 					tick: {
 						fit: true,
 						count: 10,
-						format: d3.format( "01d" ),
+						format: d3.format( "d" ),
 						values: x_tickv
 					},
 					padding: { left: 0, right: 10 }
@@ -667,7 +690,7 @@ var recipe3dsPlottDraw = function(){
 					tick: {
 						fit: true,
 						count: 10,
-						format: d3.format( "01d" ),
+						format: d3.format( "d" ),
 						values: y_tickv
 					},
 			  		padding: { top: 10, bottom: 0 }
@@ -687,7 +710,8 @@ var recipe3dsPlottDraw = function(){
 				grouped: false,
 				contents: function ( d, defaultTitleFormat, defaultValueFormat, color ) {
 					var tooltip_html = '<table style="background-color:#ffffff; font-size:1.5em;">';
-					tooltip_html += '<tr><td colspan="2"  style="background-color:mistyrose;">' + names[d[0].index] + '</td></tr>'
+					var key = d[0].x.toFixed( 1 ) + d[0].value.toFixed( 1 );
+					tooltip_html += '<tr><td colspan="2"  style="background-color:mistyrose;">' + names_dic[ key ] + '</td></tr>'
 					tooltip_html += '<tr><td>' + x_values[0] + '</td><td>: ' + d[0].x + '</td></tr>'
 					tooltip_html += '<tr><td>' + y_values[0] + '</td><td>: ' + d[0].value + '</td></tr>'
 					tooltip_html += '</table>'

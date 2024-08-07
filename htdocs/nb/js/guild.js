@@ -1,4 +1,4 @@
-//guild.js ver 0.4.3 (2024/05/12)
+//guild.js ver 0.4.4 (2024/07/28)
 
 kp = 'koyomi/'
 
@@ -426,27 +426,15 @@ const initGinmi = function(){
 	$.post( "ginmi.cgi", { mod:'menu' }, function( data ){
 		$( "#LINE" ).html( data );
 
-		flashBW();
-		dline = true;
-		dl1 = true;
-		displayBW();
 	});
 	$.post( "ginmi.cgi", { mod:'' }, function( data ){
 		$( "#L1" ).html( data );
 	});
+
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
-
-const ginmiForm = function( mod ){
-	$.post( "ginmi.cgi", { mod:mod, command:'form' }, function( data ){
-		$( "#L1" ).html( data );
-
-		flashBW();
-		dline = true;
-		dl1 = true;
-		displayBW();
-	});
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Physique //////////////////////////////////////////////////////////////
@@ -454,7 +442,7 @@ const ginmiForm = function( mod ){
 // Physique init
 var initPhysique = function(){
 	flashBW();
-	$.post( "physique.cgi", { mod:'line' }, function( data ){
+	$.post( "physique.cgi", { mod:'menu' }, function( data ){
 		$( "#LINE" ).html( data );
 
 		dline = true;
@@ -468,52 +456,26 @@ var initPhysique = function(){
 	});
 };
 
-var PhysiqueForm = function( mod ){
-	$.post( "physique.cgi", { mod:mod, step:'form' }, function( data ){
-		$( "#L1" ).html( data );
 
-		$.post( "physique.cgi", { mod:mod, step:'chart' }, function( data ){
-			$( "#L2" ).html( data );
-
-			$.post( "physique.cgi", { mod:mod, step:'notice', jsf:"1" }, function( data ){
-				$( "#L3" ).html( data );
-			
-				dl2 = true;
-				dl3 = true;
-				displayBW();
-			});
-		});
-	});
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Mother and child //////////////////////////////////////////////////////////////
 
 // Mother and child init
-var initMomChai = function(){
+const initMomChai = function(){
 	flashBW();
-	$.post( "momchai.cgi", { mod:'line' }, function( data ){
+	$.post( "momchai.cgi", { mod:'menu' }, function( data ){
 		$( "#LINE" ).html( data );
 
-		dline = true;
-		displayBW();
 	});
 	$.post( "momchai.cgi", { mod:'' }, function( data ){
 		$( "#L1" ).html( data );
 
-		dl1 = true;
-		displayBW();
 	});
-};
 
-var MomChaiForm = function( mod ){
-	$.post( "momchai.cgi", { mod:mod, step:'form' }, function( data ){ $( "#L1" ).html( data );});
-	$.post( "momchai.cgi", { mod:mod, step:'chart' }, function( data ){
-		$( "#L2" ).html( data );
-
-		dl2 = true;
-		displayBW();
-	});
+	dline = true;
+	dl1 = true;
+	displayBW();
 };
 
 /////////////////////////////////////////////////////////////////////////////////

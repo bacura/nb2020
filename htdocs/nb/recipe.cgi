@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe editor 0.2.0 (2024/02/17)
+#Nutrition browser 2020 recipe editor 0.2.1 (2024/07/28)
 
 #==============================================================================
 #COMMON LIBRARY
@@ -527,8 +527,8 @@ end
 #==============================================================================
 #FRONT SCRIPT
 #==============================================================================
-
-js = <<-"JS"
+if command == 'view'
+	js = <<-"JS"
 <script type='text/javascript'>
 
 // Recipe save
@@ -661,4 +661,6 @@ var photoDel = function( code ){
 </script>
 JS
 
-puts js
+	puts js
+
+end

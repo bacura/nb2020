@@ -1,10 +1,11 @@
-# Weight loss module for Physique 0.30b (2024/03/26)
+# Weight loss module for Physique 0.31b (2024/08/06)
 #encoding: utf-8
 
-@module = 'weight-loss'
 @period = 96
 
-def physique_module( cgi, db, l )
+def physique_module( cgi, db )
+	l = module_lp( db.user.language )
+	mod = cgi['mod']
 	today_p = Time.parse( @datetime )
 
 	puts "LOAD bio config<br>" if @debug
@@ -28,17 +29,17 @@ def physique_module( cgi, db, l )
 	html = ''
 	case cgi['step']
 	when 'form'
-		module_js( l )
+		module_js( mod, l )
 		start_date = $DATE
 		pal = 1.50
 		eenergy = calc_energy( weight, height, age, sex, pal )
 
-		r = db.query( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' and module='#{@module}';", false )
+		r = db.query( "SELECT json FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' and module='#{mod}';", false )
 		if r.first
 			mod_cfg_h = JSON.parse( r.first['json'] )
-			start_date = mod_cfg_h[@module]['start_date']
-			pal = mod_cfg_h[@module]['pal'].to_f
-			eenergy = mod_cfg_h[@module]['eenergy'].to_i
+			start_date = mod_cfg_h[mod]['start_date']
+			pal = mod_cfg_h[mod]['pal'].to_f
+			eenergy = mod_cfg_h[mod]['eenergy'].to_i
 		end
 		sex_ = [l['male'], l['female']]
 
@@ -62,20 +63,20 @@ html = <<-"HTML"
 	<div class='col-3'>
 		<div class='input-group input-group-sm'>
 			<span class='input-group-text'>#{l['start_date']}</span>
-			<input type='date' class='form-control' id='start_date' value='#{start_date}' onchange='drawChart()'>
+			<input type='date' class='form-control' id='start_date' value='#{start_date}' onchange='WeightLossChartDraw()'>
 		</div>
 	</div>
 	<div class='col-3'>
 		<div class="input-group input-group-sm">
 			<label class="input-group-text">#{l['pal']}</label>
-			<input type='number' min='0.5' max='2.5' step='0.1' class='form-control' id='pal' value='#{pal}' onchange='drawChart()'>
+			<input type='number' min='0.5' max='2.5' step='0.1' class='form-control' id='pal' value='#{pal}' onchange='WeightLossChartDraw()'>
 		</div>
 	</div>
 
 	<div class='col-4'>
 		<div class='input-group input-group-sm'>
 			<span class='input-group-text'>#{l['eenergy']}</span>
-			<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}' onchange='drawChart()'>
+			<input type='number' class='form-control' id='eenergy' min='0' value='#{eenergy}' onchange='WeightLossChartDraw()'>
 		</div>
 	</div>
 </div>
@@ -89,12 +90,12 @@ HTML
 		pal = cgi['pal'].to_f
 		eenergy = cgi['eenergy'].to_i
 
-		json = JSON.generate( { @module => { "start_date" => start_date, "pal" => pal, "eenergy" => eenergy }} )
-		res = db.query( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' AND module='#{@module}';", false )
+		json = JSON.generate( { mod => { "start_date" => start_date, "pal" => pal, "eenergy" => eenergy }} )
+		res = db.query( "SELECT module FROM #{$MYSQL_TB_MODJ} WHERE user='#{db.user.name}' AND module='#{mod}';", false )
 		if res.first
-			db.query( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{db.user.name}' AND module='#{@module}';", true )
+			db.query( "UPDATE #{$MYSQL_TB_MODJ} SET json='#{json}' WHERE user='#{db.user.name}' AND module='#{mod}';", true )
 		else
-			db.query( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{db.user.name}', module='#{@module}';", true )
+			db.query( "INSERT INTO #{$MYSQL_TB_MODJ} SET json='#{json}', user='#{db.user.name}', module='#{mod}';", true )
 		end
 		start_date_p = Time.parse( start_date )
 		end_date = ( start_date_p + ( @period - 1 ) * 86400 ).strftime( "%Y-%m-%d" )
@@ -312,9 +313,9 @@ HTML
 		puts raw.join( ':' )
 		exit
 
-	when 'chart'
+	when 'results'
 		html = '<div class="row">'
-		html << "<div class='col'><div id='physique_#{@module}-chart' align='center'></div>"
+		html << "<div class='col'><div id='physique_#{mod}-chart' align='center'></div>"
 		html << '</div>'
 
 	when 'notice'
@@ -364,11 +365,11 @@ def calc_energy( weight, height, age, sex, pal )
 end
 
 
-def module_js( l )
+def module_js( mod, l )
 	js = <<-"JS"
 <script type='text/javascript'>
 
-var drawChart = function(){
+var WeightLossChartDraw = function(){
 	dl3 = true;
 //	dl4 = true;
 	displayBW();
@@ -377,12 +378,12 @@ var drawChart = function(){
 	var pal = document.getElementById( "pal" ).value;
 	var eenergy = document.getElementById( "eenergy" ).value;
 
-//	$.post( 'physique.cgi', { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( '#L4' ).html( data );});
-	$.post( "physique.cgi", { mod:'#{@module}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
+//	$.post( 'physique.cgi', { mod:'#{mod}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( data ){ $( '#L4' ).html( data );});
+	$.post( "physique.cgi", { mod:'#{mod}', step:'raw', start_date:start_date, pal:pal, eenergy:eenergy }, function( raw ){
 
 		var column = ( String( raw )).split( ':' );
 		var chart = c3.generate({
-			bindto: '#physique_#{@module}-chart',
+			bindto: '#physique_#{mod}-chart',
 //			size: { width: 960, height: 450 },
 
 			data: {
@@ -445,7 +446,7 @@ var drawChart = function(){
 		});
 
 		var average_e = ( String( column[7] )).split(',')
-		$.post( "physique.cgi", { mod:'#{@module}', step:'notice' }, function( data ){
+		$.post( "physique.cgi", { mod:'#{mod}', step:'notice' }, function( data ){
 			$( "#L3" ).html( data );
 			document.getElementById( 'aveep1' ).value = average_e[0];
 			document.getElementById( 'aveep2' ).value = average_e[1];
@@ -456,11 +457,14 @@ var drawChart = function(){
 
 };
 
-drawChart();
+
+$( document ).ready( function(){
+	WeightLossChartDraw();
+});
 
 </script>
 JS
-	return js
+	puts js
 end
 
 

@@ -1,13 +1,14 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 nutrition mother & child tools 0.01b (2024/02/26)
+#Nutrition browser 2020 nutrition mother & child tools 0.10b (2024/07/06)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
+@mod_path = 'momchai_'
 
 #==============================================================================
 #LIBRARY
@@ -20,33 +21,21 @@ require './body'
 #DEFINITION
 #==============================================================================
 
-# Language pack
-def language_pack( language )
-	l = Hash.new
+#### Menu on line
+def menu( user )
+	mods = Dir.glob( "#{$HTDOCS_PATH}/#{@mod_path}/mod_*" )
+	mods.map! do |x|
+		x = File.basename( x )
+		x = x.sub( 'mod_', '' )
+		x = x.sub( '.rb', '' )
+	end
 
-	#Japanese
-	l['jp'] = {
-		'momchai' 	=> "母子管理モジュール",\
-		'growth' 	=> "成長曲線"
-	}
-
-	return l[language]
-end
-
-
-#### line menu
-def line( l )
-	html = <<-"HTML"
-	<div align='center' class='badge rounded-pill bg-info text-dark' onclick="MomChaiForm( 'growth-curve' )">#{l['growth']}</div>
-HTML
-
-	return html
-end
-
-
-####
-def init( l )
-	html = "<div align='center'>#{l['momchai']}</div>"
+	html = ''
+	mods.each.with_index( 1 ) do |e, i|
+		require "#{$HTDOCS_PATH}/#{@mod_path}/mod_#{e}.rb"
+		ml = module_lp( user.language )
+		html << "<span class='btn badge rounded-pill ppill' onclick='MomChaiForm( \"#{e}\" )'>#{ml['mod_name']}</span>&nbsp;"
+	end
 
 	return html
 end
@@ -54,35 +43,63 @@ end
 #==============================================================================
 # Main
 #==============================================================================
-
 user = User.new( @cgi )
-user.debug if @debug
-l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST
 mod = @cgi['mod']
 html_init( nil ) if @cgi['step'] != 'json'
 
-
 if @debug
+	user.debug
 	puts "mod:#{mod}<br>\n"
 	puts "<hr>\n"
 end
 
 
-####
-html = "<div class='container-fluid'>"
-if mod == 'line'
-	exlib_plot()
-	html = line( l )
-elsif mod == ''
-	html = init( l )
+#### Driver
+html = ''
+if mod == 'menu'
+	puts 'MENU<br>' if @debug
+	unless user.status == 7
+		html = menu( user )
+	else
+		html = "<span class='ref_error'>[ginmi]Astral user limit!</span><br>"
+	end
 else
-	require "#{$HTDOCS_PATH}/momchai_/mod_#{mod}.rb"
-	html = momchai_module( @cgi, user, @debug )
+	if mod == ''
+		html =  "<div align='center'>Mother and child assessment tools</div>"
+	else
+		require "#{$HTDOCS_PATH}/#{@mod_path}/mod_#{mod}.rb"
+		html = momchai_module( @cgi, db ) unless user.status == 7
+	end
 end
-html << "</div>"
-
-
+puts 'HTML<br>' if @debug
 puts html
+
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
+if mod == ''
+	js = <<-"JS"
+<script type='text/javascript'>
+
+var MomChaiForm = function( mod ){
+	$.post( "#{script}.cgi", { mod:mod, step:'form' }, function( data ){
+		$( "#L1" ).html( data );
+
+		$.post( "#{script}.cgi", { mod:mod, step:'results' }, function( data ){
+			$( "#L2" ).html( data );
+		});
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+</script>
+JS
+
+	puts js 
+end

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 fcz edit list 0.1.0 (2024/05/20)
+#Nutrition browser 2020 fcz edit list 0.1.1 (2024/05/22)
 
 #==============================================================================
 #STATIC
@@ -173,7 +173,7 @@ puts "FCZ list<br>" if @debug
 fcz_html = ''
 offset = ( page - 1 ) * page_limit
 offset = 0 if offset < 0
-r = db.query( "SELECT code, origin, base, name FROM #{$MYSQL_TB_FCZ} WHERE base='#{base}' ORDER BY name LIMIT #{offset}, #{page_limit};", false )
+r = db.query( "SELECT code, origin, base, name FROM #{$MYSQL_TB_FCZ} WHERE base='#{base}' AND user='#{user.name}' ORDER BY name LIMIT #{offset}, #{page_limit};", false )
 r.each do |e|
 	fcz_html << "<tr style='font-size:medium;' oncontextmenu=\"modalTip( '#{e['code']}' )\">"
 	fcz_html << "<td onclick=\"initFCZedit( '#{e['code']}' )\">#{e['name']}</td>"

@@ -1,17 +1,15 @@
-# Growth curve module for Momchai 0.01b (2022/09/11)
+# Growth curve module for Momchai 0.10b (2024/08/06)
 #encoding: utf-8
 
-require 'time'
-
-@module = 'growth-curve'
 @debug = false
 
-def momchai_module( cgi, user, debug )
-	l = module_lp( user.language )
+def momchai_module( cgi, db )
+	l = module_lp( db.user.language )
+	mod = cgi['mod']
 	today_p = Time.parse( @datetime )
 
 	puts "LOAD bio config<br>" if @debug
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{user.name}';", false, @debug )
+	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false, @debug )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -33,9 +31,10 @@ def momchai_module( cgi, user, debug )
 	end
 
 	html = ''
+	p cgi['step'] if @debug
 	case cgi['step']
 	when 'form'
-		module_js( l )
+		module_js( mod, l )
 
 		sex_ = [l['male'], l['female']]
 
@@ -72,8 +71,8 @@ HTML
 ########
 		########
 
-	when 'raw'
-		puts "LOAD height & weight<br>" if @debug
+	when 'raw', 'monitor'
+		puts "LOAD height & weight<br>" if @debug && step == 'monitor'
 		hx_day = []
 		wx_day = []
 		height_measured = []
@@ -91,13 +90,13 @@ HTML
 			age_select = 2
 			growth_period = 6
 		end
-		p age_select, growth_period if @debug
+		p age_select, growth_period if @debug && step == 'monitor'
 
 		birthdate = birth_p.strftime( "%Y-%m-%d" )
 		growth_date = ( birth_p + growth_period * 86400 ).strftime( "%Y-%m-%d" )
-		p birthdate, growth_date if @debug
+		p birthdate, growth_date if @debug && step == 'monitor'
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{user.name}' AND date BETWEEN '#{birthdate}' AND '#{growth_date}';", false, @debug )
+		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND date BETWEEN '#{birthdate}' AND '#{growth_date}';", false, @debug )
 		r.each do |e|
 			kexc = JSON.parse( e['cell'] )
 			day_pass = (( Time.parse(e['date'].strftime( "%Y-%m-%d" )) - birth_p ) / 86400 ).to_i
@@ -120,12 +119,13 @@ HTML
 		raw[8] = age_select
 		raw[9] = sex
 		puts raw.join( ':' )
+
 		exit
 
-	when 'chart'
+	when 'results'
 		html = '<div class="row">'
-		html << "<div class='col-6' align='center'><h6>#{l['data_height']}</h6><div id='momchai_#{@module}-height'></div></div>"
-		html << "<div class='col-6' align='center'><h6>#{l['data_weight']}</h6><div id='momchai_#{@module}-weight'></div></div>"
+		html << "<div class='col-6' align='center'><h6>#{l['data_height']}</h6><div id='momchai_#{mod}-height'></div></div>"
+		html << "<div class='col-6' align='center'><h6>#{l['data_weight']}</h6><div id='momchai_#{mod}-weight'></div></div>"
 		html << '</div>'
 	end
 
@@ -133,28 +133,28 @@ HTML
 end
 
 
-def module_js( l )
+def module_js( mod, l )
 	js = <<-"JS"
 <script type='text/javascript'>
 
-var drawChart = function(){
+var MomChaiChartDraw = function(){
 //	dl3 = true;
 	displayBW();
 
-//	$.post( "momchai.cgi", { mod:'#{@module}', step:'raw' }, function( data ){ $( "#L3" ).html( data );});
-	$.post( "momchai.cgi", { mod:'#{@module}', step:'raw' }, function( raw ){
+//	$.post( "momchai.cgi", { mod:'#{mod}', step:'raw' }, function( data ){ $( "#L3" ).html( data );});
+	$.post( "momchai.cgi", { mod:'#{mod}', step:'raw' }, function( raw ){
 
 		var column = ( String( raw )).split( ':' );
 		var hx_day = ( String( column[0] )).split(',');
 		var wx_day = ( String( column[1] )).split(',');
-		var y_heihgt = ( String( column[2] )).split(',');
+		var y_height = ( String( column[2] )).split(',');
 		var y_weight = ( String( column[3] )).split(',');
 		var age_select = column[8];
 		var sex = column[9];
 		var x_range = new Array;
-		x_range[0] = ["日付",0,1,2,3,4,5];
-		x_range[1] = ["日付",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710];
-		x_range[2] = ["日付",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710,820,1002,1186,1368,1551,1733,1916,2098,2281];
+		x_range[0] = ["#{l['date']}",0,1,2,3,4,5];
+		x_range[1] = ["#{l['date']}",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710];
+		x_range[2] = ["#{l['date']}",0,1,2,3,4,5,30,45,75,105,135,165,195,225,255,285,315,345,380,410,440,470,500,530,560,590,620,650,680,710,820,1002,1186,1368,1551,1733,1916,2098,2281];
 		var x_ps = x_range[age_select];
 
 		if( sex == 0 ){
@@ -192,34 +192,34 @@ var drawChart = function(){
 		}
 
 		var chart_gch = c3.generate({
-			bindto: '#momchai_#{@module}-height',
+			bindto: '#momchai_#{mod}-height',
 			size: { height: 600 },
 			data: {
 				columns: [
-					hx_day, y_heihgt,
+					hx_day, y_height,
 					x_ps,
 					hps3, hps10, hps25, hps50, hps75, hps90, hps97
 				],
 				type: 'spline',
 				xs:{
 					#{l['data_height']}: 'hx_day',
-					'3%': '日付',
-					'10%': '日付',
-					'25%': '日付',
-					'50%': '日付',
-					'75%': '日付',
-					'90%': '日付',
-					'97%': '日付'
+					'3%': '#{l['date']}',
+					'10%': '#{l['date']}',
+					'25%': '#{l['date']}',
+					'50%': '#{l['date']}',
+					'75%': '#{l['date']}',
+					'90%': '#{l['date']}',
+					'97%': '#{l['date']}'
 				},
 				types:{ '#{l['data_height']}': 'scatter' },
 				colors: {
 					#{l['data_height']}: '#00BB00',
 					'3%': '#969696',
-					'10%': '#646464',
+					'10%': '#6464c4',
 					'25%': '#646464',
 					'50%': '#000000',
 					'75%': '#646464',
-					'90%': '#646464',
+					'90%': '#c46464',
 					'97%': '#969696'
 				}
 			},
@@ -238,7 +238,7 @@ var drawChart = function(){
 		});
 //--------------------------------------------------------------------------
 		var chart_gcw = c3.generate({
-			bindto: '#momchai_#{@module}-weight',
+			bindto: '#momchai_#{mod}-weight',
 			size: { height: 600 },
 			data: {
 				columns: [
@@ -249,23 +249,23 @@ var drawChart = function(){
 				type: 'spline',
 				xs:{
 					#{l['data_weight']}: 'wx_day',
-					'3%': '日付',
-					'10%': '日付',
-					'25%': '日付',
-					'50%': '日付',
-					'75%': '日付',
-					'90%': '日付',
-					'97%': '日付'
+					'3%': '#{l['date']}',
+					'10%': '#{l['date']}',
+					'25%': '#{l['date']}',
+					'50%': '#{l['date']}',
+					'75%': '#{l['date']}',
+					'90%': '#{l['date']}',
+					'97%': '#{l['date']}'
 				},
 				types:{ '#{l['data_weight']}': 'scatter' },
 				colors: {
 					#{l['data_weight']}: '#BB00BB',
 					'3%': '#969696',
-					'10%': '#646464',
+					'10%': '#6464c4',
 					'25%': '#646464',
 					'50%': '#000000',
 					'75%': '#646464',
-					'90%': '#646464',
+					'90%': '#c46464',
 					'97%': '#969696'
 				}
 			},
@@ -283,11 +283,13 @@ var drawChart = function(){
 			line: { connectNull: true }
 		});
 	});
-}
+};
 
 
+$( document ).ready( function(){
+	MomChaiChartDraw();
+});
 
-drawChart();
 
 </script>
 JS
@@ -297,7 +299,10 @@ end
 
 def module_lp( language )
 	l = Hash.new
-	l['jp'] = { 'male' => "男性",\
+	l['jp'] = {
+		'mod_name' => "成長曲線",\
+		'date' => "日付",\
+		'male' => "男性",\
 		'female' => "女性",\
 		'chart_name' => "成長曲線",\
 		'sex' => "代謝的性別",\

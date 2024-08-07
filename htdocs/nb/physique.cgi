@@ -7,8 +7,8 @@
 #STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
-$mod_path = 'physique_'
+script = File.basename( $0, '.cgi' )
+@mod_path = 'physique_'
 
 #==============================================================================
 #LIBRARY
@@ -21,9 +21,9 @@ require './body'
 #DEFINITION
 #==============================================================================
 
-#### Menu no line
+#### Menu on line
 def menu( user )
-	mods = Dir.glob( "#{$HTDOCS_PATH}/#{$mod_path}/mod_*" )
+	mods = Dir.glob( "#{$HTDOCS_PATH}/#{@mod_path}/mod_*" )
 	mods.map! do |x|
 		x = File.basename( x )
 		x = x.sub( 'mod_', '' )
@@ -32,7 +32,7 @@ def menu( user )
 
 	html = ''
 	mods.each.with_index( 1 ) do |e, i|
-		require "#{$HTDOCS_PATH}/#{$mod_path}/mod_#{e}.rb"
+		require "#{$HTDOCS_PATH}/#{@mod_path}/mod_#{e}.rb"
 		ml = module_lp( user.language )
 		html << "<span class='btn badge rounded-pill ppill' onclick='PhysiqueForm( \"#{e}\" )'>#{ml['mod_name']}</span>"
 	end
@@ -40,40 +40,66 @@ def menu( user )
 	return html
 end
 
-
 #==============================================================================
 # Main
 #==============================================================================
-
 user = User.new( @cgi )
-user.debug if @debug
 db = Db.new( user, @debug, false )
-
 
 #### Getting POST
 mod = @cgi['mod']
 html_init( nil ) if @cgi['step'] != 'json'
 
-
 if @debug
+	user.debug
 	puts "mod:#{mod}<br>\n"
 	puts "<hr>\n"
 end
 
 
-####
-html = "<div class='container-fluid'>"
-if mod == 'line'
-	exlib_plot()
-	html = menu( user )
-elsif mod == ''
-	html =  "<div align='center'>Physique</div>"
+#### Driver
+html = ''
+if mod == 'menu'
+	puts 'MENU<br>' if @debug
+	unless user.status == 7
+		html = menu( user )
+	else
+		html = "<span class='ref_error'>[ginmi]Astral user limit!</span><br>"
+	end
 else
-	require "#{$HTDOCS_PATH}/physique_/mod_#{mod}.rb"
-	l = module_lp( user.language )
-	html = physique_module( @cgi, db, l )
+	if mod == ''
+		html =  "<div align='center'>Physique assessment tools</div>"
+	else
+		require "#{$HTDOCS_PATH}/#{@mod_path}/mod_#{mod}.rb"
+		html = physique_module( @cgi, db ) unless user.status == 7
+	end
 end
-html << "</div>"
-
+puts 'HTML<br>' if @debug
 puts html
-puts module_js( l ) if @cgi['jsf'] == '1'
+
+
+#==============================================================================
+#FRONT SCRIPT
+#==============================================================================
+if mod == ''
+	js = <<-"JS"
+<script type='text/javascript'>
+
+var PhysiqueForm = function( mod ){
+	$.post( "#{script}.cgi", { mod:mod, step:'form' }, function( data ){
+		$( "#L1" ).html( data );
+
+		$.post( "#{script}.cgi", { mod:mod, step:'results' }, function( data ){
+			$( "#L2" ).html( data );
+		});
+
+		dl2 = true;
+		displayBW();
+	});
+};
+
+</script>
+JS
+
+	puts js 
+end

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.4.1 (2024/07/13)
+#Nutrition browser 2020 recipe list 0.4.3 (2024/07/17)
 	
 
 #==============================================================================
@@ -32,7 +32,7 @@ def language_pack( language )
 		'nextp' 	=> "次項",\
 		'range' 	=> "表示範囲",\
 		'all' 		=> "全て",\
-		'all_ns'	=> "全て（ー調%）",\
+		'all_ns'	=> "全て（ー調味系）",\
 		'draft' 	=> "仮組",\
 		'protect' 	=> "保護",\
 		'public' 	=> "公開",\
@@ -124,7 +124,8 @@ end
 def role_html( role, l )
 	html = l['role']
 	html << '<select class="form-select form-select-sm" id="role">'
-	html << "<option value='99'>#{l['all_ns']}</option>"
+	html << "<option value='99'>#{l['all']}</option>"
+	html << "<option value='98' #{$SELECT[role == 98]}>#{l['all_ns']}</option>"
 	@recipe_role.size.times do |c|
 		html << "<option value='#{c}' #{$SELECT[role == c]}>#{@recipe_role[c]}</option>"
 	end
@@ -554,13 +555,21 @@ else
 end
 
 sql_where << " AND type='#{type}'" unless type == 99
-sql_where << " AND role='#{role}'" unless role == 99
+if role == 98
+	sql_where << " AND role!='100' AND role!='7'"
+elsif role != 99
+	sql_where << " AND role='#{role}'"
+end
 sql_where << " AND tech='#{tech}'" unless tech == 99
 sql_where << " AND time>0 AND time<=#{time}" unless time == 99
 sql_where << " AND cost>0 AND cost<=#{cost}" unless cost == 99
 
 sql_where_ij << " AND t1.type='#{type}'" unless type == 99
-sql_where_ij << " AND t1.role='#{role}'" unless role == 99
+if role == 98
+	sql_where_ij << " AND t1.role!='100' AND t1.role!='7'"
+elsif role != 99
+	sql_where_ij << " AND t1.role='#{role}'"
+end
 sql_where_ij << " AND t1.tech='#{tech}'" unless tech == 99
 sql_where_ij << " AND t1.time>0 AND t1.time<=#{time}" unless time == 99
 sql_where_ij << " AND t1.cost>0 AND t1.cost<=#{cost}" unless cost == 99
