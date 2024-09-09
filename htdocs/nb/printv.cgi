@@ -404,11 +404,10 @@ makeQRcode( url, code )
 
 puts 'Mode select HTML<br>' if @debug
 mode_list = %w( シンプル表示 標準表示 栄養表示 完全栄養表示 )
-mode_selected = selected( 0, 3, template )
 mode_html = '<div class="input-group input-group-sm">'
 mode_html << '<span class="input-group-text">表示モード</span>'
 mode_html << "<select class='form-select' name='t'>"
-0.upto( 3 ) do |c| mode_html << "<option value='#{c}' #{mode_selected[c]}>#{mode_list[c]}</option>" end
+0.upto( 3 ) do |c| mode_html << "<option value='#{c}' #{$SELECT[c== template]}>#{mode_list[c]}</option>" end
 mode_html << "</select>"
 mode_html << '</div>'
 

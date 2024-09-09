@@ -1,11 +1,11 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menul food composition analysis 0.02b
+#Nutrition browser 2020 menul food composition analysis 0.0.2 (2014/08/21)
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 require './brain'
 
 
@@ -80,10 +80,6 @@ if @debug
 	puts "frct_accu: #{frct_accu}<br>"
 	puts "<hr>"
 end
-
-
-puts 'Checking SELECT & CHECK <br>' if @debug
-frct_select = selected( 1, 3, frct_mode )
 
 
 puts 'Setting palette <br>' if @debug
@@ -214,19 +210,19 @@ html = <<-"HTML"
 	<div class="row">
 		<div class='col-4' align='center'>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{checked( frct_accu )} onchange="menuReAnalysis('#{code}')">#{lp[2]}
+    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{$CHECK[frct_accu]} onchange="menuReAnalysis('#{code}')">#{lp[2]}
 			</div>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{checked( ew_mode )} onchange="menuReAnalysis('#{code}')">#{lp[3]}
+    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{$CHECK[ew_mode]} onchange="menuReAnalysis('#{code}')">#{lp[3]}
 			</div>
 		</div>
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="">#{lp[4]}</label>
 				<select class="form-select" id="frct_mode" onchange="menuReAnalysis('#{code}')">
-					<option value="1"#{frct_select[1]}>#{lp[5]}</option>
-					<option value="2"#{frct_select[2]}>#{lp[6]}</option>
-					<option value="3"#{frct_select[3]}>#{lp[7]}</option>
+					<option value="1"#{$SELECT[frct_mode == 1]}>#{lp[5]}</option>
+					<option value="2"#{$SELECT[frct_mode == 2]}>#{lp[6]}</option>
+					<option value="3"#{$SELECT[frct_mode == 3]}>#{lp[7]}</option>
 				</select>
 			</div>
 		</div>

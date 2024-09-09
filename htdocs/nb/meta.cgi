@@ -1,229 +1,160 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser meta data viewer 0.01b
+#Nutrition browser meta data viewer 0.0.1.AI (2024/08/25)
+
+#==============================================================================
+#STATIC
+#==============================================================================
+@debug = false
+#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './soul'
 
-
-#==============================================================================
-#STATIC
-#==============================================================================
-script = 'meta'
-@debug = false
-
-
 #==============================================================================
 #DEFINITION
 #==============================================================================
 
-def meta_food( lp )
-	fct_num = 0
-	fctu_num = 0
-	fctp_num = 0
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_FCT};", false, @debug )
-	fct_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_FCTP};", false, @debug )
-	r.each do |e|
-		if /U/ =~ e['FN']
-			fctu_num += 1
-		elsif /P/ =~ e['FN']
-			fctp_num += 1
-		end
-	end
-
-	html = <<-"HTML"
-<h5>#{lp[1]}</h5>
-<table class="table">
-	<thead>
-		<tr>
-			<th scope="col">#{lp[2]}</th>
-			<th scope="col">#{lp[3]}</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>#{lp[4]}</td>
-			<td>#{fct_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[5]}</td>
-			<td>#{fctu_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[6]}</td>
-			<td>#{fctp_num}</td>
-		</tr>
-	</tbody>
-</table>
-HTML
-	return html
+# Language pack
+def language_pack( language )
+	{
+		'jp' => {
+			:number 		=> "登録数",
+			:account 		=> "アカウント",
+			:total			=> "累計",
+			:account_kind	=> "アカウント種別",
+			:general		=> "一般",
+			:admin_guest	=> "管理用・ゲスト",
+			:guild_mem		=> "ギルドメンバー",
+			:guild_mem_moe	=> "ギルドメンバー・萌",
+			:guild_mem_shun	=> "ギルドメンバー・旬",
+			:daughter		=> "娘アカウント",
+			:food			=> "食品",
+			:food_kind		=> "食品種別",
+			:food_regular	=> "正規食品",
+			:food_user		=> "ユーザー食品",
+			:food_user_pub	=> "公開ユーザー食品",
+			:recipe			=> "レシピ",
+			:recipe_kind	=> "レシピ種別",
+			:recipe_all		=> "全レシピ",
+			:recipe_pub		=> "全公開レシピ",
+			:recipe_san		=> "さんレシピ",
+			:recipe_pub_san	=> "さん公開レシピ",
+			:recipe_all_es	=> "全レシピ（調味％を除く）",
+			:recipe_pub_es	=> "全公開レシピ（調味％を除く）",
+			:menu			=> "献立",
+			:menu_kind		=> "献立種別",
+			:menu_all		=> "全献立",
+			:menu_pub		=> "公開献立"
+		}
+	}[language]
 end
 
-
-def meta_user( lp )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER};", false, @debug )
-	cumulative_user_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=1;", false, @debug )
-	general_user_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=2;", false, @debug )
-	guild_member_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=4;", false, @debug )
-	guild_moe_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=5;", false, @debug )
-	guild_shun_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=6;", false, @debug )
-	children_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status=3 OR status=8 OR status=9;", false, @debug )
-	admin_user_num = r.size
-
-	html = <<-"HTML"
-<h5>#{lp[7]}</h5>
+def meta_section( title, data )
+	<<-HTML
+<h5>#{title}</h5>
 <table class="table">
 	<thead>
 		<tr>
-			<th scope="col">#{lp[8]}</th>
-			<th scope="col">#{lp[9]}</th>
+			<th scope="col" width='25%'>#{data[:kind_label]}</th>
+			<th scope="col">#{data[:number_label]}</th>
 		</tr>
 	</thead>
 	<tbody>
-		<tr>
-			<td>#{lp[26]}</td>
-			<td>#{cumulative_user_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[10]}</td>
-			<td>#{general_user_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[11]}</td>
-			<td>#{guild_member_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[27]}</td>
-			<td>#{guild_moe_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[28]}</td>
-			<td>#{guild_shun_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[12]}</td>
-			<td>#{admin_user_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[29]}</td>
-			<td>#{children_num}</td>
-		</tr>
+		#{data[:rows].map do |row| "<tr><td>#{row[:kind]}</td><td>#{row[:count]}</td></tr>" end.join}
 	</tbody>
 </table>
 HTML
-
-	return html
 end
 
+def meta_food( db, l )
+	food_counts = {
+		regular: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_FCT};", false ).first&.dig('count') || 0,
+		user: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_FCTP} WHERE FN LIKE 'U%';", false ).first&.dig('count') || 0,
+		public: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_FCTP} WHERE FN LIKE 'P%';", false ).first&.dig('count') || 0
+	}
 
-def meta_recipe( lp, user )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE};", false, @debug )
-	recipe_total_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE role!=100;", false, @debug )
-	recipe_real_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1;", false, @debug )
-	recipe_public_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE public=1 AND role!=100;", false, @debug )
-	recipe_real_public_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}';", false, @debug )
-	recipe_user_num = r.size
-
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' and public=1;", false, @debug )
-	recipe_user_public_num = r.size
-
-	html = <<-"HTML"
-<h5>#{lp[13]}</h5>
-<table class="table">
-	<thead>
-		<tr>
-			<th scope="col">#{lp[14]}</th>
-			<th scope="col">#{lp[15]}</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>#{lp[16]}</td>
-			<td>#{recipe_total_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[30]}</td>
-			<td>#{recipe_real_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[17]}</td>
-			<td>#{recipe_public_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[31]}</td>
-			<td>#{recipe_real_public_num}</td>
-		</tr>
-		<tr>
-			<td>#{user.name}#{lp[18]}</td>
-			<td>#{recipe_user_num}</td>
-		</tr>
-		<tr>
-			<td>#{user.name}#{lp[19]}</td>
-			<td>#{recipe_user_public_num}</td>
-		</tr>
-	</tbody>
-</table>
-HTML
-
-	return html
+	meta_section(
+		l[:food],
+		kind_label: l[:food_kind],
+		number_label: l[:number],
+		rows: [
+			{ kind: l[:food_regular], count: food_counts[:regular] },
+			{ kind: l[:food_user], count: food_counts[:user] },
+			{ kind: l[:food_user_pub], count: food_counts[:public] }
+		]
+	)
 end
 
+def meta_user( db, l )
+	user_counts = {
+		total: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_USER};", false ).first&.dig('count') || 0,
+		general: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_USER} WHERE status=1;", false ).first&.dig('count') || 0,
+		guild: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_USER} WHERE status=2;", false ).first&.dig('count') || 0,
+		moe: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_USER} WHERE status=4;", false ).first&.dig('count') || 0,
+		shun: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_USER} WHERE status=5;", false ).first&.dig('count') || 0,
+		children: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_USER} WHERE status=6;", false ).first&.dig('count') || 0,
+		admin: db.query( "SELECT COUNT(*) AS count FROM #{$MYSQL_TB_USER} WHERE status IN (3, 8, 9);", false ).first&.dig('count') || 0
+	}
 
-def meta_menu( lp, user )
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU};", false, @debug )
-	menu_total_num = r.size
+	meta_section(
+		l[:account],
+		kind_label: l[:account_kind],
+		number_label: l[:number],
+		rows: [
+			{ kind: l[:total], count: user_counts[:total] },
+			{ kind: l[:general], count: user_counts[:general] },
+			{ kind: l[:guild_mem], count: user_counts[:guild] },
+			{ kind: l[:guild_mem_moe], count: user_counts[:moe] },
+			{ kind: l[:guild_mem_shun], count: user_counts[:shun] },
+			{ kind: l[:admin_guest], count: user_counts[:admin] },
+			{ kind: l[:daughter], count: user_counts[:children] }
+		]
+	)
+end
 
-	r = mdb( "SELECT * FROM #{$MYSQL_TB_MENU} WHERE public=1;", false, @debug )
-	menu_public_num = r.size
+def meta_recipe( db, l )
+	recipe_counts = {
+		total: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE};", false ).first&.dig('count') || 0,
+		real: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} WHERE role!=100;", false ).first&.dig('count') || 0,
+		public: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} WHERE public=1;", false ).first&.dig('count') || 0,
+		real_public: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} WHERE public=1 AND role!=100;", false ).first&.dig('count') || 0,
+		user: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}';", false ).first&.dig('count') || 0,
+		user_public: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' AND public=1;", false ).first&.dig('count') || 0
+	}
 
-	html = <<-"HTML"
-<h5>#{lp[20]}</h5>
-<table class="table">
-	<thead>
-		<tr>
-			<th scope="col">#{lp[21]}</th>
-			<th scope="col">#{lp[22]}</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>#{lp[23]}</td>
-			<td>#{menu_total_num}</td>
-		</tr>
-		<tr>
-			<td>#{lp[24]}</td>
-			<td>#{menu_public_num}</td>
-		</tr>
-	</tbody>
-</table>
-HTML
+	meta_section(
+		l[:recipe],
+		kind_label: l[:recipe_kind],
+		number_label: l[:number],
+		rows: [
+			{ kind: l[:recipe_all], count: recipe_counts[:total] },
+			{ kind: l[:recipe_all_es], count: recipe_counts[:real] },
+			{ kind: l[:recipe_pub], count: recipe_counts[:public] },
+			{ kind: l[:recipe_pub_es], count: recipe_counts[:real_public] },
+			{ kind: "#{db.user.name}#{l[:recipe_san]}", count: recipe_counts[:user] },
+			{ kind: "#{db.user.name}#{l[:recipe_pub_san]}", count: recipe_counts[:user_public] }
+		]
+	)
+end
 
-	return html
+def meta_menu( db, l )
+	menu_counts = {
+		total: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_MENU};", false ).first&.dig('count') || 0,
+		public: db.query( "SELECT COUNT(*) FROM #{$MYSQL_TB_MENU} WHERE public=1;", false ).first&.dig('count') || 0
+	}
+
+	meta_section(
+		l[:menu],
+		kind_label: l[:menu_kind],
+		number_label: l[:number],
+		rows: [
+			{ kind: l[:menu_all], count: menu_counts[:total] },
+			{ kind: l[:menu_pub], count: menu_counts[:public] }
+		]
+	)
 end
 
 #==============================================================================
@@ -232,8 +163,8 @@ end
 html_init( nil )
 
 user = User.new( @cgi )
-user.debug if @debug
-lp = user.load_lp( script )
+l = language_pack( user.language )
+db = Db.new( user, @debug, false )
 
 
 #### Getting POST data
@@ -243,23 +174,7 @@ if @debug
 	puts "<hr>"
 end
 
-
-html = ''
-case command
-when 'food'
-	html = meta_food( lp )
-
-when 'user'
-	html = meta_user( lp )
-
-when 'recipe'
-	html = meta_recipe( lp, user )
-
-when 'menu'
-	html = meta_menu( lp, user )
-
-else
-	html = "#{lp[25]}"
-end
-
-puts html
+puts meta_user( db, l )
+puts meta_food( db, l )
+puts meta_recipe( db, l )
+puts meta_menu( db, l )

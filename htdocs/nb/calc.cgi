@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser magic calc 0.07b (2020/12/17)
+#Nutrition browser magic calc 0.0.7 (2028/08/21)
 
 #==============================================================================
 #STATIC
@@ -101,12 +101,6 @@ r = mdb( "SELECT code, name, sum, dish from #{$MYSQL_TB_SUM} WHERE user='#{user.
 recipe_name = r.first['name']
 code = r.first['code']
 food_no, food_weight, total_weight = extract_sum( r.first['sum'], r.first['dish'].to_i, ew_mode )
-
-
-puts 'Checking SELECT & CHECK <br>' if @debug
-frct_select = selected( 1, 3, frct_mode )
-accu_check = checked( frct_accu )
-ew_check = checked( ew_mode )
 
 
 puts 'Setting palette <br>' if @debug
@@ -218,19 +212,19 @@ html = <<-"HTML"
 		</div>
 		<div class='col-3' align='left'>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{accu_check} onchange="recalcView('#{code}')">#{l['precision']}
+    			<input class="form-check-input" type="checkbox" id="frct_accu" value="1" #{$CHECK[frct_accu]} onchange="recalcView('#{code}')">#{l['precision']}
 			</div>
 			<div class="form-check form-check-inline">
-    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{ew_check} onchange="recalcView('#{code}')">#{l['ew']}
+    			<input class="form-check-input" type="checkbox" id="ew_mode" value="1" #{$CHECK[ew_mode]} onchange="recalcView('#{code}')">#{l['ew']}
 			</div>
 		</div>
 		<div class='col-3'>
 			<div class="input-group input-group-sm">
 				<label class="input-group-text" for="frct_mode">#{l['fract']}</label>
 				<select class="form-select form-select-sm" id="frct_mode" onchange="recalcView('#{code}')">
-					<option value="1"#{frct_select[1]}>#{l['round']}</option>
-					<option value="2"#{frct_select[2]}>#{l['ceil']}</option>
-					<option value="3"#{frct_select[3]}>#{l['floor']}</option>
+					<option value="1"#{$SELECT[frct_mode == 1]}>#{l['round']}</option>
+					<option value="2"#{$SELECT[frct_mode == 2]}>#{l['ceil']}</option>
+					<option value="3"#{$SELECT[frct_mode == 3]}>#{l['floor']}</option>
 				</select>
 				<span onclick="recalcView('#{code}')">#{l['recalc']}</span>&nbsp;
 			</div>

@@ -731,9 +731,11 @@ const memoryOpenLink = function( words, depth ){
 
 var metaDisplay = function( com ){
 	$.post( "meta.cgi", { command:com }, function( data ){
-		$( "#L3" ).html( data );
+		$( "#L2" ).html( data );
 
-		dl3 = true;
+		flashBW();
+		dl1 = true;
+		dl2 = true;
 		displayBW();
 	});
 };
@@ -965,8 +967,8 @@ var clearCT = function( code ){
 // Lucky star input ////////////////////////////////////////////////////////////////////////
 
 // Lucky☆入力ボタンを押してL2に入力画面を表示、そしてL1を非表示にする
-var luckyInput = function(){
-	$.post( "lucky.cgi", { command:'form' }, function( data ){
+const luckyInput = function(){
+	$.post( "lucky.cgi", { command:'init' }, function( data ){
 		$( "#L2" ).html( data );
 
 		flashBW();
@@ -974,41 +976,6 @@ var luckyInput = function(){
 		dl2 = true;
 		displayBW();
 	});
-};
-
-// Lucky☆転送ボタンを押してL2に確認画面を表示
-var luckyAnalyze = function(){
-	var lucky_data = document.getElementById( 'lucky_data' ).value;
-	if( lucky_data != '' ){
-		$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){
-			$( "#L2" ).html( data );
-			displayVIDEO( 'Lucky?' );
-		});
-	}
-};
-
-// Lucky☆転送ボタンを押してL2に確認画面を表示
-var luckyPush = function( idc ){
-	let lucky_solid = '';
-	for( let i = 1; i <= idc; i++ ){
-		if( document.getElementById( "lucky" + i ).checked ){
-			if( document.getElementById( "lucky_sum" + i ).value != '' ){
-				lucky_solid = lucky_solid + "\t" + document.getElementById( "lucky_sum" + i ).value;
-			}
-		}
-	}
-
-	if( lucky_solid != '' ){
-		$.post( "lucky.cgi", { command:'push', lucky_solid:lucky_solid }, function( data ){
-//			$( "#L2" ).html( data );
-			$.post( "cboard.cgi", { command:'init', code:'' }, function( data ){ $( '#L1' ).html( data );});
-
-			dl2 = false;
-			displayBW();
-		});
-
-		refreshCBN();
-	}
 };
 
 

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser koyomi fix fct editer 0.20b (2024/05/05)
+#Nutrition browser koyomi fix fct editer 0.2.1 (2024/08/18)
 
 #==============================================================================
 # STATIC
@@ -15,37 +15,43 @@ require '../soul'
 require '../brain'
 require '../body'
 
-#==============================================================================
-# DEFINITION
-#==============================================================================
 
-# Language pack
+#==============================================================================
+# LANGUAGE PACK
+#==============================================================================
 def language_pack( language )
 	l = Hash.new
 
 	#Japanese
 	l['jp'] = {
-		'save' 		=> "保存",\
+		'save' 		=> "保 存",\
 		'g100' 		=> "100 g相当",\
 		'food_n' 	=> "食品名",\
 		'food_g'	=> "食品群",\
 		'weight'	=> "重量(g)",\
 		'palette'	=> "パレット",\
-		'signpost'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
-		'clock'		=> "<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>",\
 		'min'		=> "分間",\
 		'week'		=> "-- １週間以内 --",\
 		'month'		=> "-- １ヶ月以内 --",\
 		'volume'	=> "個数",\
 		'carry_on'	=> "時間継承",\
-		'history'	=> "履歴"
+		'reference'	=> "参照",\
+		'history'	=> "履歴",\
+		'signpost'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",\
+		'clock'		=> "<img src='bootstrap-dist/icons/clock.svg' style='height:1.5em; width:1.5em;'>"
 	}
 
 	return l[language]
 end
 
 #==============================================================================
-# Main
+# METHODS
+#==============================================================================
+
+
+
+#==============================================================================
+# MAIN
 #==============================================================================
 html_init( nil )
 
@@ -57,6 +63,7 @@ koyomi = Calendar.new( user.name, 0, 0, 0 )
 
 
 puts 'POST<br>' if @debug
+p @cgi if @debug
 command = @cgi['command']
 yyyy = @cgi['yyyy']
 mm = @cgi['mm']
@@ -76,23 +83,6 @@ food_number = 1 if food_number == 0
 food_weight = @cgi['food_weight']
 food_weight = 100 if food_weight == nil || food_weight == ''|| food_weight == '0'
 food_weight = BigDecimal( food_weight )
-if @debug
-	puts "command: #{command}<br>\n"
-	puts "food_name: #{food_name}<br>\n"
-	puts "food_weight: #{food_weight}<br>\n"
-	puts "food_number: #{food_number}<br>\n"
-	puts "yyyy: #{yyyy}<br>\n"
-	puts "mm: #{mm}<br>\n"
-	puts "dd: #{dd}<br>\n"
-	puts "tdiv: #{tdiv}<br>\n"
-	puts "order: #{order}<br>\n"
-	puts "hh_mm: #{hh_mm}<br>\n"
-	puts "meal_time: #{meal_time}<br>\n"
-	puts "palette_: #{palette_}<br>\n"
-	puts "modifyf: #{modifyf}<br>\n"
-	puts "carry_on:#{carry_on}<br>\n"
-	puts "<hr>\n"
-end
 
 
 puts 'Getting standard meal start & time<br>' if @debug
@@ -107,7 +97,7 @@ if r.first
 	end
 end
 hh_mm = start_times[tdiv] if hh_mm == '' || hh_mm == nil
-hh_mm = @time_now.strftime( "%H:%M" ) if hh_mm == nil
+hh_mm = @time_now.strftime( "%H:%M" ) if hh_mm == '' || hh_mm == nil
 meal_time = meal_tiems[tdiv] if meal_time == 0
 
 
@@ -225,7 +215,7 @@ palette.set_bit( palette_ )
 palette_html = ''
 palette_html << "<div class='input-group input-group-sm'>"
 palette_html << "<label class='input-group-text'>#{l['palette']}</label>"
-palette_html << "<select class='form-select form-select-sm' id='palette' onChange=\"paletteKoyomi( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', #{modifyf} )\">"
+palette_html << "<select class='form-select form-select-sm' id='palette' onChange=\"selectKoyomiPalette( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', #{modifyf} )\">"
 palette.sets.each_key do |k|
 	s = ''
 	s = 'SELECTED' if palette_ == k
@@ -311,7 +301,7 @@ end
 end
 html_fct_blocks[5] << '</table>'
 
-
+p hh_mm
 puts 'SELECT HH block<br>' if @debug
 meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
 eat_time_html = "<div class='input-group input-group-sm'>"
@@ -334,7 +324,7 @@ if command == 'modify'
 	carry_on = 0
 	carry_on_disabled = 'DISABLED'
 end
-carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )} #{carry_on_disabled}>"
+carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{$CHECK[carry_on]} #{carry_on_disabled}>"
 carry_on_html << "<label class='form-check-label'>#{l['carry_on']}</label>"
 
 
@@ -350,7 +340,7 @@ rr = db.query( "SELECT code, name, origin FROM #{$MYSQL_TB_FCZ} WHERE user='#{us
 fix_his_html << "<div class='input-group input-group-sm'>"
 
 fix_his_html << "<label class='input-group-text'>#{l['history']}</label>"
-fix_his_html << "<select class='form-select form-select-sm' id='fix_his_code' onchange=\"koyomiFixHis( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )\">"
+fix_his_html << "<select class='form-select form-select-sm' id='fix_his_code' onchange=\"selectKoyomiHis( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}' )\">"
 fix_his_html << "<option value='' >#{l['week']}</option>"
 r.each do |e| fix_his_html << "<option value='#{e['code']}'>#{e['name']} (#{e['origin']})</option>" end
 fix_his_html << "<option value='' >#{l['month']}</option>"
@@ -361,8 +351,8 @@ fix_his_html << "</div>"
 
 fix_ref_html = ''
 fix_ref_html << '<div class="form-check form-switch">'
-fix_ref_html << "<input class='form-check-input' type='checkbox' id='fix_ref' onChange=\"koyomiFixRef()\" #{$CHECK[command == 'history']} #{$DISABLE[command != 'history']}>"
-fix_ref_html << '<label class="form-check-label" for="fix_ref">参照</label>'
+fix_ref_html << "<input class='form-check-input' type='checkbox' id='fix_ref' onChange=\"checkKyomiAsRef()\" #{$CHECK[command == 'history']} #{$DISABLE[command != 'history']}>"
+fix_ref_html << "<label class='form-check-label' for='fix_ref'>#{l['reference']}</label>"
 fix_ref_html << '</div>'
 
 
@@ -377,7 +367,7 @@ html = <<-"HTML"
 			#{fix_ref_html}
 		</div>
 		<div class="col-7">
-			<div align='center' class='joystic_koyomi' onclick="koyomiFixR()">#{l['signpost']}</div>
+			<div align='center' class='joystic_koyomi' onclick="returnFix2Edit()">#{l['signpost']}</div>
 		</div>
 	</div>
 	<br>
@@ -396,7 +386,7 @@ html = <<-"HTML"
 		<div class="col"></div>
 		<div class="col input-group input-group-sm">
 			<div class="form-check">
-				<input type="checkbox" class="form-check-input" id="g100_check" onChange="koyomiG100check()">
+				<input type="checkbox" class="form-check-input" id="g100_check" onChange="checkKyomiXOR100g()">
 				<label class="form-check-label">#{l['g100']}</label>
 				</div>
 				&nbsp;&nbsp;&nbsp;
@@ -424,7 +414,7 @@ html = <<-"HTML"
 	<br>
 
 	<div class="row">
-		<button class='btn btn-success btn-sm' type='button' onclick="koyomiSaveFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{l['save']}</button>
+		<button class='btn btn-success btn-sm' type='button' onclick="saveKoyomiFix( '#{yyyy}', '#{mm}', '#{dd}', '#{tdiv}', '#{modifyf}', '#{order}' )">#{l['save']}</button>
 	</div>
 
 </div>
@@ -440,94 +430,94 @@ if command = 'init'
 <script type='text/javascript'>
 
 // Koyomi fix save
-var koyomiSaveFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
-	const food_name = document.getElementById( "food_name" ).value;
-	const hh_mm = document.getElementById( "hh_mm_fix" ).value;
-	const meal_time = document.getElementById( "meal_time_fix" ).value;
-	const food_number = document.getElementById( "food_number" ).value;
+var saveKoyomiFix = function( yyyy, mm, dd, tdiv, modifyf, order ){
+	const food_name = $( "#food_name" ).val();
+	const hh_mm = $( "#hh_mm_fix" ).val();
+	const meal_time = $( "#meal_time_fix" ).val();
+	const food_number = $( "#food_number" ).val();
 	let carry_on = 0;
-	if( document.getElementById( "carry_on" ).checked ){ carry_on = 1; }
+	if( $( "#carry_on" ).is( ":checked" )){ carry_on = 1; }
 
 	if( food_name != '' ){
 		let food_weight = 100;
-		if( document.getElementById( "g100_check" ).checked){ food_weight = document.getElementById( "kffood_weight" ).value; }
-		const ENERC = document.getElementById( "kfENERC" ).value;
-		const ENERC_KCAL = document.getElementById( "kfENERC_KCAL" ).value;
-		const WATER = document.getElementById( "kfWATER" ).value;
+		if( $( "#g100_check" ).is( ":checked" )){ food_weight = $( "#kffood_weight" ).val(); }
+		const ENERC = $( "#kfENERC" ).val();
+		const ENERC_KCAL = $( "#kfENERC_KCAL" ).val();
+		const WATER = $( "#kfWATER" ).val();
 
-		const PROTCAA = document.getElementById( "kfPROTCAA" ).value;
-		const PROT = document.getElementById( "kfPROT" ).value;
-		const PROTV = document.getElementById( "kfPROTV" ).value;
-		const FATNLEA = document.getElementById( "kfFATNLEA" ).value;
-		const CHOLE = document.getElementById( "kfCHOLE" ).value;
-		const FAT = document.getElementById( "kfFAT" ).value;
-		const FATV = document.getElementById( "kfFATV" ).value;
-		const CHOAVLM = document.getElementById( "kfCHOAVLM" ).value;
-		const CHOAVL = document.getElementById( "kfCHOAVL" ).value;
-		const CHOAVLDF = document.getElementById( "kfCHOAVLDF" ).value;
-		const CHOV = document.getElementById( "kfCHOV" ).value;
-		const FIB = document.getElementById( "kfFIB" ).value;
-		const POLYL = document.getElementById( "kfPOLYL" ).value;
-		const CHOCDF = document.getElementById( "kfCHOCDF" ).value;
-		const OA = document.getElementById( "kfOA" ).value;
+		const PROTCAA = $( "#kfPROTCAA" ).val();
+		const PROT = $( "#kfPROT" ).val();
+		const PROTV = $( "#kfPROTV" ).val();
+		const FATNLEA = $( "#kfFATNLEA" ).val();
+		const CHOLE = $( "#kfCHOLE" ).val();
+		const FAT = $( "#kfFAT" ).val();
+		const FATV = $( "#kfFATV" ).val();
+		const CHOAVLM = $( "#kfCHOAVLM" ).val();
+		const CHOAVL = $( "#kfCHOAVL" ).val();
+		const CHOAVLDF = $( "#kfCHOAVLDF" ).val();
+		const CHOV = $( "#kfCHOV" ).val();
+		const FIB = $( "#kfFIB" ).val();
+		const POLYL = $( "#kfPOLYL" ).val();
+		const CHOCDF = $( "#kfCHOCDF" ).val();
+		const OA = $( "#kfOA" ).val();
 
-		const ASH = document.getElementById( "kfASH" ).value;
-		const NA = document.getElementById( "kfNA" ).value;
-		const K = document.getElementById( "kfK" ).value;
-		const CA = document.getElementById( "kfCA" ).value;
-		const MG = document.getElementById( "kfMG" ).value;
-		const P = document.getElementById( "kfP" ).value;
-		const FE = document.getElementById( "kfFE" ).value;
-		const ZN = document.getElementById( "kfZN" ).value;
-		const CU = document.getElementById( "kfCU" ).value;
-		const MN = document.getElementById( "kfMN" ).value;
-		const ID = document.getElementById( "kfID" ).value;
-		const SE = document.getElementById( "kfSE" ).value;
-		const CR = document.getElementById( "kfCR" ).value;
-		const MO = document.getElementById( "kfMO" ).value;
+		const ASH = $( "#kfASH" ).val();
+		const NA = $( "#kfNA" ).val();
+		const K = $( "#kfK" ).val();
+		const CA = $( "#kfCA" ).val();
+		const MG = $( "#kfMG" ).val();
+		const P = $( "#kfP" ).val();
+		const FE = $( "#kfFE" ).val();
+		const ZN = $( "#kfZN" ).val();
+		const CU = $( "#kfCU" ).val();
+		const MN = $( "#kfMN" ).val();
+		const ID = $( "#kfID" ).val();
+		const SE = $( "#kfSE" ).val();
+		const CR = $( "#kfCR" ).val();
+		const MO = $( "#kfMO" ).val();
 
-		const RETOL = document.getElementById( "kfRETOL" ).value;
-		const CARTA = document.getElementById( "kfCARTA" ).value;
-		const CARTB = document.getElementById( "kfCARTB" ).value;
-		const CRYPXB = document.getElementById( "kfCRYPXB" ).value;
-		const CARTBEQ = document.getElementById( "kfCARTBEQ" ).value;
-		const VITA_RAE = document.getElementById( "kfVITA_RAE" ).value;
-		const VITD = document.getElementById( "kfVITD" ).value;
-		const TOCPHA = document.getElementById( "kfTOCPHA" ).value;
-		const TOCPHB = document.getElementById( "kfTOCPHB" ).value;
-		const TOCPHG = document.getElementById( "kfTOCPHG" ).value;
-		const TOCPHD = document.getElementById( "kfTOCPHD" ).value;
-		const VITK = document.getElementById( "kfVITK" ).value;
+		const RETOL = $( "#kfRETOL" ).val();
+		const CARTA = $( "#kfCARTA" ).val();
+		const CARTB = $( "#kfCARTB" ).val();
+		const CRYPXB = $( "#kfCRYPXB" ).val();
+		const CARTBEQ = $( "#kfCARTBEQ" ).val();
+		const VITA_RAE = $( "#kfVITA_RAE" ).val();
+		const VITD = $( "#kfVITD" ).val();
+		const TOCPHA = $( "#kfTOCPHA" ).val();
+		const TOCPHB = $( "#kfTOCPHB" ).val();
+		const TOCPHG = $( "#kfTOCPHG" ).val();
+		const TOCPHD = $( "#kfTOCPHD" ).val();
+		const VITK = $( "#kfVITK" ).val();
 
-		const THIA = document.getElementById( "kfTHIA" ).value;
-		const RIBF = document.getElementById( "kfRIBF" ).value;
-		const NIA = document.getElementById( "kfNIA" ).value;
-		const NE = document.getElementById( "kfNE" ).value;
-		const VITB6A = document.getElementById( "kfVITB6A" ).value;
-		const VITB12 = document.getElementById( "kfVITB12" ).value;
-		const FOL = document.getElementById( "kfFOL" ).value;
-		const PANTAC = document.getElementById( "kfPANTAC" ).value;
-		const BIOT = document.getElementById( "kfBIOT" ).value;
-		const VITC = document.getElementById( "kfVITC" ).value;
+		const THIA = $( "#kfTHIA" ).val();
+		const RIBF = $( "#kfRIBF" ).val();
+		const NIA = $( "#kfNIA" ).val();
+		const NE = $( "#kfNE" ).val();
+		const VITB6A = $( "#kfVITB6A" ).val();
+		const VITB12 = $( "#kfVITB12" ).val();
+		const FOL = $( "#kfFOL" ).val();
+		const PANTAC = $( "#kfPANTAC" ).val();
+		const BIOT = $( "#kfBIOT" ).val();
+		const VITC = $( "#kfVITC" ).val();
 
-		const ALC = document.getElementById( "kfALC" ).value;
-		const NACL_EQ = document.getElementById( "kfNACL_EQ" ).value;
+		const ALC = $( "#kfALC" ).val();
+		const NACL_EQ = $( "#kfNACL_EQ" ).val();
 
-		const FASAT = document.getElementById( "kfFASAT" ).value;
-		const FAMS = document.getElementById( "kfFAMS" ).value;
-		const FAPU = document.getElementById( "kfFAPU" ).value;
-		const FAPUN3 = document.getElementById( "kfFAPUN3" ).value;
-		const FAPUN6 = document.getElementById( "kfFAPUN6" ).value;
+		const FASAT = $( "#kfFASAT" ).val();
+		const FAMS = $( "#kfFAMS" ).val();
+		const FAPU = $( "#kfFAPU" ).val();
+		const FAPUN3 = $( "#kfFAPUN3" ).val();
+		const FAPUN6 = $( "#kfFAPUN6" ).val();
 
-		const FIBTG = document.getElementById( "kfFIBTG" ).value;
-		const FIBSOL = document.getElementById( "kfFIBSOL" ).value;
-		const FIBINS = document.getElementById( "kfFIBINS" ).value;
-		const FIBTDF = document.getElementById( "kfFIBTDF" ).value;
-		const FIBSDFS = document.getElementById( "kfFIBSDFS" ).value;
-		const FIBSDFP = document.getElementById( "kfFIBSDFP" ).value;
-		const FIBIDF = document.getElementById( "kfFIBIDF" ).value;
-		const STARES = document.getElementById( "kfSTARES" ).value;
-food_weight = 100;
+		const FIBTG = $( "#kfFIBTG" ).val();
+		const FIBSOL = $( "#kfFIBSOL" ).val();
+		const FIBINS = $( "#kfFIBINS" ).val();
+		const FIBTDF = $( "#kfFIBTDF" ).val();
+		const FIBSDFS = $( "#kfFIBSDFS" ).val();
+		const FIBSDFP = $( "#kfFIBSDFP" ).val();
+		const FIBIDF = $( "#kfFIBIDF" ).val();
+		const STARES = $( "#kfSTARES" ).val();
+
 		$.post( kp + "koyomi-fix.cgi", {
 			command:'save', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time,meal_time,
 			food_name:food_name, food_weight:food_weight, food_number:food_number, modifyf:modifyf, carry_on:carry_on, order:order,
@@ -549,7 +539,7 @@ food_weight = 100;
 				dl2 = true;
 				dl3 = false;
 				displayBW();
-				displayVIDEO( food_name + ' saved' );
+				displayREC();
 			});
 
 		});
@@ -559,17 +549,15 @@ food_weight = 100;
 };
 
 
-// Koyomi fix
-var paletteKoyomi = function( yyyy, mm, dd, tdiv, modifyf ){
+var selectKoyomiPalette = function( yyyy, mm, dd, tdiv, modifyf ){
 	displayVIDEO( modifyf );
-	const palette = document.getElementById( "palette" ).value;
+	const palette = $( "#palette" ).val();
 	$.post( kp + "koyomi-fix.cgi", { command:'palette', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, palette:palette, modifyf:modifyf }, function( data ){ $( "#L3" ).html( data );});
 };
 
 
-// Koyomi fix history
-var koyomiFixHis = function( yyyy, mm, dd, tdiv ){
-	 fix_his_code = document.getElementById( "fix_his_code" ).value;
+var selectKoyomiHis = function( yyyy, mm, dd, tdiv ){
+	 fix_his_code = $( "#fix_his_code" ).val();
 	if( fix_his_code != '' ){
 		$.post( kp + "koyomi-fix.cgi", { command:"history", yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, fix_his_code:fix_his_code }, function( data ){
 			$( "#L3" ).html( data );
@@ -578,38 +566,24 @@ var koyomiFixHis = function( yyyy, mm, dd, tdiv ){
 };
 
 
-// Koyomi modify or copy panel fix
-var modifyKoyomif = function( code, yyyy, mm, dd, tdiv, hh_mm, meal_time, order ){
-	displayVIDEO( 'fix' );
-	$.post( kp + "koyomi-fix.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time, order:order }, function( data ){
-		$( "#L3" ).html( data );
-
-		dl3 = true;
-		displayBW();
-	});
-};
-
-
-// Koyomi fix reference check
-var koyomiFixRef = function(){
-	if(document.getElementById( "fix_ref" ).checked){
-		document.getElementById( "kffood_weight" ).disabled = false;
+var checkKyomiAsRef = function(){
+	if( $( "#fix_ref" ).is( ":checked" )){
+		$( "#kffood_weight" ).prop("disabled", false );
 	}else{
-		document.getElementById( "kffood_weight" ).disabled = true;
+		$( "#kffood_weight" ).prop("disabled", true );
 	}
 };
 
-// Koyomi fix 100g check
-var koyomiG100check = function(){
-	if(document.getElementById( "g100_check" ).checked){
-		document.getElementById( "kffood_weight" ).disabled = false;
+
+var checkKyomiXOR100g = function(){
+	if( $( "#g100_check" ).is( ":checked" )){
+		$( "#kffood_weight" ).prop("disabled", false );
 	}else{
-		document.getElementById( "kffood_weight" ).disabled = true;
+		$( "#kffood_weight" ).prop("disabled", true );
 	}
 };
 
-// Koyomi modify or copy panel fix
-var koyomiFixR = function(){
+var returnFix2Edit = function(){
 	dl2 = true;
 	dl3 = false;
 	displayBW();

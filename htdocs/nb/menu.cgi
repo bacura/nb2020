@@ -1,12 +1,12 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu 0.11b
+#Nutrition browser 2020 menu 0.1.1 (2024/08/21)
 
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
-require './probe'
+require './soul'
 
 
 #==============================================================================
@@ -132,12 +132,12 @@ html = <<-"HTML"
 		<div class="col-4">
 			<div class="form-check form-check-inline">
   				<label class="form-check-label">
-    				<input class="form-check-input" type="checkbox" id="public" #{checked( menu.public )}> #{lp[4]}
+    				<input class="form-check-input" type="checkbox" id="public" #{$CHECK[menu.public]}> #{lp[4]}
   				</label>
 			</div>
 			<div class="form-check form-check-inline">
   				<label class="form-check-label">
-    				<input class="form-check-input" type="checkbox" id="protect" #{checked( menu.protect )}> #{lp[5]}
+    				<input class="form-check-input" type="checkbox" id="protect" #{$CHECK[menu.protect]}> #{lp[5]}
   				</label>
 			</div>
 		</div>

@@ -235,10 +235,10 @@ end
 
 
 puts "HTML SELECT Recipe attribute<br>" if @debug
-check_favorite = checked( recipe.favorite )
-check_public = checked( recipe.public )
-check_protect = checked( recipe.protect )
-check_draft =  checked( recipe.draft )
+check_favorite = $CHECK[recipe.favorite]
+check_public = $CHECK[recipe.public]
+check_protect = $CHECK[recipe.protect]
+check_draft =  $CHECK[recipe.draft]
 file_disabled = false
 if user.name != recipe.user.name
 	check_favorite = 'DISABLED'
@@ -252,16 +252,14 @@ end
 puts "HTML SELECT Recipe type<br>" if @debug
 html_type = l['type']
 html_type << '<select class="form-select form-select-sm" id="type">'
-s = selected( 0, @recipe_type.size - 1, recipe.type )
-@recipe_type.size.times do |i| html_type << "<option value='#{i}' #{s[i]}>#{@recipe_type[i]}</option>" end
+@recipe_type.size.times do |i| html_type << "<option value='#{i}' #{$SELECT[i == recipe.type]}>#{@recipe_type[i]}</option>" end
 html_type << '</select>'
 
 
 puts "HTML SELECT Recipe role<br>" if @debug
 html_role = l['role']
 html_role << '<select class="form-select form-select-sm" id="role">'
-s = selected( 0, @recipe_role.size - 1, recipe.role )
-@recipe_role.size.times do |i| html_role << "<option value='#{i}' #{s[i]}>#{@recipe_role[i]}</option>" end
+@recipe_role.size.times do |i| html_role << "<option value='#{i}' #{$SELECT[i == recipe.role]}>#{@recipe_role[i]}</option>" end
 if recipe.role == 100
 	html_role << "<option value='100' SELECTED>[ 調味％ ]</option>"
 else
@@ -273,24 +271,21 @@ html_role << '</select>'
 puts "HTML SELECT Cooking technique<br>" if @debug
 html_tech = l['tech']
 html_tech << '<select class="form-select form-select-sm" id="tech">'
-s = selected( 0, @recipe_tech.size - 1, recipe.tech )
-@recipe_tech.size.times do |i| html_tech << "<option value='#{i}' #{s[i]}>#{@recipe_tech[i]}</option>" end
+@recipe_tech.size.times do |i| html_tech << "<option value='#{i}' #{$SELECT[i == recipe.tech]}>#{@recipe_tech[i]}</option>" end
 html_tech << '</select>'
 
 
 puts "HTML SELECT Cooking time<br>" if @debug
 html_time = l['time']
 html_time << '<select class="form-select form-select-sm" id="time">'
-s = selected( 0, @recipe_time.size - 1, recipe.time )
-@recipe_time.size.times do |i| html_time << "<option value='#{i}' #{s[i]}>#{@recipe_time[i]}</option>" end
+@recipe_time.size.times do |i| html_time << "<option value='#{i}' #{$SELECT[i == recipe.time]}>#{@recipe_time[i]}</option>" end
 html_time << '</select>'
 
 
 puts "HTML SELECT Cooking cost<br>" if @debug
 html_cost = l['cost']
 html_cost << '<select class="form-select form-select-sm" id="cost">'
-s = selected( 0, @recipe_cost.size - 1, recipe.cost )
-@recipe_cost.size.times do |i| html_cost << "<option value='#{i}' #{s[i]}>#{@recipe_cost[i]}</option>" end
+@recipe_cost.size.times do |i| html_cost << "<option value='#{i}' #{$SELECT[i == recipe.cost]}>#{@recipe_cost[i]}</option>" end
 html_cost << '</select>'
 
 

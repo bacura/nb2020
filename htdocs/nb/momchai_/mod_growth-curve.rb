@@ -9,7 +9,7 @@ def momchai_module( cgi, db )
 	today_p = Time.parse( @datetime )
 
 	puts "LOAD bio config<br>" if @debug
-	r = mdb( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false, @debug )
+	r = db.query( "SELECT bio FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", false )
 	if r.first
 		if r.first['bio'] != nil && r.first['bio'] != ''
 			bio = JSON.parse( r.first['bio'] )
@@ -96,7 +96,7 @@ HTML
 		growth_date = ( birth_p + growth_period * 86400 ).strftime( "%Y-%m-%d" )
 		p birthdate, growth_date if @debug && step == 'monitor'
 
-		r = mdb( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND date BETWEEN '#{birthdate}' AND '#{growth_date}';", false, @debug )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_KOYOMIEX} WHERE user='#{db.user.name}' AND date BETWEEN '#{birthdate}' AND '#{growth_date}';", false )
 		r.each do |e|
 			kexc = JSON.parse( e['cell'] )
 			day_pass = (( Time.parse(e['date'].strftime( "%Y-%m-%d" )) - birth_p ) / 86400 ).to_i

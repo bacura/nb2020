@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 koyomi editor 0.25b (2024/03/30)
+#Nutrition browser 2020 koyomi editor 0.2.6 (2024/08/18)
 
 
 #==============================================================================
@@ -101,7 +101,7 @@ def meals( e, l, db, freeze_flag )
 			if rr.first
 				item_name = rr.first['name']
 				origin = "#{e['date'].year}:#{e['date'].month}:#{e['date'].day}:#{e['tdiv']}:#{c}"
-				onclick = " onclick=\"modifyKoyomif( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\"" if freeze_flag == 0
+				onclick = " onclick=\"modifyKoyomiFix( '#{code}', '#{e['date'].year}', '#{e['date'].month}', '#{e['date'].day}', '#{e['tdiv']}', '#{hh_mm}', '#{meal_time}', '#{c}' )\"" if freeze_flag == 0
 				fix_copy_button = "<span class='badge bg-primary' onclick=\"cpmvFix( '#{code}', '#{origin}' )\">#{l['fixcpmv']}</span>"
 			else
 				item_name = "<span class='error'>ERROR: #{code}</span>"
@@ -433,7 +433,7 @@ end
 cmm_html = [ '', '', '', '' ]
 0.upto( 3 ) do |c|
 	unless freeze_flag == 1
-		cmm_html[c]	<< "<button class='btn btn-sm btn-dark' onclick=\"fixKoyomi( 'init', '#{yyyy}', '#{mm}', '#{dd}', '#{c}' )\">#{l['plus']}</button>&nbsp;"
+		cmm_html[c]	<< "<button class='btn btn-sm btn-dark' onclick=\"initKoyomiFix( '#{yyyy}', '#{mm}', '#{dd}', '#{c}' )\">#{l['plus']}</button>&nbsp;"
 	else
 		cmm_html[c]	<< "<button class='btn btn-sm btn-secondary'>#{l['plus']}</button>&nbsp;"
 	end

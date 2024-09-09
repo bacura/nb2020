@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Lucky sum input driver 0.0.4 (2024/06/18)
+#Nutrition browser Lucky sum input driver 0.0.4.AI (2024/09/08)
 
 #==============================================================================
 #LIBRARY
@@ -22,18 +22,22 @@ script = 'lucky'
 
 # Language pack
 def language_pack( language )
-	l = Hash.new
-
-	#Japanese
-	l['jp'] = {
-		'lucky'	=> "Lucky☆",\
-		'detect'	=> "検出",\
-		'add'	=> "追　加"
+	l = {
+		'jp' => {
+			:lucky		=> "Lucky☆",
+			:detect		=> "検出",
+			:food_no	=> "食品番号",
+			:food		=> "食品",
+			:memo		=> "メモ",
+			:volume		=> "量",
+			:unit		=> "単位",
+			:adopt		=> "採用",
+			:add		=> "追　加"
+		}
 	}
 
 	return l[language]
 end
-
 
 
 def predict_html( lucky_data, db, l )
@@ -43,16 +47,17 @@ def predict_html( lucky_data, db, l )
 	lucky_data.gsub!( /\n+/, "\n" )
 	lucky_data.gsub!( /\t+/, '' )
 
-	html = '<table class="table table-sm">'
+	html << '<table class="table table-sm">'
 	html << '<thead><tr>'
-  	html << "<th scope="col">検出</th>"
-  	html << "<th scope="col">食品番号</th>"
-  	html << "<th scope="col">食品</th>"
-  	html << "<th scope="col">メモ</th>"
-  	html << "<th scope="col">量</th>"
-  	html << "<th scope="col">単位</th>"
-  	html << "<th scope="col">採用</th>"
-  	html << '</tr></thead>'
+	html << "<th scope='col'>#{l[:detect]}</th>"
+	html << "<th scope='col'>#{l[:food_no]}</th>"
+	html << "<th scope='col'>#{l[:food]}</th>"
+	html << "<th scope='col'>#{l[:memo]}</th>"
+	html << "<th scope='col'>#{l[:volume]}</th>"
+	html << "<th scope='col'>#{l[:unit]}</th>"
+	html << "<th scope='col'>#{l[:adopt]}</th>"
+	html << '</tr></thead>'
+
 	id_counter = 0
 	lucky_solid = lucky_data.split( "\n" )
 
@@ -74,28 +79,24 @@ def predict_html( lucky_data, db, l )
       	id_counter += 1
 
 		puts 'vol~' if @debug
-		a = e.scan( /\#(.+)\#/ )
-		if a.size > 0
-			vol = a.first.first
-			aa = e.scan( /\[(.+)\]/ )
-			if aa.size > 0
-				unit = aa.first.first
-			else
-				unit = 'g'
-			end
-		else
-			food_no = '+'
-		end
+		vol_match = e.scan( /\#(.+)\#/ )
+		unit_match = e.scan( /\[(.+)\]/ )
+
+		vol = vol_match.size > 0 ? vol_match.first.first : ''
+		unit = unit_match.size > 0 ? unit_match.first.first : 'g'
+		food_no = vol.empty? ? '+' : food_no
 
 		puts 'kakko~' if @debug
-		a = e.scan( /\((.+)\)/ )
-		if a.size > 0 && memo == ''
-			memo = a.first.first
+		memo_match = e.scan( /\((.+)\)/ )
+
+		if memo_match.size > 0 && memo.empty?
+			memo = memo_match.first.first
 			food.gsub!( /\(.+\)/, '' )
 		end
 
 		puts 'Dic~' if @debug
 		dic_hit = 0
+
 		if memo == '' && food.size >= 1
 			predict_food = ''
 			r = db.query( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE alias='#{food}';", false )
@@ -130,56 +131,28 @@ def predict_html( lucky_data, db, l )
 		end
 
 		puts 'Unit~' if @debug
-		if food_no == '+' || food_no == '' || food_no == nil
-			food_no = '+'
-			predict_food = '-'
-			unit = '-'
-			dic_hit = '-'
-			vol = '-'
-			weight = '-'
-			memo = e.gsub( '#', '' ).gsub( '[', '' ).gsub( ']', '' )
-		elsif vol == 0
+		if %w[+ '' nil].include?( food_no )
+			food_no, predict_food, unit, dic_hit, vol, weight, memo = '+', '-', '-', '-', '-', '-', e.gsub( '#', '' ).gsub( '[', '' ).gsub( ']', '' )
+		elsif vol.to_i == 0
 			memo = unit
-			unit = 'g'
-			weight = 0
+			unit, weight = 'g', 0
 		else
-			r = db.query( "SELECT unit from #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false )
+			r = db.query( "SELECT unit FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no}';", false )
 			if r.first
 				unith = JSON.parse( r.first['unit'] )
-				if unith[unit] != nil
-					weight = ( vol.to_f * unith[unit].to_f ).round( 2 )
-				elsif unith["#{unit}M"] != nil
-					unit = "#{unit}M"
-					weight = ( vol.to_f * unith["#{unit}M"].to_f ).round( 2 )
-				elsif unith["#{unit}S"] != nil
-					unit = "#{unit}S"
-					weight = ( vol.to_f * unith["#{unit}S"].to_f ).round( 2 )
-				elsif unith["#{unit}L"] != nil
-					unit = "#{unit}L"
-					weight = ( vol.to_f * unith["#{unit}L"].to_f ).round( 2 )
-				else
-					memo = "#{vol}#{unit}"
-					unit = 'g'
-					vol = 0
-					weight = 0
-				end
+				weight = calculate_weight( unith, unit, vol )
 			else
 				memo = "#{vol}#{unit}"
-				vol = 0
-				unit = 'g'
-				weight = vol
+				unit, vol, weight = 'g', 0, 0
 			end
 		end
 
 		lucky_sum = "#{food_no}:#{weight}:#{unit}:#{vol}:0:#{memo}:1.0:#{weight}"
 
 		puts 'Check~<br>' if @debug
-		checked = ''
-		disabled = 'DISABLED'
-		if food_no != '' && food_no != nil
-			checked = 'CHECKED'
-			disabled = ''
-		end
+		checked = food_no.empty? ? '' : 'CHECKED'
+		disabled = food_no.empty? ? 'DISABLED' : ''
+
 		html << '<tr>'
       	html << "<td>#{food}[#{dic_hit}]</td>"
       	html << "<td>#{food_no}</td>"
@@ -196,12 +169,25 @@ def predict_html( lucky_data, db, l )
 	html << '</table><br>'
 
 	html << '<div class="row" align="right">'
-	html << "<button class='btn btn-sm btn-success' onclick=\"luckyPush( '#{id_counter}' )\" >#{l['add']}</button>"
+	html << "<button class='btn btn-sm btn-success' onclick=\"adoptLuckeyFood( '#{id_counter}' )\" >#{l['add']}</button>"
 	html << '</div>'
 
 	return html
 end
 
+def calculate_weight( unith, unit, vol )
+	if unith[ unit ]
+		( vol.to_f * unith[ unit ].to_f ).round( 2 )
+	elsif unith[ "#{unit}M" ]
+		( vol.to_f * unith[ "#{unit}M" ].to_f ).round( 2 )
+	elsif unith[ "#{unit}S" ]
+		( vol.to_f * unith[ "#{unit}S" ].to_f ).round( 2 )
+	elsif unith[ "#{unit}L" ]
+		( vol.to_f * unith[ "#{unit}L" ].to_f ).round( 2 )
+	else
+		0
+	end
+end
 
 #==============================================================================
 # Main
@@ -229,7 +215,7 @@ end
 ####
 html = ''
 case command
-when 'form'
+when 'init'
 
 html = <<-"HTML"
 <div class='container-fluid'>
@@ -238,7 +224,7 @@ html = <<-"HTML"
 	</div>
 	<br>
 	<div class='row'>
-		<button type='button' class='btn btn-sm btn-info' onclick="luckyAnalyze()">#{l['lucky']}</button>
+		<button type='button' class='btn btn-sm btn-info' onclick="analyzeLuckyFoods()">#{l[:lucky]}</button>
 	</div>
 </div>
 HTML
@@ -359,6 +345,47 @@ when 'push'
 
 	# まな板データ更新
 	db.query( "UPDATE #{$MYSQL_TB_SUM} SET sum='#{new_sum}' WHERE user='#{user.name}';", true )
+else
+	puts 'Default<br>' if @debug
+	html = 'lucky driver error'
 end
 
 puts html
+
+#==============================================================================
+# FRONT SCRIPT
+#==============================================================================
+if command == 'view'
+	js = <<-"JS"
+		<script type='text/javascript'>
+			var analyzeLuckyFoods = function(){
+				var lucky_data = document.getElementById( 'lucky_data' ).value;
+				if( lucky_data != '' ){
+					$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){
+						$( "#L2" ).html( data );
+						displayVIDEO( 'Lucky?' );
+					});
+				}
+			};
+
+			var adoptLuckeyFood = function( idc ){
+				let lucky_solid = '';
+				for( let i = 1; i <= idc; i++ ){
+					if( document.getElementById( "lucky" + i ).checked ){
+						if( document.getElementById( "lucky_sum" + i ).value != '' ){
+							lucky_solid += document.getElementById( "lucky_sum" + i ).value + "\\n";
+						}
+					}
+				}
+
+				if( lucky_solid != '' ){
+					$.post( "lucky.cgi", { command:'push', lucky_solid:lucky_solid }, function( data ){
+						$( "#L2" ).html( data );
+						displayVIDEO( 'Lucky?' );
+					});
+				}
+			};
+		</script>
+	JS
+	puts js
+end

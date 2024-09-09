@@ -237,7 +237,7 @@ save_button = "<button class='btn btn-sm btn-info' type='button' onclick=\"saveK
 ####
 if command == 'modify' || command == 'move' || command == 'fix_direct' || command == 'fixcopy'
 	copy_html << "<div class='form-group form-check'>"
-    copy_html << "<input type='checkbox' class='form-check-input' id='copy' #{checked( copy )}>"
+    copy_html << "<input type='checkbox' class='form-check-input' id='copy' #{$CHECK[copy]}>"
     copy_html << "<label class='form-check-label'>#{l['copy']}</label>"
 	copy_html << "</div>"
 
@@ -337,8 +337,7 @@ end
 tdiv_set = [ l['breakfast'], l['lunch'], l['dinner'], l['supply'] ]
 tdiv_html = ''
 tdiv_html << "<select id='tdiv' class='form-select form-select-sm'>"
-s = selected( 0, 3, tdiv )
-0.upto( 3 ) do |c| tdiv_html << "<option value='#{c}' #{s[c]}>#{tdiv_set[c]}</option>" end
+0.upto( 3 ) do |c| tdiv_html << "<option value='#{c}' #{$SELECT[c == tdiv]}>#{tdiv_set[c]}</option>" end
 tdiv_html << "</select>"
 
 
@@ -395,7 +394,7 @@ end
 
 
 #### carry_on_check
-carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )}>"
+carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{$CHECK[carry_on]}>"
 carry_on_html << "<label class='form-check-label'>#{l['inheritance']}</label>"
 
 

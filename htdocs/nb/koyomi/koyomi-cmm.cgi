@@ -277,7 +277,7 @@ eat_time_html << "</div>"
 
 
 #### carry_on_check
-carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{checked( carry_on )} DISABLED>"
+carry_on_html = "<input class='form-check-input' type='checkbox' id='carry_on' #{$CHECK[carry_on]} DISABLED>"
 carry_on_html << '<label class="form-check-label">時間継承</label>'
 
 

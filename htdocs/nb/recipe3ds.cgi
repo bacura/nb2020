@@ -1,13 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe 3D plotter 0.0.1 (2024/07/17)
+#Nutrition browser 2020 recipe 3D plotter 0.0.2 (2024/08/18)
 
 
 #==============================================================================
 #STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+script = File.basename( $0, '.cgi' )
 
 
 #==============================================================================
@@ -48,11 +48,11 @@ def language_pack( language )
 		'y_log' 	=> "Y軸Log",\
 		'x_zoom' 	=> "X軸Zoom",\
 		'y_zoom' 	=> "Y軸Zoom",\
-		'more'		=> "以上",\
-		'less'		=> "未満",\
+		'more'		=> "％以上の範囲",\
+		'less'		=> "％未満の範囲",\
 		'xcomp'		=> "X成分",\
 		'ycomp'		=> "Y成分",\
-		'zcomp'		=> "Z成分",\
+		'zcomp'		=> "Z範囲",\
 		'reset'		=> "リセット",\
 		'plot'		=> "<img src='bootstrap-dist/icons/crosshair.svg' style='height:1.0em; width:1.0em;'> プ ロ ッ ト",\
 		'crosshair' => "<img src='bootstrap-dist/icons/crosshair.svg' style='height:1.0em; width:1.0em;'>"
@@ -193,22 +193,22 @@ r = db.query( "SELECT recipe FROM cfg WHERE user='#{user.name}';", false )
 begin
 	recipe_cfg = JSON.parse( r.first['recipe'] )
 
-	range = recipe_cfg['range'].to_i
-	type = recipe_cfg['type'].to_i
-	role = recipe_cfg['role'].to_i
-	tech = recipe_cfg['tech'].to_i
-	time = recipe_cfg['time'].to_i
-	cost = recipe_cfg['cost'].to_i
+	range = recipe_cfg[:range].to_i
+	type = recipe_cfg[:type].to_i
+	role = recipe_cfg[:role].to_i
+	tech = recipe_cfg[:tech].to_i
+	time = recipe_cfg[:time].to_i
+	cost = recipe_cfg[:cost].to_i
 
-	xitem = recipe_cfg['xitem'].to_s
-	yitem = recipe_cfg['yitem'].to_s
-	zitem = recipe_cfg['zitem'].to_s
-	zml = recipe_cfg['zml'].to_i
-	zrange = recipe_cfg['zrange'].to_i
+	xitem = recipe_cfg[:xitem].to_s
+	yitem = recipe_cfg[:yitem].to_s
+	zitem = recipe_cfg[:zitem].to_s
+	zml = recipe_cfg[:zml].to_i
+	zrange = recipe_cfg[:zrange].to_i
 
-	area_size = recipe_cfg['area_size'].to_f
-	x_zoom = recipe_cfg['x_zoom'].to_s
-	y_log = recipe_cfg['y_log'].to_s
+	area_size = recipe_cfg[:area_size].to_f
+	x_zoom = recipe_cfg[:x_zoom].to_s
+	y_log = recipe_cfg[:y_log].to_s
 rescue
 end
 
@@ -225,7 +225,7 @@ html = <<-"PLOTT"
 	<div class="row">
 		<div class='col-2'>
 			#{l['plot_size']}<br>
-			<select class="form-select form-select-sm" id="area_size" onchange="resize()">
+			<select class="form-select form-select-sm" id="area_size" onchange="resize3dp()">
 				#{area_size_option}
 			</select>
 			<br>
@@ -240,14 +240,14 @@ html = <<-"PLOTT"
 -->
 			<div class="form-check form-switch">
 				<label class="form-check-label">#{l['x_zoom']}</label>
-				<input class="form-check-input" type="checkbox" id="x_zoom" #{$CHECK[x_zoom=='true']}>
+				<input class="form-check-input" type="checkbox" id="x_zoom" onchange="recipe3dsPlottDraw()" #{$CHECK[x_zoom=='true']}>
 			</div>
 			<br>
 			<br>
 
 			<div class="form-check form-switch">
 				<label class="form-check-label">#{l['y_log']}</label>
-				<input class="form-check-input" type="checkbox" id="y_log" #{$CHECK[y_log == 'log']}>
+				<input class="form-check-input" type="checkbox" id="y_log" onchange="recipe3dsPlottDraw()" #{$CHECK[y_log == 'log']}>
 			</div>
 			<br>
 			<br>
@@ -422,14 +422,14 @@ when 'plott_data'
 		end
 
 		raw = []
-		raw[0] = xitems.unshift( label_x ).join( '[]' )
-		raw[1] = yitems.unshift( label_y ).join( '[]' )
-		raw[2] = names.unshift( 'recipe_name' ).join( '[]' )
-		raw[3] = codes.unshift( 'recipe_code' ).join( '[]' )
-		raw[4] = x_tickv.join( '[]' )
-		raw[5] = y_tickv.join( '[]' )
+		raw[0] = xitems.unshift( label_x ).join( ',' )
+		raw[1] = yitems.unshift( label_y ).join( ',' )
+		raw[2] = names.unshift( 'recipe_name' ).join( ',' )
+		raw[3] = codes.unshift( 'recipe_code' ).join( ',' )
+		raw[4] = x_tickv.join( ',' )
+		raw[5] = y_tickv.join( ',' )
 
-		puts raw.join( '{}' )
+		puts raw.join( '::' )
 
 	else
 		puts '0'
@@ -510,42 +510,42 @@ else
 	</div>
 	<br>
 	<div class='row'>
-		<div class='col-4'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm mb-3">
 				<label class="input-group-text">#{l['xcomp']}</label>
 				#{xselect}
 			</div>
 		</div>
-		<div class='col-4'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm  mb-3">
 				<label class="input-group-text">#{l['ycomp']}</label>
 				#{yselect}
 			</div>
 		</div>
-		<div class='col-4'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm  mb-3">
 				<label class="input-group-text">#{l['zcomp']}</label>
 				#{zselect}
 			</div>
 		</div>
-	</div>
-	<div class='row'>
-		<div class='col-8'>
-		</div>
-		<div class='col-4'>
+		<div class='col-3'>
 			<div class="input-group input-group-sm mb-3">
-				<input type="number" class="form-control" min="0" value='0' id='zrange'>
+				<input type="number" class="form-control" min="0"  max="100" value="0" setp="10" id='zrange'>
 				#{zml_select}
 			</div>
 		</div>
 	</div>
 	<div class='row'>
-		<button class="btn btn-info btn-sm" type="button" onclick="recipe3dsPlottDraw()">#{l['plot']}</button>
+		<div class='col-11'>
+			<div class='row'>
+				<button class="btn btn-info btn-sm" type="button" onclick="recipe3dsPlottDraw()">#{l['plot']}</button>
+			</div>
+		</div>
+		<div class='col-1' align="right">
+			<button class="btn btn-warning btn-sm" type="button" onclick="recipe3dsReset()">#{l['reset']}</button>
+		</div>
 	</div>
 	<br>
-	<div class='row'>
-		<div class='col-12' align="right"><span class="badge rounded-pill npill" type="button" onclick="recipe3dsReset()">#{l['reset']}</span></div>
-	</div>
 </div>
 HTML
 
@@ -596,29 +596,29 @@ if command == 'init'
 
 // Dosplaying recipe by scatter plott
 var recipe3dsPlottDraw = function(){
-	const range = document.getElementById( "range" ).value;
-	const type = document.getElementById( "type" ).value;
-	const role = document.getElementById( "role" ).value;
-	const tech = document.getElementById( "tech" ).value;
-	const time = document.getElementById( "time" ).value;
-	const cost = document.getElementById( "cost" ).value;
+	const range = $( "#range" ).val();
+	const type = $( "#type" ).val();
+	const role = $( "#role" ).val();
+	const tech = $( "#tech" ).val();
+	const time = $( "#time" ).val();
+	const cost = $( "#cost" ).val();
 
-	const xitem = document.getElementById( "xitem" ).value;
-	const yitem = document.getElementById( "yitem" ).value;
-	const zitem = document.getElementById( "zitem" ).value;
-	const zml = document.getElementById( "zml" ).value;
-	const zrange = document.getElementById( "zrange" ).value;
+	const xitem = $( "#xitem" ).val();
+	const yitem = $( "#yitem" ).val();
+	const zitem = $( "#zitem" ).val();
+	const zml = $( "#zml" ).val();
+	const zrange = $( "#zrange" ).val();
 
-	const area_size = document.getElementById( "area_size" ).value;
-	if( document.getElementById( "x_zoom" ).checked ){ var x_zoom = true; }else{ var x_zoom = false; }
-	if( document.getElementById( "y_log" ).checked ){ var y_log = 'log'; }else{ var y_log = 'linear'; }
+	const area_size = $( "#area_size" ).val();
+	if( $( "#x_zoom" ).checked ){ var x_zoom = true; }else{ var x_zoom = false; }
+	if( $( "#y_log" ).checked ){ var y_log = 'log'; }else{ var y_log = 'linear'; }
 
-	$.post( "recipe3ds.cgi", { command:'monitor', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
+	$.post( "#{script}.cgi", { command:'monitor', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
 		xitem:xitem, yitem:yitem, zitem:zitem, zml:zml, zrange:zrange, area_size:area_size, x_zoom:x_zoom, y_log:y_log }, function( data ){
 		$( "#L3" ).html( data );
 	});
 
-	$.post( "recipe3ds.cgi", { command:'plott_data', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
+	$.post( "#{script}.cgi", { command:'plott_data', range:range, type:type, role:role, tech:tech, time:time, cost:cost,
 		xitem:xitem, yitem:yitem, zitem:zitem, zml:zml, zrange:zrange, area_size:area_size, x_zoom:x_zoom, y_log:y_log }, function( raw ){
 
 		//
@@ -628,13 +628,13 @@ var recipe3dsPlottDraw = function(){
 		}
 
 		//
-		const column = ( String( raw )).split( '{}' );
-		const x_values = ( String( column[0] )).split('[]');
-		const y_values = ( String( column[1] )).split('[]');
-		const names = ( String( column[2] )).split('[]');
-		const codes = ( String( column[3] )).split('[]');
-		const x_tickv = ( String( column[4] )).split('[]');
-		const y_tickv = ( String( column[5] )).split('[]');
+		const column = ( String( raw )).split( '::' );
+		const x_values = ( String( column[0] )).split(',');
+		const y_values = ( String( column[1] )).split(',');
+		const names = ( String( column[2] )).split(',');
+		const codes = ( String( column[3] )).split(',');
+		const x_tickv = ( String( column[4] )).split(',');
+		const y_tickv = ( String( column[5] )).split(',');
 
 		//
 		let names_dic = {};
@@ -645,8 +645,8 @@ var recipe3dsPlottDraw = function(){
 		}
 
 		//
-		const plott_size = document.documentElement.clientWidth;
-		const frame_rate = document.getElementById( "area_size" ).value;
+		const plott_size = $( document.documentElement ).width();
+		const frame_rate = $( "#area_size" ).val();
 		if ( window.chart_recipe3d != null ){
 			window.chart_recipe3d.destroy();
 			displayVIDEO( 'Flush!' );
@@ -726,25 +726,25 @@ var recipe3dsPlottDraw = function(){
 
 // Dosplaying recipe by scatter plott
 var recipe3dsReset = function(){
-	document.getElementById( "range" ).value = 0;
-	document.getElementById( "type" ).value = 99;
-	document.getElementById( "role" ).value = 99;
-	document.getElementById( "tech" ).value = 99;
-	document.getElementById( "time" ).value = 99;
-	document.getElementById( "cost" ).value = 99;
+	$( "#range" ).val( 0 );
+	$( "#type" ).val( 99 );
+	$( "#role" ).val( 99);
+	$( "#tech" ).val( 99 );
+	$( "#time" ).val( 99 );
+	$( "#cost" ).val( 99 );
 
-	document.getElementById( "xitem" ).value = 'ENERC';
-	document.getElementById( "yitem" ).value = 'ENERC';
+	$( "#xitem" ).val( 'ENERC' );
+	$( "#yitem" ).val( 'ENERC' );
 
-	document.getElementById( "zitem" ).value = 'ENERC';
-	document.getElementById( "zml" ).value = 0;
-	document.getElementById( "zrange" ).value = 0;
+	$( "#zitem" ).val( 'ENERC' );
+	$( "#zml" ).val( 0 );
+	$( "#zrange" ).val( 0 );
 };
 
 // Dosplaying recipe by scatter plott
-var resize = function(){
-	const plott_size = document.documentElement.clientWidth
-	const frame_rate = document.getElementById( "area_size" ).value;
+var resize3dp = function(){
+	const plott_size = $( document.documentElement ).width();
+	const frame_rate = $( "#area_size" ).val();
 
 	window.chart_recipe3d.resize({
 		height: plott_size * frame_rate,

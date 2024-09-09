@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 recipe list 0.4.3 (2024/07/17)
+#Nutrition browser 2020 recipe list 0.4.4 (2024/09/08)
 	
 
 #==============================================================================
@@ -46,11 +46,10 @@ def language_pack( language )
 		'time' 		=> "目安時間(分)",\
 		'cost'	 	=> "目安費用(円)",\
 		'limit' 	=> "絞　り　込　み",\
-		'reset' 	=> "条件クリア",\
+		'reset' 	=> "リセット",\
 		'photo' 	=> "写真",\
 		'name' 		=> "レシピ名",\
 		'status' 	=> "ステータス",\
-		'family' 	=> "親子集合",\
 		'display'	=> "表示数",\
 		'delete'	=> "削除",\
 		'pick'		=> "コードピック",\
@@ -701,18 +700,19 @@ html = <<-"HTML"
 		<div class='col'>#{html_cost}</div>
 	</div><br>
 	<div class='row'>
-		<button class="btn btn-info btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{l['limit']}</button>
-	</div>
-	<br>
-	<div class='row'>
-		<div class='col-6'>
-			<div class="form-check">
-  				<input class="form-check-input" type="checkbox" id="family" #{checked( family )}>
-  				<label class='form-check-label'>#{l['family']}</label>
+		<div class='col-1'>
+			<div class='row'>
+				<div class="form-check">
+	  				<input class="form-check-input" type="checkbox" id="family" #{$CHECK[family]}>
+	  				<label class='form-check-label'>#{l['diagram']}</label>
+				</div>
 			</div>
 		</div>
-		<div class='col' align="right">
-			<span class="badge rounded-pill npill" type="button" onclick="recipeList( 'reset' )">#{l['reset']}</span>
+		<div class='col-10'>
+			<div class='row'><button class="btn btn-info btn-sm" type="button" onclick="recipeListP( '#{page}' )">#{l['limit']}</button></div>
+		</div>
+		<div class='col-1'>
+			<div class='row'><button class="btn btn-warning btn-sm" type="button" onclick="recipeList( 'reset' )">#{l['reset']}</button></div>
 		</div>
 	</div>
 	<br>

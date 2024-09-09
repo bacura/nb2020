@@ -225,7 +225,7 @@ else
 	r = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE status='6' AND mom='#{user.name}';", false )
 	r.each do |e|
 		account_html << "<tr>"
-		account_html << "<td><div class='custom-control custom-switch'><input type='checkbox' class='custom-control-input' id='sw_#{e['user']}' onchange=\"switchAccountM( 'sw_#{e['user']}', '#{e['user']}' )\" #{checked( e['switch'].to_i )}><label class='custom-control-label' for='sw_#{e['user']}'></label></div></td>"
+		account_html << "<td><div class='custom-control custom-switch'><input type='checkbox' class='custom-control-input' id='sw_#{e['user']}' onchange=\"switchAccountM( 'sw_#{e['user']}', '#{e['user']}' )\" #{$CHECK[e['switch']]}><label class='custom-control-label' for='sw_#{e['user']}'></label></div></td>"
 		account_html << "<td>#{e['user']}</td>"
 		account_html << "<td>#{e['pass']}</td>"
 		account_html << "<td>#{e['mail']}</td>"

@@ -1,55 +1,53 @@
 #! /usr/bin/ruby
 # coding: utf-8
-#Nutrition browser 2020 login 0.06b (2023/07/15)
-
+# Nutrition browser 2020 login 0.0.6.AI (2024/08/18)
 
 #==============================================================================
-#STATIC
+# STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
 
 #==============================================================================
-#LIBRARY
+# LIBRARY
 #==============================================================================
 require './soul'
 
 #==============================================================================
-#DEFINITION
+# METHODS
 #==============================================================================
 
 # Language pack
-def language_pack( language )
-  l = Hash.new
-
-  #Japanese
-  l['jp'] = {
-    'message'   => "IDとパスワードを入力してログインしてください。",\
-    'password'  => "パスワード",\
-    'login'   => "ログイン",\
-    'error'   => "IDとパスワードが一致しませんでした。<br>パスワードを忘れた方は再登録してください。",\
-    'help'  => "<img src='bootstrap-dist/icons/question-circle-ndsk.svg' style='height:3em; width:2em;'>",\
-    'nb'    => "栄養ブラウザ",\
-    'regist'  => "登録",\
-    'empty'   => "[空き地]"
+def language_pack( lang )
+  languages = {
+    'jp' => {
+      'message'  => "IDとパスワードを入力してログインしてください。",
+      'password' => "パスワード",
+      'login'    => "ログイン",
+      'error'    => "IDとパスワードが一致しませんでした。<br>パスワードを忘れた方は再登録してください。",
+      'help'     => "<img src='bootstrap-dist/icons/question-circle-ndsk.svg' style='height:3em; width:2em;'>",
+      'nb'       => "栄養ブラウザ",
+      'regist'   => "登録",
+      'empty'    => "[空き地]"
+    }
   }
-
-  return l[language]
+  return languages[lang]
 end
 
+def render_html( content )
+  puts content
+end
 
-#### HTML login
-def html_login_form( msg, l )
-  html = <<-"HTML"
+def render_login_form( msg, l )
+  form_html = <<-"HTML"
     <div class="container">
       <div class="row">
         <div class="col-6">
           <form action="login.cgi?mode=check" method="post" class="form-signin login_form">
-          #{msg}
-          <p class="msg_small">#{l['message']}</p>
-          <input type="text" name="id" id="inputID" class="form-control login_input" placeholder="ID" required autofocus>
-          <input type="password" name="pass" id="inputPassword" class="form-control login_input" placeholder="#{l['password']}">
-          <input type="submit" value="#{l['login']}" class="btn btn-primary btn-block"></input>
+            #{msg}
+            <p class="msg_small">#{l['message']}</p>
+            <input type="text" name="id" id="inputID" class="form-control login_input" placeholder="ID" required autofocus>
+            <input type="password" name="pass" id="inputPassword" class="form-control login_input" placeholder="#{l['password']}">
+            <input type="submit" value="#{l['login']}" class="btn btn-primary btn-block"></input>
           </form>
         </div>
         <div class="col-6">
@@ -57,129 +55,121 @@ def html_login_form( msg, l )
         </div>
       </div>
     </div>
-HTML
-
-  puts html
+  HTML
+  render_html( form_html )
 end
 
+def render_top_login( l )
+  top_login_html = <<-"HTML"
+    <header class="navbar navbar-expand-lg navbar-dark bg-dark" id="header">
+      <div class="container-fluid">
+        <a href="index.cgi" class="navbar-brand h1 text-secondary">#{l['nb']}</a>
+        <span class="navbar-text text-secondary login_msg h4"><a href="regist.cgi" class="text-secondary">#{l['regist']}</a></span>
+        <a href='https://bacura.jp/?page_id=543' target='manual'>#{l['help']}</a>
+      </div>
+    </header>
+  HTML
+  render_html( top_login_html )
+end
 
-#### HTML top
-def html_top_login( l )
-  login_color = "secondary"
-  login = "<a href=\"regist.cgi\" class=\"text-#{login_color}\">#{l['regist']}</a>"
+def validate_user( db, cgi, l )
+  query = "SELECT user, status, cookie FROM #{$MYSQL_TB_USER} WHERE user='#{cgi['id']}' AND pass='#{cgi['pass']}' AND status>'0';"
+  res = db.query( query, false )
 
-  html = <<-"HTML"
-<header class="navbar navbar-expand-lg navbar-dark bg-dark" id="header">
-  <div class="container-fluid">
-    <a href="index.cgi" class="navbar-brand h1 text-#{login_color}">#{l['nb']}</a>
-    <span class="navbar-text text-#{login_color} login_msg h4">#{login}</span>
-    <a href='https://bacura.jp/?page_id=543' target='manual'>#{l['help']}</a>
-  </div>
-</header>
-HTML
+  unless res.first
+    html_init( nil )
+    html_head( nil, 0, nil )
+    render_top_login( l )
+    render_login_form( "<p class='msg_small_red'>#{l['error']}</p>", l )
+    html_foot()
+  else
+    update_user_data( db, res.first, cgi )
+  end
+end
 
-  puts html
+def update_user_data( db, user_data, cgi )
+  status = user_data['status'].to_i
+  uid = user_data['cookie'] || SecureRandom.hex( 16 )
+  cookie = "Set-Cookie: NAME=#{cgi['id']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
+
+  db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m=NULL WHERE user='#{cgi['id']}';", true )
+  html_init( cookie )
+  html_head( 'refresh', status, nil )
+  puts '</span></body></html>'
+  initialize_user_config( db, cgi, status ) unless status == 7
+end
+
+def initialize_user_config( db, cgi, status )
+  [
+    $MYSQL_TB_HIS, 
+    $MYSQL_TB_SUM, 
+    $MYSQL_TB_MEAL
+  ].each do |table|
+    query = "SELECT user FROM #{table} WHERE user='#{cgi['id']}';"
+    insert_query = "INSERT INTO #{table} SET user='#{cgi['id']}', #{table.downcase}='';"
+    res = db.query( query, false )
+    db.query( insert_query, true ) unless res.first
+  end
+end
+
+def handle_family_login( db, get_data )
+  login_mv = get_data['login_mv']
+  query = "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{login_mv}';"
+  res = db.query( query, false )
+  handle_login_mv( db, res.first ) if res.first
+end
+
+def handle_login_mv( db, login_data )
+  cookie = if login_data['mom'].to_s.empty?
+    "Set-Cookie: NAME=#{login_data['user']}\nSet-Cookie: #{$COOKIE_UID}=#{login_data['cookie']}\n"
+  else
+    handle_family_cookie( db, login_data )
+  end
+  db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{db.user.name}';", true )
+  html_init( cookie )
+  html_head( 'refresh', login_data['status'], nil )
+  puts '</span></body></html>'
+end
+
+def handle_family_cookie( db, login_data )
+  parent_query = "SELECT * FROM #{$MYSQL_TB_USER} WHERE user=\"#{login_data['mom']}\";"
+  parent_res = db.query( parent_query, false )
+  return unless parent_res.first
+
+  uid = SecureRandom.hex( 16 )
+  parent_cookie = parent_res.first['cookie']
+  db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{parent_cookie}' WHERE user='#{login_data['user']}';", true )
+  "Set-Cookie: NAME=#{login_data['user']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
 end
 
 #==============================================================================
-# Main
+# MAIN
 #==============================================================================
 text_init() if @debug
 
-#### Getting GET data
 get_data = get_data()
-
-#### Getting POST date
 user = User.new( @cgi )
 l = language_pack( user.language )
 db = Db.new( user, false, true )
 
-puts "#{get_data['mode']}" if @debug
 case get_data['mode']
-when 'check'
+  when 'check'
+    validate_user( db, @cgi, l )
 
-  puts 'Checking user ID on DB' if @debug
-  r = db.query( "SELECT user, status, cookie FROM #{$MYSQL_TB_USER} WHERE user='#{@cgi['id']}' AND pass='#{@cgi['pass']}' AND status>'0';", false )
-  unless r.first
-      html_init( nil )
-      html_head( nil, 0, nil )
-      html_top_login( l )
-      msg = "<p class='msg_small_red'>#{l['error']}</p>"
-      html_login_form( msg, l )
-      html_foot()
-  else
-    status = r.first['status'].to_i
-
-    puts 'Issuing cookies' if @debug
-    uid = SecureRandom.hex( 16 )
-    uid = r.first['cookie'] if status == 7 && r.first['cookie'] != nil
-    cookie = "Set-Cookie: NAME=#{@cgi['id']}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
-
-    puts 'Updating user information' if @debug
-    db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m=NULL WHERE user='#{@cgi['id']}';", true )
-
+  when 'logout'
+    cookie = "Set-Cookie: NAME=NULL\nSet-Cookie: #{$COOKIE_UID}=NULL\n"
     html_init( cookie )
-    html_head( 'refresh', status, nil )
+    html_head( 'refresh', 0, nil )
     puts '</span></body></html>'
+    db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
 
-    puts 'Init essential config' if @debug
-    if status != 7
-      # Checking & repairing history table
-      r = db.query( "SELECT user FROM #{$MYSQL_TB_HIS} WHERE user='#{@cgi['id']}';", false )
-      db.query( "INSERT INTO #{$MYSQL_TB_HIS} SET user='#{@cgi['id']}', his='';", true )  unless r.first
+  when 'family'
+    handle_family_login( db, get_data )
 
-      # Checking & repairing SUM table
-      r = db.query( "SELECT user FROM #{$MYSQL_TB_SUM} WHERE user='#{@cgi['id']}';", false )
-      db.query( "INSERT INTO #{$MYSQL_TB_SUM} SET user='#{@cgi['id']}', sum='';", true ) unless r.first
-
-      # Checking & repairing meal table
-      r = db.query( "SELECT user FROM #{$MYSQL_TB_MEAL} WHERE user='#{@cgi['id']}';", false )
-      db.query( "INSERT INTO #{$MYSQL_TB_MEAL} SET user='#{@cgi['id']}', meal='';", true ) unless r.first
-    end
-  end
-
-when 'logout'
-  # Meaningless Cookie
-  cookie = "Set-Cookie: NAME=NULL\nSet-Cookie: #{$COOKIE_UID}=NULL\n"
-  html_init( cookie )
-  html_head( 'refresh', 0, nil )
-  puts '</span></body></html>'
-  db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
-
-when 'family'
-  cookie = ''
-  login_mv = get_data['login_mv']
-  puts "->#{login_mv}" if @debug
-  r = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user='#{login_mv}';", false )
-  if r.first
-    puts r.first['mom'] if @debug
-    if r.first['mom'] == '' ||  r.first['mom'] == nil
-        cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{r.first['cookie']}\n"
-        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
-    else
-      rr = db.query( "SELECT * FROM #{$MYSQL_TB_USER} WHERE user=\"#{r.first['mom']}\";", false )
-      if rr.first
-        # Issuing cookies
-        uid = SecureRandom.hex( 16 )
-        mid = rr.first['cookie']
-        cookie = "Set-Cookie: NAME=#{login_mv}\nSet-Cookie: #{$COOKIE_UID}=#{uid}\n"
-        puts cookie if @debug
-
-        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie='#{uid}', cookie_m='#{mid}' WHERE user='#{login_mv}';", true )
-        db.query( "UPDATE #{$MYSQL_TB_USER} SET cookie_m=NULL WHERE user='#{user.name}';", true )
-      end
-    end
-  end
-  html_init( cookie )
-
-  html_head( 'refresh', r.first['status'], nil )
-  puts '</span></body></html>'
-
-# Input form init
-else
-  html_init( nil )
-  html_head( nil, 0, nil )
-  html_top_login( l )
-  html_login_form( nil, l )
-  html_foot()
+  else
+    html_init( nil )
+    html_head( nil, 0, nil )
+    render_top_login( l )
+    render_login_form( nil, l )
+    html_foot()
 end

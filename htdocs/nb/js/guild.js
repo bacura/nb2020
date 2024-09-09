@@ -1,4 +1,4 @@
-//guild.js ver 0.4.4 (2024/07/28)
+//guild.js ver 0.4.5 (2024/08/17)
 
 kp = 'koyomi/'
 
@@ -16,6 +16,15 @@ var initKoyomi = function(){
 	displayBW();
 };
 
+// Set time to now
+var nowKoyomi = function( id ){
+	var today = new Date();
+	var hh = today.getHours();
+	var mm = today.getMinutes();
+	if( hh < 10 ){ hh = '0' + hh; }
+	if( mm < 10 ){ mm = '0' + mm; }
+	document.getElementById( id ).value = hh + ':' + mm;
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi Edit//////////////////////////////////////////////////////////////
@@ -80,11 +89,23 @@ const editKoyomiR = function( yyyy, mm ){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// Koyomi Direct fix data //////////////////////////////////////////////////////////////
+// Koyomi fix //////////////////////////////////////////////////////////////
 
-// Koyomi fix
-const fixKoyomi = function( yyyy, mm, dd, tdiv ){
+// Initial
+const initKoyomiFix = function( yyyy, mm, dd, tdiv ){
 	$.post( kp + "koyomi-fix.cgi", { command:'init', yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv }, function( data ){
+		$( "#L3" ).html( data );
+
+		dl2 = false;
+		dl3 = true;
+		displayBW();
+	});
+};
+
+
+// Modify or Copy
+var modifyKoyomiFix = function( code, yyyy, mm, dd, tdiv, hh_mm, meal_time, order ){
+	$.post( kp + "koyomi-fix.cgi", { command:"modify", code:code, yyyy:yyyy, mm:mm, dd:dd, tdiv:tdiv, hh_mm:hh_mm, meal_time, order:order }, function( data ){
 		$( "#L3" ).html( data );
 
 		dl2 = false;
@@ -229,15 +250,6 @@ var modifychangeKoyomiFC = function( code, origin ){
 	});
 };
 
-// Set time to now
-var nowKoyomi = function( id ){
-	var today = new Date();
-	var hh = today.getHours();
-	var mm = today.getMinutes();
-	if( hh < 10 ){ hh = '0' + hh; }
-	if( mm < 10 ){ mm = '0' + mm; }
-	document.getElementById( id ).value = hh + ':' + mm;
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Koyomi menu copy / move //////////////////////////////////////////////////////////////

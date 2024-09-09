@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.6.2 (2024/05/22)
+#Nutrition browser 2020 soul 1.7.1 (2024/08/20)
 
 #==============================================================================
 # LIBRARY
@@ -349,29 +349,10 @@ def wash( txt )
 end
 
 
-#### for checkbox
-#### Obsolete in the future
-def checked( bit )
-  s = ''
-  s = 'CHECKED' if bit == 1
-
-  return s
-end
-
-
-#### for select
-#### Obsolete in the future
-def selected( s, e, n )
-  a = []
-  s.upto( e ) do |c|
-    if c == n.to_i
-      a << 'SELECTED'
-    else
-      a << ''
-    end
+def debug_output( *messages )
+  messages.each do |msg|
+    puts "#{msg}<br>" if @debug
   end
-
-  return a
 end
 
 
@@ -409,6 +390,47 @@ class Db
           exit( 9 )
       end
       return $DB.query( query )
+
+    rescue
+      if @html
+        html_init( nil )
+        html_head( nil )
+      end
+        puts "<span class='error'>[db]ERROR!!</span><br>"
+    end
+  end
+end
+
+class Dba
+  attr_reader :user
+
+  def initialize( user, debug, html )
+    @user = user
+    @debug = debug
+    @status = 0
+    @status = @user.status unless @user == nil
+    @html = html
+  end
+
+  def qq( query )
+    q = query.gsub( ';', '' ) << ';'
+    return $DB.query( q )
+  end
+
+  def query( query, *pf, barrier )
+    puts "<span class='dbq'>[db]#{query}</span><br>" if @debug
+    begin
+      if @status == $ASTRAL && barrier
+          puts "<span class='ref_error'>[db]Astral user barrier!</span><br>"
+          exit( 9 )
+      end
+
+      t = query.chop
+      if /[\;\$]/ =~ t
+          puts "<span class='error'>[db]ERROR!!</span><br>"
+          exit( 9 )
+      end
+      return $DB.query( query, pf )
 
     rescue
       if @html

@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 detail viewer 0.16b (2023/09/27)
+#Nutrition browser 2020 detail viewer 0.1.6 (2024/08/21)
 
 #==============================================================================
 # STATIC
@@ -97,7 +97,6 @@ end
 puts 'Weight process<br>' if @debug
 food_volume = BigDecimal( food_weight_check( food_weight ).first )
 food_weight = food_volume * uk
-frct_select = selected( 0, 3, frct_mode )
 
 
 puts 'Load FCT<br>' if @debug
@@ -184,9 +183,9 @@ fract_html = ''
 fract_html << '<div class="input-group input-group-sm">'
 fract_html << "	<label class='input-group-text'>#{l['fract']}</label>"
 fract_html << "	<select class='form-select form-select-sm' id='detail_fraction' onchange=\"detailWeight( '#{food_no}' )\">"
-fract_html << "		<option value='1' #{frct_select[1]}>#{l['round']}</option>"
-fract_html << "		<option value='2' #{frct_select[2]}>#{l['ceil']}</option>"
-fract_html << "		<option value='3' #{frct_select[3]}>#{l['floor']}</option>"
+fract_html << "		<option value='1' #{$SELECT[frct_mode == 1]}>#{l['round']}</option>"
+fract_html << "		<option value='2' #{$SELECT[frct_mode == 2]}>#{l['ceil']}</option>"
+fract_html << "		<option value='3' #{$SELECT[frct_mode == 3]}>#{l['floor']}</option>"
 fract_html << '	</select>'
 fract_html << '</div>'
 

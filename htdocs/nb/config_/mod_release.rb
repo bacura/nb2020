@@ -1,107 +1,116 @@
-# Nutorition browser 2020 Config module for release 0.02b (23/07/14)
+# Nutorition browser 2020 Config module for release 0.0.3.AI (24/08/20)
 #encoding: utf-8
 
-#mod debug
+# Debug mode
 @debug = false
 
 def config_module( cgi, db )
-	module_js()
+	render_javascript()
 	l = module_lp( db.user.language )
 
 	step = cgi['step']
 	password = cgi['password']
-	puts "#{step}<br>" if @debug
-	puts "#{password}<br>" if @debug
+	debug_output( step, password )
 
-	html =''
-
-	if step ==  ''
-		puts 'form step<br>' if @debug
-		html = <<-"HTML"
-      	<div class="container">
-      		<div class='row'>
-	    		#{l['msg']}<br>
-			</div><br>
-      		<div class='row'>
-				<div class='col-4'><input type="password" id="password" class="form-control form-control-sm login_input" placeholder="#{l['password']}" required></div>
-				<div class='col-4'><button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="release_cfg()">#{l['release']}</button></div>
-			</div>
-		</div>
-HTML
+	if step.empty?
+		debug_output( 'form step' )
+		html = render_form( l )
 	else
-		if user.status != 3 || user.status != 9
-			puts 'release step general<br>' if @debug
-			html = <<-"HTML"
-      		<div class="container">
-      			<div class='row'>
-	    			#{l['thanks']}
-				</div>
-			</div>
-HTML
+		if db.user.status != 3 && db.user.status != 9
+			debug_output( 'release step general' )
+			html = render_general_release( l )
+			update_user_status( db )
+			delete_user_data( db )
 
-			# Updating user table
-			db.query( "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{db.user.name}' AND cookie='#{db.user.uid}';", true )
-
-			# Deleting indivisual data
-			db.query( "DELETE FROM #{$MYSQL_TB_HIS} WHERE user='#{db.user.name}';", true )
-			db.query( "DELETE FROM #{$MYSQL_TB_SUM} WHERE user='#{db.user.name}';", true )
-			db.query( "DELETE FROM #{$MYSQL_TB_CFG} WHERE user='#{db.user.name}';", true )
-			db.query( "DELETE FROM #{$MYSQL_TB_MEAL} WHERE user='#{db.user.name}';", true )
-			db.query( "DELETE FROM #{$MYSQL_TB_PRICEM} WHERE user='#{db.user.name}';", true )
-			db.query( "DELETE FROM #{$MYSQL_TB_PALETTE} WHERE user='#{db.user.name}';", true )
 		else
-			puts 'release step ROM<br>' if @debug
-			html = <<-"HTML"
-      		<div class="container">
-      			<div class='row'>
-	    			#{l['nguser']}
-				</div>
-			</div>
-HTML
+			debug_output( 'release step ROM' )
+			html = render_rom_release( l )
 		end
 	end
 
 	return html
-
 end
 
+def render_form( l )
+	<<-"HTML"
+		<div class="container">
+			<div class='row'>
+				#{l['msg']}<br>
+			</div><br>
+			<div class='row'>
+				<div class='col-4'><input type="password" id="password" class="form-control form-control-sm login_input" placeholder="#{l['password']}" required></div>
+				<div class='col-4'><button type="button" class="btn btn-outline-danger btn-sm nav_button" onclick="release_cfg()">#{l['release']}</button></div>
+			</div>
+		</div>
+	HTML
+end
 
-def module_js()
+def render_general_release( l )
+	<<-"HTML"
+		<div class="container">
+			<div class='row'>
+				#{l['thanks']}
+			</div>
+		</div>
+	HTML
+end
+
+def update_user_status( db )
+	db.query( "UPDATE #{$MYSQL_TB_USER} SET status='0' WHERE user='#{db.user.name}' AND cookie='#{db.user.uid}';", true )
+end
+
+def delete_user_data( db )
+	[
+		$MYSQL_TB_HIS, 
+		$MYSQL_TB_SUM, 
+		$MYSQL_TB_CFG, 
+		$MYSQL_TB_MEAL,
+		$MYSQL_TB_PRICEM, 
+		$MYSQL_TB_PALETTE
+	].each do |table|
+		db.query( "DELETE FROM #{table} WHERE user='#{db.user.name}';", true )
+	end
+end
+
+def render_rom_release( l )
+	<<-"HTML"
+		<div class="container">
+			<div class='row'>
+				#{l['nguser']}
+			</div>
+		</div>
+	HTML
+end
+
+def render_javascript()
 	js = <<-"JS"
 <script type='text/javascript'>
+	var release_cfg = function(){
+		const password = $( "#password" ).val();
 
-var release_cfg = function(){
-	const password = document.getElementById( "password" ).value;
-
-	$.post( "config.cgi", { mod:'release', step:'release', password:password }, function( data ){
-		$( "#L1" ).html( data );
-
-		flashBW();
-		dl1 = true;
-		dline = true;
-		displayBW();
-	});
-};
-
+		$.post( "config.cgi", { mod:'release', step:'release', password:password }, function( data ){
+			$( "#L1" ).html( data );
+			flashBW();
+			dl1 = true;
+			dline = true;
+			displayBW();
+		});
+	};
 </script>
 JS
 	puts js
 end
 
-
-# Language pack
 def module_lp( language )
-	l = Hash.new
-
-	l['jp'] = {
-		'mod_name' => "登録解除",\
-		'msg' => "ユーザー登録を解除する場合は、パスワードを入力し登録解除ボタンを押してください。",\
-		'password' => "パスワード",\
-		'release' => "登録解除",\
-		'thanks' => "ユーザー登録を解除しました。ご利用ありがとうございました。",\
-		'nguser' => "特殊アカウントは登録解除できません。"
+	l = {
+		'jp' => {
+			'mod_name' => "登録解除",
+			'msg' => "ユーザー登録を解除する場合は、パスワードを入力し登録解除ボタンを押してください。",
+			'password' => "パスワード",
+			'release' => "登録解除",
+			'thanks' => "ユーザー登録を解除しました。ご利用ありがとうございました。",
+			'nguser' => "特殊アカウントは登録解除できません。"
+		}
 	}
-
 	return l[language]
 end
-

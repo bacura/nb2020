@@ -38,7 +38,7 @@ def physique_module( cgi, db )
 			pal = mod_cfg_h[mod]['pal'].to_f
 		end
 	end
-	start_date = @date if start_date = ""
+	start_date = @date if start_date == ""
 
 
 	html = ''

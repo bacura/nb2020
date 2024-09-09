@@ -120,7 +120,6 @@ when 'init', 'weight', 'cb', 'cbp'
 	require './brain'
 
 	food_weight = BigDecimal( food_weight_check( food_weight ).first )
-	frct_select = selected( 0, 2, frct_mode )
 
 	query = ''
 	food_no_list = []
@@ -294,9 +293,9 @@ when 'init', 'weight', 'cb', 'cbp'
 	<div class="input-group input-group-sm">
 		<label class='input-group-text' for='fraction'>#{l['fract']}</label>
 		<select class='form-select' id='fraction' onchange='changeDSWeight( "weight", "#{food_key}", "#{food_no}" )>
-			<option value='1'#{frct_select[1]}>#{l['round']}</option>
-			<option value='2'#{frct_select[2]}>#{l['ceil']}</option>
-			<option value='3'#{frct_select[3]}>#{l['floor']}</option>
+			<option value='1'#{$SELECT[frct_mode == 1]}>#{l['round']}</option>
+			<option value='2'#{$SELECT[frct_mode == 2]}>#{l['ceil']}</option>
+			<option value='3'#{$SELECT[frct_mode == 3]}>#{l['floor']}</option>
 		</select>
 	</div>
 </div>

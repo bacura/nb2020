@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 menu list 0.06b (2024/02/16)
+#Nutrition browser 2020 menu list 0.0.6 (2024/08/21)
 
 
 #==============================================================================
@@ -22,13 +22,11 @@ script = 'menul'
 #==============================================================================
 ### HTML display range
 def range_html( range, lp )
-	range_select = selected( 0, 3, range )
-
 	html = '<select class="form-select form-select-sm" id="range">'
-	html << "<option value='0' #{range_select[0]}>#{lp[12]}</option>"
-	html << "<option value='1' #{range_select[1]}>#{lp[19]}</option>"
-	html << "<option value='2' #{range_select[2]}>#{lp[13]}</option>"
-	html << "<option value='3' #{range_select[3]}>#{lp[14]}</option>"
+	html << "<option value='0' #{$SELECT[range == 0]}>#{lp[12]}</option>"
+	html << "<option value='1' #{$SELECT[range == 1]}>#{lp[19]}</option>"
+	html << "<option value='2' #{$SELECT[range == 2]}>#{lp[13]}</option>"
+	html << "<option value='3' #{$SELECT[range == 3]}>#{lp[14]}</option>"
 	html << '</select>'
 
 	return html
