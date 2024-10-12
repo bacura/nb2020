@@ -1,4 +1,4 @@
-#Nutrition browser 2020 soul 1.7.1 (2024/08/20)
+#Nutrition browser 2020 soul 1.8.0 (2024/10/08)
 
 #==============================================================================
 # LIBRARY
@@ -529,6 +529,47 @@ class User
     puts "mid:#{@mid}<br>"
     puts "language:#{@language}<br>"
     puts "<hr>"
+  end
+end
+
+
+class Config
+  attr_accessor :elements
+  def initialize( user, base )
+    @user = user
+    @base = base.to_s
+    @base = 'global' if @base == ''
+    @elements = {}
+    res = $DB.query( "SELECT cfgj FROM #{$MYSQL_TB_CFG} WHERE user='#{@user.name}';" )
+    if res.first && res.first['cfgj'].to_s != ''
+      @elements = JSON.parse( res.first['cfgj'] ) if res.first['cfgj'].to_s != ''
+    end
+    @elements[@base] ||= {}
+  end
+
+  def base( base )
+    @base = base.to_s
+    @elements[@base] ||= {}
+  end
+
+  def value( key )
+    @elements[@base][key] ||= nil
+    @elements[@base][key]
+  end
+
+  def set_value( key, value )
+    @elements[@base][key] ||= {}
+    @elements[@base][key] = value
+  end
+
+  def update()
+    elements_ = JSON.generate( @elements )
+    res = $DB.query( "SELECT * FROM #{$MYSQL_TB_CFG} WHERE user='#{@user.name}';" )
+    if res.first
+      $DB.query( "UPDATE #{$MYSQL_TB_CFG} SET cfgj='#{elements_}' WHERE user='#{@user.name}';" )
+    else
+      $DB.query("INSERT INTO #{$MYSQL_TB_CFG} (user, cfgj) VALUES ('#{@user.name}', '#{elements_}');")
+    end
   end
 end
 

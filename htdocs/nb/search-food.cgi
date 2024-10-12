@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-# Nutrition browser food search 0.1.1.AI (2024/09/09)
+# Nutrition browser food search 0.1.2.AI (2024/09/30)
 
 #==============================================================================
 # STATIC
@@ -117,10 +117,11 @@ words.gsub!( /　+/, "\t")
 words.gsub!( /,+/, "\t")
 words.gsub!( /、+/, "\t")
 words.gsub!( /\t{2,}/, "\t")
-query_words = words.split( "\t" ).uniq!
+query_words = words.split( "\t" ).uniq
 
 
 if @debug
+	puts "words: #{words}<br>"
 	puts "query_words: #{query_words}<br>"
 	puts "<hr>"
 end

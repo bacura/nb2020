@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail parallel 0.0.1 (2024/06/30)
+#Nutrition browser 2020 food detail parallel 0.0.2 (2024/10/12)
 
 
 #==============================================================================
@@ -160,7 +160,7 @@ when 'init', 'weight', 'cb', 'cbp'
 	juten_html = ''
 	@fct_para.each do |e|
 		juten_html << "<th>"
-		juten_html << "<input class='form-check-input' type='radio' name='para_juten' id='para_#{e}' onchange=\"cb_detail_para_juten('#{food_key}','#{food_weight}','#{base_fn}')\" #{$CHECK[ e == juten ]}>"
+		juten_html << "<input class='form-check-input' type='radio' name='para_juten' id='para_#{e}' value='#{e}' onchange=\"cb_detail_para_juten('#{food_key}','#{food_weight}','#{base_fn}')\" #{$CHECK[ e == juten ]}>"
 		juten_html << "</th>"
 	end
 

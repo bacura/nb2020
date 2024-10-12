@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser Lucky sum input driver 0.0.4.AI (2024/09/08)
+#Nutrition browser Lucky sum input driver 0.0.5.AI (2024/09/30)
 
 #==============================================================================
 #LIBRARY
@@ -60,8 +60,10 @@ def predict_html( lucky_data, db, l )
 
 	id_counter = 0
 	lucky_solid = lucky_data.split( "\n" )
+	lucky_solid.delete( '' )
 
 	lucky_solid.each do |e|
+
 		food_no = ''
 		weight = 100
 		memo = ''
@@ -86,7 +88,7 @@ def predict_html( lucky_data, db, l )
 		unit = unit_match.size > 0 ? unit_match.first.first : 'g'
 		food_no = vol.empty? ? '+' : food_no
 
-		puts 'kakko~' if @debug
+		puts '<br>kakko~' if @debug
 		memo_match = e.scan( /\((.+)\)/ )
 
 		if memo_match.size > 0 && memo.empty?
@@ -94,7 +96,7 @@ def predict_html( lucky_data, db, l )
 			food.gsub!( /\(.+\)/, '' )
 		end
 
-		puts 'Dic~' if @debug
+		puts '<br>Dic~' if @debug
 		dic_hit = 0
 
 		if memo == '' && food.size >= 1
@@ -105,6 +107,10 @@ def predict_html( lucky_data, db, l )
 				if r.first['def_fn'] != ''
 					predict_food = r.first['org_name']
 					food_no = r.first['def_fn']
+					if food_no == nil
+						rr = db.query( "SELECT MIN(FN) FROM #{$MYSQL_TB_TAG} WHERE name='#{predict_food}';", false )
+						food_no = rr.first['MIN(FN)']
+					end
 				else
 					food_no = '+'
 				end
@@ -120,6 +126,10 @@ def predict_html( lucky_data, db, l )
 								dic_hit = rr.size
 								predict_food = rr.first['org_name']
 								food_no = rr.first['def_fn']
+								if food_no == nil
+									rr = db.query( "SELECT MIN(FN) FROM #{$MYSQL_TB_TAG} WHERE name='#{predict_food}';", false )
+									food_no = rr.first['MIN(FN)']
+								end
 								food_sub_max = n.surface.size
 							end
 						end
@@ -169,7 +179,7 @@ def predict_html( lucky_data, db, l )
 	html << '</table><br>'
 
 	html << '<div class="row" align="right">'
-	html << "<button class='btn btn-sm btn-success' onclick=\"adoptLuckeyFood( '#{id_counter}' )\" >#{l['add']}</button>"
+	html << "<button class='btn btn-sm btn-success' onclick=\"adoptLuckeyFood( '#{id_counter}' )\" >#{l[:add]}</button>"
 	html << '</div>'
 
 	return html
@@ -330,6 +340,7 @@ when 'analyze'
 		end
 	end
 
+
 	html = predict_html( lucky_data, db, l )
 
 when 'push'
@@ -355,37 +366,43 @@ puts html
 #==============================================================================
 # FRONT SCRIPT
 #==============================================================================
-if command == 'view'
-	js = <<-"JS"
-		<script type='text/javascript'>
-			var analyzeLuckyFoods = function(){
-				var lucky_data = document.getElementById( 'lucky_data' ).value;
-				if( lucky_data != '' ){
-					$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){
-						$( "#L2" ).html( data );
-						displayVIDEO( 'Lucky?' );
-					});
-				}
-			};
+if command == 'init'
+js = <<-"JS"
+<script type='text/javascript'>
 
-			var adoptLuckeyFood = function( idc ){
-				let lucky_solid = '';
-				for( let i = 1; i <= idc; i++ ){
-					if( document.getElementById( "lucky" + i ).checked ){
-						if( document.getElementById( "lucky_sum" + i ).value != '' ){
-							lucky_solid += document.getElementById( "lucky_sum" + i ).value + "\\n";
-						}
-					}
-				}
+var analyzeLuckyFoods = function(){
+	var lucky_data = document.getElementById( 'lucky_data' ).value;
+	if( lucky_data != '' ){
+		$.post( "lucky.cgi", { command:'analyze', lucky_data:lucky_data }, function( data ){
+			$( "#L2" ).html( data );
+			displayVIDEO( 'Lucky?' );
+		});
+	}
+};
 
-				if( lucky_solid != '' ){
-					$.post( "lucky.cgi", { command:'push', lucky_solid:lucky_solid }, function( data ){
-						$( "#L2" ).html( data );
-						displayVIDEO( 'Lucky?' );
-					});
-				}
-			};
-		</script>
-	JS
-	puts js
+var adoptLuckeyFood = function( idc ){
+	let lucky_solid = '';
+	for( let i = 1; i <= idc; i++ ){
+		if( document.getElementById( "lucky" + i ).checked ){
+			if( document.getElementById( "lucky_sum" + i ).value != '' ){
+				lucky_solid += document.getElementById( "lucky_sum" + i ).value + "\t";
+			}
+		}
+	}
+
+	if( lucky_solid != '' ){
+		$.post( "lucky.cgi", { command:'push', lucky_solid:lucky_solid }, function( data ){
+			$( "#L2" ).html( data );
+			displayVIDEO( 'Lucky?' );
+
+			initCB( 'refresh', '', null )
+
+		});
+	}
+};
+</script>
+JS
+
+puts js
+
 end

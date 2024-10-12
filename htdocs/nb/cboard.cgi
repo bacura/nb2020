@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 cutting board 0.2.7 (2024/06/07)
+#Nutrition browser 2020 cutting board 0.2.8 (2024/10/12)
 
 #==============================================================================
 #STATIC
@@ -38,6 +38,7 @@ def language_pack( language )
 		'food_name' => "食品名",\
 		'memo' 		=> "一言メモ",\
 		'simple_g' 	=> "単純g",\
+		:chomi_pub 	=> '公開含む',\
 		'sort' 		=> "<img src='bootstrap-dist/icons/sort-down.svg' style='height:1.2em; width:1.2em;'>",\
 		'expect_g' 	=> "予想g",\
 		'volume' 	=> "量",\
@@ -216,13 +217,15 @@ end
 
 
 #### Chomi cell
-def chomi_cell( l, code, chomi_selected, chomi_code, db )
+def chomi_cell( l, code, chomi_selected, chomi_code, chomi_pub, db )
 	puts 'chomi % categoty set<br>' if @debug
 	chomi_html = ''
-
 	chomim_categoty = []
-	r = db.query( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE user='#{db.user.name}' and role='100' ORDER BY name;", false )
 
+
+
+	sql_chomi_pub = chomi_pub == 1 ? "OR public='1'" : ''
+	r = db.query( "SELECT code, name FROM #{$MYSQL_TB_RECIPE} WHERE ( user='#{db.user.name}' #{sql_chomi_pub} ) and role='100' ORDER BY name;", false )
 	r.each do |e|
 		a = e['name'].sub( '：', ':' ).split( ':' )
 		chomim_categoty << a[0]
@@ -275,9 +278,9 @@ end
 html_init( nil )
 
 user = User.new( @cgi )
-user.debug if @debug
-l = language_pack( user.language )
 db = Db.new( user, @debug, false )
+cfg = Config.new( user, 'cboard' )
+l = language_pack( user.language )
 
 #### POST
 command = @cgi['command']
@@ -292,6 +295,7 @@ unit= @cgi['unit']
 code = @cgi['code']
 chomi_selected = @cgi['chomi_selected']
 chomi_code = @cgi['chomi_code']
+chomi_pub = @cgi['chomi_pub']
 recipe_user = @cgi['recipe_user']
 recipe_user = user.name if recipe_user == nil || recipe_user == ''
 if @debug
@@ -307,10 +311,18 @@ if @debug
 	puts "unitv:#{unitv}<br>"
 	puts "chomi_selected:#{chomi_selected}<br>"
 	puts "chomi_code:#{chomi_code}<br>"
+	puts "chomi_pub:#{chomi_pub}<br>"
 	puts "recipe_user:#{recipe_user}<br>"
 #	puts "adjew:#{adjew}<br>"
 	puts "<hr>"
 end
+
+puts "Loading Config<br>" if @debug
+if chomi_pub == '' 
+	chomi_pub = cfg.value( 'chomi_pub' )
+	chomi_pub = 0 if chomi_pub == nil
+end
+chomi_pub = chomi_pub.to_i
 
 
 puts "Loading Sum<br>" if @debug
@@ -373,7 +385,7 @@ update = ''
 all_check = ''
 case command
 when 'chomi_cell'
-	chomi_html = chomi_cell( l, code, chomi_selected, chomi_code, db )
+	chomi_html = chomi_cell( l, code, chomi_selected, chomi_code, chomi_pub, db )
 	puts chomi_html
 	exit
 
@@ -629,7 +641,8 @@ when 'chomis'
 	target_weight = total_weight if target_weight == 0
 	chomi_rate = target_weight / 100
 
-	r = db.query( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE user='#{user.name}' AND code='#{chomi_code}';", false )
+
+	r = db.query( "SELECT sum from #{$MYSQL_TB_RECIPE} WHERE code='#{chomi_code}';", false )
 	if r.first
 		 r.first['sum'].split( "\t" ).each do |e|
 			t = Sum.new( user )
@@ -745,7 +758,7 @@ end
 
 
 puts 'chomi % HTML<br>' if @debug
-chomi_html = chomi_cell( l, code, chomi_selected, chomi_code, db )
+chomi_html = chomi_cell( l, code, chomi_selected, chomi_code, chomi_pub, db )
 
 
 puts 'HTML upper part<br>' if @debug
@@ -772,6 +785,12 @@ html = <<-"UPPER_MENU"
 		<script language='javascript' type='text/javascript'>
 			document.getElementById( 'chomi_cell' ).innerHTML = '#{chomi_html}';
 		</script>
+		<div class='col-1'>
+			<div class="form-check">
+				<input class="form-check-input" type="checkbox" id="chomi_pub_check" onchange=\"selectChomiPub()\" #{$CHECK[chomi_pub == 1]}>
+				<label class="form-check-label">#{l[:chomi_pub]}</label>
+			</div>
+		</div>
 	</div>
 	<br>
 
@@ -990,9 +1009,13 @@ puts 'Updating cboard sum<br>' if @debug
 sum_new = ''
 food_list.each do |e| sum_new << "#{e.fn}:#{e.weight}:#{e.unit}:#{e.unitv}:#{e.check}:#{e.init}:#{e.rr}:#{e.ew}\t" end
 sum_new.chop!
-
 db.query( "UPDATE #{$MYSQL_TB_SUM} set code='#{code}', name='#{recipe_name}', sum='#{sum_new}', dish='#{dish_num}', protect='#{protect}' WHERE user='#{user.name}';", true ) unless user.status == 7
 
+puts 'Updating config<br>' if @debug
+cfg.set_value( 'chomi_pub', chomi_pub )
+cfg.update()
+
+puts 'Updating history<br>' if @debug
 add_his( user, code ) if command == 'load'
 
 #==============================================================================
@@ -1002,242 +1025,175 @@ if command == 'init' || command == 'load'
 	js = <<-"JS"
 <script type='text/javascript'>
 
+var postReq = ( command, data, successCallback ) => {
+	$.post( "#{script}.cgi", { command, ...data }, successCallback );
+};
+
 // Clear foods, and reload CB counter
-var clearCB = function( order, code ){
-	if( order == 'all' ){
-		if( document.getElementById( 'all_check' ).checked ){
-			$.post( "#{script}.cgi", { command:'clear', food_check:'all', code:code }, function( data ){ $( "#L1" ).html( data );});
+var clearCB = ( order, code ) => {
+    if ( order === 'all' && $( '#all_check' ).is( ':checked' )) {
+        postReq( 'clear', { food_check: 'all', code }, data => $( "#L1" ).html( data ));
 
-			flashBW();
-			dl1 = true;
-			displayBW();
-		} else{
-			displayVIDEO( '(>_<)check!' );
-		}
-	} else{
-		$.post( "#{script}.cgi", { command:'clear', order:order, code:code }, function( data ){
-			$( "#L1" ).html( data );
-		});
-	}
-	setTimeout( refreshCBN(), 1000 );
+        flashBW();
+        dl1 = true;
+        displayBW();
+
+    } else if ( order !== 'all' ) {
+        postReq( 'clear', { order, code }, data => $( "#L1" ).html( data ));
+
+    } else {
+        displayVIDEO( '(>_<)check!' );
+
+    }
+    setTimeout( refreshCBN, 1000 );
 };
 
+var upperCB = ( order, code ) => postReq( 'upper', { order, code }, data => $( "#L1" ).html( data ));
+var lowerCB = ( order, code ) => postReq( 'lower', { order, code }, data => $( "#L1" ).html( data ));
 
-// Move a food towrd upper
-var upperCB = function( order, code ){
-	$.post( "#{script}.cgi", { command:'upper', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
+var dishCB = ( code ) => {
+	const dish_num = $( '#dish_num' ).val();
+	postReq( 'dish', { code, dish_num }, data => $( "#L1" ).html( data ));
 };
-
-
-// Move a food towrd lower
-var lowerCB = function( order, code ){
-	$.post( "#{script}.cgi", { command:'lower', order:order, code:code }, function( data ){ $( "#L1" ).html( data );});
-};
-
-
-// Change dish number
-var dishCB = function( code ){
-	const dish_num = document.getElementById( "dish_num" ).value;
-	$.post( "#{script}.cgi", { command:'dish', code:code, dish_num:dish_num }, function( data ){ $( "#L1" ).html( data );});
-};
-
 
 // Adjust total food weight
-var weightAdj = function( code ){
-	const weight_adj = document.getElementById( "weight_adj" ).value;
-	$.post( "#{script}.cgi", { command:'wadj', code:code, weight_adj:weight_adj }, function( data ){ $( "#L1" ).html( data );});
-	displayVIDEO( 'Adjusted' );
+var weightAdj = ( code ) => {
+	const weight_adj = $( '#weight_adj' ).val();
+	postReq( 'wadj', { code, weight_adj }, data => $( "#L1" ).html( data ));
 };
-
 
 // Adjust total food energy
-var energyAdj = function( code ){
-	const energy_adj = document.getElementById( "energy_adj" ).value;
-	$.post( "#{script}.cgi", { command:'eadj', code:code, energy_adj:energy_adj }, function( data ){ $( "#L1" ).html( data );});
-		displayVIDEO( 'Adjusted' );
+var energyAdj = ( code ) => {
+	const energy_adj = $( '#energy_adj' ).val();
+	postReq( 'eadj', { code, energy_adj }, data => $( "#L1" ).html( data ));
 };
-
 
 // Adjust total food salt
-var saltAdj = function( code ){
-	const salt_adj = document.getElementById( "salt_adj" ).value;
-	$.post( "#{script}.cgi", { command:'sadj', code:code, salt_adj:salt_adj }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Adjusted' );
-	});
+var saltAdj = ( code ) => {
+	const salt_adj = $( '#salt_adj' ).val();
+	postReq( 'sadj', { code, salt_adj }, data => $( "#L1" ).html( data ));
 };
-
 
 // Switch Adjust weight mode
-var changeAdjew = function(){
-	if( document.getElementById( "adjew" ).checked ){ var adjew = 1 }else{ var adjew = 0 }
-	$.post( "#{script}.cgi", { command:'adjew', adjew:adjew }, function( data ){ $( "#L1" ).html( data );});
+var changeAdjew = () => {
+	const adjew = $( '#adjew' ).is( ':checked' ) ? 1 : 0;
+	postReq( 'adjew', { adjew }, data => $( "#L1" ).html( data ));
 };
-
 
 // Adjust feeding rate by food loss
-var lossAdj = function( code ){
-	const loss_adj = document.getElementById( "loss_adj" ).value;
-	$.post( "#{script}.cgi", { command:'ladj', code:code, loss_adj:loss_adj }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Adjusted' );
-	});
+var lossAdj = ( code ) => {
+	const loss_adj = $( '#loss_adj' ).val();
+	postReq( 'ladj', { code, loss_adj }, data => $( "#L1" ).html( data ));
 };
-
 
 // Sort sum list by food weight
-var sortCB = function( code ){
-	$.post( "#{script}.cgi", { command:'sort', code:code }, function( data ){
-		$( "#L1" ).html( data );
-		displayVIDEO( 'Sorted' );
-	});
-};
-
+var sortCB = ( code ) => postReq( 'sort', { code }, data => $( "#L1" ).html( data ));
 
 // Add a food or a delimiter
-var recipeAdd = function( code ){
-	const fn = document.getElementById( "food_add" ).value;
-	$.post( "#{script}.cgi", { command:'add', fn:fn, code:code }, function( data ){ $( "#L1" ).html( data );});
-	setTimeout( refreshCBN(), 1000 );
+var recipeAdd = ( code ) => {
+	const fn = $( '#food_add' ).val();
+	postReq( 'add', { fn, code }, data => $( "#L1" ).html( data ));
+	setTimeout( refreshCBN, 1000 );
 };
-
-
-// まな板の調味％ボタンを押してプリセット食品を追加してL1にリストを表示。そしてカウンターも更新
-//var seasoningAdd = function( code ){
-//	const seasoning = document.getElementById( "seasoning" ).value;
-//	$.post( "#{script}.cgi", { command:'seasoning', seasoning:seasoning, code:code }, function( data ){ $( "#L1" ).html( data );});
-//	setTimeout( refreshCBN(), 1000 );
-//};
-
 
 // Update sum
-var weightCB = function( order, unitv_id, unit_id, food_init_id, food_rr_id, code ){
-	const unitv = document.getElementById( unitv_id ).value;
-	const unit = document.getElementById( unit_id ).value;
-	const food_init = document.getElementById( food_init_id ).value;
-	const food_rr = document.getElementById( food_rr_id ).value;
-
-	$.post( "#{script}.cgi", { command:'weight', order:order, unitv:unitv, unit:unit, code:code, food_init:food_init, food_rr:food_rr }, function( data ){ $( "#L1" ).html( data );});
+var weightCB = ( order, unitv_id, unit_id, food_init_id, food_rr_id, code ) => {
+	const unitv = $( '#unitv_id' ).val();
+	const unit = $( '#unit_id' ).val();
+	const food_init = $( '#food_init_id' ).val();
+	const food_rr = $( '#food_rr_id' ).val();
+	postReq( 'weight', { order, unitv, unit, code, food_init, food_rr }, data => $( "#L1" ).html( data ));
 };
-
 
 // Update sum by hidden
-var initCB_SS = function( order, unitv_id, unit_id, food_init_id, food_rr_id, code ){
-	const unitv = document.getElementById( unitv_id ).value;
-	const unit = document.getElementById( unit_id ).value;
-	const food_init = document.getElementById( food_init_id ).value;
-	const food_rr = document.getElementById( food_rr_id ).value;
-
-	$.post( "#{script}.cgi", { command:'weight', order:order, unitv:unitv, unit:unit, code:code, food_init:food_init, food_rr:food_rr }, function( data ){});
+var initCB_SS = ( order, unitv_id, unit_id, food_init_id, food_rr_id, code ) => {
+	const unitv = $( '#unitv_id' ).val();
+	const unit = $( '#unit_id}' ).val();
+	const food_init = $( '#food_init_id}' ).val();
+	const food_rr = $( '#food_rr_id' ).val();
+	postReq( 'weight', { order, unitv, unit, code, food_init, food_rr });
 };
-
 
 // Foods check process
-var checkCB = function( order, code, check_id ){
-	let checked = 0;
-	if( document.getElementById( check_id ).checked ){ checked = 1; }
-	$.post( "#{script}.cgi", { command:'check_box', order:order, food_check:checked, code:code }, function( data ){});
+var checkCB = ( order, code, check_id ) => {
+	const checked = $( '#check_id' ).is( ':checked' ) ? 1 : 0;
+	postReq( 'check_box', { order, food_check: checked, code });
 };
-
 
 // Switching all check box
-var allSwitch = function( code ){
-	let allSwitch = 0;
-	if( document.getElementById( 'switch_all' ).checked ){ allSwitch = 1; }
-	$.post( "#{script}.cgi", { command:'allSwitch', code:code, allSwitch:allSwitch }, function( data ){ $( "#L1" ).html( data );});
+var allSwitch = ( code ) => {
+	const allSwitch = $( '#switch_all' ).is( ':checked' ) ? 1 : 0;
+	postReq( 'allSwitch', { code, allSwitch }, data => $( "#L1" ).html( data ));
 };
-
 
 // Quick Save
-var quickSave = function( code ){
-	$.post( "#{script}.cgi", { command:'quick_save', code:code }, function( data ){
-		$( "#L1" ).html( data );
-		displayREC();
-	});
-};
-
+var quickSave = ( code ) => postReq( 'quick_save', { code }, data => {
+	$( "#L1" ).html( data );
+	displayREC();
+});
 
 // GN Exchange
-var gnExchange = function( code ){
-	if( document.getElementById( 'gn_check' ).checked ){
-		$.post( "#{script}.cgi", { command:'gn_exchange', code:code }, function( data ){
-			$( "#L1" ).html( data );
-			displayVIDEO( 'Adjusted' );
-		});
-	} else{
-		displayVIDEO( 'Check!!(>_<)' );
+var gnExchange = ( code ) => {
+	if ( $( '#gn_check' ).is( ':checked' )) {
+		postReq('gn_exchange', { code }, data => $( "#L1" ).html( data ));
+	} else {
+		displayVIDEO('Check!!(>_<)');
 	}
 };
 
-
 // Display sub-foods
-var cb_detail_sub = function( key, weight, base_fn ){
-	$.get( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
+var cb_detail_sub = ( key, weight, base_fn ) => {
+	$.post( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, data => {
 		$( "#L2" ).html( data );
-
 		flashBW();
 		dl2 = true;
 		displayBW();
 	});
 };
 
-
 // Display para-foods
-var cb_detail_para = function( key, weight, base_fn ){
-	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, function( data ){
+var cb_detail_para = ( key, weight, base_fn ) => {
+	$.post( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, data => {
 		$( "#L3" ).html( data );
-
 		flashBW();
 		dl3 = true;
 		displayBW();
 	});
 };
 
-
 // Change juten in para-foods
-var cb_detail_para_juten = function( key, weight, base_fn ){
-	let juten = "FLAT";
-	if( document.getElementById( "para_ENERC_KCAL" ).checked ){ juten = "ENERC_KCAL"; }
-	if( document.getElementById( "para_WATER" ).checked ){ juten = "WATER"; }
-	if( document.getElementById( "para_PROTV" ).checked ){ juten = "PROTV"; }
-	if( document.getElementById( "para_FATV" ).checked ){ juten = "FATV"; }
-	if( document.getElementById( "para_FASAT" ).checked ){ juten = "FASAT"; }
-	if( document.getElementById( "para_CHOV" ).checked ){ juten = "CHOV"; }
-	if( document.getElementById( "para_FIB" ).checked ){ juten = "FIB"; }
-	if( document.getElementById( "para_CA" ).checked ){ juten = "CA"; }
-	if( document.getElementById( "para_FE" ).checked ){ juten = "FE"; }
-	if( document.getElementById( "para_CARTBEQ" ).checked ){ juten = "CARTBEQ"; }
-	if( document.getElementById( "para_THIA" ).checked ){ juten = "THIA"; }
-	if( document.getElementById( "para_RIBF" ).checked ){ juten = "RIBF"; }
-	if( document.getElementById( "para_NACL_EQ" ).checked ){ juten = "NACL_EQ"; }
-
-	$.get( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn, juten:juten }, function( data ){ $( "#L3" ).html( data );});
+var cb_detail_para_juten = ( key, weight, base_fn ) => {
+	const juten = $( "input[name='para_juten']:checked" ).val() || "FLAT";
+	$.post( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn,juten }, data => $( "#L3" ).html( data ));
 };
-
 
 // Retrun to CB
-var returnCB = function(){
-		flashBW();
-		dl1 = true;
-		displayBW();
+var returnCB = () => {
+	flashBW();
+	dl1 = true;
+	displayBW();
 };
 
-
 // Chomi% category
-var chomiSelect =  function(){
-	const code = document.getElementById( "recipe_code" ).value;
-	const chomi_selected = document.getElementById( "chomi_selected" ).value;
-	$.post( "#{script}.cgi", { command:'chomi', code:code, chomi_selected:chomi_selected }, function( data ){ $( "#chomi_cell" ).html( data );});
+var chomiSelect = () => {
+	const code = $( '#recipe_code' ).val();
+	const chomi_selected = $( '#chomi_selected' ).val();
+	postReq( 'chomi', { code, chomi_selected }, data => $( "#chomi_cell" ).html( data ));
 };
 
 // Chomi% add
-var chomiAdd =  function(){
-	const code = document.getElementById( "recipe_code" ).value;
-	const chomi_selected = document.getElementById( "chomi_selected" ).value;
-	const chomi_code = document.getElementById( "chomi_code" ).value;
-	$.post( "#{script}.cgi", { command:'chomis', code:code, chomi_selected:chomi_selected, chomi_code:chomi_code }, function( data ){ $( "#L1" ).html( data );});
+var chomiAdd = () => {
+	const code = $( '#recipe_code' ).val();
+	const chomi_selected = $( '#chomi_selected' ).val();
+	const chomi_code = $( '#chomi_code' ).val();
+	postReq( 'chomis', { code, chomi_selected, chomi_code }, data => $( "#L1" ).html( data ));
 };
 
+// Chomi% public
+var selectChomiPub = () => {
+	const chomi_pub = $( '#chomi_pub_check' ).is( ':checked' ) ? 1 : 0;
+	postReq( 'reload', { chomi_pub }, data => $( "#L1" ).html( data ));
+};
 
 </script>
 

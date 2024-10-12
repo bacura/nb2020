@@ -301,7 +301,6 @@ end
 end
 html_fct_blocks[5] << '</table>'
 
-p hh_mm
 puts 'SELECT HH block<br>' if @debug
 meal_time_set = [5, 10, 15, 20, 30, 45, 60, 90, 120 ]
 eat_time_html = "<div class='input-group input-group-sm'>"
