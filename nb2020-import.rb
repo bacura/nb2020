@@ -1,20 +1,17 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 GM import 0.00b
+#Nutrition browser 2020 import 0.0.0 (2024/10/14)
+
+#==============================================================================
+#STATIC
+#==============================================================================
+@debug = false
+
 
 #==============================================================================
 #LIBRARY
 #==============================================================================
 require './nb2020-soul'
-
-
-#==============================================================================
-#STATIC
-#==============================================================================
-script = 'nb2020-import'
-@debug = false
-db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}", :password => "#{$MYSQL_PW}", :database => "#{$MYSQL_DB}", :encoding => "utf8" )
-
 
 #==============================================================================
 #DEFINITION
@@ -29,15 +26,34 @@ db = Mysql2::Client.new(:host => "#{$MYSQL_HOST}", :username => "#{$MYSQL_USER}"
 import_solid = []
 txt_class = ''
 line1_flag = true
-File.open( ARGV[0], 'r' ) do |f|
+
+opt = ARGV[0]
+data_file = ARGV[1]
+if ARGV[1] == nil
+	data_file = opt 
+	opt = 'ad'
+end
+
+if data_file == nil
+	puts 'Nutrition browser 2020 import 0.0.0 (2024/10/14)'
+	puts '[Usage]ruby nb2020-import.rb mode_option data'
+	puts '[Mode option]'
+	puts 'xx -> exchange'
+	puts 'ow -> overwrite'
+	puts 'ad -> add (default)'
+	exit
+end
+
+
+File.open( data_file, 'r' ) do |f|
 	f.each_line do |line|
 		if line1_flag
 			a = line.chomp.split( "\s" )
-			if a[0] == 'NB2020' && a[2] == 'data'
+			if a[0] == 'NB2020' && /^\[\w+\]$/ =~ a[1] && a[2] == 'data'
 				txt_class = a[1].sub( '[', '' ).sub( ']', '' )
 				line1_flag = false
 			else
-				puts 'Incomplete dic data.'
+				puts 'Incomplete data.'
 				exit( 0 )
 			end
 		else
@@ -47,33 +63,44 @@ File.open( ARGV[0], 'r' ) do |f|
 end
 puts "[#{txt_class}]"
 
+if import_solid.size == 0
+	puts 'Empty data.'
+	exit
+end
 
 #### DB upadate
-if import_solid.size > 0
-    count = 0
-	case txt_class
-	when 'dic'
-		if import_solid[0].size == 5
-			db.query( "DELETE FROM #{$MYSQL_TB_DIC};" )
-			import_solid.each do |e|
-				print "#{count}\r"
-				begin
-					#FG org_name alias user def_fn
-					db.query( "INSERT INTO #{$MYSQL_TB_DIC} SET FG='#{e[0]}', org_name='#{e[1]}', alias='#{e[2]}', user='#{e[3]}', def_fn='#{e[4]}';" )
-				rescue
-					puts "[ERROR]#{e}"
+count = 0
+case txt_class
+when 'dic'
+	#FG org_name alias user def_fn
+	if import_solid[0].size == 5
+		$DB.query( "DELETE FROM #{$MYSQL_TB_DIC};" ) if opt == 'xx'
+
+		import_solid.each do |e|
+			print "#{count}\r"
+
+			begin
+				res = $DB.query( "SELECT * FROM #{$MYSQL_TB_DIC} WHERE FG='#{e[0]}' AND org_name='#{e[1]}' AND alias='#{e[2]}';" )
+
+				if res.first
+					$DB.query( "UPDATE #{$MYSQL_TB_DIC} SET user='#{e[3]}', def_fn='#{e[4]}' WHERE FG='#{e[0]}'AND org_name='#{e[1]}' AND alias='#{e[2]}';" ) if opt == 'ow'
+				else
+
+					$DB.query( "INSERT INTO #{$MYSQL_TB_DIC} SET FG='#{e[0]}', org_name='#{e[1]}', alias='#{e[2]}', user='#{e[3]}', def_fn='#{e[4]}';" )
 				end
-				count += 1
+
+			rescue
+				puts "[ERROR]#{e}"
 			end
-		else
-			puts 'Incomplete dic data.'
+			count += 1
 		end
 	else
-		puts 'Importable data list..'
-		puts 'dic'
+		puts 'Incomplete dic data.'
 	end
-	db.close
+	puts "#{count} data have imported."
 
 else
-	puts 'ruby nb2020-import [data.txt]'
+	puts 'Importable data list..'
+	puts 'dic'
 end
+

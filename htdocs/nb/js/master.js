@@ -138,32 +138,6 @@ const initDic = function( command, sg, org_name, dfn ){
 	displayBW();
 };
 
-// Food name dictionary Sub group
-const changeDic = function( sg ){
-	$.post( mp + "gm-dic.cgi", { command:'change', sg:sg }, function( data ){ $( "#L1" ).html( data );});
-};
-
-// Direct food name dictionary button
-const saveDic = function( org_name, sg ){
-	const aliases = document.getElementById( org_name ).value;
-	const dfn = document.getElementById( 'dfn_' + org_name ).value;
-	$.post( mp + "gm-dic.cgi", { command:'update', org_name:org_name, aliases:aliases, sg:sg, dfn:dfn }, function( data ){
-//		$( "#L1" ).html( data );
-		displayVIDEO( org_name + ' modified' );
-	});
-};
-
-// Add new food into dictionary button
-const newDic = function(){
-	const org_name = document.getElementById( 'new_org_name' ).value;
-	const aliases = document.getElementById( 'new_alias' ).value;
-	const sg = document.getElementById( 'new_fg' ).value;
-	const dfn = document.getElementById( 'dic_def_fn' ).value;
-	$.post( mp + "gm-dic.cgi", { command:'new', org_name:org_name, aliases:aliases, sg:sg, dfn:dfn }, function( data ){
-//		$( "#L1" ).html( data );
-		displayVIDEO( org_name + ' saved' );
-	});
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Allergen ////////////////////////////////////////////////////////////////////////

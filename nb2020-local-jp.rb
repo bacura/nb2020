@@ -1,9 +1,10 @@
-#Nutrition browser 2020 soul Japanese pack 0.2.1 (2024/07/14)
+#Nutrition browser 2020 soul Japanese pack 0.3.0 (2024/10/13)
 
 #==============================================================================
 # STATIC
 #==============================================================================
 @category = %w( 特　殊 穀　類 いも・でん粉類 砂糖・甘味類 豆　類 種実類 野菜類 果実類 きのこ類 藻　類 魚介類 肉　類 卵　類 乳　類 油脂類 菓子類 し好飲料類 調味料・香辛料類 調理・流通食品類 特　殊 )
+@fg = %w( 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 )
 
 @fct_base = %w( FG FN SID Tagnames )
 @fct_rew = %w( REFUSE ENERC ENERC_KCAL WATER )
@@ -81,8 +82,6 @@ def html_head( interrupt, status, sub_title )
   end
 
   x_card = ''
-
-
 
   html = <<-"HTML"
 <!DOCTYPE html>

@@ -1026,7 +1026,12 @@ if command == 'init' || command == 'load'
 <script type='text/javascript'>
 
 var postReq = ( command, data, successCallback ) => {
-	$.post( "#{script}.cgi", { command, ...data }, successCallback );
+	$.post( mp + "#{script}.cgi", { command, ...data })
+		.done( successCallback )
+		.fail(( jqXHR, textStatus, errorThrown ) => {
+			console.error( "Request failed: ", textStatus, errorThrown );
+			alert( "An error occurred. Please try again." );
+		});
 };
 
 // Clear foods, and reload CB counter

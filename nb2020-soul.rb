@@ -401,46 +401,6 @@ class Db
   end
 end
 
-class Dba
-  attr_reader :user
-
-  def initialize( user, debug, html )
-    @user = user
-    @debug = debug
-    @status = 0
-    @status = @user.status unless @user == nil
-    @html = html
-  end
-
-  def qq( query )
-    q = query.gsub( ';', '' ) << ';'
-    return $DB.query( q )
-  end
-
-  def query( query, *pf, barrier )
-    puts "<span class='dbq'>[db]#{query}</span><br>" if @debug
-    begin
-      if @status == $ASTRAL && barrier
-          puts "<span class='ref_error'>[db]Astral user barrier!</span><br>"
-          exit( 9 )
-      end
-
-      t = query.chop
-      if /[\;\$]/ =~ t
-          puts "<span class='error'>[db]ERROR!!</span><br>"
-          exit( 9 )
-      end
-      return $DB.query( query, pf )
-
-    rescue
-      if @html
-        html_init( nil )
-        html_head( nil )
-      end
-        puts "<span class='error'>[db]ERROR!!</span><br>"
-    end
-  end
-end
 
 class User
   attr_accessor :name, :uid, :mom, :mid, :status, :aliasu, :switch, :language, :pass, :mail, :astral, :reg_date
