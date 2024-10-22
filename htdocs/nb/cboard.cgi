@@ -6,7 +6,7 @@
 #STATIC
 #==============================================================================
 @debug = false
-script = File.basename( $0, '.cgi' )
+myself = File.basename( __FILE__ )
 
 #==============================================================================
 #LIBRARY
@@ -1026,7 +1026,7 @@ if command == 'init' || command == 'load'
 <script type='text/javascript'>
 
 var postReq = ( command, data, successCallback ) => {
-	$.post( mp + "#{script}.cgi", { command, ...data })
+	$.post( '#{myself}', { command, ...data })
 		.done( successCallback )
 		.fail(( jqXHR, textStatus, errorThrown ) => {
 			console.error( "Request failed: ", textStatus, errorThrown );
@@ -1146,39 +1146,6 @@ var gnExchange = ( code ) => {
 	}
 };
 
-// Display sub-foods
-var cb_detail_sub = ( key, weight, base_fn ) => {
-	$.post( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, data => {
-		$( "#L2" ).html( data );
-		flashBW();
-		dl2 = true;
-		displayBW();
-	});
-};
-
-// Display para-foods
-var cb_detail_para = ( key, weight, base_fn ) => {
-	$.post( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, data => {
-		$( "#L3" ).html( data );
-		flashBW();
-		dl3 = true;
-		displayBW();
-	});
-};
-
-// Change juten in para-foods
-var cb_detail_para_juten = ( key, weight, base_fn ) => {
-	const juten = $( "input[name='para_juten']:checked" ).val() || "FLAT";
-	$.post( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn,juten }, data => $( "#L3" ).html( data ));
-};
-
-// Retrun to CB
-var returnCB = () => {
-	flashBW();
-	dl1 = true;
-	displayBW();
-};
-
 // Chomi% category
 var chomiSelect = () => {
 	const code = $( '#recipe_code' ).val();
@@ -1198,6 +1165,13 @@ var chomiAdd = () => {
 var selectChomiPub = () => {
 	const chomi_pub = $( '#chomi_pub_check' ).is( ':checked' ) ? 1 : 0;
 	postReq( 'reload', { chomi_pub }, data => $( "#L1" ).html( data ));
+};
+
+// Retrun to CB
+var returnCB = () => {
+	flashBW();
+	dl1 = true;
+	displayBW();
 };
 
 </script>

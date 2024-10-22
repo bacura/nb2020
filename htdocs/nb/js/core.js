@@ -1,4 +1,4 @@
-// Nutorition Browser 2020 core.js 0.6.6 (2024/06/16)
+// Nutorition Browser 2020 core.js 0.6.7 (2024/10/19)
 ///////////////////////////////////////////////////////////////////////////////////
 // Global ////////////////////////////////////////////////////////////////////
 dl1 = false;
@@ -308,10 +308,10 @@ const changeDSWeight = function( com, key, fn ){
 // Browsing nutritional Information (ditail) ///////////////////////////////////////////////////////////////////////
 
 // Display ditail information on LF
-var detailView = function( fn ){
+const detailView = function( fn ){
 	var fraction_mode = document.getElementById( "fraction" ).value;
 	var food_weight = document.getElementById( "weight" ).value;
-	$.post( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:food_weight, selectu:'g' }, function( data ){
+	$.post( "detail.cgi", { command:'init', food_no:fn, frct_mode:fraction_mode, food_weight:food_weight, selectu:'g' }, function( data ){
 		$( "#LF" ).html( data );
 
 		pushBW();
@@ -322,8 +322,8 @@ var detailView = function( fn ){
 };
 
 // Display ditail information on LF (history)
-var detailView_his = function( fn ){
-	$.post( "detail.cgi", { food_no:fn, frct_mode:1, food_weight:100, selectu:'g' }, function( data ){
+const detailView_his = function( fn ){
+	$.post( "detail.cgi", { command:'init', food_no:fn, frct_mode:1, food_weight:100, selectu:'g' }, function( data ){
 		$( "#LF" ).html( data );
 
 		pushBW();
@@ -334,18 +334,30 @@ var detailView_his = function( fn ){
 	});
 };
 
-// Changing weight of food (ditail)
-var detailWeight = function( fn ){
-	var fraction_mode = document.getElementById( "detail_fraction" ).value;
-	var food_weight = document.getElementById( "detail_volume" ).value;
-	var selectu = document.getElementById( "detail_unit" ).value;
-	$.post( "detail.cgi", { food_no:fn, frct_mode:fraction_mode, food_weight:food_weight, selectu:selectu }, function( data ){ $( "#LF" ).html( data );});
+// Display sub-foods
+const cb_detail_sub = ( key, weight, base_fn ) => {
+	$.post( "detail-sub.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, data => {
+		$( "#L2" ).html( data );
+		flashBW();
+		dl2 = true;
+		displayBW();
+	});
 };
 
-// 詳細画面のページボタンを押したらL5閲覧ウインドウの内容を書き換える。
-var detailReturn = function(){
-	pullBW();
-	displayBW();
+// Display para-foods
+const cb_detail_para = ( key, weight, base_fn ) => {
+	$.post( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn:base_fn }, data => {
+		$( "#L3" ).html( data );
+		flashBW();
+		dl3 = true;
+		displayBW();
+	});
+};
+
+// Change juten in para-foods
+const cb_detail_para_juten = ( key, weight, base_fn ) => {
+	const juten = $( "input[name='para_juten']:checked" ).val() || "FLAT";
+	$.post( "detail-para.cgi", { command:"cb", food_key:key, frct_mode:0, food_weight:weight, base:'cb', base_fn,juten }, data => $( "#L3" ).html( data ));
 };
 
 
@@ -454,133 +466,6 @@ var pseudoAdd = function( com, food_key, code ){
 
 		dlf = true;
 		displayBW();
-	});
-};
-
-
-// 登録ボタンを押してLFにエディタを表示
-var pseudoSave = function( code ){
-	var food_name = document.getElementById( "pfood_name" ).value;
-
-	if( food_name != '' ){
-		var food_group = document.getElementById( "pfood_group" ).value;
-		var class1 = document.getElementById( "pclass1" ).value;
-		var class2 = document.getElementById( "pclass2" ).value;
-		var class3 = document.getElementById( "pclass3" ).value;
-		var tag1 = document.getElementById( "ptag1" ).value;
-		var tag2 = document.getElementById( "ptag2" ).value;
-		var tag3 = document.getElementById( "ptag3" ).value;
-		var tag4 = document.getElementById( "ptag4" ).value;
-		var tag5 = document.getElementById( "ptag5" ).value;
-		var food_weight = document.getElementById( "pfood_weight" ).value;
-
-		var REFUSE = document.getElementById( "pREFUSE" ).value;
-		var ENERC = document.getElementById( "pENERC" ).value;
-		var ENERC_KCAL = document.getElementById( "pENERC_KCAL" ).value;
-		var WATER = document.getElementById( "pWATER" ).value;
-
-		var PROTCAA = document.getElementById( "pPROTCAA" ).value;
-		var PROT = document.getElementById( "pPROT" ).value;
-		var PROTV = document.getElementById( "pPROTV" ).value;
-		var FAT = document.getElementById( "pFAT" ).value;
-		var FATV = document.getElementById( "pFATV" ).value;
-		var FATNLEA = document.getElementById( "pFATNLEA" ).value;
-		var CHOLE = document.getElementById( "pCHOLE" ).value;
-		var CHOAVLM = document.getElementById( "pCHOAVLM" ).value;
-		var CHOAVL = document.getElementById( "pCHOAVL" ).value;
-		var CHOAVLDF = document.getElementById( "pCHOAVLDF" ).value;
-		var CHOV = document.getElementById( "pCHOV" ).value;
-		var FIB = document.getElementById( "pFIB" ).value;
-		var CHOCDF = document.getElementById( "pCHOCDF" ).value;
-		var OA = document.getElementById( "pOA" ).value;
-		var POLYL = document.getElementById( "pPOLYL" ).value;
-
-		var ASH = document.getElementById( "pASH" ).value;
-		var NA = document.getElementById( "pNA" ).value;
-		var K = document.getElementById( "pK" ).value;
-		var CA = document.getElementById( "pCA" ).value;
-		var MG = document.getElementById( "pMG" ).value;
-		var P = document.getElementById( "pP" ).value;
-		var FE = document.getElementById( "pFE" ).value;
-		var ZN = document.getElementById( "pZN" ).value;
-		var CU = document.getElementById( "pCU" ).value;
-		var MN = document.getElementById( "pMN" ).value;
-		var ID = document.getElementById( "pID" ).value;
-		var SE = document.getElementById( "pSE" ).value;
-		var CR = document.getElementById( "pCR" ).value;
-		var MO = document.getElementById( "pMO" ).value;
-
-		var RETOL = document.getElementById( "pRETOL" ).value;
-		var CARTA = document.getElementById( "pCARTA" ).value;
-		var CARTB = document.getElementById( "pCARTB" ).value;
-		var CRYPXB = document.getElementById( "pCRYPXB" ).value;
-		var CARTBEQ = document.getElementById( "pCARTBEQ" ).value;
-		var VITA_RAE = document.getElementById( "pVITA_RAE" ).value;
-		var VITD = document.getElementById( "pVITD" ).value;
-		var TOCPHA = document.getElementById( "pTOCPHA" ).value;
-		var TOCPHB = document.getElementById( "pTOCPHB" ).value;
-		var TOCPHG = document.getElementById( "pTOCPHG" ).value;
-		var TOCPHD = document.getElementById( "pTOCPHD" ).value;
-		var VITK = document.getElementById( "pVITK" ).value;
-
-		var THIA = document.getElementById( "pTHIA" ).value;
-		var RIBF = document.getElementById( "pRIBF" ).value;
-		var NIA = document.getElementById( "pNIA" ).value;
-		var NE = document.getElementById( "pNE" ).value;
-		var VITB6A = document.getElementById( "pVITB6A" ).value;
-		var VITB12 = document.getElementById( "pVITB12" ).value;
-		var FOL = document.getElementById( "pFOL" ).value;
-		var PANTAC = document.getElementById( "pPANTAC" ).value;
-		var BIOT = document.getElementById( "pBIOT" ).value;
-		var VITC = document.getElementById( "pVITC" ).value;
-
-		var ALC = document.getElementById( "pALC" ).value;
-		var NACL_EQ = document.getElementById( "pNACL_EQ" ).value;
-		var Notice = document.getElementById( "pNotice" ).value;
-
-		var FASAT = document.getElementById( "pFASAT" ).value;
-		var FAMS = document.getElementById( "pFAMS" ).value;
-		var FAPU = document.getElementById( "pFAPU" ).value;
-		var FAPUN3 = document.getElementById( "pFAPUN3" ).value;
-		var FAPUN6 = document.getElementById( "pFAPUN6" ).value;
-
-		var FIBTG = document.getElementById( "pFIBTG" ).value;
-		var FIBSOL = document.getElementById( "pFIBSOL" ).value;
-		var FIBINS = document.getElementById( "pFIBINS" ).value;
-		var FIBTDF = document.getElementById( "pFIBTDF" ).value;
-		var FIBSDFS = document.getElementById( "pFIBSDFS" ).value;
-		var FIBSDFP = document.getElementById( "pFIBSDFP" ).value;
-		var FIBIDF = document.getElementById( "pFIBIDF" ).value;
-		var STARES = document.getElementById( "pSTARES" ).value;
-
-		$.post( "pseudo.cgi", {
-			command:'save', code:code, food_name:food_name, food_group:food_group, food_weight:food_weight,
-			class1:class1, class2:class2, class3:class3, tag1:tag1, tag2:tag2, tag3:tag3, tag4:tag4, tag5:tag5,
-			REFUSE:REFUSE,  ENERC:ENERC, ENERC_KCAL:ENERC_KCAL, WATER:WATER,
-			PROTCAA:PROTCAA, PROT:PROT, PROTV:PROTV, FATNLEA:FATNLEA, CHOLE:CHOLE, FAT:FAT, FATV:FATV, CHOAVLM:CHOAVLM, CHOAVL:CHOAVL, CHOAVLDF:CHOAVLDF, CHOV:CHOV, FIB:FIB, POLYL:POLYL, CHOCDF:CHOCDF, OA:OA,
-			ASH:ASH, NA:NA, K:K, CA:CA, MG:MG, P:P, FE:FE, ZN:ZN, CU:CU, MN:MN, ID:ID, SE:SE, CR:CR, MO:MO,
-			RETOL:RETOL, CARTA:CARTA, CARTB:CARTB, CRYPXB:CRYPXB, CARTBEQ:CARTBEQ, VITA_RAE:VITA_RAE, VITD:VITD, TOCPHA:TOCPHA, TOCPHB:TOCPHB, TOCPHG:TOCPHG, TOCPHD:TOCPHD, VITK:VITK,
-			THIA:THIA, RIBF:RIBF, NIA:NIA, NE:NE, VITB6A:VITB6A, VITB12:VITB12, FOL:FOL, PANTAC:PANTAC, BIOT:BIOT, VITC:VITC,
-			ALC:ALC, NACL_EQ:NACL_EQ, Notice:Notice,
-			FASAT:FASAT, FAMS:FAMS, FAPU:FAPU, FAPUN3:FAPUN3, FAPUN6:FAPUN6,
-			FIBTG:FIBTG, FIBSOL:FIBSOL, FIBINS:FIBINS, FIBTDF:FIBTDF, FIBSDFS:FIBSDFS, FIBSDFP:FIBSDFP, FIBIDF:FIBIDF, STARES:STARES
-		}, function( data ){
-			$( "#LF" ).html( data );
-			displayVIDEO( food_name + ' saved' );
-		});
-	} else{
-		displayVIDEO( 'Food name! (>_<)' );
-	}
-};
-
-// 削除ボタンを押したときに非同期通信でLFの内容を書き換える
-var pseudoDelete = function( code ){
-	$.post( "pseudo.cgi", { command:'delete', code:code }, function( data ){
-		$( "#LF" ).html( data );
-
-		dlf = false;
-		displayBW();
-		displayVIDEO( code + ' deleted' );
 	});
 };
 
@@ -988,7 +873,7 @@ const luckyInput = function(){
 
 // 成分計算表の食品化ボタンを押してL3に擬似食品フォームを表示
 var Pseudo_R2F = function( code ){
-	$.post( "pseudo_r2f.cgi", { command:'form', code:code }, function( data ){
+	$.post( "pseudo_r2f.cgi", { command:'init', code:code }, function( data ){
 		$( "#L2" ).html( data );
 
 		flashBW();

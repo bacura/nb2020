@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food square 0.23b (2023/9/25)
+#Nutrition browser 2020 food square 0.2.3 (2024/10/16)
 
 
 #==============================================================================
@@ -24,8 +24,8 @@ def language_pack( language )
 
 	#Japanese
 	l['jp'] = {
-		'plus' 		=> "<img src='bootstrap-dist/icons/plus-square-fill.svg' style='height:2em; width:2em;'>",\
-		'signpost'	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>"
+		:plus 		=> "<img src='bootstrap-dist/icons/plus-square-fill.svg' style='height:2em; width:2em;'>",\
+		:signpost	=> "<img src='bootstrap-dist/icons/signpost.svg' style='height:2em; width:2em;'>"
 	}
 
 	return l[language]
@@ -41,7 +41,7 @@ def get_history_name( fg, db )
 			his_raw.map! do |x|
 				x = "'#{x}'" if x.size <= 6
 			end
-			his_raw.delete( nil )
+			his_raw.compact!
 			his = his_raw.join( ',' )
 
 			unless his == ''
@@ -58,26 +58,18 @@ end
 # ダイレクトグループの作成
 def make_direct_group( direct_group, name_his, fg, class1, class2, class3, direct, pseudo_bit )
 	dg_html = ''
-	direct_group.uniq!
-	direct_group.each do |e|
+	direct_group.uniq.each do |e|
 		if name_his.include?( e )
-			if pseudo_bit == 1
-				@his_class = 'btn btn-outline-success btn-sm nav_button visited'
-			else
-				@his_class = 'btn btn-outline-primary btn-sm nav_button visited'
-			end
+			@his_class = pseudo_bit == 1 ? 'btn btn-outline-success btn-sm nav_button visited' : 'btn btn-outline-primary btn-sm nav_button visited'
 		else
-			if pseudo_bit == 1
-				@his_class = 'btn btn-outline-dark btn-sm nav_button'
-			else
-				@his_class = 'btn btn-outline-secondary btn-sm nav_button'
-			end
+			@his_class = pseudo_bit == 1 ? 'btn btn-outline-dark btn-sm nav_button' : 'btn btn-outline-secondary btn-sm nav_button'
 		end
 		dg_html << "<button type='button' class='#{@his_class}' onclick=\"viewDetailSub( 'init', '#{fg}:#{class1}:#{class2}:#{class3}:#{e}', #{direct} )\">#{e}</button>\n"
 	end
 
 	return dg_html
 end
+
 
 #==============================================================================
 # Main
@@ -113,18 +105,12 @@ end
 
 
 #### 食品グループ番号の桁補完
-if category == '' || category == nil
-	@fg = food_key.split( ':' ).shift
-elsif category.size == 2
-	@fg = category
-else
-	@fg = "0#{category}"
-end
-puts "@fg: #{@fg}<br>" if @debug
+fg_no = category.empty? ? food_key.split( ':' ).shift : @fg[category.to_i]
+puts "fg_no: #{fg_no}<br>" if @debug
 
 
 #### 名前の履歴の取得
-name_his = get_history_name( @fg, db )
+name_his = get_history_name( fg_no, db )
 #puts "name_his: #{name_his}<br>" if @debug
 
 
@@ -176,47 +162,40 @@ case channel
 when 'fctb'
 
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND public='9' GROUP BY SN;", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_no}' AND status='9' GROUP BY SN;", false )
 	r.each do |e|
 		if e['class1'] != ''
 			class1_group << e['class1']
-			next
 		elsif e['class2'] != ''
 			class2_group << e['class2']
-			next
 		elsif e['class3'] != ''
 			class3_group << e['class3']
-			next
 		else
 			direct_group << e['name']
 		end
 	end
-	class1_group.uniq!
-	class2_group.uniq!
-	class3_group.uniq!
+	[ class1_group, class2_group, class3_group ].each( &:uniq! )
+
 
 	# Classグループの作成
 	tag_button = "<button type='button' class='btn btn-info btn-sm nav_button'"
-	class1_group.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{@fg}:#{e}:::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
-	class2_group.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{@fg}::#{e}::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
-	class3_group.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{@fg}:::#{e}:' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
+	class1_group.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{fg_no}:#{e}:::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
+	class2_group.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{fg_no}::#{e}::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
+	class3_group.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{fg_no}:::#{e}:' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
 
 	# ダイレクトグループの作成
-	direct_html = make_direct_group( direct_group, name_his, @fg, '', '', '', 1, 0 )
+	direct_html = make_direct_group( direct_group, name_his, fg_no, '', '', '', 1, 0 )
 
 	# 擬似食品
 	unless user.status == 0
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{@fg}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_no}' AND (( user='#{user.name}' AND status='1' ) OR status='2' );", false )
 		r.each do |e|
 			if e['class1'] != ''
 				class1_group_p << e['class1']
-				next
 			elsif e['class2'] != ''
 				class2_group_p << e['class2']
-				next
 			elsif e['class3'] != ''
 				class3_group_p << e['class3']
-				next
 			else
 				direct_group_p << e['name']
 			end
@@ -228,16 +207,16 @@ when 'fctb'
 
 		# Classグループの作成
 		tag_button = "<button type='button' class='btn btn-secondary btn-sm nav_button'"
-		class1_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{@fg}:#{e}:::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
-		class2_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{@fg}::#{e}::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
-		class3_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{@fg}:::#{e}:' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
+		class1_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{fg_no}:#{e}:::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
+		class2_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{fg_no}::#{e}::' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
+		class3_group_p.each do |e| class_html << "#{tag_button} onclick=\"summonL2( '#{fg_no}:::#{e}:' )\">#{e.sub( '+', '' ).sub( /^.+\-/, '' )}</button>\n" end
 
 		# ダイレクトグループの作成
-		direct_html << make_direct_group( direct_group_p, name_his, @fg, '', '', '', 1, 1 )
+		direct_html << make_direct_group( direct_group_p, name_his, fg_no, '', '', '', 1, 1 )
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{@fg}::::', '' )\">#{l['plus']}</span>\n" if user.status > 0
+	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_no}::::', '' )\">#{l[:plus]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{category}.#{@category[category.to_i]}</h6>
@@ -250,17 +229,14 @@ HTML
 #### 第２層閲覧選択ページ
 when 'fctb_l2'
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9' GROUP BY SN;", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND status='9' GROUP BY SN;", false )
 	r.each do |e|
 		if e['class1'] != '' && e['class2'] != ''
 			class2_group << e['class2']
-			next
 		elsif e['class1'] == '' && e['class2'] != '' && e['class3'] != ''
 			class3_group << e['class3']
-			next
 		elsif e['class1'] != '' && e['class2'] == '' && e['class3'] != ''
 			class3_group << e['class3']
-			next
 		else
 			direct_group << e['name']
 		end
@@ -280,17 +256,14 @@ when 'fctb_l2'
 
 	# 擬似食品
 	unless user.status == 0
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG= '#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND status='1' ) OR status='2');", false )
 		r.each do |e|
 			if e['class1'] != '' && e['class2'] != ''
 				class2_group_p << e['class2']
-				next
 			elsif e['class1'] == '' && e['class2'] != '' && e['class3'] != ''
 				class3_group_p << e['class3']
-				next
 			elsif e['class1'] != '' && e['class2'] == '' && e['class3'] != ''
 				class3_group_p << e['class3']
-				next
 			else
 				direct_group_p << e['name']
 			end
@@ -308,7 +281,7 @@ when 'fctb_l2'
 	end
 
 	# 擬似食品ボタンの作成
-	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l['plus']}</span>\n" if user.status > 0
+	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l[:plus]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -320,11 +293,10 @@ HTML
 #### 第３層閲覧選択ページ
 when 'fctb_l3'
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9' GROUP BY SN;", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND status='9' GROUP BY SN;", false )
 	r.each do |e|
 		if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 			class3_group << e['class3']
-			next
 		else
 			direct_group << e['name']
 		end
@@ -340,11 +312,10 @@ when 'fctb_l3'
 
 	# 擬似食品
 	unless user.status == 0
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1' );", false )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND status='1' ) OR status='2' );", false )
 		r.each do |e|
 			if e['class3'] != '' && e['class1'] != '' && e['class2'] != ''
 				class3_group_p << e['class3']
-				next
 			else
 				direct_group_p << e['name']
 			end
@@ -360,7 +331,7 @@ when 'fctb_l3'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l['plus']}</span>\n" if user.status > 0
+ 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l[:plus]}</span>\n" if user.status > 0
 
   html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>
@@ -373,7 +344,7 @@ HTML
 #### 第４層閲覧選択ページ
 when 'fctb_l4'
 	# 正規食品
-	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND public='9' GROUP BY SN;", false )
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND status='9' GROUP BY SN;", false )
 	r.each do |e| direct_group << e['name'] end
 
 	# ダイレクトグループの作成
@@ -381,7 +352,7 @@ when 'fctb_l4'
 
 	# 擬似食品
 	unless user.status == 0
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');", false )
+		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND (( user='#{user.name}' AND status='1' ) OR status='2');", false )
 		r.each do |e| direct_group_p << e['name'] end
 
 		# ダイレクトグループの作成
@@ -389,7 +360,7 @@ when 'fctb_l4'
 	end
 
 	# 擬似食品ボタンの作成
- 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l['plus']}</span>\n" if user.status > 0
+ 	pseudo_button = "<span onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}' )\">#{l[:plus]}</span>\n" if user.status > 0
 
 	html = <<-"HTML"
 	<h6>#{class_name.sub( '+', '' ).sub( /^.+\-/, '' )}</h6>

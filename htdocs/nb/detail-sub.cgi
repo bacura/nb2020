@@ -1,13 +1,13 @@
 #! /usr/bin/ruby
 #encoding: utf-8
-#Nutrition browser 2020 food detail sub 0.03b (2023/08/09)
+#Nutrition browser 2020 food detail sub 0.0.3 (2024/10/16)
 
 
 #==============================================================================
 # STATIC
 #==============================================================================
 @debug = false
-#script = File.basename( $0, '.cgi' )
+myself = File.basename( __FILE__ )
 
 #==============================================================================
 # LIBRARY
@@ -24,26 +24,26 @@ def language_pack( language )
 
 	#Japanese
 	l['jp'] = {
-		'search' 	=> "レシピ検索",\
-		'fract' 	=> "端数",\
-		'round'		=> "四捨五入",\
-		'ceil' 		=> "切り上げ",\
-		'floor'		=> "切り捨て",\
-		'weight' 	=> "重量",\
-		'fn' 		=> "食品番号",\
-		'name' 		=> "食品名",\
-		'change'	=> "<img src='bootstrap-dist/icons/hammer.svg' style='height:1.2em; width:1.2em;'>",\
-		'egg'		=> "<img src='bootstrap-dist/icons/egg.svg' style='height:1.2em; width:1.2em;'>",\
-		'cboard' 	=> "<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>",\
-		'calendar'	=> "<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>",\
-		'unit' 		=> "単",\
-		'color' 	=> "色",\
-		'shun' 		=> "旬",\
-		'dic' 		=> "辞",\
-		'allergen' 	=> "ア",\
-		'plus' 		=> "<img src='bootstrap-dist/icons/plus-square-fill.svg' style='height:2em; width:2em;'>",\
-		'signpost'	=> "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",
-		'parallel'	=> "<img src='bootstrap-dist/icons/wrench-adjustable.svg' style='height:2em; width:2em;'>"
+			search: "レシピ検索",
+			fract: "端数",
+			round: "四捨五入",
+			ceil: "切り上げ",
+			floor: "切り捨て",
+			weight: "重量",
+			fn: "食品番号",
+			name: "食品名",
+			change: "<img src='bootstrap-dist/icons/hammer.svg' style='height:1.2em; width:1.2em;'>",
+			egg: "<img src='bootstrap-dist/icons/egg.svg' style='height:1.2em; width:1.2em;'>",
+			cboard: "<img src='bootstrap-dist/icons/card-text.svg' style='height:1.2em; width:1.2em;'>",
+			calendar: "<img src='bootstrap-dist/icons/calendar-plus.svg' style='height:1.2em; width:1.2em;'>",
+			unit: "単",
+			color: "色",
+			shun: "旬",
+			dic: "辞",
+			allergen: "ア",
+			plus: "<img src='bootstrap-dist/icons/plus-square-fill.svg' style='height:2em; width:2em;'>",
+			signpost: "<img src='bootstrap-dist/icons/signpost-r.svg' style='height:2em; width:2em;'>",
+			parallel: "<img src='bootstrap-dist/icons/wrench-adjustable.svg' style='height:2em; width:2em;'>"
 	}
 
 	return l[language]
@@ -84,20 +84,16 @@ puts 'Key chain<br>' if @debug
 food_key = '' if food_key == nil
 fg_key, class1, class2, class3, food_name = food_key.split( ':' )
 
-class_name = ''
-class_no = 0
-unless class1 == nil || class1 == ''
-	class_name = class1
-	class_no = 1
+class_name, class_no = if class3
+	[class3, 3]
+elsif class2
+	[class2, 2]
+elsif class1
+	[class1, 1]
+else
+	['', 0]
 end
-unless class2 == nil || class2 == ''
-	class_name = class2
-	class_no = 2
-end
-unless class3 == nil || class3 == ''
-	class_name = class3
-	class_no = 3
-end
+
 if @debug
 	puts "fg_key: #{fg_key}<br>"
 	puts "class1: #{class1}<br>"
@@ -132,19 +128,12 @@ when 'init', 'weight', 'cb', 'cbp'
 	r = Hash.new
 
 	#### 補助クラスネームの追加処理
-	if /\+/ =~ class_name
-		class_add = "<span class='tagc'>#{class_name.sub( '+', '' )}</span> "
-	else
-		class_add = ''
-	end
+	class_add = /\+/ =~ class_name ? "<span class='tagc'>#{class_name.sub( '+', '' )}</span> " : ''
 
 
 	# 正規食品
-	if class_no.to_i == 0
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND public='9';", false )
-	else
-		r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND public='9';", false )
-	end
+	sub_query = class_no.to_i != 0 ? " AND class#{class_no}='#{class_name}'" : ''
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND status='9'#{sub_query};", false )
 	if r.first
 		r.each do |e|
 			food_no_list << e['FN']
@@ -159,13 +148,8 @@ when 'init', 'weight', 'cb', 'cbp'
 
 
 	# 擬似食品
-	if class_no.to_i == 0
-		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
-	else
-		query = "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND class#{class_no}='#{class_name}' AND name='#{food_name}' AND (( user='#{user.name}' AND public='0' ) OR public='1');"
-	end
-	puts "#{query}<br>" if @debug
-	r = db.query( query, false )
+	sub_query = class_no.to_i != 0 ? " AND class#{class_no}='#{class_name}'" : ''
+	r = db.query( "SELECT * FROM #{$MYSQL_TB_TAG} WHERE FG='#{fg_key}' AND name='#{food_name}' AND (( user='#{user.name}' AND status='1' ) OR status='2')#{sub_query};", false )
 	if r.first
 		r.each do |e|
 			food_no_list << e['FN']
@@ -233,21 +217,17 @@ when 'init', 'weight', 'cb', 'cbp'
 
 		# 追加・変更ボタン
 		if user.name && base == 'cb' && food_no_list[c] == base_fn
-			add_button = "<span onclick=\"addingCB( '#{base_fn}', 'weight_sub', 'duplicated' )\">#{l['egg']}</span>"
+			add_button = "<span onclick=\"addingCB( '#{base_fn}', 'weight_sub', 'duplicated' )\">#{l[:egg]}</span>"
 		elsif user.name && base == 'cb'
-			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}', '#{food_weight}' )\">#{l['change']}</span>"
+			add_button = "<span onclick=\"changingCB( '#{food_no_list[c]}', '#{base_fn}', '#{food_weight}' )\">#{l[:change]}</span>"
 		elsif user.name
-			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{l['cboard']}</span>"
+			add_button = "<span onclick=\"addingCB( '#{food_no_list[c]}', 'weight', '#{food_name}' )\">#{l[:cboard]}</span>"
 		else
 			add_button = ""
 		end
 
 		# Koyomi button
-		if user.status >= 2 && base != 'cb'
-			koyomi_button = "<span onclick=\"addKoyomi( '#{food_no_list[c]}' )\">#{l['calendar']}</span>"
-		else
-			koyomi_button = ''
-		end
+		koyomi_button = user.status >= 2 && base != 'cb' ? "<span onclick=\"addKoyomi( '#{food_no_list[c]}' )\">#{l[:calendar]}</span>" : ''
 
 		# GM/SGM専用単位変換ボタン
 		gm_unitc = ''
@@ -259,21 +239,17 @@ when 'init', 'weight', 'cb', 'cbp'
 		if user.status >= 8
 			res = db.query( "SELECT * FROM #{$MYSQL_TB_EXT} WHERE FN='#{food_no_list[c]}';", false )
 			if res.first
-				bc = 'btn-outline-secondary'
-				bc = 'btn-outline-danger' if res.first['unit'] != '{"g":1}';
-				gm_unitc = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{l['unit']}</button>"
+				bc = res.first['unit'] != '{"g":1}' ? 'btn-outline-danger' : 'btn-outline-secondary'
+				gm_unitc = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directUnit( '#{food_no_list[c]}' )\">#{l[:unit]}</button>"
+#				gm_color = "<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{l[:color]}</button>"
 
-#				gm_color = "<button type='button' class='btn btn-outline-danger btn-sm' onclick=\"directColor( '#{food_no_list[c]}' )\">#{l['color']}</button>"
+				bc = res.first['allergen'].to_i > 0 ? 'btn-outline-danger' : 'btn-outline-secondary'
+				gm_allergen = "<button type='button' class='btn btn #{bc} btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{l[:allergen]}</button>"
 
-				bc = 'btn-outline-secondary'
-				bc = 'btn-outline-danger' if res.first['allergen'].to_i > 0;
-				gm_allergen = "<button type='button' class='btn btn #{bc} btn-sm' onclick=\"directAllergen( '#{food_no_list[c]}' )\">#{l['allergen']}</button>"
+				bc = res.first['shun1s'] == 0 || res.first['shun1s'] == ''|| res.first['shun1s'] == nil ? 'btn-outline-secondary' : 'btn-outline-danger'
+				gm_shun = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{l[:shun]}</button>"
 
-				bc = 'btn-outline-danger'
-				bc = 'btn-outline-secondary' if res.first['shun1s'] == 0 || res.first['shun1s'] == ''|| res.first['shun1s'] == nil;
-				gm_shun = "<button type='button' class='btn #{bc} btn-sm' onclick=\"directShun( '#{food_no_list[c]}' )\">#{l['shun']}</button>"
-
-				gm_dic = "<button type='button' class='btn btn-outline-info btn-sm' onclick=\"initDic( 'direct', '#{fg_key}', '#{food_name}', '#{food_no_list[c]}' )\">#{l['dic']}</button>"
+				gm_dic = "<button type='button' class='btn btn-outline-info btn-sm' onclick=\"initDic( 'direct', '#{fg_key}', '#{food_name}', '#{food_no_list[c]}' )\">#{l[:dic]}</button>"
 			end
 		end
 
@@ -291,18 +267,18 @@ when 'init', 'weight', 'cb', 'cbp'
 		weight_parts = <<-"WEIGHT"
 <div class="col-3">
 	<div class="input-group input-group-sm">
-		<label class='input-group-text' for='fraction'>#{l['fract']}</label>
+		<label class='input-group-text' for='fraction'>#{l[:fract]}</label>
 		<select class='form-select' id='fraction' onchange='changeDSWeight( "weight", "#{food_key}", "#{food_no}" )>
-			<option value='1'#{$SELECT[frct_mode == 1]}>#{l['round']}</option>
-			<option value='2'#{$SELECT[frct_mode == 2]}>#{l['ceil']}</option>
-			<option value='3'#{$SELECT[frct_mode == 3]}>#{l['floor']}</option>
+			<option value='1'#{$SELECT[frct_mode == 1]}>#{l[:round]}</option>
+			<option value='2'#{$SELECT[frct_mode == 2]}>#{l[:ceil]}</option>
+			<option value='3'#{$SELECT[frct_mode == 3]}>#{l[:floor]}</option>
 		</select>
 	</div>
 </div>
 
 <div class="col-3">
 	<div class="input-group input-group-sm">
-		<label class="input-group-text" for="weight">#{l['weight']}</label>
+		<label class="input-group-text" for="weight">#{l[:weight]}</label>
 		<input type="number" min='0' class="form-control" id="weight" value="#{food_weight.to_f}">
 		<button class="btn btn-outline-primary" type="button" onclick="changeDSWeight( 'weight', '#{food_key}', '#{food_no}' )">g</button>
 	</div>
@@ -312,21 +288,11 @@ WEIGHT
 	end
 
 
-	# 擬似食品ボタンの作成
-	pseudo_button = ''
- 	pseudo_button = "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l['plus']}</span>\n" if user.status > 0 && base != 'cb'
-
- 	# Recipe search badge
- 	recipe_search = ''
- 	recipe_search = "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l['search']}</span><br><br>" unless user.status == 0
-
- 	#
-	return_button = ''
-	return_button = "<div align='center' class='joystic_koyomi' onclick=\"returnCB( '', '' )\">#{l['signpost']}</div><br>" if base == 'cb'
-
-
-	parallel_button = ''
-	parallel_button = "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{base_fn}' )\">#{l['parallel']}</div><br>" if base == 'cb'
+	# HTML parts
+	pseudo_button = user.status > 0 && base != 'cb' ? "<apan onclick=\"pseudoAdd( 'init', '#{fg_key}:#{class1}:#{class2}:#{class3}:#{food_name}', '' )\">#{l[:plus]}</span>\n" : ''
+ 	recipe_search = user.status != 0 ? "&nbsp;&nbsp;<span class='badge bbg' onclick=\"searchDR( '#{food_name}' )\">#{l[:search]}</span><br><br>" : ''
+	return_button = base == 'cb' ? "<div align='center' class='joystic_koyomi' onclick=\"returnCB( '', '' )\">#{l[:signpost]}</div><br>" : ''
+	parallel_button =  base == 'cb'? "<div align='center' class='joystic_koyomi' onclick=\"cb_detail_para( '#{food_key}', '#{food_weight}', '#{base_fn}' )\">#{l[:parallel]}</div><br>" : ''
  
 	html = <<-"HTML"
 	<div class='container-fluid'>
@@ -346,8 +312,8 @@ WEIGHT
 	<table class="table table-sm table-hover">
 		<thead>
 			<tr>
-	  			<th>#{l['fn']}</th>
-	  			<th>#{l['name']}</th>
+	  			<th>#{l[:fn]}</th>
+	  			<th>#{l[:name]}</th>
 				<th></th>
 				#{fc_items_html}
     		</tr>
